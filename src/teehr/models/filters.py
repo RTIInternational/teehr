@@ -6,20 +6,6 @@ from pydantic import ValidationInfo, field_validator
 from datetime import datetime, timedelta
 import logging
 from teehr.models.str_enum import StrEnum
-from teehr.models.table_enums import (
-    ConfigurationFields,
-    UnitFields,
-    VariableFields,
-    AttributeFields,
-    LocationFields,
-    LocationAttributeFields,
-    LocationCrosswalkFields,
-    TimeseriesFields,
-    JoinedTimeseriesFields,
-)
-from teehr.models.pydantic_table_models import (
-    TableBaseModel
-)
 
 
 logger = logging.getLogger(__name__)
@@ -37,12 +23,19 @@ class FilterOperators(StrEnum):
     isin = "in"
 
 
-class FilterBaseModel(BaseModel):
+class TableFilter(BaseModel):
     """Base model for filters."""
 
-    column: TableBaseModel
+    column: str
     operator: FilterOperators
-    value: Union[str, List[str]]
+    value: Union[
+        str,
+        int,
+        float,
+        datetime,
+        timedelta,
+        List[Union[str, int, float, datetime, timedelta]]
+    ]
 
     def is_iterable_not_str(obj):
         """Check if is type Iterable and not str.
@@ -69,85 +62,23 @@ class FilterBaseModel(BaseModel):
     @field_validator("column", mode='before')
     def coerce_column_to_enum(cls, v, info: ValidationInfo):
         """Column name must exist in the database table."""
-        if not isinstance(v, StrEnum):
-            fields = info.context.get("fields_enum")
-            v = fields[v]
+        if info.context is not None:
+            # String column names require context with field_names (list of strings)
+            fields = info.context.get("field_names")
+            if fields is None:
+                raise ValueError(
+                    "'field_names' not found in context. "
+                    "Pass context={'field_names': [list of field names]}"
+                )
+
+            # Validate the column name exists in the provided fields list
+            if not isinstance(fields, (list, tuple)):
+                raise ValueError(
+                    f"field_names must be a list of field names, got {type(fields)}"
+                )
+            if v not in fields:
+                raise ValueError(
+                    f"Column '{v}' not found in the provided fields list. "
+                    f"Available fields: {fields}"
+                )
         return v
-
-
-class ConfigurationFilter(FilterBaseModel):
-    """Configuration filter model."""
-
-    column: ConfigurationFields
-
-
-class UnitFilter(FilterBaseModel):
-    """Unit filter model."""
-
-    column: UnitFields
-
-
-class VariableFilter(FilterBaseModel):
-    """Variable filter model."""
-
-    column: VariableFields
-
-
-class AttributeFilter(FilterBaseModel):
-    """Attribute filter model."""
-
-    column: AttributeFields
-
-
-class LocationFilter(FilterBaseModel):
-    """Location filter model.
-
-    ToDo: Add a geometry filter: lat, lon, intersect, etc.
-    """
-
-    column: LocationFields
-
-
-class LocationAttributeFilter(FilterBaseModel):
-    """Location attribute filter model.
-
-    ToDo: How should we handle values types that are say a number stored
-    as a string?
-    """
-
-    column: LocationAttributeFields
-
-
-class LocationCrosswalkFilter(FilterBaseModel):
-    """Location crosswalk filter model."""
-
-    column: LocationCrosswalkFields
-
-
-class TimeseriesFilter(FilterBaseModel):
-    """Timeseries filter model."""
-
-    column: TimeseriesFields
-    value: Union[
-        str,
-        int,
-        float,
-        datetime,
-        timedelta,
-        List[Union[str, int, float, datetime, timedelta]]
-    ]
-
-
-class JoinedTimeseriesFilter(FilterBaseModel):
-    """Joined timeseries filter model."""
-
-    column: JoinedTimeseriesFields
-    value: Union[
-        str,
-        int,
-        float,
-        datetime,
-        timedelta,
-        List[Union[str, int, float, datetime, timedelta]]
-    ]
-

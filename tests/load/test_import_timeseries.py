@@ -41,6 +41,54 @@ MIZU_LOCATIONS = Path(
     TEST_STUDY_DATA_DIR, "geo", "mizu_locations.parquet"
 )
 
+@pytest.mark.function_scope_evaluation_template
+def test_load_spark_dataframe(function_scope_evaluation_template):
+    """Test the load_dataframe function."""
+    ev = function_scope_evaluation_template
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    ev.configurations.add(
+        Configuration(
+            name="test_obs",
+            type="primary",
+            description="Test Observations Data"
+        )
+    )
+    ev.units.add(
+        Unit(
+            name="cfd",
+            long_name="Cubic Feet per Day"
+        )
+    )
+    ev.variables.add(
+        Variable(
+            name="streamflow",
+            long_name="Streamflow"
+        )
+    )
+    # Create a pyspark dataframe to load.
+    data = {
+        "reference_time": ["2024-02-15T08:00:00Z"],
+        "value_time": ["2024-02-15T08:00:00Z"],
+        "configuration_name": ["test_obs"],
+        "unit_name": ["cfd"],
+        "variable_name": ["streamflow"],
+        "value": [1.9],
+        "location_id": ["gage-A"]
+    }
+    rows = [dict(zip(data, t)) for t in zip(*data.values())]
+    df = ev.spark.createDataFrame(rows)
+    ev.primary_timeseries.load_dataframe(
+        df=df
+    )
+    # Verify that the data was loaded correctly
+    loaded_df = ev.primary_timeseries.to_pandas()
+    assert loaded_df.index.size == 1
+    loaded_row = loaded_df.iloc[0]
+    assert loaded_row["configuration_name"] == "test_obs"
+    assert loaded_row["unit_name"] == "cfd"
+    assert loaded_row["variable_name"] == "streamflow"
+    assert loaded_row["location_id"] == "gage-A"
+    assert loaded_row["value"] == 1.9
 
 @pytest.mark.function_scope_evaluation_template
 def test_dropping_duplicates(function_scope_evaluation_template):

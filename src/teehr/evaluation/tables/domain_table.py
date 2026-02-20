@@ -2,7 +2,7 @@
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.models.pydantic_table_models import TableBaseModel
 from teehr.querying.utils import order_df
-from teehr.models.filters import FilterBaseModel
+from teehr.models.filters import TableFilter
 from teehr.models.str_enum import StrEnum
 import pandas as pd
 from typing import List, Union
@@ -128,8 +128,8 @@ class DomainTable(BaseTable):
     def query(
         self,
         filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ] = None,
         order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
     ):
@@ -142,11 +142,11 @@ class DomainTable(BaseTable):
         Parameters
         ----------
         filters : Union[
-                str, dict, FilterBaseModel,
-                List[Union[str, dict, FilterBaseModel]]
+                str, dict, TableFilter,
+                List[Union[str, dict, TableFilter]]
             ]
             The filters to apply to the query.  The filters can be an SQL string,
-            dictionary, FilterBaseModel or a list of any of these. The filters
+            dictionary, TableFilter or a list of any of these. The filters
             will be applied in the order they are provided.
         order_by : Union[str, List[str], StrEnum, List[StrEnum]]
             The fields to order the query by.  The fields can be a string,

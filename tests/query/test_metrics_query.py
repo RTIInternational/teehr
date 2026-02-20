@@ -6,8 +6,9 @@ import geopandas as gpd
 from pathlib import Path
 import numpy as np
 import pytest
+import warnings
 
-from teehr.models.filters import JoinedTimeseriesFilter
+from teehr.models.filters import TableFilter
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
 BOOT_YEAR_FILE = Path(
@@ -39,18 +40,17 @@ def test_executing_deterministic_metrics(module_scope_test_warehouse):
     ]
 
     # Get the currently available fields to use in the query.
-    flds = ev.joined_timeseries.field_enum()
 
     metrics_df = ev.metrics.query(
         include_metrics=include_nonconditional_metrics,
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
+        order_by=["primary_location_id"],
     ).to_pandas()
 
     metrics_df2 = ev.metrics(table_name="joined_timeseries").query(
         include_metrics=include_nonconditional_metrics,
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
+        order_by=["primary_location_id"],
     ).to_pandas()
 
     assert metrics_df.equals(metrics_df2)
@@ -72,8 +72,8 @@ def test_executing_deterministic_metrics(module_scope_test_warehouse):
         )
     ]).query(
         include_metrics=include_conditional_metrics,
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
+        order_by=["primary_location_id"],
     ).to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
@@ -92,12 +92,11 @@ def test_executing_signatures(module_scope_test_warehouse):
     ]
 
     # Get the currently available fields to use in the query.
-    flds = ev.joined_timeseries.field_enum()
 
     metrics_df = ev.metrics.query(
         include_metrics=include_all_metrics,
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
+        order_by=["primary_location_id"],
     ).to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
@@ -119,12 +118,11 @@ def test_metrics_filter_and_geometry(module_scope_test_warehouse):
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
     # Get the currently available fields to use in the query.
-    flds = ev.joined_timeseries.field_enum()
 
     # Define some filters.
     filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
+        TableFilter(
+            column="primary_location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -132,8 +130,8 @@ def test_metrics_filter_and_geometry(module_scope_test_warehouse):
 
     metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
+        order_by=["primary_location_id"],
         filters=filters,
     ).to_geopandas()
 
@@ -421,3 +419,12 @@ def test_table_based_metrics(function_scope_test_warehouse):
     ).to_pandas()
 
     assert sigs_df.sort_index().equals(sigs_df2.sort_index())
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_metrics_property_deprecation_warning(module_scope_test_warehouse):
+    """Test that accessing ev.metrics emits a FutureWarning."""
+    ev = module_scope_test_warehouse
+
+    with pytest.warns(FutureWarning, match="metrics.*deprecated"):
+        ev.metrics

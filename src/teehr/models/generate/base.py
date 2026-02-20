@@ -2,7 +2,7 @@
 import abc
 from typing import Union, List
 
-from teehr.models.filters import FilterBaseModel
+from teehr.models.filters import TableFilter
 
 from pydantic import BaseModel as PydanticBaseModel, ConfigDict
 from pydantic import Field
@@ -73,8 +73,8 @@ class SignatureGeneratorBaseModel(PydanticBaseModel):
         default=TimeseriesTableNamesEnum.primary_timeseries
     )
     filters: Union[
-        str, dict, FilterBaseModel,
-        List[Union[str, dict, FilterBaseModel]]
+        str, dict, TableFilter,
+        List[Union[str, dict, TableFilter]]
     ] = Field(default=None)
     temporal_resolution: NormalsResolutionEnum = Field(default=None)
     summary_statistic: NormalsStatisticEnum = Field(default=None)

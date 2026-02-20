@@ -47,6 +47,7 @@ from teehr.evaluation.spark_session_utils import (
 )
 import pandas as pd
 import re
+import warnings
 from fsspec.implementations.local import LocalFileSystem
 from teehr.utilities import apply_migrations
 from teehr.models.evaluation_base import (
@@ -202,7 +203,31 @@ class Evaluation(EvaluationBase):
 
     @property
     def metrics(self) -> Metrics:
-        """The metrics component class for calculating performance metrics."""
+        """The metrics component class for calculating performance metrics.
+
+        .. deprecated::
+            The ``metrics`` property is deprecated and will be removed in a
+            future version. Use the ``query`` method on the table directly
+            with the ``include_metrics`` argument instead. For example::
+
+                ev.joined_timeseries.query(
+                    include_metrics=[...],
+                    group_by=[...],
+                    order_by=[...],
+                )
+        """
+        warnings.warn(
+            "The 'metrics' property is deprecated and will be removed in a "
+            "future version. Use the 'query' method on the table directly "
+            "with the 'include_metrics' argument instead. For example:\n\n"
+            "    ev.joined_timeseries.query(\n"
+            "        include_metrics=[...],\n"
+            "        group_by=[...],\n"
+            "        order_by=[...],\n"
+            "    )",
+            FutureWarning,
+            stacklevel=2,
+        )
         return Metrics(self)
 
     @property
