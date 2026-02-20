@@ -80,7 +80,15 @@ def test_load_spark_dataframe(function_scope_evaluation_template):
     ev.primary_timeseries.load_dataframe(
         df=df
     )
-    assert True
+    # Verify that the data was loaded correctly
+    loaded_df = ev.primary_timeseries.to_pandas()
+    assert loaded_df.index.size == 1
+    loaded_row = loaded_df.iloc[0]
+    assert loaded_row["configuration_name"] == "test_obs"
+    assert loaded_row["unit_name"] == "cfd"
+    assert loaded_row["variable_name"] == "streamflow"
+    assert loaded_row["location_id"] == "gage-A"
+    assert loaded_row["value"] == 1.9
 
 @pytest.mark.function_scope_evaluation_template
 def test_dropping_duplicates(function_scope_evaluation_template):
