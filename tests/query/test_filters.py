@@ -13,7 +13,7 @@ from teehr.models.filters import TableFilter
 
 @pytest.mark.function_scope_two_location_warehouse
 def test_filtering_a_new_table(function_scope_two_location_warehouse):
-    """Test no filter returns all rows."""
+    """Test filtering a new table with TableFilter."""
     ev = function_scope_two_location_warehouse
     ev.write.to_warehouse(
         table_name="new_attributes",
