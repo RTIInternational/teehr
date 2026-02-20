@@ -188,7 +188,7 @@ class Write:
         if isinstance(source_data, pd.DataFrame):
             source_data = self._ev.spark.createDataFrame(source_data)
 
-        if isinstance(source_data, DataFrame) | isinstance(source_data, BaseTable):
+        if isinstance(source_data, DataFrame) or isinstance(source_data, BaseTable):
             source_data.createOrReplaceTempView("source_data")
             source_data = "source_data"
 
