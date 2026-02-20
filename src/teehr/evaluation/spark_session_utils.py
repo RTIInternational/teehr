@@ -314,6 +314,9 @@ def _set_spark_cluster_configuration(
     conf.set("spark.kubernetes.namespace", spark_namespace)
     conf.set("spark.kubernetes.authenticate.executor.serviceAccountName", "spark")
     conf.set("spark.kubernetes.container.image.pullPolicy", "Always")
+    conf.set("spark.decommission.enabled", "true")
+    conf.set("spark.executor.decommission.signal", "SIGTERM")
+    conf.set("spark.storage.decommission.enabled", "true")
 
     if os.path.exists(pod_template_path):
         conf.set("spark.kubernetes.executor.podTemplateFile", pod_template_path)
