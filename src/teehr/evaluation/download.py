@@ -9,6 +9,7 @@ import geopandas as gpd
 import requests
 
 from teehr.loading.teehr_api import teehr_api_timeseries_to_dataframe
+from teehr.models.table_enums import TableWriteEnum
 
 logger = logging.getLogger(__name__)
 
@@ -157,11 +158,13 @@ class Download:
 
         return response
 
-    def get_locations(
+    def locations(
         self,
         prefix: str = None,
         include_attributes: bool = False,
         limit: int = 10000,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> gpd.GeoDataFrame:
         """Fetch locations from the warehouse API as a GeoDataFrame.
@@ -175,6 +178,12 @@ class Download:
             Default: False
         limit : int, optional
             Maximum number of locations to return. Default: 10000
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "locations" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -186,9 +195,14 @@ class Download:
         Examples
         --------
         >>> # Fetch USGS locations with attributes
-        >>> locations = ev.download.get_locations(
+        >>> locations = ev.download.locations(
         ...     prefix="usgs",
         ...     include_attributes=True
+        ... )
+        >>> # Fetch and load into local evaluation
+        >>> locations = ev.download.locations(
+        ...     prefix="usgs",
+        ...     load=True
         ... )
         """
         params = {
@@ -211,12 +225,21 @@ class Download:
 
         logger.info(f"Fetched {len(gdf)} locations from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=gdf,
+                table_name="locations",
+                write_mode=write_mode
+            )
+
         return gdf
 
-    def get_attributes(
+    def attributes(
         self,
         name: str = None,
         type: str = None,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> pd.DataFrame:
         """Fetch attributes from the warehouse API.
@@ -227,6 +250,12 @@ class Download:
             Filter by attribute name
         type : str, optional
             Filter by attribute type ("categorical" or "continuous")
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "attributes" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -238,7 +267,9 @@ class Download:
         Examples
         --------
         >>> # Fetch all categorical attributes
-        >>> attrs = ev.warehouse.get_attributes(type="categorical")
+        >>> attrs = ev.download.attributes(type="categorical")
+        >>> # Fetch and load into local evaluation
+        >>> attrs = ev.download.attributes(load=True)
         """
         params = {**kwargs}
 
@@ -257,12 +288,21 @@ class Download:
 
         logger.info(f"Fetched {len(df)} attributes from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="attributes",
+                write_mode=write_mode
+            )
+
         return df
 
-    def get_location_attributes(
+    def location_attributes(
         self,
         location_id: Union[str, List[str]] = None,
         attribute_name: str = None,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> pd.DataFrame:
         """Fetch location attributes from the warehouse API.
@@ -273,6 +313,12 @@ class Download:
             Filter by location ID(s)
         attribute_name : str, optional
             Filter by attribute name
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "location_attributes" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -285,9 +331,11 @@ class Download:
         --------
         >>> # Fetch attributes for specific locations
         >>> loc_ids = ["usgs-01010000", "usgs-01010500"]
-        >>> loc_attrs = ev.warehouse.get_location_attributes(
+        >>> loc_attrs = ev.download.location_attributes(
         ...     location_id=loc_ids
         ... )
+        >>> # Fetch and load into local evaluation
+        >>> loc_attrs = ev.download.location_attributes(load=True)
         """
         params = {**kwargs}
 
@@ -306,11 +354,20 @@ class Download:
 
         logger.info(f"Fetched {len(df)} location attributes from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="location_attributes",
+                write_mode=write_mode
+            )
+
         return df
 
-    def get_units(
+    def units(
         self,
         name: str = None,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> pd.DataFrame:
         """Fetch units from the warehouse API.
@@ -319,6 +376,12 @@ class Download:
         ----------
         name : str, optional
             Filter by unit name
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "units" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -330,7 +393,9 @@ class Download:
         Examples
         --------
         >>> # Fetch all units
-        >>> units = ev.warehouse.get_units()
+        >>> units = ev.download.units()
+        >>> # Fetch and load into local evaluation
+        >>> units = ev.download.units(load=True)
         """
         params = {**kwargs}
 
@@ -347,11 +412,20 @@ class Download:
 
         logger.info(f"Fetched {len(df)} units from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="units",
+                write_mode=write_mode
+            )
+
         return df
 
-    def get_variables(
+    def variables(
         self,
         name: str = None,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> pd.DataFrame:
         """Fetch variables from the warehouse API.
@@ -360,6 +434,12 @@ class Download:
         ----------
         name : str, optional
             Filter by variable name
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "variables" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -371,7 +451,9 @@ class Download:
         Examples
         --------
         >>> # Fetch all variables
-        >>> variables = ev.warehouse.get_variables()
+        >>> variables = ev.download.variables()
+        >>> # Fetch and load into local evaluation
+        >>> variables = ev.download.variables(load=True)
         """
         params = {**kwargs}
 
@@ -388,12 +470,21 @@ class Download:
 
         logger.info(f"Fetched {len(df)} variables from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="variables",
+                write_mode=write_mode
+            )
+
         return df
 
-    def get_configurations(
+    def configurations(
         self,
         name: str = None,
         type: str = None,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> pd.DataFrame:
         """Fetch configurations from the warehouse API.
@@ -404,6 +495,12 @@ class Download:
             Filter by configuration name
         type : str, optional
             Filter by configuration type ("primary" or "secondary")
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "configurations" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -415,7 +512,9 @@ class Download:
         Examples
         --------
         >>> # Fetch all primary configurations
-        >>> configs = ev.warehouse.get_configurations(type="primary")
+        >>> configs = ev.download.configurations(type="primary")
+        >>> # Fetch and load into local evaluation
+        >>> configs = ev.download.configurations(load=True)
         """
         params = {**kwargs}
 
@@ -434,12 +533,21 @@ class Download:
 
         logger.info(f"Fetched {len(df)} configurations from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="configurations",
+                write_mode=write_mode
+            )
+
         return df
 
-    def get_location_crosswalks(
+    def location_crosswalks(
         self,
         primary_location_id: Union[str, List[str]] = None,
         secondary_location_id: Union[str, List[str]] = None,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> pd.DataFrame:
         """Fetch location crosswalks from the warehouse API.
@@ -450,6 +558,12 @@ class Download:
             Filter by primary location ID(s)
         secondary_location_id : str or list of str, optional
             Filter by secondary location ID(s)
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "location_crosswalks" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -462,9 +576,11 @@ class Download:
         --------
         >>> # Fetch crosswalks for specific primary locations
         >>> loc_ids = ["usgs-01010000", "usgs-01010500"]
-        >>> crosswalks = ev.warehouse.get_location_crosswalks(
+        >>> crosswalks = ev.download.location_crosswalks(
         ...     primary_location_id=loc_ids
         ... )
+        >>> # Fetch and load into local evaluation
+        >>> crosswalks = ev.download.location_crosswalks(load=True)
         """
         params = {**kwargs}
 
@@ -483,15 +599,24 @@ class Download:
 
         logger.info(f"Fetched {len(df)} location crosswalks from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="location_crosswalks",
+                write_mode=write_mode
+            )
+
         return df
 
-    def get_primary_timeseries(
+    def primary_timeseries(
         self,
         primary_location_id: Union[str, List[str]],
         configuration_name: Union[str, List[str]],
         variable_name: str = None,
         start_date: Union[str, datetime, pd.Timestamp] = None,
         end_date: Union[str, datetime, pd.Timestamp] = None,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> pd.DataFrame:
         """Fetch primary timeseries from the warehouse API.
@@ -511,6 +636,12 @@ class Download:
             End date for timeseries query.
             Accepts ISO 8601 string, datetime, or pd.Timestamp.
             If None, only start_date is used.
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "primary_timeseries" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -522,11 +653,17 @@ class Download:
         Examples
         --------
         >>> # Fetch USGS observations for specific locations and date range
-        >>> timeseries = ev.warehouse.get_primary_timeseries(
+        >>> timeseries = ev.download.primary_timeseries(
         ...     primary_location_id=["usgs-01010000", "usgs-01010500"],
         ...     configuration_name="usgs_observations",
         ...     start_date="1990-10-01",
         ...     end_date="1990-10-02"
+        ... )
+        >>> # Fetch and load into local evaluation
+        >>> timeseries = ev.download.primary_timeseries(
+        ...     primary_location_id=["usgs-01010000"],
+        ...     configuration_name="usgs_observations",
+        ...     load=True
         ... )
         """
         params = {**kwargs}
@@ -552,9 +689,16 @@ class Download:
 
         logger.info(f"Fetched {len(df)} primary timeseries values from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="primary_timeseries",
+                write_mode=write_mode
+            )
+
         return df
 
-    def get_secondary_timeseries(
+    def secondary_timeseries(
         self,
         primary_location_id: Union[str, List[str]] = None,
         secondary_location_id: Union[str, List[str]] = None,
@@ -562,6 +706,8 @@ class Download:
         variable_name: str = None,
         start_date: Union[str, datetime, pd.Timestamp] = None,
         end_date: Union[str, datetime, pd.Timestamp] = None,
+        load: bool = False,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ) -> pd.DataFrame:
         """Fetch secondary timeseries from the warehouse API.
@@ -585,6 +731,12 @@ class Download:
             End date for timeseries query.
             Accepts ISO 8601 string, datetime, or pd.Timestamp.
             If None, only start_date is used.
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "secondary_timeseries" table. Default: False
+        write_mode : TableWriteEnum, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
         **kwargs
             Additional query parameters to pass to the API
 
@@ -601,11 +753,17 @@ class Download:
         Examples
         --------
         >>> # Fetch NWM retrospective for specific locations and date range
-        >>> timeseries = ev.warehouse.get_secondary_timeseries(
+        >>> timeseries = ev.download.secondary_timeseries(
         ...     primary_location_id=["usgs-01010000", "usgs-01010500"],
         ...     configuration_name="nwm30_retrospective",
         ...     start_date="1990-10-01",
         ...     end_date="1990-10-02"
+        ... )
+        >>> # Fetch and load into local evaluation
+        >>> timeseries = ev.download.secondary_timeseries(
+        ...     primary_location_id=["usgs-01010000"],
+        ...     configuration_name="nwm30_retrospective",
+        ...     load=True
         ... )
         """
         if not primary_location_id and not secondary_location_id:
@@ -638,4 +796,68 @@ class Download:
 
         logger.info(f"Fetched {len(df)} secondary timeseries values from warehouse API")
 
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="secondary_timeseries",
+                write_mode=write_mode
+            )
+
         return df
+
+    # Create a method to download a subset of an evaluation using the methods above based on a
+    # list of locations ids, date range, and configuration names. Instead of returning a dataframe
+    # this method will write the data to local iceberg tables using ev._write.to_warehouse().
+    def evaluation_subset(
+        self,
+        location_ids: List[str],
+        prefix: str = None,
+        start_date: Union[str, datetime, pd.Timestamp] = None,
+        end_date: Union[str, datetime, pd.Timestamp] = None,
+        configuration_names: List[str] = None
+    ) -> None:
+        """Download a subset of evaluation data based on location IDs, date range, and configurations.
+
+        Parameters
+        ----------
+        location_ids : List[str]
+            List of location IDs to include in the subset
+        start_date : Union[str, datetime, pd.Timestamp], optional
+            Start date for timeseries query. Accepts ISO 8601 string, datetime, or pd.Timestamp.
+        end_date : Union[str, datetime, pd.Timestamp], optional
+            End date for timeseries query. Accepts ISO 8601 string, datetime, or pd.Timestamp.
+            If None, only start_date is used.
+        configuration_names : List[str], optional
+            List of configuration names to include. If None, includes all configurations.
+        variable_names : List[str], optional
+            List of variable names to include. If None, includes all variables.
+
+        Returns
+        -------
+        None
+            Writes the subset data to local iceberg tables using ev._write.to_warehouse()
+        """
+        # Download and write the locations.
+        locations_gdf = self.locations(
+            prefix=prefix,
+            include_attributes=False,
+            location_id=location_ids
+        )
+        self._ev._write.to_warehouse(
+            df=locations_gdf,
+            table_name="locations",
+            mode="append"
+        )
+
+        # Download and write the primary timeseries.
+        primary_df = self.primary_timeseries(
+            primary_location_id=location_ids,
+            configuration_name=configuration_names,
+            start_date=start_date,
+            end_date=end_date
+        )
+        self._ev._write.to_warehouse(
+            df=primary_df,
+            table_name="primary_timeseries",
+            mode="append"
+        )

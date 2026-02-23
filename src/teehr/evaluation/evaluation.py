@@ -39,7 +39,7 @@ from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
-from teehr.evaluation.warehouse import Warehouse
+from teehr.evaluation.download import Download
 from teehr.evaluation.utils import copy_migrations_dir
 from teehr.evaluation.spark_session_utils import (
     create_spark_session,
@@ -101,7 +101,7 @@ class Evaluation(EvaluationBase):
         self.dir_path = dir_path
 
         # Cached component instances
-        self._warehouse_instance = None
+        self._download_instance = None
 
         if not self.dir_path.is_dir():
             if create_dir:
@@ -204,11 +204,11 @@ class Evaluation(EvaluationBase):
         return Fetch(self)
 
     @property
-    def warehouse(self) -> Warehouse:
-        """The warehouse component class for managing data warehouse."""
-        if self._warehouse_instance is None:
-            self._warehouse_instance = Warehouse(self)
-        return self._warehouse_instance
+    def download(self) -> Download:
+        """The download component class for managing data downloads."""
+        if self._download_instance is None:
+            self._download_instance = Download(self)
+        return self._download_instance
 
     @property
     def metrics(self) -> Metrics:
