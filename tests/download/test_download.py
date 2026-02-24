@@ -10,7 +10,7 @@ def test_downloading(function_scope_evaluation_template):
     """Test downloading from the S3 warehouse via the TEEHR API."""
     ev = function_scope_evaluation_template
 
-    gdf = ev.download.get_locations(
+    gdf = ev.download.locations(
         location_id_prefix="usgs",
         include_attributes=True,
         limit=10
