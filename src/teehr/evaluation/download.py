@@ -66,13 +66,13 @@ class Download:
         self._ev = ev
         self._load = ev.load
         self.api_base_url = "https://api.teehr.rtiamanzi.org"
-        self.verify_ssl = False
+        self.verify_ssl = True
 
     def configure(
         self,
         api_base_url: str = None,
         api_port: int = None,
-        verify_ssl: bool = False
+        verify_ssl: bool = True
     ) -> "Download":
         """Configure the warehouse API connection settings.
 
@@ -86,7 +86,7 @@ class Download:
             base URL (e.g., "https://api.teehr.rtiamanzi.org:8443").
         verify_ssl : bool, optional
             Whether to verify SSL certificates when making requests.
-            Default: False
+            Default: True
 
         Returns
         -------
@@ -100,7 +100,7 @@ class Download:
         ...     api_port=8443,
         ...     verify_ssl=True
         ... )
-        >>> locations = ev.download.get_locations(prefix="usgs")
+        >>> locations = ev.download.locations(prefix="usgs")
         """
         base_url = api_base_url or "https://api.teehr.rtiamanzi.org"
         if api_port is not None:
@@ -116,7 +116,7 @@ class Download:
         self.api_base_url = base_url
         self.verify_ssl = verify_ssl
 
-        logger.info(f"Clone API configured: {self.api_base_url}")
+        logger.info(f"Download API configured: {self.api_base_url}")
         return self
 
     @staticmethod
@@ -148,13 +148,18 @@ class Download:
         ------
         requests.HTTPError
             If the request fails
+        requests.exceptions.Timeout
+            If the request times out
         """
         url = f"{api_base_url}/{endpoint}"
 
         logger.debug(f"Making request to {url} with params {params}")
-
-        response = requests.get(url, params=params or {}, verify=verify_ssl)
-        response.raise_for_status()
+        try:
+            response = requests.get(url, params=params or {}, verify=verify_ssl, timeout=30)
+            response.raise_for_status()
+        except requests.exceptions.Timeout:
+            logger.error(f"Request to {url} timed out.")
+            raise
 
         return response
 
@@ -167,7 +172,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> gpd.GeoDataFrame:
+    ) -> Union[gpd.GeoDataFrame, None]:
         """Fetch locations from the warehouse API as a GeoDataFrame.
 
         Parameters
@@ -193,8 +198,8 @@ class Download:
 
         Returns
         -------
-        gpd.GeoDataFrame
-            GeoDataFrame containing locations with geometry
+        Union[gpd.GeoDataFrame, None]
+            GeoDataFrame containing locations with geometry, or None if load=True
 
         Examples
         --------
@@ -253,7 +258,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, None]:
         """Fetch attributes from the warehouse API.
 
         Parameters
@@ -273,8 +278,8 @@ class Download:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame containing attribute definitions
+        Union[pd.DataFrame, None]
+            DataFrame containing attribute definitions, or None if load=True
 
         Examples
         --------
@@ -315,7 +320,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, None]:
         """Fetch location attributes from the warehouse API.
 
         Parameters
@@ -335,8 +340,8 @@ class Download:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame containing location attribute values
+        Union[pd.DataFrame, None]
+            DataFrame containing location attribute values, or None if load=True
 
         Examples
         --------
@@ -379,7 +384,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, None]:
         """Fetch units from the warehouse API.
 
         Parameters
@@ -397,8 +402,8 @@ class Download:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame containing unit definitions
+        Union[pd.DataFrame, None]
+            DataFrame containing unit definitions, or None if load=True
 
         Examples
         --------
@@ -436,7 +441,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, None]:
         """Fetch variables from the warehouse API.
 
         Parameters
@@ -454,8 +459,8 @@ class Download:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame containing variable definitions
+        Union[pd.DataFrame, None]
+            DataFrame containing variable definitions, or None if load=True
 
         Examples
         --------
@@ -494,7 +499,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, None]:
         """Fetch configurations from the warehouse API.
 
         Parameters
@@ -514,8 +519,8 @@ class Download:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame containing configuration definitions
+        Union[pd.DataFrame, None]
+            DataFrame containing configuration definitions, or None if load=True
 
         Examples
         --------
@@ -556,7 +561,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, None]:
         """Fetch location crosswalks from the warehouse API.
 
         Parameters
@@ -576,8 +581,8 @@ class Download:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame containing location crosswalk mappings
+        Union[pd.DataFrame, None]
+            DataFrame containing location crosswalk mappings, or None if load=True
 
         Examples
         --------
@@ -624,7 +629,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, None]:
         """Fetch primary timeseries from the warehouse API.
 
         Parameters
@@ -653,8 +658,8 @@ class Download:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame with TEEHR primary timeseries schema
+        Union[pd.DataFrame, None]
+            DataFrame with TEEHR primary timeseries schema, or None if load=True
 
         Examples
         --------
@@ -716,7 +721,7 @@ class Download:
         load: bool = False,
         write_mode: TableWriteEnum = "append",
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, None]:
         """Fetch secondary timeseries from the warehouse API.
 
         Parameters
@@ -749,8 +754,8 @@ class Download:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame with TEEHR secondary timeseries schema
+        Union[pd.DataFrame, None]
+            DataFrame with TEEHR secondary timeseries schema, or None if load=True
 
         Raises
         ------
@@ -830,7 +835,6 @@ class Download:
             Start date for timeseries query. Accepts ISO 8601 string, datetime, or pd.Timestamp.
         end_date : Union[str, datetime, pd.Timestamp]
             End date for timeseries query. Accepts ISO 8601 string, datetime, or pd.Timestamp.
-            If None, only start_date is used.
         primary_configuration_name : str
             Name of the primary configuration to include.
         secondary_configuration_name : str
@@ -882,6 +886,10 @@ class Download:
             bbox=bbox,
             load=True
         )
+        if self._ev.locations.to_sdf().count() == 0:
+            logger.warning("No locations found with the specified filters. "
+                           "No timeseries or location attributes will be loaded.")
+            return
         location_ids = self._ev.locations.to_sdf().select("id").rdd.flatMap(lambda x: x).collect()
         logger.info("Loading the primary timeseries data")
         self.primary_timeseries(

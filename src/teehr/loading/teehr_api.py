@@ -1,6 +1,5 @@
 """Convert TEEHR API response data to TEEHR timeseries format."""
 from typing import Union
-from pathlib import Path
 import pandas as pd
 import logging
 
@@ -82,6 +81,8 @@ def teehr_api_timeseries_to_dataframe(
 
     # Create DataFrame
     df = pd.DataFrame(all_rows)
+    if df.index.size == 0:
+        raise ValueError("No timeseries data found in the API response.")
 
     # Reorder columns to match TEEHR schema
     if 'member' in df.columns:
