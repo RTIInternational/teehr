@@ -65,7 +65,7 @@ class Download:
         """
         self._ev = ev
         self._load = ev.load
-        self.api_base_url = "https://api.teehr.local.app.garden"
+        self.api_base_url = "https://api.teehr.rtiamanzi.org"
         self.verify_ssl = False
 
     def configure(
@@ -80,10 +80,10 @@ class Download:
         ----------
         api_base_url : str, optional
             Base URL for the TEEHR warehouse API.
-            Default: "https://api.teehr.local.app.garden"
+            Default: "https://api.teehr.rtiamanzi.org"
         api_port : int, optional
             Port number for the API. If provided, will be appended to the
-            base URL (e.g., "https://api.teehr.local.app.garden:8443").
+            base URL (e.g., "https://api.teehr.rtiamanzi.org:8443").
         verify_ssl : bool, optional
             Whether to verify SSL certificates when making requests.
             Default: False
@@ -96,13 +96,13 @@ class Download:
         Examples
         --------
         >>> ev.download.configure(
-        ...     api_base_url="https://api.teehr.local.app.garden",
+        ...     api_base_url="https://api.teehr.rtiamanzi.org",
         ...     api_port=8443,
         ...     verify_ssl=True
         ... )
         >>> locations = ev.download.get_locations(prefix="usgs")
         """
-        base_url = api_base_url or "https://api.teehr.local.app.garden"
+        base_url = api_base_url or "https://api.teehr.rtiamanzi.org"
         if api_port is not None:
             if "://" in base_url:
                 scheme, rest = base_url.split("://", 1)
@@ -224,14 +224,20 @@ class Download:
         gdf = gpd.read_file(BytesIO(response.content))
 
         logger.info(f"Fetched {len(gdf)} locations from warehouse API")
-
         if load:
+            if include_attributes:
+                logger.warning(
+                    "When load=True and include_attributes=True, "
+                    "location attribute fields will be dropped when loading the locations table. "
+                    "To return a dataframe with the location attribute fields included, "
+                    "set load=False and include_attributes=True."
+                )
             self._load.dataframe(
                 df=gdf,
                 table_name="locations",
                 write_mode=write_mode
             )
-
+            return
         return gdf
 
     def attributes(
@@ -287,14 +293,13 @@ class Download:
         df = pd.DataFrame(response.json()["items"])
 
         logger.info(f"Fetched {len(df)} attributes from warehouse API")
-
         if load:
             self._load.dataframe(
                 df=df,
                 table_name="attributes",
                 write_mode=write_mode
             )
-
+            return
         return df
 
     def location_attributes(
@@ -353,14 +358,13 @@ class Download:
         df = pd.DataFrame(response.json()["items"])
 
         logger.info(f"Fetched {len(df)} location attributes from warehouse API")
-
         if load:
             self._load.dataframe(
                 df=df,
                 table_name="location_attributes",
                 write_mode=write_mode
             )
-
+            return
         return df
 
     def units(
@@ -411,14 +415,13 @@ class Download:
         df = pd.DataFrame(response.json()["items"])
 
         logger.info(f"Fetched {len(df)} units from warehouse API")
-
         if load:
             self._load.dataframe(
                 df=df,
                 table_name="units",
                 write_mode=write_mode
             )
-
+            return
         return df
 
     def variables(
@@ -469,14 +472,13 @@ class Download:
         df = pd.DataFrame(response.json()["items"])
 
         logger.info(f"Fetched {len(df)} variables from warehouse API")
-
         if load:
             self._load.dataframe(
                 df=df,
                 table_name="variables",
                 write_mode=write_mode
             )
-
+            return
         return df
 
     def configurations(
@@ -532,14 +534,13 @@ class Download:
         df = pd.DataFrame(response.json()["items"])
 
         logger.info(f"Fetched {len(df)} configurations from warehouse API")
-
         if load:
             self._load.dataframe(
                 df=df,
                 table_name="configurations",
                 write_mode=write_mode
             )
-
+            return
         return df
 
     def location_crosswalks(
@@ -598,14 +599,13 @@ class Download:
         df = pd.DataFrame(response.json()["items"])
 
         logger.info(f"Fetched {len(df)} location crosswalks from warehouse API")
-
         if load:
             self._load.dataframe(
                 df=df,
                 table_name="location_crosswalks",
                 write_mode=write_mode
             )
-
+            return
         return df
 
     def primary_timeseries(
@@ -663,6 +663,8 @@ class Download:
         >>> timeseries = ev.download.primary_timeseries(
         ...     primary_location_id=["usgs-01010000"],
         ...     configuration_name="usgs_observations",
+        ...     start_date="1990-10-01",
+        ...     end_date="1990-10-02",
         ...     load=True
         ... )
         """
@@ -688,14 +690,13 @@ class Download:
         df = teehr_api_timeseries_to_dataframe(response.json())
 
         logger.info(f"Fetched {len(df)} primary timeseries values from warehouse API")
-
         if load:
             self._load.dataframe(
                 df=df,
                 table_name="primary_timeseries",
                 write_mode=write_mode
             )
-
+            return
         return df
 
     def secondary_timeseries(
@@ -763,6 +764,8 @@ class Download:
         >>> timeseries = ev.download.secondary_timeseries(
         ...     primary_location_id=["usgs-01010000"],
         ...     configuration_name="nwm30_retrospective",
+        ...     start_date="1990-10-01",
+        ...     end_date="1990-10-02",
         ...     load=True
         ... )
         """
@@ -795,26 +798,22 @@ class Download:
         df = teehr_api_timeseries_to_dataframe(response.json())
 
         logger.info(f"Fetched {len(df)} secondary timeseries values from warehouse API")
-
         if load:
             self._load.dataframe(
                 df=df,
                 table_name="secondary_timeseries",
                 write_mode=write_mode
             )
-
+            return
         return df
 
-    # Create a method to download a subset of an evaluation using the methods above based on a
-    # list of locations ids, date range, and configuration names. Instead of returning a dataframe
-    # this method will write the data to local iceberg tables using ev._write.to_warehouse().
     def evaluation_subset(
         self,
         location_ids: List[str],
-        prefix: str = None,
-        start_date: Union[str, datetime, pd.Timestamp] = None,
-        end_date: Union[str, datetime, pd.Timestamp] = None,
-        configuration_names: List[str] = None
+        start_date: Union[str, datetime, pd.Timestamp],
+        end_date: Union[str, datetime, pd.Timestamp],
+        primary_configuration_name: str,
+        secondary_configuration_name: str,
     ) -> None:
         """Download a subset of evaluation data based on location IDs, date range, and configurations.
 
@@ -822,42 +821,76 @@ class Download:
         ----------
         location_ids : List[str]
             List of location IDs to include in the subset
-        start_date : Union[str, datetime, pd.Timestamp], optional
+        start_date : Union[str, datetime, pd.Timestamp]
             Start date for timeseries query. Accepts ISO 8601 string, datetime, or pd.Timestamp.
-        end_date : Union[str, datetime, pd.Timestamp], optional
+        end_date : Union[str, datetime, pd.Timestamp]
             End date for timeseries query. Accepts ISO 8601 string, datetime, or pd.Timestamp.
             If None, only start_date is used.
-        configuration_names : List[str], optional
-            List of configuration names to include. If None, includes all configurations.
-        variable_names : List[str], optional
-            List of variable names to include. If None, includes all variables.
+        primary_configuration_name : str
+            Name of the primary configuration to include.
+        secondary_configuration_name : str
+            Name of the secondary configuration to include.
 
         Returns
         -------
         None
-            Writes the subset data to local iceberg tables using ev._write.to_warehouse()
-        """
-        # Download and write the locations.
-        locations_gdf = self.locations(
-            prefix=prefix,
-            include_attributes=False,
-            location_id=location_ids
-        )
-        self._ev._write.to_warehouse(
-            df=locations_gdf,
-            table_name="locations",
-            mode="append"
-        )
+            Loads the subset data to local iceberg tables.
 
-        # Download and write the primary timeseries.
-        primary_df = self.primary_timeseries(
+        Examples
+        --------
+        >>> ev.download.evaluation_subset(
+        ...     location_ids=["usgs-06892350"],
+        ...     start_date="2020-01-01",
+        ...     end_date="2020-01-02",
+        ...     primary_configuration_name="usgs_observations",
+        ...     secondary_configuration_name="nwm30_retrospective"
+        ... )
+        """
+        logger.info("Loading the units, variables, and attributes tables")
+        self.units(load=True)
+        self.variables(load=True)
+        self.attributes(load=True)
+        logger.info("Loading the primary configuration name")
+        self.configurations(
+            name=primary_configuration_name,
+            load=True
+        )
+        logger.info("Loading the secondary configuration name")
+        self.configurations(
+            name=secondary_configuration_name,
+            load=True
+        )
+        logger.info("Loading the locations table")
+        self.locations(
+            # prefix=prefix,
+            include_attributes=False,
+            location_id=location_ids,
+            load=True
+        )
+        logger.info("Loading the primary timeseries data")
+        self.primary_timeseries(
             primary_location_id=location_ids,
-            configuration_name=configuration_names,
+            configuration_name=primary_configuration_name,
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            load=True
         )
-        self._ev._write.to_warehouse(
-            df=primary_df,
-            table_name="primary_timeseries",
-            mode="append"
+        logger.info("Loading the location crosswalks")
+        self.location_crosswalks(
+            primary_location_id=location_ids,
+            load=True
         )
+        logger.info("Loading the secondary timeseries data")
+        self.secondary_timeseries(
+            primary_location_id=location_ids,
+            configuration_name=secondary_configuration_name,
+            start_date=start_date,
+            end_date=end_date,
+            load=True
+        )
+        logger.info("Loading the location attributes")
+        self.location_attributes(
+            location_id=location_ids,
+            load=True
+        )
+        logger.info("Finished loading evaluation subset")

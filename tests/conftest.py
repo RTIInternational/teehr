@@ -173,16 +173,24 @@ def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     )
 
     yield ev
-    # tables = spark_shared_session.sql(f"SHOW TABLES IN local.teehr").collect()
-    # for table in tables:
-    #     table_name = table.tableName
-    #     # Use "DROP TABLE IF EXISTS" to avoid errors if a table is transiently missing
-    #     # The PURGE option removes the underlying data files as well
-    #     try:
-    #         spark_shared_session.sql(f"DROP TABLE IF EXISTS local.teehr.{table_name} PURGE")
-    #         print(f"Dropped table: {table_name}")
-    #     except Exception as e:
-    #         print(f"Error dropping table {table_name}: {e}")
+
+
+@pytest.fixture(scope="module")
+def module_scope_evaluation_template(spark_shared_session, tmp_path_factory):
+    """Module-level evaluation fixture with template cloned."""
+    base_dir = tmp_path_factory.getbasetemp()
+    spark = spark_shared_session
+    warehouse_dir = Path(base_dir) / "module-scoped-warehouse"
+
+    # Create Evaluation with custom namespace
+    ev = Evaluation(
+        dir_path=warehouse_dir,
+        create_dir=True,
+        spark=spark,
+    )
+    ev.clone_template()
+
+    yield ev
 
 
 @pytest.fixture(scope="session")
