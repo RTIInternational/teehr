@@ -8,10 +8,6 @@ import pyspark.sql.functions as F
 from pydantic import BaseModel as PydanticBaseModel
 
 from teehr.models.str_enum import StrEnum
-# from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.models.table_enums import (
-    JoinedTimeseriesFields
-)
 
 import logging
 
@@ -22,8 +18,8 @@ def post_process_metric_results(
     metrics_sdf: ps.DataFrame,
     include_metrics: List[PydanticBaseModel],
     group_by: Union[
-        str, JoinedTimeseriesFields,
-        List[Union[str, JoinedTimeseriesFields]]
+        str,
+        List[str]
     ]
 ) -> ps.DataFrame:
     """Post-process the results of the metrics query.
@@ -103,8 +99,8 @@ def calculate_metric_skill_score(
     metric_field: str,
     reference_configuration: str,
     group_by: Union[
-        str, JoinedTimeseriesFields,
-        List[Union[str, JoinedTimeseriesFields]]
+        str,
+        List[str]
     ]
 ) -> ps.DataFrame:
     """Calculate skill score based on a reference configuration.
@@ -117,7 +113,7 @@ def calculate_metric_skill_score(
         The name of the metric field to calculate skill scores for.
     reference_configuration : str
         The name of the reference configuration.
-    group_by : Union[str, JoinedTimeseriesFields, List[...]]
+    group_by : Union[str, List[str]]
         Fields used for grouping in the metrics calculation.
 
     Calculate the skill score of metric values for each configuration

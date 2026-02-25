@@ -8,6 +8,7 @@ with warnings.catch_warnings():
     import pandera.pyspark as ps  # noqa: F401
 
 from teehr.evaluation.evaluation import Evaluation  # noqa
+from teehr.evaluation.evaluation import RemoteReadOnlyEvaluation  # noqa
 from teehr.models.metrics.deterministic_models import DeterministicMetrics  # noqa
 from teehr.models.metrics.probabilistic_models import ProbabilisticMetrics  # noqa
 from teehr.models.metrics.signature_models import Signatures  # noqa
@@ -18,17 +19,6 @@ from teehr.models.pydantic_table_models import (  # noqa
     Attribute,
     Unit,
     Variable
-)
-from teehr.models.filters import (  # noqa
-    UnitFilter,
-    ConfigurationFilter,
-    VariableFilter,
-    AttributeFilter,
-    LocationFilter,
-    LocationAttributeFilter,
-    LocationCrosswalkFilter,
-    TimeseriesFilter,
-    JoinedTimeseriesFilter
 )
 
 from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields # noqa

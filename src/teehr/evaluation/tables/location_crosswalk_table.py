@@ -76,7 +76,7 @@ class LocationCrosswalkTable(BaseTable):
             "primary_location_id"
         )
         gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.fields()
+        gdf.attrs['fields'] = self.to_sdf().columns
         return gdf
 
     def load_parquet(

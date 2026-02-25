@@ -117,31 +117,33 @@ class Load:
             field_mapping=field_mapping,
             constant_field_values=constant_field_values
         )
-        if field_mapping is not None:
-            df = df.rename(columns=field_mapping)
-
         # Convert the input DataFrame to Spark DataFrame
         if isinstance(df, gpd.GeoDataFrame):
-            # This is a bit of a workaround due to spark failing when
-            # converting a pd.DataFrame with all null columns. We can pass in
-            # a schema, but first we validate with pandera to ensure all
-            # columns are present.Here we pass in flds to get the correct
-            # column order.
+            # This is a bit of a workaround due to spark failing when converting
+            # a pd.DataFrame with all null columns. We can pass in a schema, but
+            # first we validate with pandera to ensure all columns are present.
+            # Here we pass in flds to get the correct column order.
+            if field_mapping is not None:
+                df = df.rename(columns=field_mapping)
             df = schema_func("pandas").validate(df)
             df = df.to_wkb()
             df = self._ev.spark.createDataFrame(
                 df[flds], schema=schema
             )
         elif isinstance(df, pd.DataFrame):
-            # This is a bit of a workaround due to spark failing when
-            # converting a pd.DataFrame with all null columns. We can pass in
-            # a schema, but first we validate with pandera to ensure all
-            # columns are present.Here we pass in flds to get the correct
-            # column order.
+            # This is a bit of a workaround due to spark failing when converting
+            # a pd.DataFrame with all null columns. We can pass in a schema, but
+            # first we validate with pandera to ensure all columns are present.
+            # Here we pass in flds to get the correct column order.
+            if field_mapping is not None:
+                df = df.rename(columns=field_mapping)
             df = schema_func("pandas").validate(df)
             df = self._ev.spark.createDataFrame(
                 df[flds], schema=schema
             )
+        elif isinstance(df, ps.DataFrame):
+            if field_mapping is not None:
+                df = df.withColumnsRenamed(field_mapping)
         elif not isinstance(df, ps.DataFrame):
             raise TypeError(
                 "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
@@ -286,7 +288,7 @@ class Load:
         schema_func = tbl.schema_func
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
-        fields = tbl.fields()
+        fields = tbl.to_sdf().columns
 
         # Begin the ETL process.
         self._extract.to_cache(

@@ -7,6 +7,8 @@ import pandas as pd
 from pyarrow import schema as arrow_schema
 import geopandas as gpd
 
+from teehr.evaluation.tables.base_table import BaseTable
+
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
 
 
@@ -186,7 +188,7 @@ class Write:
         if isinstance(source_data, pd.DataFrame):
             source_data = self._ev.spark.createDataFrame(source_data)
 
-        if isinstance(source_data, DataFrame):
+        if isinstance(source_data, DataFrame) or isinstance(source_data, BaseTable):
             source_data.createOrReplaceTempView("source_data")
             source_data = "source_data"
 
@@ -195,6 +197,10 @@ class Write:
             self._apply_datatype_transform()
 
         if write_mode == "append":
+            if uniqueness_fields is None:
+                raise ValueError(
+                    "uniqueness_fields must be provided for append write mode."
+                )
             self._append(
                 source_view=source_data,
                 table_name=table_name,
@@ -203,6 +209,10 @@ class Write:
                 namespace_name=namespace_name
             )
         elif write_mode == "upsert":
+            if uniqueness_fields is None:
+                raise ValueError(
+                    "uniqueness_fields must be provided for upsert write mode."
+                )
             self._upsert(
                 source_view=source_data,
                 table_name=table_name,

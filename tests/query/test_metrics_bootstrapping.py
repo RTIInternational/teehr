@@ -1,18 +1,15 @@
 """Test evaluation class."""
 from teehr import DeterministicMetrics, Signatures
 from teehr import Operators as ops
-import tempfile
 import pandas as pd
 from pathlib import Path
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
 import pytest
 
-from teehr.models.filters import JoinedTimeseriesFilter
+from teehr.models.filters import TableFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
-from teehr.evaluation.evaluation import Evaluation
-from teehr.evaluation.spark_session_utils import create_spark_session
 
 
 BOOT_YEAR_FILE = Path(
@@ -38,7 +35,6 @@ def test_bootstrapping_signatures(session_scope_test_warehouse):
     ev = session_scope_test_warehouse
 
     # Get the currently available fields to use in the query.
-    flds = ev.joined_timeseries.field_enum()
 
     fdc = Signatures.FlowDurationCurveSlope()
     fdc.bootstrap = Bootstrappers.CircularBlock(
@@ -50,8 +46,8 @@ def test_bootstrapping_signatures(session_scope_test_warehouse):
     fdc.unpack_results = True
     sig_metrics_df = ev.metrics.query(
         include_metrics=[fdc],
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
+        order_by=["primary_location_id"],
     ).to_pandas()
 
     assert isinstance(sig_metrics_df, pd.DataFrame)
@@ -76,10 +72,9 @@ def test_unpacking_bootstrap_results(session_scope_test_warehouse):
     kge = DeterministicMetrics.KlingGuptaEfficiency()
     kge.bootstrap = boot
     kge.unpack_results = True
-    flds = ev.joined_timeseries.field_enum()
     filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
+        TableFilter(
+            column="primary_location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -87,7 +82,7 @@ def test_unpacking_bootstrap_results(session_scope_test_warehouse):
     metrics_df = ev.metrics.query(
         include_metrics=[kge],
         filters=filters,
-        group_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
     ).to_pandas()
     cols = metrics_df.columns
     benchmark_cols = [
@@ -137,11 +132,10 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
     )
 
     # TEEHR bootstrapping.
-    flds = ev.joined_timeseries.field_enum()
 
     filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
+        TableFilter(
+            column="primary_location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -150,7 +144,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
     metrics_df = ev.metrics.query(
         include_metrics=[kge],
         filters=filters,
-        group_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
     ).to_pandas()
 
     # Unpack and compare the results.
@@ -201,11 +195,10 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     )
 
     # TEEHR bootstrapping.
-    flds = ev.joined_timeseries.field_enum()
 
     filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
+        TableFilter(
+            column="primary_location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -214,7 +207,7 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     metrics_df = ev.metrics.query(
         include_metrics=[kge],
         filters=filters,
-        group_by=[flds.primary_location_id]
+        group_by=["primary_location_id"]
     ).to_pandas()
 
     # Unpack and compare the results.
@@ -295,11 +288,10 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
     )
 
     # TEEHR Gumboot bootstrapping.
-    flds = ev.joined_timeseries.field_enum()
 
     filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
+        TableFilter(
+            column="primary_location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -308,13 +300,13 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
     metrics_df = ev.metrics.query(
         include_metrics=[kge, nse],
         filters=filters,
-        group_by=[flds.primary_location_id]
+        group_by=["primary_location_id"]
     ).to_pandas()
 
     _ = ev.metrics.query(
         include_metrics=[kge, nse],
         filters=filters,
-        group_by=[flds.primary_location_id]
+        group_by=["primary_location_id"]
     ).to_sdf()
 
     # Unpack and compare the results.
@@ -368,11 +360,10 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
     )
 
     # TEEHR bootstrapping.
-    flds = ev.joined_timeseries.field_enum()
 
     filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
+        TableFilter(
+            column="primary_location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -381,7 +372,7 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
     metrics_df = ev.metrics.query(
         include_metrics=[kge],
         filters=filters,
-        group_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
     ).to_pandas()
 
     # Unpack and compare the results.
@@ -412,10 +403,9 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
     fdc = Signatures.FlowDurationCurveSlope()
     fdc.bootstrap = boot
     fdc.unpack_results = True
-    flds = ev.joined_timeseries.field_enum()
     filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
+        TableFilter(
+            column="primary_location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -423,7 +413,7 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
     metrics_df = ev.metrics.query(
         include_metrics=[fdc],
         filters=filters,
-        group_by=[flds.primary_location_id],
+        group_by=["primary_location_id"],
     ).to_pandas()
 
     cols = metrics_df.columns
