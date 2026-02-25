@@ -134,6 +134,31 @@ class BaseTable:
         # if self.sdf is None:
         #     self._raise_missing_table_error(table_name=self.table_name)
 
+    def _apply_filters_to_sdf(
+        self,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ]
+    ):
+        """Apply filters to the existing sdf in-memory.
+
+        This preserves any in-memory modifications (like calculated fields)
+        rather than re-reading from the warehouse.
+
+        Parameters
+        ----------
+        filters : Union[str, dict, TableFilter, List[...]]
+            The filters to apply.
+        """
+        validated_filters = self._ev.validate.filters_from_sdf(
+            sdf=self.sdf,
+            filters=filters,
+            validate=self.validate_filter_field_types or False
+        )
+        for f in validated_filters:
+            self.sdf = self.sdf.filter(f)
+
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
 
@@ -301,13 +326,7 @@ class BaseTable:
         logger.info("Performing the query.")
         self._check_load_table()
         if filters is not None:
-            self.sdf = self._read.from_warehouse(
-                catalog_name=self.catalog_name,
-                namespace_name=self.table_namespace_name,
-                table_name=self.table_name,
-                filters=filters,
-                validate_filter_field_types=self.validate_filter_field_types,
-            ).to_sdf()
+            self._apply_filters_to_sdf(filters)
 
         if include_metrics is not None:
             logger.debug(f"Grouping by '{group_by}' and applying metrics.")
@@ -413,15 +432,9 @@ class BaseTable:
         >>> ]).to_pandas()
 
         """
-        logger.info(f"Setting filter {filter}.")
+        logger.info(f"Setting filter {filters}.")
         self._check_load_table()
-        self.sdf = self._read.from_warehouse(
-            catalog_name=self.catalog_name,
-            namespace_name=self.table_namespace_name,
-            table_name=self.table_name,
-            filters=filters,
-            validate_filter_field_types=self.validate_filter_field_types,
-        ).to_sdf()
+        self._apply_filters_to_sdf(filters)
         return self
 
     def order_by(
