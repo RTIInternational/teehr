@@ -35,7 +35,6 @@ from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
 from teehr.evaluation.extract import Extract
 from teehr.evaluation.validate import Validate
-from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
@@ -177,11 +176,6 @@ class Evaluation(EvaluationBase):
     def extract(self) -> Extract:
         """The extract component class for extracting data."""
         return Extract(self)
-
-    @property
-    def workflows(self) -> Workflow:
-        """The workflow component class for managing evaluation workflows."""
-        return Workflow(self)
 
     @property
     def write(self) -> Write:
