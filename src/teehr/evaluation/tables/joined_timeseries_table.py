@@ -36,7 +36,8 @@ class JoinedTimeseriesTable(BaseTable):
         Parameters
         ----------
         table_name : str
-            The name of the table to operate on. Defaults to 'joined_timeseries'.
+            The name of the table to operate on. Defaults to
+            'joined_timeseries'.
         namespace_name : Union[str, None], optional
             The namespace containing the table. If None, uses the
             active catalog's namespace.
@@ -72,17 +73,33 @@ class JoinedTimeseriesTable(BaseTable):
         gdf.attrs['fields'] = self.to_sdf().columns
         return gdf
 
-    def _join(self,
-            primary_filters: Union[
-                str, dict, TableFilter,
-                List[Union[str, dict, TableFilter]]
-            ] = None,
-            secondary_filters: Union[
-                str, dict, TableFilter,
-                List[Union[str, dict, TableFilter]]
-            ] = None,
-        ) -> ps.DataFrame:
+    def _join(
+        self,
+        primary_filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ] = None,
+        secondary_filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ] = None,
+    ) -> ps.DataFrame:
         """Join primary and secondary timeseries.
+
+        Joins primary and secondary timeseries based on location crosswalks,
+        value_time, unit_name, and variable name components. Variable names
+        are parsed into three parts: parameter, period, and statistic
+        (e.g., "streamflow_hourly_inst" -> parameter="streamflow",
+        period="hourly", statistic="inst").
+
+        Join behavior based on variable name structure:
+        - For 'inst' (instantaneous) statistics: Joins on parameter and
+          statistic only, ignoring period. This allows hourly_inst primary
+          data to match daily_inst secondary data.
+        - For non-inst statistics (e.g., 'mean', 'max'): Requires parameter,
+          period, AND statistic to match.
+        - For variable names with fewer than 3 parts: Uses null-safe
+          comparison, so variables must have identical structure to match.
 
         Parameters
         ----------
@@ -95,25 +112,54 @@ class JoinedTimeseriesTable(BaseTable):
             str, dict, TableFilter,
             List[Union[str, dict, TableFilter]]], optional
             Filters to apply to the secondary timeseries before joining,
-            by default None"""
+            by default None
 
-        self._ev.primary_timeseries.filter(primary_filters).to_sdf().createOrReplaceTempView("filtered_primary_timeseries")
+        Returns
+        -------
+        ps.DataFrame
+            Spark DataFrame containing the joined timeseries data.
+        """
+        (
+            self._ev.primary_timeseries.filter(primary_filters)
+            .to_sdf()
+            .createOrReplaceTempView("filtered_primary_timeseries")
+        )
 
-        self._ev.secondary_timeseries.filter(secondary_filters).to_sdf().createOrReplaceTempView("filtered_secondary_timeseries")
+        (
+            self._ev.secondary_timeseries.filter(secondary_filters)
+            .to_sdf()
+            .createOrReplaceTempView("filtered_secondary_timeseries")
+        )
 
-        self._ev.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
+        (
+            self._ev.location_crosswalks.to_sdf()
+            .createOrReplaceTempView("location_crosswalks")
+        )
 
-        self._ev.variables.to_sdf().createOrReplaceTempView("variables")
+        (
+            self._ev.variables.to_sdf()
+            .createOrReplaceTempView("variables")
+        )
 
         joined_df = self._ev.spark.sql("""
             WITH exploded_variables AS (
                 SELECT
                     name,
-                    split(name, '_')[0] as parameter,
-                    split(name, '_')[1] as period,
-                    split(name, '_')[2] as statistic
+                    split(name, '_') as parts,
+                    size(split(name, '_')) as num_parts
                 FROM
                     variables
+            ),
+            variables_parsed AS (
+                SELECT
+                    name,
+                    parts[0] as parameter,
+                    CASE WHEN num_parts >= 2
+                        THEN parts[1] ELSE NULL END as period,
+                    CASE WHEN num_parts >= 3
+                        THEN parts[2] ELSE NULL END as statistic
+                FROM
+                    exploded_variables
             ),
             primary AS (
                 SELECT
@@ -123,7 +169,7 @@ class JoinedTimeseriesTable(BaseTable):
                     v.statistic
                 FROM
                     filtered_primary_timeseries pf
-                JOIN exploded_variables v
+                JOIN variables_parsed v
                     ON v.name = pf.variable_name
             ),
             secondary AS (
@@ -134,7 +180,7 @@ class JoinedTimeseriesTable(BaseTable):
                     v.statistic
                 FROM
                     filtered_secondary_timeseries sf
-                JOIN exploded_variables v
+                JOIN variables_parsed v
                     ON v.name = sf.variable_name
             )
             SELECT
@@ -155,9 +201,9 @@ class JoinedTimeseriesTable(BaseTable):
                 ON cf.primary_location_id = pf.location_id
                 AND sf.value_time = pf.value_time
                 AND sf.unit_name = pf.unit_name
-                AND sf.parameter = pf.parameter
-                AND sf.statistic = pf.statistic
-                AND (sf.statistic = 'inst' OR sf.period = pf.period)
+                AND sf.parameter <=> pf.parameter
+                AND sf.statistic <=> pf.statistic
+                AND (sf.statistic = 'inst' OR sf.period <=> pf.period)
             """)
 
         self._ev.spark.catalog.dropTempView("filtered_primary_timeseries")
@@ -308,7 +354,6 @@ class JoinedTimeseriesTable(BaseTable):
 
         return self
 
-
     def write(
         self,
         table_name: str = "joined_timeseries",
@@ -338,7 +383,7 @@ class JoinedTimeseriesTable(BaseTable):
         >>> )
         """
         logger.info(
-            f"Writing metrics results to the warehouse table: {table_name}."
+            f"Writing dataframe to the warehouse table: {table_name}."
         )
         self._check_load_table()
         self._write.to_warehouse(
