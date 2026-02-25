@@ -116,52 +116,45 @@ class Validate:
             )
         return table_schema.validate(df)
 
-    def table_filters(
+    def filters_from_sdf(
         self,
-        table_name: str,
+        sdf: ps.DataFrame,
         filters: Union[
             str, dict, TableFilter,
             List[Union[str, dict, TableFilter]]
         ],
         validate: bool = True
-    ) -> Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-    ]:
-        """Validate table filter(s).
+    ) -> List[str]:
+        """Validate and format filter(s) against an existing DataFrame.
+
+        This method validates filters against the schema and columns of an
+        in-memory DataFrame, allowing filtering on calculated fields that
+        don't exist in the warehouse table.
 
         Parameters
         ----------
-        table_name : str
-            The name of the table to validate filters for.
+        sdf : ps.DataFrame
+            The Spark DataFrame to validate filters against.
         filters : Union[
             str, dict, TableFilter,
             List[Union[str, dict, TableFilter]]
         ]
             The filters to validate.
         validate : bool, optional
-            Whether to validate the filter field types against the table schema.
+            Whether to validate the filter field types against the schema.
             The default is True.
 
         Returns
         -------
-        Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-        ]
-            The validated filter(s).
+        List[str]
+            List of validated filter strings ready to apply with sdf.filter().
         """
-        if isinstance(filters, str):
-            logger.debug(f"Filter {filters} is already string, returning as is")
-            # return filters
-
         if not isinstance(filters, List):
-            logger.debug("Filter is not a list.  Making a list.")
+            logger.debug("Filter is not a list. Making a list.")
             filters = [filters]
 
-        tbl = self._ev.table(table_name=table_name)
-        table_fields = tbl.to_sdf().columns
-        table_schema = tbl.to_sdf().schema
+        table_fields = sdf.columns
+        table_schema = sdf.schema
         validated_filters = []
         for filter in filters:
             logger.debug(f"Validating and applying {filter}")
@@ -186,6 +179,39 @@ class Validate:
             validated_filters.append(filter)
 
         return validated_filters
+
+    def table_filters(
+        self,
+        table_name: str,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ],
+        validate: bool = True
+    ) -> List[str]:
+        """Validate table filter(s) by reading the table schema.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to validate filters for.
+        filters : Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ]
+            The filters to validate.
+        validate : bool, optional
+            Whether to validate the filter field types against the table schema.
+            The default is True.
+
+        Returns
+        -------
+        List[str]
+            List of validated filter strings ready to apply with sdf.filter().
+        """
+        tbl = self._ev.table(table_name=table_name)
+        sdf = tbl.to_sdf()
+        return self.filters_from_sdf(sdf, filters, validate)
 
     def schema(
         self,
