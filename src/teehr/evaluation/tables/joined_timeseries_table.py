@@ -103,7 +103,40 @@ class JoinedTimeseriesTable(BaseTable):
 
         self._ev.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
 
+        self._ev.variables.to_sdf().createOrReplaceTempView("variables")
+
         joined_df = self._ev.spark.sql("""
+            WITH exploded_variables AS (
+                SELECT
+                    name,
+                    split(name, '_')[0] as parameter,
+                    split(name, '_')[1] as period,
+                    split(name, '_')[2] as statistic
+                FROM
+                    variables
+            ),
+            primary AS (
+                SELECT
+                    pf.*,
+                    v.parameter,
+                    v.period,
+                    v.statistic
+                FROM
+                    filtered_primary_timeseries pf
+                JOIN exploded_variables v
+                    ON v.name = pf.variable_name
+            ),
+            secondary AS (
+                SELECT
+                    sf.*,
+                    v.parameter,
+                    v.period,
+                    v.statistic
+                FROM
+                    filtered_secondary_timeseries sf
+                JOIN exploded_variables v
+                    ON v.name = sf.variable_name
+            )
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -115,19 +148,22 @@ class JoinedTimeseriesTable(BaseTable):
                 , sf.unit_name
                 , sf.variable_name
                 , sf.member
-            FROM filtered_secondary_timeseries sf
+            FROM secondary sf
             JOIN location_crosswalks cf
-                on cf.secondary_location_id = sf.location_id
-            JOIN filtered_primary_timeseries pf
-                on cf.primary_location_id = pf.location_id
-                and sf.value_time = pf.value_time
-                and sf.unit_name = pf.unit_name
-                and sf.variable_name = pf.variable_name
+                ON cf.secondary_location_id = sf.location_id
+            JOIN primary pf
+                ON cf.primary_location_id = pf.location_id
+                AND sf.value_time = pf.value_time
+                AND sf.unit_name = pf.unit_name
+                AND sf.parameter = pf.parameter
+                AND sf.statistic = pf.statistic
+                AND (sf.statistic = 'inst' OR sf.period = pf.period)
             """)
 
         self._ev.spark.catalog.dropTempView("filtered_primary_timeseries")
         self._ev.spark.catalog.dropTempView("filtered_secondary_timeseries")
         self._ev.spark.catalog.dropTempView("location_crosswalks")
+        self._ev.spark.catalog.dropTempView("variables")
 
         return joined_df
 
