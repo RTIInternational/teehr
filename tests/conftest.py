@@ -175,24 +175,6 @@ def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     yield ev
 
 
-@pytest.fixture(scope="module")
-def module_scope_evaluation_template(spark_shared_session, tmp_path_factory):
-    """Module-level evaluation fixture with template cloned."""
-    base_dir = tmp_path_factory.getbasetemp()
-    spark = spark_shared_session
-    warehouse_dir = Path(base_dir) / "module-scoped-warehouse"
-
-    # Create Evaluation with custom namespace
-    ev = Evaluation(
-        dir_path=warehouse_dir,
-        create_dir=True,
-        spark=spark,
-    )
-    ev.clone_template()
-
-    yield ev
-
-
 @pytest.fixture(scope="session")
 def session_scope_evaluation_template(spark_shared_session, tmp_path_factory):
     """Session-level evaluation fixture with template cloned."""

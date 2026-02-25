@@ -161,6 +161,7 @@ class Download:
     def locations(
         self,
         prefix: str = None,
+        bbox: List[float] = None,
         include_attributes: bool = False,
         limit: int = 10000,
         load: bool = False,
@@ -173,6 +174,9 @@ class Download:
         ----------
         prefix : str, optional
             Filter locations by ID prefix (e.g., "usgs", "nwm30")
+        bbox : list of float, optional
+            Bounding box to filter locations by spatial extent,
+            in the format [minx, miny, maxx, maxy].
         include_attributes : bool, optional
             Whether to include location attributes in the response.
             Default: False
@@ -214,6 +218,8 @@ class Download:
             params["prefix"] = prefix
         if include_attributes:
             params["include_attributes"] = "true"
+        if bbox:
+            params["bbox"] = ",".join(map(str, bbox))
 
         response = self._make_request(
             "collections/locations/items",
@@ -809,18 +815,17 @@ class Download:
 
     def evaluation_subset(
         self,
-        location_ids: List[str],
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
         primary_configuration_name: str,
         secondary_configuration_name: str,
+        prefix: str = None,
+        bbox: List[float] = None,
     ) -> None:
         """Download a subset of evaluation data based on location IDs, date range, and configurations.
 
         Parameters
         ----------
-        location_ids : List[str]
-            List of location IDs to include in the subset
         start_date : Union[str, datetime, pd.Timestamp]
             Start date for timeseries query. Accepts ISO 8601 string, datetime, or pd.Timestamp.
         end_date : Union[str, datetime, pd.Timestamp]
@@ -830,6 +835,11 @@ class Download:
             Name of the primary configuration to include.
         secondary_configuration_name : str
             Name of the secondary configuration to include.
+        prefix : str, optional
+            Filter locations by ID prefix (e.g., "usgs", "nwm30").
+        bbox : list of float, optional
+            Bounding box to filter locations by spatial extent,
+            in the format [minx, miny, maxx, maxy].
 
         Returns
         -------
@@ -839,13 +849,18 @@ class Download:
         Examples
         --------
         >>> ev.download.evaluation_subset(
-        ...     location_ids=["usgs-06892350"],
+        ...     prefix="usgs",
+        ...     bbox=[-120.0, 35.0, -119.0, 36.0],
         ...     start_date="2020-01-01",
         ...     end_date="2020-01-02",
         ...     primary_configuration_name="usgs_observations",
         ...     secondary_configuration_name="nwm30_retrospective"
         ... )
         """
+        if prefix is None and bbox is None:
+            raise ValueError(
+                "At least one of prefix or bbox must be provided to filter locations"
+            )
         logger.info("Loading the units, variables, and attributes tables")
         self.units(load=True)
         self.variables(load=True)
@@ -862,11 +877,12 @@ class Download:
         )
         logger.info("Loading the locations table")
         self.locations(
-            # prefix=prefix,
+            prefix=prefix,
             include_attributes=False,
-            location_id=location_ids,
+            bbox=bbox,
             load=True
         )
+        location_ids = self._ev.locations.to_sdf().select("id").rdd.flatMap(lambda x: x).collect()
         logger.info("Loading the primary timeseries data")
         self.primary_timeseries(
             primary_location_id=location_ids,
