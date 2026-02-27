@@ -659,29 +659,6 @@ class Evaluation(EvaluationBase):
         """Log the current Spark session configuration."""
         log_session_config(self.spark)
 
-    # def update_spark_config(
-    #     self,
-    #     remove_configs: List[str] = None,
-    #     update_configs: Dict[str, str] = None
-    # ):
-    #     """Update the Spark session configuration.
-
-    #     Parameters
-    #     ----------
-    #     configs : Dict[str, str]
-    #         A dictionary of Spark configurations to update.
-    #     """
-    #     # NOTE: You could theoretically update catalog configs
-    #     # here, but they would not be reflected in the Local and
-    #     # RemoteCatalog objects attached to the Evaluation.
-    #     # For now, if you want to change the catalog configs,
-    #     # you need to start a new session.
-    #     remove_or_update_configs(
-    #         spark=self.spark,
-    #         remove_configs=remove_configs,
-    #         update_configs=update_configs
-    #     )
-
 
 class RemoteReadOnlyEvaluation(Evaluation):
     """A read-only Evaluation class for accessing remote catalogs.
@@ -743,5 +720,6 @@ class RemoteReadOnlyEvaluation(Evaluation):
         if hasattr(self, '_temp_dir') and self._temp_dir is not None:
             try:
                 self._temp_dir.cleanup()
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Error cleaning up temporary directory: {e}")
                 pass  # Ignore cleanup errors during garbage collection
