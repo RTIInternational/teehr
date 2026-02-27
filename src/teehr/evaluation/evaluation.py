@@ -700,7 +700,8 @@ class RemoteReadOnlyEvaluation(Evaluation):
 
     def __init__(
         self,
-        spark: SparkSession = None
+        spark: SparkSession = None,
+        dir_path: Union[str, Path] = None,
     ):
         """
         Initialize the RemoteReadOnlyEvaluation class.
@@ -710,9 +711,15 @@ class RemoteReadOnlyEvaluation(Evaluation):
         spark : SparkSession, optional
             The SparkSession object. If not provided, a new default
             Spark session will be created.
+        dir_path : Union[str, Path], optional
+            The directory path to use for the temporary local catalog.
+            If not provided, a temporary directory will be created in the default location.
         """
         # Create a temporary directory for the local catalog
-        self._temp_dir = tempfile.TemporaryDirectory()
+        if dir_path is not None:
+            self._temp_dir = tempfile.TemporaryDirectory(dir=Path(dir_path).as_posix())
+        else:
+            self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
 
         # Initialize the parent Evaluation class
