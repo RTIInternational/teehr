@@ -24,7 +24,13 @@ logger = logging.getLogger(__name__)
 class BaseTable:
     """Base class inherited by all table classes."""
 
-    def __init__(self, ev: EvaluationBase):
+    def __init__(
+        self,
+        ev: EvaluationBase,
+        table_name: str = None,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
+    ):
         """Initialize the Table class.
 
         Parameters
@@ -32,6 +38,15 @@ class BaseTable:
         ev : EvaluationBase
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
+        table_name : str, optional
+            The name of the table to operate on. If provided, the table
+            will be initialized for this specific table.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
         """
         self._ev = ev
         self._read = ev.read
@@ -44,19 +59,22 @@ class BaseTable:
         self.validate_filter_field_types = None
         self.field_enum_model = None
         self.extraction_func = None
-        # We could also make these available to generic tables,
-        # but then they're available to table classes. Is that bad?
-        # self.validate = ev.validate
-        # self.extract = ev.extract
-        # self.load = ev.load
+        self.table_name = None
+        self.table_namespace_name = None
+        self.catalog_name = None
+        self.sdf = None
 
-    def __call__(
+        # Initialize for specific table if table_name provided
+        if table_name is not None:
+            self._initialize_table(table_name, namespace_name, catalog_name)
+
+    def _initialize_table(
         self,
         table_name: str,
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None
-    ) -> "BaseTable":
-        """Initialize the Table class for a specific table.
+    ):
+        """Initialize the table properties for a specific table.
 
         Parameters
         ----------
@@ -68,13 +86,12 @@ class BaseTable:
         catalog_name : Union[str, None], optional
             The catalog containing the table. If None, uses the
             active catalog name.
-
-        Returns
-        -------
-        "BaseTable"
-            The initialized Table instance ready for operations.
         """
-        logger.info(f"Initializing Table for table: {table_name}.{namespace_name or ''}{'.' if namespace_name else ''}{catalog_name or ''}")
+        logger.info(
+            f"Initializing Table for table: {table_name}"
+            f".{namespace_name or ''}"
+            f"{'.' if namespace_name else ''}{catalog_name or ''}"
+        )
         self.table_name = table_name
         self.sdf = None
         tbl_props = TBLPROPERTIES.get(table_name)
@@ -89,7 +106,9 @@ class BaseTable:
             self.schema_func = tbl_props.get("schema_func")
             self.filter_model = tbl_props.get("filter_model")
             self.strict_validation = tbl_props.get("strict_validation")
-            self.validate_filter_field_types = tbl_props.get("validate_filter_field_types")
+            self.validate_filter_field_types = tbl_props.get(
+                "validate_filter_field_types"
+            )
             self.field_enum_model = tbl_props.get("field_enum_model")
             self.extraction_func = tbl_props.get("extraction_func")
 
@@ -101,8 +120,6 @@ class BaseTable:
             self.catalog_name = self._ev.active_catalog.catalog_name
         else:
             self.catalog_name = catalog_name
-
-        return self
 
     def _load_table(self):
         """Load the table from the directory to self.sdf.

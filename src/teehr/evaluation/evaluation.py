@@ -37,7 +37,7 @@ from teehr.evaluation.write import Write
 from teehr.evaluation.extract import Extract
 from teehr.evaluation.validate import Validate
 from teehr.evaluation.workflows import Workflow
-from teehr.evaluation.tables.generic_table import Table
+from teehr.evaluation.tables.generic_table import get_table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
 from teehr.evaluation.utils import copy_migrations_dir
@@ -156,10 +156,44 @@ class Evaluation(EvaluationBase):
         if create_dir is False and check_evaluation_version is True:
             self.check_evaluation_version()
 
-    @property
-    def table(self) -> Table:
-        """The table component class for managing data tables."""
-        return Table(self)
+    def table(
+        self,
+        table_name: str,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
+    ):
+        """Get a table instance by name.
+
+        This is a factory method that returns the appropriate table class
+        for the given table name. For known table names (like 'primary_timeseries'),
+        returns the specialized table class. For unknown names, returns a
+        generic BaseTable instance.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to access.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Returns
+        -------
+        BaseTable
+            The appropriate table instance.
+
+        Examples
+        --------
+        >>> # Access a known table
+        >>> ev.table("primary_timeseries").query(...)
+
+        >>> # Access a custom/user-defined table
+        >>> ev.table("my_custom_table").to_pandas()
+        """
+        return get_table(self, table_name, namespace_name, catalog_name)
 
     @property
     def validate(self) -> Validate:
@@ -233,62 +267,52 @@ class Evaluation(EvaluationBase):
     @property
     def units(self) -> UnitTable:
         """Access the units table."""
-        tbl = UnitTable(self)
-        return tbl()
+        return UnitTable(self)
 
     @property
     def variables(self) -> VariableTable:
         """Access the variables table."""
-        tbl = VariableTable(self)
-        return tbl()
+        return VariableTable(self)
 
     @property
     def attributes(self) -> AttributeTable:
         """Access the attributes table."""
-        tbl = AttributeTable(self)
-        return tbl()
+        return AttributeTable(self)
 
     @property
     def configurations(self) -> ConfigurationTable:
         """Access the configurations table."""
-        tbl = ConfigurationTable(self)
-        return tbl()
+        return ConfigurationTable(self)
 
     @property
     def locations(self) -> LocationTable:
         """Access the locations table."""
-        tbl = LocationTable(self)
-        return tbl()
+        return LocationTable(self)
 
     @property
     def location_attributes(self) -> LocationAttributeTable:
         """Access the location attributes table."""
-        tbl = LocationAttributeTable(self)
-        return tbl()
+        return LocationAttributeTable(self)
 
     @property
     def location_crosswalks(self) -> LocationCrosswalkTable:
         """Access the location crosswalks table."""
-        tbl = LocationCrosswalkTable(self)
-        return tbl()
+        return LocationCrosswalkTable(self)
 
     @property
     def primary_timeseries(self) -> PrimaryTimeseriesTable:
         """Access the primary timeseries table."""
-        tbl = PrimaryTimeseriesTable(self)
-        return tbl()
+        return PrimaryTimeseriesTable(self)
 
     @property
     def secondary_timeseries(self) -> SecondaryTimeseriesTable:
         """Access the secondary timeseries table."""
-        tbl = SecondaryTimeseriesTable(self)
-        return tbl()
+        return SecondaryTimeseriesTable(self)
 
     @property
     def joined_timeseries(self) -> JoinedTimeseriesTable:
         """Access the joined timeseries table."""
-        tbl = JoinedTimeseriesTable(self)
-        return tbl()
+        return JoinedTimeseriesTable(self)
 
     def set_active_catalog(self, catalog: Literal["local", "remote"]):
         """Set the active catalog to either local or remote.

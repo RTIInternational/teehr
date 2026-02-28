@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 class DomainTable(BaseTable):
     """Domain table class."""
 
-    def __init__(self, ev):
+    def __init__(
+        self,
+        ev,
+        table_name: str = None,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
+    ):
         """Initialize the Table class.
 
         Parameters
@@ -22,8 +28,16 @@ class DomainTable(BaseTable):
         ev : EvaluationBase
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
+        table_name : str, optional
+            The name of the table to operate on.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
         """
-        super().__init__(ev)
+        super().__init__(ev, table_name, namespace_name, catalog_name)
 
     def _add(
         self,
