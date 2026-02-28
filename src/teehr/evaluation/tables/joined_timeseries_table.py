@@ -96,27 +96,21 @@ class JoinedTimeseriesTable(BaseTable):
         ps.DataFrame
             Spark DataFrame containing the joined timeseries data.
         """
-        (
-            self._ev.primary_timeseries.filter(primary_filters)
-            .to_sdf()
-            .createOrReplaceTempView("filtered_primary_timeseries")
-        )
+        pt = self._ev.primary_timeseries
+        if primary_filters is not None:
+            pt = pt.filter(primary_filters)
+        pt.to_sdf().createOrReplaceTempView("filtered_primary_timeseries")
 
-        (
-            self._ev.secondary_timeseries.filter(secondary_filters)
-            .to_sdf()
-            .createOrReplaceTempView("filtered_secondary_timeseries")
-        )
+        st = self._ev.secondary_timeseries
+        if secondary_filters is not None:
+            st = st.filter(secondary_filters)
+        st.to_sdf().createOrReplaceTempView("filtered_secondary_timeseries")
 
-        (
-            self._ev.location_crosswalks.to_sdf()
-            .createOrReplaceTempView("location_crosswalks")
-        )
+        lc = self._ev.location_crosswalks
+        lc.to_sdf().createOrReplaceTempView("location_crosswalks")
 
-        (
-            self._ev.variables.to_sdf()
-            .createOrReplaceTempView("variables")
-        )
+        v = self._ev.variables
+        v.to_sdf().createOrReplaceTempView("variables")
 
         joined_df = self._ev.spark.sql("""
             WITH exploded_variables AS (
