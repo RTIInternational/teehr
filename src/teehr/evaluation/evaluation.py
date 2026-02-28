@@ -100,6 +100,7 @@ class Evaluation(EvaluationBase):
         self.cache_dir = None
         self.scripts_dir = None
         self.dir_path = dir_path
+        self.read_only_remote = False
 
         if not self.dir_path.is_dir():
             if create_dir:
@@ -711,9 +712,75 @@ class RemoteReadOnlyEvaluation(Evaluation):
             check_evaluation_version=False,
             spark=spark
         )
-
         # Set the active catalog to remote
         self.set_active_catalog("remote")
+        self.read_only_remote = True
+
+    def __del__(self):
+        """Clean up the temporary directory when the object is deleted."""
+        if hasattr(self, '_temp_dir') and self._temp_dir is not None:
+            try:
+                self._temp_dir.cleanup()
+            except Exception as e:
+                logger.warning(f"Error cleaning up temporary directory: {e}")
+                pass  # Ignore cleanup errors during garbage collection
+
+
+class RemoteReadWriteEvaluation(Evaluation):
+    """A read-write Evaluation class for access to remote catalogs.
+
+    This class provides a convenient way to access a remote TEEHR catalog
+    without needing to manage local directories. It automatically creates
+    a temporary directory and sets the active catalog to remote.
+
+    Note: This is intended for read-write access to remote data. Write
+    operations to the remote catalog are supported through this class, however
+    an AWS profile with write permissions is required in the Spark session.
+
+    Currently only users in the TEEHR-Hub environment have access to
+    the remote catalog, so this class is intended for use within that environment,
+    until remote access is more broadly available.
+    """
+
+    def __init__(
+        self,
+        spark: SparkSession = None,
+        dir_path: Union[str, Path] = None,
+    ):
+        """
+        Initialize the RemoteReadWriteEvaluation class.
+
+        Parameters
+        ----------
+        spark : SparkSession, optional
+            The SparkSession object. If not provided, a new default
+            Spark session will be created.
+        dir_path : Union[str, Path], optional
+            The directory path to use for the temporary local catalog.
+            If not provided, a temporary directory will be created in the default location.
+            If it does not exist, it will be created.
+        """
+        # Create a temporary directory for the local catalog
+        if dir_path is not None:
+            dir_path = Path(dir_path)
+            if not dir_path.is_dir():
+                logger.info(f"Creating base directory {dir_path} for temporary local catalog.")
+                dir_path.mkdir(parents=True, exist_ok=True)
+            self._temp_dir = tempfile.TemporaryDirectory(dir=dir_path.as_posix())
+        else:
+            self._temp_dir = tempfile.TemporaryDirectory()
+        temp_path = Path(self._temp_dir.name)
+
+        # Initialize the parent Evaluation class
+        super().__init__(
+            dir_path=temp_path,
+            create_dir=False,
+            check_evaluation_version=False,
+            spark=spark
+        )
+        # Set the active catalog to remote
+        self.set_active_catalog("remote")
+        self.read_only_remote = False
 
     def __del__(self):
         """Clean up the temporary directory when the object is deleted."""
