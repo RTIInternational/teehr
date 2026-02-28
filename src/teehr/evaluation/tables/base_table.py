@@ -369,7 +369,7 @@ class BaseTable:
         filters: Union[
             str, dict, TableFilter,
             List[Union[str, dict, TableFilter]]
-        ]
+        ] = None
     ):
         """Apply a filter.
 
@@ -449,6 +449,10 @@ class BaseTable:
         >>> ]).to_pandas()
 
         """
+        if filters is None:
+            logger.info("No filters provided to filter method. Returning unfiltered table.")
+            return self
+
         logger.info(f"Setting filter {filters}.")
         self._check_load_table()
         self._apply_filters_to_sdf(filters)
