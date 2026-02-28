@@ -1,6 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Configuration
+from teehr.models.pydantic_table_models import Variable, Unit
 import geopandas as gpd
 import numpy as np
 import pytest
@@ -358,3 +359,297 @@ def test_distinct_values(function_scope_test_warehouse):
     # test invalid column handling for location_prefixes==False
     with pytest.raises(ValueError):
         prefixes = ev.joined_timeseries.distinct_values(column='test')
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_inst_join_across_periods(function_scope_evaluation_template):
+    """Test that inst statistic joins across different periods.
+
+    When both primary and secondary have 'inst' statistic, they should join
+    regardless of the period (hourly vs daily).
+    """
+    ev = function_scope_evaluation_template
+
+    # Load the location data
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+
+    # Add variables with inst statistic but different periods
+    ev.variables.add(
+        Variable(
+            name="streamflow_hourly_inst",
+            long_name="Hourly Inst Streamflow"
+        )
+    )
+    ev.variables.add(
+        Variable(
+            name="streamflow_daily_inst",
+            long_name="Daily Inst Streamflow"
+        )
+    )
+
+    ev.units.add(
+        Unit(name="m^3/s", long_name="Cubic meters per second")
+    )
+
+    ev.configurations.add(
+        Configuration(
+            name="usgs_observations",
+            type="primary",
+            description="test primary configuration"
+        )
+    )
+
+    ev.configurations.add(
+        Configuration(
+            name="nwm30_retrospective",
+            type="secondary",
+            description="test secondary configuration"
+        )
+    )
+
+    # Load primary timeseries with hourly_inst variable
+    ev.primary_timeseries.load_parquet(
+        in_path=PRIMARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_inst",
+            "configuration_name": "usgs_observations"
+        }
+    )
+
+    # Load the crosswalk data
+    ev.location_crosswalks.load_csv(in_path=CROSSWALK_FILEPATH)
+
+    # Load secondary timeseries with daily_inst variable (different period)
+    ev.secondary_timeseries.load_parquet(
+        in_path=SECONDARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_daily_inst",
+            "configuration_name": "nwm30_retrospective"
+        }
+    )
+
+    # Create the joined timeseries - should join despite different periods
+    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
+
+    joined_df = ev.joined_timeseries.to_pandas()
+
+    # Should have rows because inst ignores period during join
+    assert len(joined_df) > 0
+
+    # The variable_name in joined table should be from secondary (daily_inst)
+    assert all(joined_df['variable_name'] == 'streamflow_daily_inst')
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_non_inst_join_requires_matching_period(
+    function_scope_evaluation_template
+):
+    """Test that non-inst statistic requires matching period.
+
+    When primary has 'mean' statistic with hourly period and secondary has
+    'mean' with daily period, they should NOT join.
+    """
+    ev = function_scope_evaluation_template
+
+    # Load the location data
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+
+    # Add variables with mean statistic but different periods
+    ev.variables.add(
+        Variable(
+            name="streamflow_hourly_mean",
+            long_name="Hourly Mean Streamflow"
+        )
+    )
+    ev.variables.add(
+        Variable(
+            name="streamflow_daily_mean",
+            long_name="Daily Mean Streamflow"
+        )
+    )
+
+    ev.units.add(
+        Unit(name="m^3/s", long_name="Cubic meters per second")
+    )
+
+    ev.configurations.add(
+        Configuration(
+            name="usgs_observations",
+            type="primary",
+            description="test primary configuration"
+        )
+    )
+
+    ev.configurations.add(
+        Configuration(
+            name="nwm30_retrospective",
+            type="secondary",
+            description="test secondary configuration"
+        )
+    )
+
+    # Load primary timeseries with hourly_mean variable
+    ev.primary_timeseries.load_parquet(
+        in_path=PRIMARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_mean",
+            "configuration_name": "usgs_observations"
+        }
+    )
+
+    # Load the crosswalk data
+    ev.location_crosswalks.load_csv(in_path=CROSSWALK_FILEPATH)
+
+    # Load secondary timeseries with daily_mean variable (different period)
+    ev.secondary_timeseries.load_parquet(
+        in_path=SECONDARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_daily_mean",
+            "configuration_name": "nwm30_retrospective"
+        }
+    )
+
+    # Create the joined timeseries - should NOT join due to different periods
+    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
+
+    joined_df = ev.joined_timeseries.to_pandas()
+
+    # Should have NO rows because non-inst requires matching period
+    assert len(joined_df) == 0, \
+        "non-inst statistic should not join across different periods"
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_non_inst_join_with_matching_period(
+    function_scope_evaluation_template
+):
+    """Test that non-inst statistic with matching period does join.
+
+    When both primary and secondary have 'mean' statistic with the same
+    period (hourly), they should join.
+    """
+    ev = function_scope_evaluation_template
+
+    # Load the location data
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+
+    # Add variable with mean statistic and same period for both
+    ev.variables.add(
+        Variable(
+            name="streamflow_hourly_mean",
+            long_name="Hourly Mean Streamflow"
+        )
+    )
+
+    ev.units.add(
+        Unit(name="m^3/s", long_name="Cubic meters per second")
+    )
+
+    ev.configurations.add(
+        Configuration(
+            name="usgs_observations",
+            type="primary",
+            description="test primary configuration"
+        )
+    )
+
+    ev.configurations.add(
+        Configuration(
+            name="nwm30_retrospective",
+            type="secondary",
+            description="test secondary configuration"
+        )
+    )
+
+    # Load primary timeseries with hourly_mean variable
+    ev.primary_timeseries.load_parquet(
+        in_path=PRIMARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_mean",
+            "configuration_name": "usgs_observations"
+        }
+    )
+
+    # Load the crosswalk data
+    ev.location_crosswalks.load_csv(in_path=CROSSWALK_FILEPATH)
+
+    # Load secondary timeseries with SAME hourly_mean variable
+    ev.secondary_timeseries.load_parquet(
+        in_path=SECONDARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_mean",
+            "configuration_name": "nwm30_retrospective"
+        }
+    )
+
+    # Create the joined timeseries - should join
+    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
+
+    joined_df = ev.joined_timeseries.to_pandas()
+
+    # Should have rows because non-inst with matching period should join
+    assert len(joined_df) > 0, \
+        "non-inst statistic with matching period should join"
+
+    # The variable_name in joined table should be hourly_mean
+    assert all(joined_df['variable_name'] == 'streamflow_hourly_mean')
