@@ -1,6 +1,6 @@
 """Module for generating metrics."""
 import logging
-from teehr.evaluation.tables.base_table import BaseTable
+from teehr.evaluation.tables import BaseTable
 
 logger = logging.getLogger(__name__)
 

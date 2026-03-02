@@ -2,15 +2,17 @@
 import logging
 from typing import Union
 
-from teehr.evaluation.tables.base_table import BaseTable
-from teehr.evaluation.tables.primary_timeseries_table import PrimaryTimeseriesTable
-from teehr.evaluation.tables.secondary_timeseries_table import SecondaryTimeseriesTable
-from teehr.evaluation.tables.location_table import LocationTable
-from teehr.evaluation.tables.location_attribute_table import LocationAttributeTable
-from teehr.evaluation.tables.location_crosswalk_table import LocationCrosswalkTable
-from teehr.evaluation.tables.unit_table import UnitTable
-from teehr.evaluation.tables.variable_table import VariableTable
-from teehr.evaluation.tables.configuration_table import ConfigurationTable
+from teehr.evaluation.tables import (
+    BaseTable,
+    PrimaryTimeseriesTable,
+    SecondaryTimeseriesTable,
+    LocationTable,
+    LocationAttributeTable,
+    LocationCrosswalkTable,
+    UnitTable,
+    VariableTable,
+    ConfigurationTable,
+)
 
 logger = logging.getLogger(__name__)
 

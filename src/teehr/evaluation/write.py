@@ -7,7 +7,7 @@ import pandas as pd
 from pyarrow import schema as arrow_schema
 import geopandas as gpd
 
-from teehr.evaluation.tables.base_table import BaseTable
+from teehr.evaluation.tables import BaseTable
 
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
 

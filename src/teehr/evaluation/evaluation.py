@@ -3,28 +3,23 @@ import tempfile
 from datetime import datetime
 from typing import Union, Literal, List
 from pathlib import Path
-from teehr.evaluation.tables.attribute_table import AttributeTable
-from teehr.evaluation.tables.configuration_table import ConfigurationTable
-from teehr.evaluation.tables.location_attribute_table import (
-    LocationAttributeTable
+from teehr.evaluation.tables import (
+    AttributeTable,
+    ConfigurationTable,
+    LocationAttributeTable,
+    LocationCrosswalkTable,
+    LocationTable,
+    PrimaryTimeseriesTable,
+    SecondaryTimeseriesTable,
+    UnitTable,
+    VariableTable,
+    get_table,
 )
-from teehr.evaluation.tables.location_crosswalk_table import (
-    LocationCrosswalkTable
-)
-from teehr.evaluation.tables.location_table import LocationTable
-from teehr.evaluation.tables.primary_timeseries_table import (
-    PrimaryTimeseriesTable
-)
-from teehr.evaluation.tables.secondary_timeseries_table import (
-    SecondaryTimeseriesTable
-)
-from teehr.evaluation.tables.unit_table import UnitTable
-from teehr.evaluation.tables.variable_table import VariableTable
-from teehr.evaluation.views.joined_timeseries_view import JoinedTimeseriesView
-from teehr.evaluation.views.location_attributes_view import LocationAttributesView
-from teehr.evaluation.views.primary_timeseries_view import PrimaryTimeseriesView
-from teehr.evaluation.views.secondary_timeseries_view import (
-    SecondaryTimeseriesView
+from teehr.evaluation.views import (
+    JoinedTimeseriesView,
+    LocationAttributesView,
+    PrimaryTimeseriesView,
+    SecondaryTimeseriesView,
 )
 from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
@@ -40,7 +35,6 @@ from teehr.evaluation.write import Write
 from teehr.evaluation.extract import Extract
 from teehr.evaluation.validate import Validate
 from teehr.evaluation.workflows import Workflow
-from teehr.evaluation.tables.generic_table import get_table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
 from teehr.evaluation.utils import copy_migrations_dir
