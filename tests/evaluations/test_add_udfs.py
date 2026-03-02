@@ -19,16 +19,15 @@ def test_add_row_udfs_null_reference(function_scope_evaluation_template):
     """Test adding row level UDFs with null reference time."""
     ev = function_scope_evaluation_template
 
-    ev.joined_timeseries.create()
-    ev.joined_timeseries.add_calculated_fields([
+    ev.joined_timeseries_view().add_calculated_fields([
         rcf.Month(),
         rcf.Year(),
         rcf.WaterYear(),
         rcf.Seasons()
-    ]).write()
+    ]).write("joined_timeseries")
 
     nse = teehr.DeterministicMetrics.NashSutcliffeEfficiency()
-    ev.metrics.query(
+    ev.table("joined_timeseries").query(
         include_metrics=[nse],
         group_by=["primary_location_id"]
     ).write(table_name="metrics", write_mode="create_or_replace")
@@ -38,7 +37,9 @@ def test_add_row_udfs_null_reference(function_scope_evaluation_template):
 def test_add_row_udfs(session_scope_test_warehouse):
     """Test adding row level UDFs."""
     ev = session_scope_test_warehouse
-    sdf = ev.joined_timeseries.to_sdf()
+
+    # Read table in fixture.
+    sdf = ev.table("joined_timeseries").to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
     _ = sdf.toPandas()
@@ -139,16 +140,18 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     fcst_bins_static = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=pd.Timedelta(hours=6)
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_static,
     ]).to_sdf()
+
     sorted_sdf = sdf.orderBy(
         "primary_location_id",
         "configuration_name",
         "member",
         "reference_time",
         "value_time"
-        )
+    )
+
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 9
 
     # try with dynamic bin sizes that DO encompass full lead time range
@@ -171,7 +174,8 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin,
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -199,7 +203,7 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin,
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -236,7 +240,7 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -267,7 +271,7 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -304,7 +308,7 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -322,7 +326,7 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     # Test data needs at least 20 timesteps.
     ev = function_scope_two_location_warehouse
 
-    sdf = ev.joined_timeseries.filter(
+    sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
 
@@ -464,7 +468,7 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     assert event_count == 219
 
     # test percentile event detection (no event-id)
-    sdf = ev.joined_timeseries.filter(
+    sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
     ped = tcf.AbovePercentileEventDetection(
@@ -475,7 +479,7 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     assert num_event_timesteps == 14823
 
     # test percentile event detection (return quantile value)
-    sdf = ev.joined_timeseries.filter(
+    sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
     ped = tcf.AbovePercentileEventDetection(
@@ -487,7 +491,7 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     assert np.isclose(quantile, 37.66, atol=0.01)
 
     # test percentile event detection (below percentile)
-    sdf = ev.joined_timeseries.filter(
+    sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
     ped = tcf.BelowPercentileEventDetection()
@@ -496,7 +500,7 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     assert event_count == 92
 
     # test exceedance probability
-    sdf = ev.joined_timeseries.filter(
+    sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
     ep = tcf.ExceedanceProbability()
@@ -513,7 +517,7 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     assert "exceedance_probability" in columns
 
     # test exceedance probability
-    sdf = ev.joined_timeseries.filter(
+    sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
     ep = tcf.ExceedanceProbability()
@@ -533,15 +537,16 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
 def test_add_udfs_write(function_scope_evaluation_template):
     """Test adding UDFs and write DataFrame back to table."""
     ev = function_scope_evaluation_template
-    ev.joined_timeseries.create()
 
+    # First join with event detection
     ped = tcf.AbovePercentileEventDetection()
-    ev.joined_timeseries.add_calculated_fields(ped).write()
+    ev.joined_timeseries_view().add_calculated_fields(ped).write("joined_timeseries")
 
+    # Add forecast lead time to the persisted table (new instance loads from table)
     flt = rcf.ForecastLeadTime()
-    ev.joined_timeseries.add_calculated_fields(flt).write()
+    ev.table("joined_timeseries").add_calculated_fields(flt).write("joined_timeseries")
 
-    new_sdf = ev.joined_timeseries.to_sdf()
+    new_sdf = ev.table("joined_timeseries").to_sdf()
     cols = new_sdf.columns
     assert "event_above" in cols
     assert "event_above_id" in cols
@@ -553,7 +558,7 @@ def test_location_event_detection(function_scope_test_warehouse):
     ev = function_scope_test_warehouse
 
     ped = tcf.AbovePercentileEventDetection()
-    sdf = ev.metrics.add_calculated_fields(ped).query(
+    sdf = ev.table("joined_timeseries").add_calculated_fields(ped).query(
         group_by=["configuration_name",
                   "primary_location_id",
                   "event_above_id"],

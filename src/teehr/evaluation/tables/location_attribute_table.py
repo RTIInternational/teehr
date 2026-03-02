@@ -129,7 +129,7 @@ class LocationAttributeTable(BaseTable):
             drop_duplicates=drop_duplicates,
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_csv(
         self,
@@ -214,7 +214,7 @@ class LocationAttributeTable(BaseTable):
             drop_duplicates=drop_duplicates,
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_dataframe(
         self,
@@ -280,4 +280,4 @@ class LocationAttributeTable(BaseTable):
             write_mode=write_mode,
             drop_duplicates=drop_duplicates
         )
-        self._load_table()
+        self._load_sdf()

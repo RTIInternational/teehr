@@ -1,12 +1,11 @@
 """Module for generating metrics."""
-from teehr.evaluation.tables.joined_timeseries_table import JoinedTimeseriesTable
-
 import logging
+from teehr.evaluation.tables.base_table import BaseTable
 
 logger = logging.getLogger(__name__)
 
 
-class Metrics(JoinedTimeseriesTable):
+class Metrics(BaseTable):
     """Component class for calculating metrics.
 
     .. deprecated::

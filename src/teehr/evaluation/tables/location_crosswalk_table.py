@@ -49,7 +49,6 @@ class LocationCrosswalkTable(BaseTable):
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
-        self._check_load_table()
         gdf = join_geometry(
             self.sdf, self._ev.locations.to_sdf(),
             "primary_location_id"
@@ -150,7 +149,7 @@ class LocationCrosswalkTable(BaseTable):
             drop_duplicates=drop_duplicates,
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_csv(
         self,
@@ -244,7 +243,7 @@ class LocationCrosswalkTable(BaseTable):
             drop_duplicates=drop_duplicates,
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_dataframe(
         self,
@@ -319,4 +318,4 @@ class LocationCrosswalkTable(BaseTable):
             write_mode=write_mode,
             drop_duplicates=drop_duplicates
         )
-        self._load_table()
+        self._load_sdf()

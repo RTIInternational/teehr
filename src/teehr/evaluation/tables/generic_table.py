@@ -5,7 +5,6 @@ from typing import Union
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.evaluation.tables.primary_timeseries_table import PrimaryTimeseriesTable
 from teehr.evaluation.tables.secondary_timeseries_table import SecondaryTimeseriesTable
-from teehr.evaluation.tables.joined_timeseries_table import JoinedTimeseriesTable
 from teehr.evaluation.tables.location_table import LocationTable
 from teehr.evaluation.tables.location_attribute_table import LocationAttributeTable
 from teehr.evaluation.tables.location_crosswalk_table import LocationCrosswalkTable
@@ -18,7 +17,6 @@ logger = logging.getLogger(__name__)
 TBL_CLASS_LOOKUP = {
     "primary_timeseries": PrimaryTimeseriesTable,
     "secondary_timeseries": SecondaryTimeseriesTable,
-    "joined_timeseries": JoinedTimeseriesTable,
     "locations": LocationTable,
     "location_attributes": LocationAttributeTable,
     "location_crosswalks": LocationCrosswalkTable,

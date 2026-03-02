@@ -40,14 +40,14 @@ class Validate:
             )
         sdf.createOrReplaceTempView("temp_table")
         for fk in foreign_keys:
+            catalog_name = self._ev.active_catalog.catalog_name
+            namespace_name = self._ev.active_catalog.namespace_name
             sql = f"""
                 SELECT t.* from temp_table t
-                LEFT ANTI JOIN {fk['domain_table']} d
+                LEFT ANTI JOIN {catalog_name}.{namespace_name}.{fk['domain_table']} d
                 ON t.{fk['column']} = d.{fk['domain_column']}
             """
-            result_sdf = self._ev.sql(
-                query=sql, create_temp_views=[fk["domain_table"]]
-            )
+            result_sdf = self._ev.spark.sql(sql)
             self._ev.spark.catalog.dropTempView(fk["domain_table"])
             if not result_sdf.isEmpty():
                 self._ev.spark.catalog.dropTempView("temp_table")

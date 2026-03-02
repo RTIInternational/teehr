@@ -2,6 +2,7 @@
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from typing import Union
 import logging
+from teehr.querying.utils import df_to_gdf
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +35,25 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         """
         super().__init__(ev, table_name, namespace_name, catalog_name)
 
+    def _join_geometry_using_crosswalk(self):
+        """Join geometry via the crosswalk."""
+        logger.debug("Joining locations geometry via the crosswalk.")
+        catalog_name = self._ev.active_catalog.catalog_name
+        namespace_name = self._ev.active_catalog.namespace_name
+        sql = f"""
+            SELECT
+                sf.*,
+                lf.geometry as geometry
+            FROM {catalog_name}.{namespace_name}.secondary_timeseries sf
+            JOIN {catalog_name}.{namespace_name}.location_crosswalks cf
+                on cf.secondary_location_id = sf.location_id
+            JOIN {catalog_name}.{namespace_name}.locations lf
+                on cf.primary_location_id = lf.id
+        """
+        joined_df = self._ev.spark.sql(sql)
+        return df_to_gdf(joined_df.toPandas())
+
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
-        self._check_load_table()
         gdf = self._join_geometry_using_crosswalk()
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.to_sdf().columns
         return gdf

@@ -575,114 +575,114 @@ def secondary_timeseries_schema(
         ])
 
 
-def joined_timeseries_schema(
-    type: str = "pyspark",
-) -> ps.DataFrameSchema:
-    """Return the schema for joined timeseries data."""
-    if type == "pandas":
-        return pa.DataFrameSchema(
-            columns={
-                "reference_time": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True
-                ),
-                "value_time": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=False
-                ),
-                "primary_value": pa.Column(
-                    pandas_value_type,
-                    nullable=False,
-                ),
-                "secondary_value": pa.Column(
-                    pandas_value_type,
-                    nullable=False,
-                ),
-                "variable_name": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "configuration_name": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "unit_name": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "primary_location_id": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "secondary_location_id": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "member": pa.Column(
-                    pa.String,
-                    nullable=True
-                )
-            }
-        )
-    if type == "pyspark":
-        return ps.DataFrameSchema(
-            columns={
-                "reference_time": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True
-                ),
-                "value_time": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=False
-                ),
-                "primary_value": ps.Column(
-                    pyspark_value_type,
-                    nullable=False,
-                    coerce=True,
-                ),
-                "secondary_value": ps.Column(
-                    pyspark_value_type,
-                    nullable=False,
-                    coerce=True,
-                ),
-                "variable_name": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "configuration_name": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "unit_name": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "primary_location_id": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "secondary_location_id": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "member": ps.Column(
-                    T.StringType(),
-                    nullable=True
-                )
-            },
-            coerce=True,
-        )
-    if type == "arrow":  # is this needed for joined?
-        return pyarrow.schema([
-            ("reference_time", pyarrow.timestamp("ms")),
-            ("value_time", pyarrow.timestamp("ms")),
-            ("primary_value", pyarrow_value_type),
-            ("secondary_value", pyarrow_value_type),
-            ("variable_name", pyarrow.string()),
-            ("configuration_name", pyarrow.string()),
-            ("unit_name", pyarrow.string()),
-            ("primary_location_id", pyarrow.string()),
-            ("secondary_location_id", pyarrow.string()),
-        ])
+# def joined_timeseries_schema(
+#     type: str = "pyspark",
+# ) -> ps.DataFrameSchema:
+#     """Return the schema for joined timeseries data."""
+#     if type == "pandas":
+#         return pa.DataFrameSchema(
+#             columns={
+#                 "reference_time": pa.Column(
+#                     pa.DateTime,
+#                     parsers=pa.Parser(format_datetime64),
+#                     nullable=True
+#                 ),
+#                 "value_time": pa.Column(
+#                     pa.DateTime,
+#                     parsers=pa.Parser(format_datetime64),
+#                     nullable=False
+#                 ),
+#                 "primary_value": pa.Column(
+#                     pandas_value_type,
+#                     nullable=False,
+#                 ),
+#                 "secondary_value": pa.Column(
+#                     pandas_value_type,
+#                     nullable=False,
+#                 ),
+#                 "variable_name": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "configuration_name": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "unit_name": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "primary_location_id": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "secondary_location_id": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "member": pa.Column(
+#                     pa.String,
+#                     nullable=True
+#                 )
+#             }
+#         )
+#     if type == "pyspark":
+#         return ps.DataFrameSchema(
+#             columns={
+#                 "reference_time": ps.Column(
+#                     T.TimestampNTZType(),
+#                     nullable=True
+#                 ),
+#                 "value_time": ps.Column(
+#                     T.TimestampNTZType(),
+#                     nullable=False
+#                 ),
+#                 "primary_value": ps.Column(
+#                     pyspark_value_type,
+#                     nullable=False,
+#                     coerce=True,
+#                 ),
+#                 "secondary_value": ps.Column(
+#                     pyspark_value_type,
+#                     nullable=False,
+#                     coerce=True,
+#                 ),
+#                 "variable_name": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "configuration_name": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "unit_name": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "primary_location_id": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "secondary_location_id": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "member": ps.Column(
+#                     T.StringType(),
+#                     nullable=True
+#                 )
+#             },
+#             coerce=True,
+#         )
+#     if type == "arrow":  # is this needed for joined?
+#         return pyarrow.schema([
+#             ("reference_time", pyarrow.timestamp("ms")),
+#             ("value_time", pyarrow.timestamp("ms")),
+#             ("primary_value", pyarrow_value_type),
+#             ("secondary_value", pyarrow_value_type),
+#             ("variable_name", pyarrow.string()),
+#             ("configuration_name", pyarrow.string()),
+#             ("unit_name", pyarrow.string()),
+#             ("primary_location_id", pyarrow.string()),
+#             ("secondary_location_id", pyarrow.string()),
+#         ])

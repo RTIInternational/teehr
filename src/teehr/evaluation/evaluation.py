@@ -20,8 +20,11 @@ from teehr.evaluation.tables.secondary_timeseries_table import (
 )
 from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
-from teehr.evaluation.tables.joined_timeseries_table import (
-    JoinedTimeseriesTable
+from teehr.evaluation.views.joined_timeseries_view import JoinedTimeseriesView
+from teehr.evaluation.views.location_attributes_view import LocationAttributesView
+from teehr.evaluation.views.primary_timeseries_view import PrimaryTimeseriesView
+from teehr.evaluation.views.secondary_timeseries_view import (
+    SecondaryTimeseriesView
 )
 from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
@@ -309,10 +312,210 @@ class Evaluation(EvaluationBase):
         """Access the secondary timeseries table."""
         return SecondaryTimeseriesTable(self)
 
-    @property
-    def joined_timeseries(self) -> JoinedTimeseriesTable:
-        """Access the joined timeseries table."""
-        return JoinedTimeseriesTable(self)
+    def joined_timeseries_view(
+        self,
+        primary_filters: Union[
+            str, dict, List[Union[str, dict]]
+        ] = None,
+        secondary_filters: Union[
+            str, dict, List[Union[str, dict]]
+        ] = None,
+        add_attrs: bool = False,
+        attr_list: List[str] = None,
+    ) -> JoinedTimeseriesView:
+        """Create a computed view that joins primary and secondary timeseries.
+
+        This returns a lazy view that computes the join on-the-fly when
+        accessed. The view can be filtered, transformed, and optionally
+        materialized to an iceberg table via write().
+
+        Parameters
+        ----------
+        primary_filters : Union[str, dict, List[...]], optional
+            Filters to apply to primary timeseries before joining.
+        secondary_filters : Union[str, dict, List[...]], optional
+            Filters to apply to secondary timeseries before joining.
+        add_attrs : bool, optional
+            Whether to add location attributes. Default False.
+        attr_list : List[str], optional
+            Specific attributes to add (if add_attrs=True).
+
+        Returns
+        -------
+        JoinedTimeseriesView
+            A lazy view of the joined timeseries.
+
+        Examples
+        --------
+        Create different join views:
+
+        >>> winter = ev.joined_timeseries_view(primary_filters=["month IN (12, 1, 2)"])
+        >>> summer = ev.joined_timeseries_view(primary_filters=["month IN (6, 7, 8)"])
+
+        Use directly (computes on-the-fly):
+
+        >>> ev.joined_timeseries_view().to_pandas()
+
+        Chain operations:
+
+        >>> ev.joined_timeseries_view().filter("primary_location_id LIKE 'usgs%'").to_pandas()
+
+        Compute metrics and materialize:
+
+        >>> ev.joined_timeseries_view().query(
+        ...     include_metrics=[KGE()],
+        ...     group_by=["primary_location_id"]
+        ... ).write("location_kge")
+
+        Materialize joined data:
+
+        >>> ev.joined_timeseries_view(add_attrs=True).write("joined_timeseries")
+        """
+        return JoinedTimeseriesView(
+            ev=self,
+            primary_filters=primary_filters,
+            secondary_filters=secondary_filters,
+            add_attrs=add_attrs,
+            attr_list=attr_list,
+        )
+
+    def pivoted_location_attributes_view(
+        self,
+        attr_list: List[str] = None,
+    ) -> LocationAttributesView:
+        """Create a computed view of pivoted location attributes.
+
+        Transforms the location_attributes table from long format
+        (location_id, attribute_name, value) to wide format where
+        each attribute becomes a column.
+
+        Parameters
+        ----------
+        attr_list : List[str], optional
+            Specific attributes to include. If None, includes all.
+
+        Returns
+        -------
+        LocationAttributesView
+            A lazy view of the pivoted attributes.
+
+        Examples
+        --------
+        Pivot all attributes:
+
+        >>> ev.pivoted_location_attributes_view().to_pandas()
+
+        Pivot specific attributes:
+
+        >>> ev.pivoted_location_attributes_view(
+        ...     attr_list=["drainage_area", "ecoregion"]
+        ... ).to_pandas()
+
+        With filters (chained):
+
+        >>> ev.pivoted_location_attributes_view().filter(
+        ...     "location_id LIKE 'usgs%'"
+        ... ).to_pandas()
+
+        Materialize for later use:
+
+        >>> ev.pivoted_location_attributes_view().write("pivoted_attrs")
+        """
+        return LocationAttributesView(
+            ev=self,
+            attr_list=attr_list,
+        )
+
+    def primary_timeseries_view(
+        self,
+        add_attrs: bool = False,
+        attr_list: List[str] = None,
+    ) -> PrimaryTimeseriesView:
+        """Create a computed view of primary timeseries with optional attrs.
+
+        Parameters
+        ----------
+        add_attrs : bool, optional
+            Whether to add location attributes. Default False.
+        attr_list : List[str], optional
+            Specific attributes to add. If None and add_attrs=True, adds all.
+
+        Returns
+        -------
+        PrimaryTimeseriesView
+            A lazy view of the primary timeseries.
+
+        Examples
+        --------
+        Basic usage:
+
+        >>> ev.primary_timeseries_view().to_pandas()
+
+        With filters (chained):
+
+        >>> ev.primary_timeseries_view().filter(
+        ...     "location_id LIKE 'usgs%'"
+        ... ).to_pandas()
+
+        With location attributes:
+
+        >>> ev.primary_timeseries_view(
+        ...     add_attrs=True,
+        ...     attr_list=["drainage_area", "ecoregion"]
+        ... ).to_pandas()
+        """
+        return PrimaryTimeseriesView(
+            ev=self,
+            add_attrs=add_attrs,
+            attr_list=attr_list,
+        )
+
+    def secondary_timeseries_view(
+        self,
+        add_attrs: bool = False,
+        attr_list: List[str] = None,
+    ) -> SecondaryTimeseriesView:
+        """Create a computed view of secondary timeseries with crosswalk.
+
+        Joins secondary timeseries with location_crosswalks to add
+        primary_location_id, and optionally joins location attributes.
+
+        Parameters
+        ----------
+        add_attrs : bool, optional
+            Whether to add location attributes. Default False.
+        attr_list : List[str], optional
+            Specific attributes to add. If None and add_attrs=True, adds all.
+
+        Returns
+        -------
+        SecondaryTimeseriesView
+            A lazy view of the secondary timeseries with primary_location_id.
+
+        Examples
+        --------
+        Basic usage (adds primary_location_id via crosswalk):
+
+        >>> ev.secondary_timeseries_view().to_pandas()
+
+        With filters (chained):
+
+        >>> ev.secondary_timeseries_view().filter(
+        ...     "configuration_name = 'nwm30_retrospective'"
+        ... ).to_pandas()
+
+        With location attributes:
+
+        >>> ev.secondary_timeseries_view(
+        ...     add_attrs=True,
+        ...     attr_list=["drainage_area", "ecoregion"]
+        ... ).to_pandas()
+        """
+        return SecondaryTimeseriesView(
+            ev=self,
+            add_attrs=add_attrs,
+            attr_list=attr_list,
+        )
 
     def set_active_catalog(self, catalog: Literal["local", "remote"]):
         """Set the active catalog to either local or remote.
@@ -486,58 +689,6 @@ class Evaluation(EvaluationBase):
         logger.info(f"Removing temporary files from {self.active_catalog.cache_dir}")
         remove_dir_if_exists(self.active_catalog.cache_dir)
         self.active_catalog.cache_dir.mkdir()
-
-    def sql(self, query: str, create_temp_views: List[str]):
-        """Run a SQL query on the Spark session against the TEEHR tables.
-
-        Parameters
-        ----------
-        query : str
-            The SQL query to run.
-        create_temp_views : List[str], optional
-            A list of tables to create temporary views for.
-            The default is None which creates all.
-
-        Returns
-        -------
-        pyspark.sql.DataFrame
-            The result of the SQL query.
-            This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.
-
-        By default this method has access to the following tables preloaded as temporary views:
-            - units
-            - variables
-            - attributes
-            - configurations
-            - locations
-            - location_attributes
-            - location_crosswalks
-            - primary_timeseries
-            - secondary_timeseries
-            - joined_timeseries
-        """ # noqa
-        if "units" in create_temp_views:
-            self.units.to_sdf().createOrReplaceTempView("units")
-        if "variables" in create_temp_views:
-            self.variables.to_sdf().createOrReplaceTempView("variables")
-        if "attributes" in create_temp_views:
-            self.attributes.to_sdf().createOrReplaceTempView("attributes")
-        if "configurations" in create_temp_views:
-            self.configurations.to_sdf().createOrReplaceTempView("configurations")
-        if "locations" in create_temp_views:
-            self.locations.to_sdf().createOrReplaceTempView("locations")
-        if "location_attributes" in create_temp_views:
-            self.location_attributes.to_sdf().createOrReplaceTempView("location_attributes")
-        if "location_crosswalks" in create_temp_views:
-            self.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
-        if "primary_timeseries" in create_temp_views:
-            self.primary_timeseries.to_sdf().createOrReplaceTempView("primary_timeseries")
-        if "secondary_timeseries" in create_temp_views:
-            self.secondary_timeseries.to_sdf().createOrReplaceTempView("secondary_timeseries")
-        if "joined_timeseries" in create_temp_views:
-            self.joined_timeseries.to_sdf().createOrReplaceTempView("joined_timeseries")
-
-        return self.spark.sql(query)
 
     def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> None:
         """Check the version of the TEEHR Evaluation.

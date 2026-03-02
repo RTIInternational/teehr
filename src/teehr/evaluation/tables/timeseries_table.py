@@ -159,7 +159,7 @@ class TimeseriesTable(BaseTable):
             primary_location_id_field="location_id",
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_csv(
         self,
@@ -271,7 +271,7 @@ class TimeseriesTable(BaseTable):
             primary_location_id_field="location_id",
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_netcdf(
         self,
@@ -383,7 +383,7 @@ class TimeseriesTable(BaseTable):
             primary_location_id_field="location_id",
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_fews_xml(
         self,
@@ -523,7 +523,7 @@ class TimeseriesTable(BaseTable):
             primary_location_id_field="location_id",
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_dataframe(
         self,
@@ -591,4 +591,4 @@ class TimeseriesTable(BaseTable):
             write_mode=write_mode,
             drop_duplicates=drop_duplicates
         )
-        self._load_table()
+        self._load_sdf()

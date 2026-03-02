@@ -113,17 +113,16 @@ def test_create_joined_timeseries(function_scope_evaluation_template):
     print("Load location attributes time:", time.time() - t0)
 
     t0 = time.time()
-    # Create the joined timeseries with only specified attributes
+    # Create the joined timeseries view with only specified attributes
     # include one invalid attribute 'tester' alongside valid attributes
     attr_list = ['drainage_area', 'ecoregion', 'tester']
-    ev.joined_timeseries.create(
+    joined = ev.joined_timeseries_view(
         add_attrs=True,
-        execute_scripts=True,
         attr_list=attr_list
     )
     print("Create joined timeseries time:", time.time() - t0)
 
-    columns = ev.joined_timeseries.to_sdf().columns
+    columns = joined.to_sdf().columns
     expected_columns = [
         'reference_time',
         'value_time',
@@ -134,13 +133,13 @@ def test_create_joined_timeseries(function_scope_evaluation_template):
         'unit_name',
         'drainage_area',
         'ecoregion',
-        'month',
-        'year',
-        'water_year',
+        # 'month',
+        # 'year',
+        # 'water_year',
         'configuration_name',
         'variable_name',
         'member',
-        'season'
+        # 'season'
     ]
     # Make sure secondary geodataframe is created correctly
     secondary_gdf = ev.secondary_timeseries.to_geopandas()
@@ -231,17 +230,16 @@ def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
         update_attrs_table=True
     )
 
-    # Create the joined timeseries with only specified attributes
+    # Create the joined timeseries view with only specified attributes
     # include one invalid attribute 'tester' alongside valid attributes
     attr_list = ['drainage_area', 'ecoregion', 'tester']
-    ev.joined_timeseries.create(
+    joined = ev.joined_timeseries_view(
         add_attrs=True,
-        execute_scripts=True,
         attr_list=attr_list,
         secondary_filters=["location_id = 'fcst-1'"]
     )
 
-    columns = ev.joined_timeseries.to_sdf().columns
+    columns = joined.to_sdf().columns
     expected_columns = [
         'reference_time',
         'value_time',
@@ -252,19 +250,19 @@ def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
         'unit_name',
         'drainage_area',
         'ecoregion',
-        'month',
-        'year',
-        'water_year',
+        # 'month',
+        # 'year',
+        # 'water_year',
         'configuration_name',
         'variable_name',
         'member',
-        'season'
+        # 'season'
     ]
 
     assert len(columns) == len(expected_columns)
     assert sorted(columns) == sorted(expected_columns)
 
-    joined_df = ev.joined_timeseries.to_pandas()
+    joined_df = joined.to_pandas()
     assert all(joined_df['secondary_location_id'].unique() == ['fcst-1'])
 
 
@@ -295,7 +293,7 @@ def test_distinct_values(function_scope_test_warehouse):
 
     # test joined_timeseries for primary_location_id with
     # location_prefixes==True (valid)
-    prefixes = ev.joined_timeseries.distinct_values(
+    prefixes = ev.table("joined_timeseries").distinct_values(
         column='primary_location_id',
         location_prefixes=True
     )
@@ -304,7 +302,7 @@ def test_distinct_values(function_scope_test_warehouse):
 
     # test joined_timeseries for secondary_location_id with
     # location_prefixes==True (valid)
-    prefixes = ev.joined_timeseries.distinct_values(
+    prefixes = ev.table("joined_timeseries").distinct_values(
         column='secondary_location_id',
         location_prefixes=True
         )
@@ -348,17 +346,21 @@ def test_distinct_values(function_scope_test_warehouse):
 
     # test invalid table handling with location_prefixes==True
     with pytest.raises(ValueError):
-        prefixes = ev.locations.distinct_values(column='name',
-                                                location_prefixes=True)
+        prefixes = ev.locations.distinct_values(
+            column='name',
+            location_prefixes=True
+        )
 
     # test invalid column handling for location_prefixes==True
     with pytest.raises(ValueError):
-        prefixes = ev.joined_timeseries.distinct_values(column='location_id',
-                                                        location_prefixes=True)
+        prefixes = ev.table("joined_timeseries").distinct_values(
+            column='location_id',
+            location_prefixes=True
+        )
 
     # test invalid column handling for location_prefixes==False
     with pytest.raises(ValueError):
-        prefixes = ev.joined_timeseries.distinct_values(column='test')
+        prefixes = ev.table("joined_timeseries").distinct_values(column='test')
 
 
 @pytest.mark.function_scope_evaluation_template
@@ -448,10 +450,10 @@ def test_inst_join_across_periods(function_scope_evaluation_template):
         }
     )
 
-    # Create the joined timeseries - should join despite different periods
-    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
+    # Create the joined timeseries view - should join despite different periods
+    joined = ev.joined_timeseries_view(add_attrs=False)
 
-    joined_df = ev.joined_timeseries.to_pandas()
+    joined_df = joined.to_pandas()
 
     # Should have rows because inst ignores period during join
     assert len(joined_df) > 0
@@ -549,10 +551,10 @@ def test_non_inst_join_requires_matching_period(
         }
     )
 
-    # Create the joined timeseries - should NOT join due to different periods
-    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
+    # Create the joined timeseries view - should NOT join due to different periods
+    joined = ev.joined_timeseries_view(add_attrs=False)
 
-    joined_df = ev.joined_timeseries.to_pandas()
+    joined_df = joined.to_pandas()
 
     # Should have NO rows because non-inst requires matching period
     assert len(joined_df) == 0, \
@@ -642,10 +644,10 @@ def test_non_inst_join_with_matching_period(
         }
     )
 
-    # Create the joined timeseries - should join
-    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
+    # Create the joined timeseries view - should join
+    joined = ev.joined_timeseries_view(add_attrs=False)
 
-    joined_df = ev.joined_timeseries.to_pandas()
+    joined_df = joined.to_pandas()
 
     # Should have rows because non-inst with matching period should join
     assert len(joined_df) > 0, \

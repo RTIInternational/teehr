@@ -2,27 +2,22 @@
 from typing import List, Dict, Union
 import logging
 
-from teehr.models.str_enum import StrEnum
-from teehr.querying.utils import (
-    order_df,
-    join_geometry,
-    df_to_gdf,
-    group_df,
-    post_process_metric_results
-)
-from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
+from teehr.evaluation.dataframe_base import DataFrameBase
+from teehr.querying.utils import join_geometry
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import TableFilter
 from teehr.models.table_properties import TBLPROPERTIES
-from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.querying.metric_format import apply_aggregation_metrics
+import pyspark.sql as ps
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTable:
-    """Base class inherited by all table classes."""
+class BaseTable(DataFrameBase):
+    """Base class inherited by all table classes.
+
+    Tables represent persisted iceberg data that is read from storage.
+    """
 
     def __init__(
         self,
@@ -48,9 +43,8 @@ class BaseTable:
             The catalog containing the table. If None, uses the
             active catalog name.
         """
-        self._ev = ev
+        super().__init__(ev)
         self._read = ev.read
-        self._write = ev.write
         self.uniqueness_fields: List[str] = None
         self.foreign_keys: List[Dict[str, str]] = None
         self.schema_func = None
@@ -62,11 +56,20 @@ class BaseTable:
         self.table_name = None
         self.table_namespace_name = None
         self.catalog_name = None
-        self.sdf = None
 
         # Initialize for specific table if table_name provided
         if table_name is not None:
             self._initialize_table(table_name, namespace_name, catalog_name)
+
+    @property
+    def sdf(self) -> ps.DataFrame:
+        """Get the Spark DataFrame."""
+        return self._sdf
+
+    @sdf.setter
+    def sdf(self, value: ps.DataFrame):
+        """Set the Spark DataFrame."""
+        self._sdf = value
 
     def _initialize_table(
         self,
@@ -93,10 +96,20 @@ class BaseTable:
             f"{'.' if namespace_name else ''}{catalog_name or ''}"
         )
         self.table_name = table_name
-        self.sdf = None
+        self._sdf = None
+
+        if namespace_name is None:
+            self.table_namespace_name = self._ev.active_catalog.namespace_name
+        else:
+            self.table_namespace_name = namespace_name
+        if catalog_name is None:
+            self.catalog_name = self._ev.active_catalog.catalog_name
+        else:
+            self.catalog_name = catalog_name
+
         tbl_props = TBLPROPERTIES.get(table_name)
         if tbl_props is None:
-            logger.warning(
+            logger.info(
                 f"No table properties found for table: '{table_name}'."
                 " Proceeding without table properties."
             )
@@ -112,82 +125,68 @@ class BaseTable:
             self.field_enum_model = tbl_props.get("field_enum_model")
             self.extraction_func = tbl_props.get("extraction_func")
 
-        if namespace_name is None:
-            self.table_namespace_name = self._ev.active_catalog.namespace_name
-        else:
-            self.table_namespace_name = namespace_name
-        if catalog_name is None:
-            self.catalog_name = self._ev.active_catalog.catalog_name
-        else:
-            self.catalog_name = catalog_name
+        # Load the table (lazy Spark reference - no data read until action)
+        # Table may not exist yet (e.g., before data is loaded), so catch error
+        try:
+            self._load_sdf()
+        except Exception as e:
+            if "TABLE_OR_VIEW_NOT_FOUND" in str(e):
+                logger.debug(
+                    f"Table '{table_name}' does not exist yet. "
+                    "sdf will be set after data is loaded."
+                )
+                self._sdf = None
+            else:
+                raise
 
-    def _load_table(self):
-        """Load the table from the directory to self.sdf.
-
-        Parameters
-        ----------
-        **kwargs
-            Additional options to pass to the spark read method.
-        """
+    def _load_sdf(self):
+        """Load the table from the warehouse to self.sdf."""
         logger.info(
             f"Loading files from {self.catalog_name}."
             f"{self.table_namespace_name}."
             f"{self.table_name}."
         )
-        self.sdf = self._read.from_warehouse(
+        self._sdf = self._read.from_warehouse(
             catalog_name=self.catalog_name,
             namespace_name=self.table_namespace_name,
             table_name=self.table_name
         ).to_sdf()
 
-    def _check_load_table(self):
-        """Check if the table is loaded.
-
-        If the table is not loaded, try to load it.  If the table is still
-        not loaded, raise an error.
-        """
-        if self.sdf is None:
-            self._load_table()
-        # if self.sdf is None:
-        #     self._raise_missing_table_error(table_name=self.table_name)
-
-    def _apply_filters_to_sdf(
+    def _apply_filters(
         self,
         filters: Union[
             str, dict, TableFilter,
             List[Union[str, dict, TableFilter]]
-        ]
+        ],
+        validate: bool = None
     ):
-        """Apply filters to the existing sdf in-memory.
+        """Apply filters to the DataFrame.
 
-        This preserves any in-memory modifications (like calculated fields)
-        rather than re-reading from the warehouse.
+        Overrides base class to use table-specific validation setting.
 
         Parameters
         ----------
         filters : Union[str, dict, TableFilter, List[...]]
             The filters to apply.
+        validate : bool, optional
+            Whether to validate filter field types. If None, uses
+            self.validate_filter_field_types.
         """
-        validated_filters = self._ev.validate.filters_from_sdf(
-            sdf=self.sdf,
-            filters=filters,
-            validate=self.validate_filter_field_types or False
-        )
-        for f in validated_filters:
-            self.sdf = self.sdf.filter(f)
+        if validate is None:
+            validate = self.validate_filter_field_types or False
+        super()._apply_filters(filters, validate=validate)
 
     def _get_schema(self, type: str = "pyspark"):
-        """Get the primary timeseries schema.
+        """Get the table schema.
 
         Parameters
         ----------
         type : str, optional
-            The type of schema to return.  Valid values are "pyspark" and
-            "pandas".  The default is "pyspark".
+            The type of schema to return. Valid values are "pyspark" and
+            "pandas". Default is "pyspark".
         """
         if type == "pandas":
             return self.schema_func(type="pandas")
-
         return self.schema_func()
 
     def validate(self, drop_duplicates: bool = True):
@@ -207,7 +206,6 @@ class BaseTable:
         >>>     table_name="primary_timeseries"
         >>> ).validate(drop_duplicates=True)
         """
-        self._check_load_table()
         self._ev.validate.schema(
             sdf=self.sdf,
             table_schema=self.schema_func(),
@@ -215,277 +213,6 @@ class BaseTable:
             foreign_keys=self.foreign_keys,
             uniqueness_fields=self.uniqueness_fields,
         )
-
-    def query(
-        self,
-        filters: Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-        ] = None,
-        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
-        group_by: Union[
-            str,
-            List[Union[str]]
-        ] = None,
-        include_metrics: Union[
-            List[MetricsBasemodel],
-            str
-        ] = None
-    ):
-        """Run a query against the table with filters and order_by.
-
-        In general a user will either use the query methods or the filter and
-        order_by methods.  The query method is a convenience method that will
-        apply filters and order_by in a single call.
-
-        Parameters
-        ----------
-        filters : Union[
-                str, dict, TableFilter,
-                List[Union[str, dict, TableFilter]]
-            ]
-            The filters to apply to the query.  The filters can be an SQL string,
-            dictionary, TableFilter or a list of any of these. The filters
-            will be applied in the order they are provided.
-        order_by : Union[str, List[str], StrEnum, List[StrEnum]]
-            The fields to order the query by.  The fields can be a string,
-            StrEnum or a list of any of these.  The fields will be ordered in
-            the order they are provided.
-        group_by : Union[str, List[Union[str]]], optional
-            The fields to group the query by, by default None
-        include_metrics : Union[List[MetricsBasemodel], str], optional
-            The metrics to include in the query, by default None
-
-        Returns
-        -------
-        self : Table or subclass of Table
-
-        Examples
-        --------
-        Filters as dictionaries:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         {
-        >>>             "column": "value_time",
-        >>>             "operator": ">",
-        >>>             "value": "2022-01-01",
-        >>>         },
-        >>>         {
-        >>>             "column": "value_time",
-        >>>             "operator": "<",
-        >>>             "value": "2022-01-02",
-        >>>         },
-        >>>         {
-        >>>             "column": "location_id",
-        >>>             "operator": "=",
-        >>>             "value": "gage-C",
-        >>>         },
-        >>>     ],
-        >>>     order_by=["location_id", "value_time"]
-        >>> ).to_pandas()
-
-        Filters as SQL strings:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         "value_time > '2022-01-01'",
-        >>>         "value_time < '2022-01-02'",
-        >>>         "location_id = 'gage-C'"
-        >>>     ],
-        >>>     order_by=["location_id", "value_time"]
-        >>> ).to_pandas()
-
-        Filters as FilterBaseModels:
-
-        >>> from teehr.models.filters import TimeseriesFilter
-        >>> from teehr.models.filters import FilterOperators
-        >>>
-        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         TimeseriesFilter(
-        >>>             column=fields.value_time,
-        >>>             operator=FilterOperators.gt,
-        >>>             value="2022-01-01",
-        >>>         ),
-        >>>         TimeseriesFilter(
-        >>>             column=fields.value_time,
-        >>>             operator=FilterOperators.lt,
-        >>>             value="2022-01-02",
-        >>>         ),
-        >>>         TimeseriesFilter(
-        >>>             column=fields.location_id,
-        >>>             operator=FilterOperators.eq,
-        >>>             value="gage-C",
-        >>>         ),
-        >>> ]).to_pandas()
-
-        Metrics can be calculated on any table (other than the domain tables) by including the
-        ``include_metrics`` and ``group_by`` parameters. For example, to calculate the Flow Duration Curve
-        slope metric for each location in the primary timeseries table:
-
-        >>> fdc = teehr.Signatures.FlowDurationCurveSlope()
-        >>> fdc.input_field_names = ["value"]
-
-        >>> metrics_df = ev.table(
-        >>>     table_name="primary_timeseries"
-        >>> ).query(
-        >>>     include_metrics=[fdc],
-        >>>     group_by=[flds.location_id],
-        >>>     order_by=[flds.location_id],
-        >>> ).to_pandas()
-
-        This may not make sense for all table types, but is included for
-        consistency across table types and to allow for metrics to be calculated
-        on user-created tables.
-        """
-        logger.info("Performing the query.")
-        self._check_load_table()
-        if filters is not None:
-            self._apply_filters_to_sdf(filters)
-
-        if include_metrics is not None:
-            logger.debug(f"Grouping by '{group_by}' and applying metrics.")
-            sdf = group_df(self.sdf, group_by)
-
-            sdf = apply_aggregation_metrics(
-                gp=sdf,
-                include_metrics=include_metrics,
-            )
-            self.sdf = post_process_metric_results(
-                metrics_sdf=sdf,
-                include_metrics=include_metrics,
-                group_by=group_by
-            )
-
-        if order_by is not None:
-            logger.debug(f"Ordering the metrics by: {order_by}.")
-            self.sdf = order_df(self.sdf, order_by)
-        return self
-
-    def filter(
-        self,
-        filters: Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-        ] = None
-    ):
-        """Apply a filter.
-
-        Parameters
-        ----------
-        filters : Union[
-                str, dict, TableFilter,
-                List[Union[str, dict, TableFilter]]
-            ]
-            The filters to apply to the query.  The filters can be an SQL string,
-            dictionary, TableFilter or a list of any of these.
-
-        Returns
-        -------
-        self : Table or subclass of Table
-
-        Examples
-        --------
-        Note: The filter method is universal for all table types. When
-        repurposing this example, ensure filter arguments (e.g., column names,
-        values) are valid for the specific table type.
-
-        Filters as dictionary:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
-        >>>     filters=[
-        >>>         {
-        >>>             "column": "value_time",
-        >>>             "operator": ">",
-        >>>             "value": "2022-01-01",
-        >>>         },
-        >>>         {
-        >>>             "column": "value_time",
-        >>>             "operator": "<",
-        >>>             "value": "2022-01-02",
-        >>>         },
-        >>>         {
-        >>>             "column": "location_id",
-        >>>             "operator": "=",
-        >>>             "value": "gage-C",
-        >>>         },
-        >>>     ]
-        >>> ).to_pandas()
-
-        Filters as string:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
-        >>>     filters=[
-        >>>         "value_time > '2022-01-01'",
-        >>>         "value_time < '2022-01-02'",
-        >>>         "location_id = 'gage-C'"
-        >>>     ]
-        >>> ).to_pandas()
-
-        Filters as TableFilter:
-
-        >>> from teehr.models.filters import TableFilter
-        >>> from teehr.models.filters import FilterOperators
-        >>>
-        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
-        >>>     filters=[
-        >>>         TableFilter(
-        >>>             column="value_time",
-        >>>             operator=FilterOperators.gt,
-        >>>             value="2022-01-01",
-        >>>         ),
-        >>>         TableFilter(
-        >>>             column="value_time",
-        >>>             operator=FilterOperators.lt,
-        >>>             value="2022-01-02",
-        >>>         ),
-        >>>         TableFilter(
-        >>>             column="location_id",
-        >>>             operator=FilterOperators.eq,
-        >>>             value="gage-C",
-        >>>         ),
-        >>> ]).to_pandas()
-
-        """
-        if filters is None:
-            logger.info("No filters provided to filter method. Returning unfiltered table.")
-            return self
-
-        logger.info(f"Setting filter {filters}.")
-        self._check_load_table()
-        self._apply_filters_to_sdf(filters)
-        return self
-
-    def order_by(
-        self,
-        fields: Union[str, List[Union[str]]]
-    ):
-        """Apply an order_by.
-
-        Parameters
-        ----------
-        fields : Union[str, StrEnum, List[Union[str, StrEnum]]]
-            The fields to order the query by.  The fields can be a string,
-            StrEnum or a list of any of these.  The fields will be ordered in
-            the order they are provided.
-
-        Returns
-        -------
-        self : Table or subclass of Table
-
-        Examples
-        --------
-        Order by string:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").order_by("value_time").to_df()
-        """
-        logger.info(f"Setting order_by {fields}.")
-        self._check_load_table()
-        self.sdf = order_df(self.sdf, fields)
-        return self
-
 
     def distinct_values(
         self,
@@ -527,7 +254,6 @@ class BaseTable:
         >>>     location_prefixes=True
         >>> )
         """
-        self._check_load_table()
         if column not in self.sdf.columns:
             raise ValueError(
                 f"Invalid column: '{column}' for table: '{self.table_name}'"
@@ -581,132 +307,13 @@ class BaseTable:
 
     def to_pandas(self):
         """Return Pandas DataFrame."""
-        self._check_load_table()
-        df = self.sdf.toPandas()
-        df.attrs['table_type'] = self.table_name
-        df.attrs['fields'] = self.to_sdf().columns
+        df = super().to_pandas()
+        # df.attrs['table_type'] = self.table_name
         return df
-
-    def _join_geometry_using_crosswalk(self):
-        """Join geometry."""
-        logger.debug("Joining locations geometry via the crosswalk.")
-        joined_df = self._ev.sql("""
-            SELECT
-                sf.*,
-                lf.geometry as geometry
-            FROM secondary_timeseries sf
-            JOIN location_crosswalks cf
-                on cf.secondary_location_id = sf.location_id
-            JOIN locations lf
-                on cf.primary_location_id = lf.id
-        """,
-        create_temp_views=["secondary_timeseries", "location_crosswalks", "locations"])
-        return df_to_gdf(joined_df.toPandas())
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
-        self._check_load_table()
         gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.to_sdf().columns
+        # gdf.attrs['table_type'] = self.__class__.__name__
+        # gdf.attrs['fields'] = self.to_sdf().columns
         return gdf
-
-    def to_sdf(self):
-        """Return PySpark DataFrame.
-
-        The PySpark DataFrame can be further processed using PySpark. Note,
-        PySpark DataFrames are lazy and will not be executed until an action
-        is called.  For example, calling `show()`, `collect()` or toPandas().
-        This can be useful for further processing or analysis, for example,
-
-        >>> ts_sdf = ev.primary_timeseries.query(
-        >>>     filters=[
-        >>>         "value_time > '2022-01-01'",
-        >>>         "value_time < '2022-01-02'",
-        >>>         "location_id = 'gage-C'"
-        >>>     ]
-        >>> ).to_sdf()
-        >>> ts_df = (
-        >>>     ts_sdf.select("value_time", "location_id", "value")
-        >>>    .orderBy("value").toPandas()
-        >>> )
-        >>> ts_df.head()
-        """
-        self._check_load_table()
-        return self.sdf
-
-    def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
-        """Add in-memory calculated fields to the table before running metrics.
-
-        Parameters
-        ----------
-        cfs : Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
-            The CFs to apply to the DataFrame.
-
-        Returns
-        -------
-        self
-            The Metrics object with the CFs applied to the DataFrame.
-
-        Examples
-        --------
-        Add the temporary calculated field "month" to use in the metrics query.
-
-        >>> import teehr
-        >>> from teehr import RowLevelCalculatedFields as rcf
-
-        >>> ev.metrics(table_name="joined_timeseries").add_calculated_fields([
-        >>>     rcf.Month()
-        >>> ]).query(
-        >>>     include_metrics=[fdc],
-        >>>     group_by=[flds.primary_location_id, "month"],
-        >>>     order_by=[flds.primary_location_id, "month"],
-        >>> ).to_pandas()
-        """
-        self._check_load_table()
-        if not isinstance(cfs, List):
-            cfs = [cfs]
-
-        for cf in cfs:
-            self.sdf = cf.apply_to(self.sdf)
-
-        return self
-
-    def write(
-        self,
-        table_name: str,
-        write_mode: str = "create_or_replace"
-    ):
-        """Write the DataFrame to a warehouse table.
-
-        Parameters
-        ----------
-        table_name : str
-            The name of the table to write to.
-        write_mode : str, optional
-            The write mode to use, by default "create_or_replace"
-            Options are: "create", "append", "overwrite", "create_or_replace"
-
-        Example
-        -------
-        >>> import teehr
-        >>> ev = teehr.Evaluation()
-        Calculate some metrics and write to the warehouse.
-        >>> metrics_df = ev.metrics.query(
-        >>>     include_metrics=[...],
-        >>>     group_by=["primary_location_id"]
-        >>> ).write_to_warehouse(
-        >>>     table_name="metrics",
-        >>>     write_mode="create_or_replace"
-        >>> )
-        """
-        logger.info(
-            f"Writing metrics results to the warehouse table: {table_name}."
-        )
-        self._check_load_table()
-        self._write.to_warehouse(
-            source_data=self.sdf,
-            table_name=table_name,
-            write_mode=write_mode
-        )
-        return self

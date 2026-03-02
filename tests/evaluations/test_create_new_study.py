@@ -24,13 +24,14 @@ def test_clone_template(function_scope_evaluation_template):
             )
         ]
     )
+    catalog_name = ev.active_catalog.catalog_name
+    namespace_name = ev.active_catalog.namespace_name
+    _ = ev.spark.sql(f"SELECT * FROM {catalog_name}.{namespace_name}.attributes")
 
-    _ = ev.sql("SELECT * FROM attributes", create_temp_views=["attributes"])
     views_df = ev.list_views()
 
     # Not a complete test, but at least we know the function runs.
     assert len(tbls_df) == 9
     assert len(views_df) == 1
-    assert Path(ev.dir_path, ev.active_catalog.catalog_name, "cache").is_dir()
-    assert Path(ev.dir_path, ev.active_catalog.catalog_name, "scripts").is_dir()
-    assert Path(ev.dir_path, ev.active_catalog.catalog_name, ".gitignore").is_file()
+    assert Path(ev.dir_path, catalog_name, "cache").is_dir()
+    assert Path(ev.dir_path, catalog_name, ".gitignore").is_file()

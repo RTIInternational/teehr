@@ -45,8 +45,6 @@ class DomainTable(BaseTable):
         write_mode: str = "append"
     ):
         # logger.info(f"Adding attribute to {self.dir}")
-        self._check_load_table()
-
         org_df = self.to_sdf()
 
         if issubclass(type(obj), TableBaseModel):
@@ -233,7 +231,6 @@ class DomainTable(BaseTable):
         >>> ]).to_pandas()
         """
         logger.info("Performing the query.")
-        self._check_load_table()
         if filters is not None:
             self.sdf = self._read.from_warehouse(
                 catalog_name=self.catalog_name,

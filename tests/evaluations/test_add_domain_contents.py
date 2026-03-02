@@ -13,8 +13,6 @@ def test_add_domains(function_scope_evaluation_template):
     """Test creating a new study."""
     ev = function_scope_evaluation_template
 
-    new_tbl = ev.table(table_name="new_table")
-
     # Check configurations.add doesn't add columns
     cols = ev.configurations.to_pandas().columns
 

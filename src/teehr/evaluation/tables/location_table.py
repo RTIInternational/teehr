@@ -46,7 +46,6 @@ class LocationTable(BaseTable):
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
-        self._check_load_table()
         gdf = df_to_gdf(self.to_pandas())
         gdf.attrs['table_type'] = self.table_name
         gdf.attrs['fields'] = self.to_sdf().columns
@@ -149,7 +148,7 @@ class LocationTable(BaseTable):
             primary_location_id_field="id",
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_dataframe(
         self,
@@ -210,4 +209,4 @@ class LocationTable(BaseTable):
             drop_duplicates=drop_duplicates,
             primary_location_id_field="id"
         )
-        self._load_table()
+        self._load_sdf()

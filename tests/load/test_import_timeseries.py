@@ -462,7 +462,7 @@ def test_validate_and_insert_fews_xml_timeseries(function_scope_evaluation_templ
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    ev.joined_timeseries.create(execute_scripts=False)
+    ev.joined_timeseries_view().write("joined_timeseries")
 
     # Now, metrics.
     kge = m.KlingGuptaEfficiency()

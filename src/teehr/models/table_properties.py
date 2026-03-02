@@ -158,20 +158,20 @@ TBLPROPERTIES = {
         "validate_filter_field_types": True,
         "extraction_func": convert_single_timeseries,
     },
-    "joined_timeseries": {
-        "uniqueness_fields": [
-            "primary_location_id",
-            "secondary_location_id",
-            "value_time",
-            "reference_time",
-            "variable_name",
-            "unit_name",
-            "configuration_name",
-        ],
-        "foreign_keys": None,
-        "schema_func": schemas.joined_timeseries_schema,
-        "strict_validation": False,
-        "validate_filter_field_types": False,
-        "extraction_func": None,
-    }
+    # "joined_timeseries": {
+    #     "uniqueness_fields": [
+    #         "primary_location_id",
+    #         "secondary_location_id",
+    #         "value_time",
+    #         "reference_time",
+    #         "variable_name",
+    #         "unit_name",
+    #         "configuration_name",
+    #     ],
+    #     "foreign_keys": None,
+    #     "schema_func": schemas.joined_timeseries_schema,
+    #     "strict_validation": False,
+    #     "validate_filter_field_types": False,
+    #     "extraction_func": None,
+    # }
 }

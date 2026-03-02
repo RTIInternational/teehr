@@ -245,11 +245,12 @@ def test_query_list_model(module_scope_test_warehouse):
 def test_filter_by_lead_time(function_scope_test_warehouse):
     """Test filter by lead time."""
     ev = function_scope_test_warehouse
-    ev.joined_timeseries.add_calculated_fields([
+    ev.joined_timeseries_view().add_calculated_fields([
         rcf.ForecastLeadTime(),
-    ]).write()
+    ]).write("joined_timeseries")
+
     filter_value = timedelta(days=0, hours=18)
-    df = ev.joined_timeseries.query(
+    df = ev.table("joined_timeseries").query(
             TableFilter(
                 column="forecast_lead_time",
                 operator=FilterOperators.gt,
@@ -257,7 +258,8 @@ def test_filter_by_lead_time(function_scope_test_warehouse):
             )
     ).to_pandas()
     assert len(df) == 45
-    df = ev.joined_timeseries.filter(
+
+    df = ev.table("joined_timeseries").filter(
         filters=[
             {
                 "column": "forecast_lead_time",
@@ -268,17 +270,17 @@ def test_filter_by_lead_time(function_scope_test_warehouse):
     ).to_pandas()
     assert len(df) == 45
 
-    df = ev.joined_timeseries.filter(
+    df = ev.table("joined_timeseries").filter(
         "forecast_lead_time > interval 18 hours"
     ).to_pandas()
     assert len(df) == 45
 
-    df = ev.joined_timeseries.filter(
+    df = ev.table("joined_timeseries").filter(
         "forecast_lead_time < interval 1 day"
     ).to_pandas()
     assert len(df) == 216
 
-    df = ev.joined_timeseries.filter(
+    df = ev.table("joined_timeseries").filter(
         "forecast_lead_time < interval 3600 seconds"
     ).to_pandas()
     assert len(df) == 9

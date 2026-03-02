@@ -41,13 +41,13 @@ def test_executing_deterministic_metrics(module_scope_test_warehouse):
 
     # Get the currently available fields to use in the query.
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=include_nonconditional_metrics,
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
     ).to_pandas()
 
-    metrics_df2 = ev.metrics(table_name="joined_timeseries").query(
+    metrics_df2 = ev.table("joined_timeseries").query(
         include_metrics=include_nonconditional_metrics,
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
@@ -65,7 +65,7 @@ def test_executing_deterministic_metrics(module_scope_test_warehouse):
         if callable(func) and func().attrs.get('requires_threshold_field', True)  # noqa
     ]
 
-    metrics_df = ev.metrics.add_calculated_fields([
+    metrics_df = ev.table("joined_timeseries").add_calculated_fields([
         tcf.AbovePercentileEventDetection(
             skip_event_id=True,
             add_quantile_field=True,
@@ -80,6 +80,7 @@ def test_executing_deterministic_metrics(module_scope_test_warehouse):
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 6
 
+
 @pytest.mark.module_scope_test_warehouse
 def test_executing_signatures(module_scope_test_warehouse):
     """Test get_metrics method."""
@@ -93,7 +94,7 @@ def test_executing_signatures(module_scope_test_warehouse):
 
     # Get the currently available fields to use in the query.
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=include_all_metrics,
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
@@ -102,6 +103,7 @@ def test_executing_signatures(module_scope_test_warehouse):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 9
+
 
 @pytest.mark.module_scope_test_warehouse
 def test_metrics_filter_and_geometry(module_scope_test_warehouse):
@@ -128,7 +130,7 @@ def test_metrics_filter_and_geometry(module_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=include_metrics,
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
@@ -147,7 +149,7 @@ def test_metric_chaining(module_scope_test_warehouse):
     ev = module_scope_test_warehouse
 
     # Test chaining.
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         order_by=["primary_location_id", "month"],
         group_by=["primary_location_id", "month"],
         include_metrics=[
@@ -192,7 +194,7 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
 
     # assemble metrics df
     include_metrics = [crps, bs]
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=include_metrics,
         group_by=[
             "primary_location_id",
@@ -241,21 +243,21 @@ def test_metrics_transforms(module_scope_test_warehouse):
     mvtd_t.transform = 'log'
 
     # get metrics_df
-    metrics_df_tansformed_e = test_eval.metrics.query(
+    metrics_df_tansformed_e = test_eval.table("joined_timeseries").query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t_e,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df_transformed = test_eval.metrics.query(
+    metrics_df_transformed = test_eval.table("joined_timeseries").query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df = test_eval.metrics.query(
+    metrics_df = test_eval.table("joined_timeseries").query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge,
@@ -286,7 +288,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     pearson_e.add_epsilon = True
 
     # ensure we can obtain a divide by zero error
-    sdf = test_eval.joined_timeseries.to_sdf()
+    sdf = test_eval.table("joined_timeseries").to_sdf()
     from pyspark.sql.functions import lit
     sdf = sdf.withColumn("primary_value", lit(100.0))
     test_eval.write.to_warehouse(
@@ -296,7 +298,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     )
 
     # get metrics df control and assert divide by zero occurs
-    metrics_df_e_control = test_eval.metrics.query(
+    metrics_df_e_control = test_eval.table("joined_timeseries").query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             r2,
@@ -307,7 +309,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
 
     # get metrics df test and ensure no divide by zero occurs
-    metrics_df_e_test = test_eval.metrics.query(
+    metrics_df_e_test = test_eval.table("joined_timeseries").query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             r2_e,
@@ -326,7 +328,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     pearson_e.add_epsilon = True
 
     # ensure we can obtain a divide by zero error
-    sdf = test_eval.joined_timeseries.to_sdf()
+    sdf = test_eval.table("joined_timeseries").to_sdf()
     from pyspark.sql.functions import lit
     sdf = sdf.withColumn("primary_value", lit(100.0))
     test_eval.write.to_warehouse(
@@ -336,7 +338,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     )
 
     # get metrics df control and assert divide by zero occurs
-    metrics_df_e_control = test_eval.metrics.query(
+    metrics_df_e_control = test_eval.table("joined_timeseries").query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             r2,
@@ -347,7 +349,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
 
     # get metrics df test and ensure no divide by zero occurs
-    metrics_df_e_test = test_eval.metrics.query(
+    metrics_df_e_test = test_eval.table("joined_timeseries").query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             r2_e,
@@ -367,7 +369,7 @@ def test_adding_calculated_fields(function_scope_test_warehouse):
     kge = DeterministicMetrics.KlingGuptaEfficiency()
     metrics_df_calc = (
         ev
-        .metrics(table_name="joined_timeseries")
+        .table("joined_timeseries")
         .add_calculated_fields([
             rcf.Month()
         ])
@@ -388,7 +390,7 @@ def test_table_based_metrics(function_scope_test_warehouse):
 
     kge = DeterministicMetrics.KlingGuptaEfficiency()
 
-    metrics_df = ev.table(table_name="joined_timeseries").query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=[kge],
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
@@ -402,7 +404,7 @@ def test_table_based_metrics(function_scope_test_warehouse):
     primary_avg = Signatures.Average()
     primary_avg.input_field_names = ["value"]
 
-    sigs_df = ev.table(table_name="primary_timeseries").query(
+    sigs_df = ev.table("primary_timeseries").query(
         include_metrics=[primary_avg],
         group_by=["location_id"],
         order_by=["location_id"],
@@ -412,7 +414,7 @@ def test_table_based_metrics(function_scope_test_warehouse):
     assert sigs_df.index.size == 3
     assert "location_id" in sigs_df.columns
 
-    sigs_df2 = ev.metrics(table_name="primary_timeseries").query(
+    sigs_df2 = ev.table("primary_timeseries").query(
         include_metrics=[primary_avg],
         group_by=["location_id"],
         order_by=["location_id"],
