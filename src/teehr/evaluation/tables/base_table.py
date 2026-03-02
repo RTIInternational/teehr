@@ -8,6 +8,7 @@ from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import TableFilter
 from teehr.models.table_properties import TBLPROPERTIES
 import pyspark.sql as ps
+from pyspark.sql.functions import split, col
 
 
 logger = logging.getLogger(__name__)
@@ -102,6 +103,7 @@ class BaseTable(DataFrameBase):
             self.table_namespace_name = self._ev.active_catalog.namespace_name
         else:
             self.table_namespace_name = namespace_name
+
         if catalog_name is None:
             self.catalog_name = self._ev.active_catalog.catalog_name
         else:
@@ -176,18 +178,18 @@ class BaseTable(DataFrameBase):
             validate = self.validate_filter_field_types or False
         super()._apply_filters(filters, validate=validate)
 
-    def _get_schema(self, type: str = "pyspark"):
-        """Get the table schema.
+    # def _get_schema(self, type: str = "pyspark"):
+    #     """Get the table schema.
 
-        Parameters
-        ----------
-        type : str, optional
-            The type of schema to return. Valid values are "pyspark" and
-            "pandas". Default is "pyspark".
-        """
-        if type == "pandas":
-            return self.schema_func(type="pandas")
-        return self.schema_func()
+    #     Parameters
+    #     ----------
+    #     type : str, optional
+    #         The type of schema to return. Valid values are "pyspark" and
+    #         "pandas". Default is "pyspark".
+    #     """
+    #     if type == "pandas":
+    #         return self.schema_func(type="pandas")
+    #     return self.schema_func()
 
     def validate(self, drop_duplicates: bool = True):
         """Validate the dataset table against the schema.
@@ -227,10 +229,7 @@ class BaseTable(DataFrameBase):
             The column to get distinct values for.
         location_prefixes : bool
             Whether to return location prefixes. If True, only the unique
-            prefixes of the locations will be returned. Only compatible with
-            primary_timeseries, secondary_timeseries, joined_timeseries,
-            locations, location_attributes, and location_crosswalk tables and
-            their respective location columns.
+            prefixes of the locations will be returned.
             Default: False
 
         Returns
@@ -259,61 +258,18 @@ class BaseTable(DataFrameBase):
                 f"Invalid column: '{column}' for table: '{self.table_name}'"
             )
         if location_prefixes:
-            # ensure valid table
-            valid_tables = ['primary_timeseries',
-                            'secondary_timeseries',
-                            'joined_timeseries',
-                            'locations',
-                            'location_attributes',
-                            'location_crosswalks']
-            if self.table_name not in valid_tables:
-                raise ValueError(
-                    f"""
-                    Invalid table: '{self.table_name}' with argument
-                    location_prefixes==True. Valid tables are: {valid_tables}
-                    """
-                    )
-            # ensure valid columns for selected table
-            valid_columns = {'primary_timeseries': ['location_id'],
-                             'secondary_timeseries': ['location_id'],
-                             'joined_timeseries': ['primary_location_id',
-                                                   'secondary_location_id'],
-                             'locations': ['id'],
-                             'location_attributes': ['location_id'],
-                             'location_crosswalks': ['primary_location_id',
-                                                     'secondary_location_id']
-                             }
-            if column not in valid_columns[self.table_name]:
-                raise ValueError(
-                    f"""
-                    Invalid column: '{column}' for table: '{self.table_name}' with
-                    argument location_prefixes==True. Valid columns are:
-                    {valid_columns[self.table_name]}
-                    """
-                )
-            # get unique location prefixes
-            unique_locations = self.sdf.select(column).distinct().rdd.flatMap(
-                lambda x: x
-                ).collect()
-            prefixes = [location.split('-')[0] for location
-                        in unique_locations
-                        ]
-            return list(set(prefixes))
+            # Split in Spark, then distinct, then collect
+            prefixes_df = self._sdf.select(
+                split(col(column), '-').getItem(0).alias('prefix')
+            ).distinct()
+            return [row.prefix for row in prefixes_df.collect()]
 
         else:
-            return self.sdf.select(column).distinct().rdd.flatMap(
-                lambda x: x
-                ).collect()
+            unique_values_df = self._sdf.select(column).distinct()
+            return [row[column] for row in unique_values_df.collect()]
 
-    def to_pandas(self):
-        """Return Pandas DataFrame."""
-        df = super().to_pandas()
-        # df.attrs['table_type'] = self.table_name
-        return df
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
-        # gdf.attrs['table_type'] = self.__class__.__name__
-        # gdf.attrs['fields'] = self.to_sdf().columns
         return gdf

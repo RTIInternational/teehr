@@ -344,13 +344,6 @@ def test_distinct_values(function_scope_test_warehouse):
     assert len(prefixes) == 1
     assert prefixes[0] == "fcst"
 
-    # test invalid table handling with location_prefixes==True
-    with pytest.raises(ValueError):
-        prefixes = ev.locations.distinct_values(
-            column='name',
-            location_prefixes=True
-        )
-
     # test invalid column handling for location_prefixes==True
     with pytest.raises(ValueError):
         prefixes = ev.table("joined_timeseries").distinct_values(
