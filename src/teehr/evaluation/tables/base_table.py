@@ -2,6 +2,10 @@
 from typing import List, Dict, Union
 import logging
 
+import pandas as pd
+import pyspark.sql as ps
+import geopandas as gpd
+
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import (
     order_df,
@@ -16,6 +20,7 @@ from teehr.models.filters import TableFilter
 from teehr.models.table_properties import TBLPROPERTIES
 from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.querying.metric_format import apply_aggregation_metrics
+from teehr.models.table_enums import TableWriteEnum
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +41,7 @@ class BaseTable:
         self._ev = ev
         self._read = ev.read
         self._write = ev.write
+        self._load = ev.load
         self.uniqueness_fields: List[str] = None
         self.foreign_keys: List[Dict[str, str]] = None
         self.schema_func = None
@@ -676,3 +682,75 @@ class BaseTable:
             write_mode=write_mode
         )
         return self
+
+    def load_dataframe(
+        self,
+        df: Union[pd.DataFrame, ps.DataFrame, gpd.GeoDataFrame],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        primary_location_id_prefix: str = None,
+        primary_location_id_field: str = None,
+        secondary_location_id_prefix: str = None,
+        secondary_location_id_field: str = None,
+        write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
+    ):
+        """Load data from an in-memory dataframe.
+
+        Parameters
+        ----------
+        df : Union[pd.DataFrame, ps.DataFrame, gpd.GeoDataFrame]
+            DataFrame or GeoDataFrame to load into the table.
+        namespace_name : str, optional
+            The namespace name to write to. If None, uses the
+            active catalog's namespace.
+        catalog_name : str, optional
+            The catalog name to write to. If None, uses the
+            active catalog's catalog name.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
+        primary_location_id_prefix : str, optional
+            The prefix to add to primary location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        primary_location_id_field : str, optional
+            The field name for primary location IDs.
+        secondary_location_id_prefix : str, optional
+            The prefix to add to secondary location IDs.
+        secondary_location_id_field : str, optional
+            The field name for secondary location IDs.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "create_or_replace".
+            If "append", the table will be appended without checking
+            existing data.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "create_or_replace", a new table will be created or an existing
+            table will be replaced.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        """ # noqa
+        self._load.dataframe(
+            df=df,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            primary_location_id_prefix=primary_location_id_prefix,
+            primary_location_id_field=primary_location_id_field,
+            secondary_location_id_prefix=secondary_location_id_prefix,
+            secondary_location_id_field=secondary_location_id_field,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates
+        )
+        self._load_table()

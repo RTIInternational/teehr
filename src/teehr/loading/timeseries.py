@@ -2,7 +2,6 @@
 from typing import Union
 from pathlib import Path
 import pandas as pd
-# from pyspark.sql.functions import lit
 from teehr.loading.utils import (
     read_and_convert_netcdf_to_df,
     read_and_convert_xml_to_df
