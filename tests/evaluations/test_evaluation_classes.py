@@ -12,7 +12,7 @@ def test_read_only_evaluation(spark_shared_session, tmpdir):
     with pytest.raises(ValueError):
         _ = RemoteReadOnlyEvaluation(
             spark=spark_shared_session,
-            dir_path=tmpdir
+            temp_dir_path=tmpdir
         )
 
 
@@ -22,5 +22,5 @@ def test_read_write_evaluation(spark_shared_session, tmpdir):
     with pytest.raises(ValueError):
         _ = RemoteReadWriteEvaluation(
             spark=spark_shared_session,
-            dir_path=tmpdir
+            temp_dir_path=tmpdir
         )

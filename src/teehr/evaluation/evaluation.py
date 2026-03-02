@@ -679,7 +679,7 @@ class RemoteReadOnlyEvaluation(Evaluation):
     def __init__(
         self,
         spark: SparkSession = None,
-        dir_path: Union[str, Path] = None,
+        temp_dir_path: Union[str, Path] = None,
     ):
         """
         Initialize the RemoteReadOnlyEvaluation class.
@@ -689,18 +689,18 @@ class RemoteReadOnlyEvaluation(Evaluation):
         spark : SparkSession, optional
             The SparkSession object. If not provided, a new default
             Spark session will be created.
-        dir_path : Union[str, Path], optional
+        temp_dir_path : Union[str, Path], optional
             The directory path to use for the temporary local catalog.
             If not provided, a temporary directory will be created in the default location.
             If it does not exist, it will be created.
         """
         # Create a temporary directory for the local catalog
-        if dir_path is not None:
-            dir_path = Path(dir_path)
-            if not dir_path.is_dir():
-                logger.info(f"Creating base directory {dir_path} for temporary local catalog.")
-                dir_path.mkdir(parents=True, exist_ok=True)
-            self._temp_dir = tempfile.TemporaryDirectory(dir=dir_path.as_posix())
+        if temp_dir_path is not None:
+            temp_dir_path = Path(temp_dir_path)
+            if not temp_dir_path.is_dir():
+                logger.info(f"Creating base directory {temp_dir_path} for temporary local catalog.")
+                temp_dir_path.mkdir(parents=True, exist_ok=True)
+            self._temp_dir = tempfile.TemporaryDirectory(dir=temp_dir_path.as_posix())
         else:
             self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
@@ -753,7 +753,7 @@ class RemoteReadWriteEvaluation(Evaluation):
     def __init__(
         self,
         spark: SparkSession = None,
-        dir_path: Union[str, Path] = None,
+        temp_dir_path: Union[str, Path] = None,
     ):
         """
         Initialize the RemoteReadWriteEvaluation class.
@@ -763,18 +763,18 @@ class RemoteReadWriteEvaluation(Evaluation):
         spark : SparkSession, optional
             The SparkSession object. If not provided, a new default
             Spark session will be created.
-        dir_path : Union[str, Path], optional
+        temp_dir_path : Union[str, Path], optional
             The directory path to use for the temporary local catalog.
             If not provided, a temporary directory will be created in the default location.
             If it does not exist, it will be created.
         """
         # Create a temporary directory for the local catalog
-        if dir_path is not None:
-            dir_path = Path(dir_path)
-            if not dir_path.is_dir():
-                logger.info(f"Creating base directory {dir_path} for temporary local catalog.")
-                dir_path.mkdir(parents=True, exist_ok=True)
-            self._temp_dir = tempfile.TemporaryDirectory(dir=dir_path.as_posix())
+        if temp_dir_path is not None:
+            temp_dir_path = Path(temp_dir_path)
+            if not temp_dir_path.is_dir():
+                logger.info(f"Creating base directory {temp_dir_path} for temporary local catalog.")
+                temp_dir_path.mkdir(parents=True, exist_ok=True)
+            self._temp_dir = tempfile.TemporaryDirectory(dir=temp_dir_path.as_posix())
         else:
             self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
