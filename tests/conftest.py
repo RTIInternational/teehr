@@ -173,16 +173,6 @@ def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     )
 
     yield ev
-    # tables = spark_shared_session.sql(f"SHOW TABLES IN local.teehr").collect()
-    # for table in tables:
-    #     table_name = table.tableName
-    #     # Use "DROP TABLE IF EXISTS" to avoid errors if a table is transiently missing
-    #     # The PURGE option removes the underlying data files as well
-    #     try:
-    #         spark_shared_session.sql(f"DROP TABLE IF EXISTS local.teehr.{table_name} PURGE")
-    #         print(f"Dropped table: {table_name}")
-    #     except Exception as e:
-    #         print(f"Error dropping table {table_name}: {e}")
 
 
 @pytest.fixture(scope="session")

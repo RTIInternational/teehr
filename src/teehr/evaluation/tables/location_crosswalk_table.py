@@ -31,7 +31,6 @@ class LocationCrosswalkTable(BaseTable):
             catalogs, and related table operations.
         """
         super().__init__(ev)
-        self._load = ev.load
 
     def __call__(
         self,

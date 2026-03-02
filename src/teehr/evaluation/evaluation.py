@@ -36,10 +36,10 @@ from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
 from teehr.evaluation.extract import Extract
 from teehr.evaluation.validate import Validate
-from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
+from teehr.evaluation.download import Download
 from teehr.evaluation.utils import copy_migrations_dir
 from teehr.evaluation.spark_session_utils import (
     create_spark_session,
@@ -100,6 +100,9 @@ class Evaluation(EvaluationBase):
         self.cache_dir = None
         self.scripts_dir = None
         self.dir_path = dir_path
+
+        # Cached component instances
+        self._download_instance = None
 
         if not self.dir_path.is_dir():
             if create_dir:
@@ -177,11 +180,6 @@ class Evaluation(EvaluationBase):
         return Extract(self)
 
     @property
-    def workflows(self) -> Workflow:
-        """The workflow component class for managing evaluation workflows."""
-        return Workflow(self)
-
-    @property
     def write(self) -> Write:
         """The write component class for writing data."""
         return Write(self)
@@ -200,6 +198,13 @@ class Evaluation(EvaluationBase):
     def fetch(self) -> Fetch:
         """The fetch component class for accessing external data."""
         return Fetch(self)
+
+    @property
+    def download(self) -> Download:
+        """The download component class for managing data downloads."""
+        if self._download_instance is None:
+            self._download_instance = Download(self)
+        return self._download_instance
 
     @property
     def metrics(self) -> Metrics:
@@ -658,30 +663,6 @@ class Evaluation(EvaluationBase):
     def log_spark_config(self):
         """Log the current Spark session configuration."""
         log_session_config(self.spark)
-
-    # def update_spark_config(
-    #     self,
-    #     remove_configs: List[str] = None,
-    #     update_configs: Dict[str, str] = None
-    # ):
-    #     """Update the Spark session configuration.
-
-    #     Parameters
-    #     ----------
-    #     configs : Dict[str, str]
-    #         A dictionary of Spark configurations to update.
-    #     """
-    #     # NOTE: You could theoretically update catalog configs
-    #     # here, but they would not be reflected in the Local and
-    #     # RemoteCatalog objects attached to the Evaluation.
-    #     # For now, if you want to change the catalog configs,
-    #     # you need to start a new session.
-    #     remove_or_update_configs(
-    #         spark=self.spark,
-    #         remove_configs=remove_configs,
-    #         update_configs=update_configs
-    #     )
-
 
 class RemoteReadOnlyEvaluation(Evaluation):
     """A read-only Evaluation class for accessing remote catalogs.

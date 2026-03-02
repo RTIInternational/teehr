@@ -3,9 +3,6 @@ from pathlib import Path
 from typing import Union
 import logging
 
-import pandas as pd
-import pyspark.sql as ps
-
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.utils import (
     validate_input_is_xml,
@@ -33,7 +30,6 @@ class TimeseriesTable(BaseTable):
             catalogs, and related table operations.
         """
         super().__init__(ev)
-        self._load = ev.load
 
     def load_parquet(
         self,
@@ -508,73 +504,5 @@ class TimeseriesTable(BaseTable):
             drop_duplicates=drop_duplicates,
             primary_location_id_field="location_id",
             **kwargs
-        )
-        self._load_table()
-
-    def load_dataframe(
-        self,
-        df: Union[pd.DataFrame, ps.DataFrame],
-        namespace_name: str = None,
-        catalog_name: str = None,
-        field_mapping: dict = None,
-        constant_field_values: dict = None,
-        location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
-        drop_duplicates: bool = True,
-    ):
-        """Load data from an in-memory dataframe.
-
-        Parameters
-        ----------
-        df : Union[pd.DataFrame, ps.DataFrame]
-            Pandas or PySparkDataFrame to load into the table.
-        namespace_name : str, optional
-            The namespace name to write to, by default None, which means the
-            namespace_name of the active catalog is used.
-        catalog_name : str, optional
-            The catalog name to write to, by default None, which means the
-            catalog_name of the active catalog is used.
-        field_mapping : dict, optional
-            A dictionary mapping input fields to output fields.
-            Format: {input_field: output_field}
-        constant_field_values : dict, optional
-            A dictionary mapping field names to constant values.
-            Format: {field_name: value}.
-        location_id_prefix : str, optional
-            The prefix to add to location IDs.
-            Used to ensure unique location IDs across configurations.
-            Note, the methods for fetching USGS and NWM data automatically
-            prefix location IDs with "usgs" or the nwm version
-            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
-        drop_duplicates : bool, optional (default: True)
-            Whether to drop duplicates from the dataframe.
-        """ # noqa
-        if namespace_name is None:
-            namespace_name = self._ev.active_catalog.namespace_name
-        if catalog_name is None:
-            catalog_name = self._ev.active_catalog.catalog_name
-
-        table_name = self.table_name
-
-        self._load.dataframe(
-            df=df,
-            table_name=table_name,
-            namespace_name=namespace_name,
-            catalog_name=catalog_name,
-            field_mapping=field_mapping,
-            constant_field_values=constant_field_values,
-            primary_location_id_prefix=location_id_prefix,
-            primary_location_id_field="location_id",
-            write_mode=write_mode,
-            drop_duplicates=drop_duplicates
         )
         self._load_table()
