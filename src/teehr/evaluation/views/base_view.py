@@ -66,15 +66,3 @@ class View(DataFrameBase):
         """Set the Spark DataFrame (for chained operations)."""
         self._sdf = value
         self._computed = True
-
-    def to_pandas(self):
-        """Return Pandas DataFrame.
-
-        Returns
-        -------
-        pd.DataFrame
-            The computed data as a Pandas DataFrame.
-        """
-        df = super().to_pandas()
-        df.attrs['view_type'] = self.__class__.__name__
-        return df

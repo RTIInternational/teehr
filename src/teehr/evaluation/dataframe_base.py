@@ -81,7 +81,6 @@ class DataFrameBase(ABC):
             The data as a Pandas DataFrame.
         """
         df = self.sdf.toPandas()
-        df.attrs['fields'] = self.sdf.columns
         return df
 
     def _apply_filters(
