@@ -712,6 +712,14 @@ class RemoteReadOnlyEvaluation(Evaluation):
             check_evaluation_version=False,
             spark=spark
         )
+        # Check the configuration for remote catalog access
+        if self.remote_catalog.catalog_uri == "" or self.remote_catalog.warehouse_dir == "":
+            raise ValueError(
+                "Currently you must be in the TEEHR-Hub environment to use the "
+                "RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes. "
+                "When working locally, you can access data in the TEEHR-Cloud data warehouse "
+                "by using the standard Evaluation class and the ev.download methods."
+            )
         # Set the active catalog to remote
         self.set_active_catalog("remote")
         self.read_only_remote = True
@@ -778,6 +786,14 @@ class RemoteReadWriteEvaluation(Evaluation):
             check_evaluation_version=False,
             spark=spark
         )
+        # Check the configuration for remote catalog access
+        if self.remote_catalog.catalog_uri == "" or self.remote_catalog.warehouse_dir == "":
+            raise ValueError(
+                "Currently you must be in the TEEHR-Hub environment to use the "
+                "RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes. "
+                "When working locally, you can access data in the TEEHR-Cloud data warehouse "
+                "by using the standard Evaluation class and the ev.download methods."
+            )
         # Set the active catalog to remote
         self.set_active_catalog("remote")
         self.read_only_remote = False
