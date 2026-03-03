@@ -705,12 +705,9 @@ class RemoteReadOnlyEvaluation(Evaluation):
             if not temp_dir_path.is_dir():
                 logger.info(f"Creating base directory {temp_dir_path} for temporary local catalog.")
                 temp_dir_path.mkdir(parents=True, exist_ok=True)
-            self._temp_dir = tempfile.TemporaryDirectory(
-                dir=temp_dir_path.as_posix(),
-                ignore_cleanup_errors=True
-            )
+            self._temp_dir = tempfile.TemporaryDirectory(dir=temp_dir_path.as_posix())
         else:
-            self._temp_dir = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+            self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
 
         # Initialize the parent Evaluation class
@@ -782,12 +779,9 @@ class RemoteReadWriteEvaluation(Evaluation):
             if not temp_dir_path.is_dir():
                 logger.info(f"Creating base directory {temp_dir_path} for temporary local catalog.")
                 temp_dir_path.mkdir(parents=True, exist_ok=True)
-            self._temp_dir = tempfile.TemporaryDirectory(
-                dir=temp_dir_path.as_posix(),
-                ignore_cleanup_errors=True
-            )
+            self._temp_dir = tempfile.TemporaryDirectory(dir=temp_dir_path.as_posix())
         else:
-            self._temp_dir = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+            self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
 
         # Initialize the parent Evaluation class
