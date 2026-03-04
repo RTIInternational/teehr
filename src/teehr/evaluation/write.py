@@ -259,10 +259,7 @@ class Write:
         write_schema: arrow_schema,
         write_mode: str = "overwrite"
     ):
-        """Cache the DataFrame in memory for faster access.
-
-        @samlamont, this accurately describes what this method does?
-        It seems like it writes to parquet, which is not really caching in memory.
+        """Write the DataFrame to a parquet file for caching.
 
         Parameters
         ----------
@@ -292,31 +289,3 @@ class Write:
             raise ValueError(
                 "source_data must be a Spark or Pandas DataFrame."
             )
-
-    def to_view(
-        self,
-        source_data: ps.DataFrame | pd.DataFrame,
-        view_name: str,
-        temporary: bool = True,
-    ):
-        """Create a view from the DataFrame.
-
-        @samlamont, do we use this at all?
-
-        Parameters
-        ----------
-        source_data : ps.DataFrame | pd.DataFrame
-            The Spark or Pandas DataFrame to create a view from.
-        view_name : str
-            The name to use for the temporary or global view.
-        temporary : bool, optional
-            Whether to create a temporary (True) or a global view (False),
-            by default True.
-        """
-        # TODO: Does this make sense to be on writer?
-        if isinstance(source_data, pd.DataFrame):
-            source_data = self._ev.spark.createDataFrame(source_data)
-        if temporary is True:
-            source_data.createOrReplaceTempView(view_name)
-        else:
-            source_data.createOrReplaceGlobalTempView(view_name)
