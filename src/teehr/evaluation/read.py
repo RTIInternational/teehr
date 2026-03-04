@@ -58,7 +58,7 @@ class Read:
     def from_cache(
         self,
         path: Union[str, Path],
-        table_schema_func: SparkDataFrameSchema | PandasDataFrameSchema,
+        table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
         pattern: str = "**/*.parquet",
         file_format: str = "parquet",
         show_missing_table_warning: bool = False,
@@ -70,8 +70,8 @@ class Read:
         ----------
         path : Union[str, Path, S3Path]
             The path to the cache directory containing the files.
-        table_schema_func : SparkDataFrameSchema | PandasDataFrameSchema
-            The function to generate the table schema.
+        table_schema : SparkDataFrameSchema | PandasDataFrameSchema
+            The schema of the table.
         pattern : str, optional
             The pattern to match files. The default is "**/*.parquet".
         file_format : str, optional
@@ -100,8 +100,8 @@ class Read:
         # read it again without the schema to ensure all fields are included.
         # Otherwise, continue.
         # TODO: What if it's Pandas schema?
-        if isinstance(table_schema_func, SparkDataFrameSchema):
-            schema = table_schema_func.to_structtype()
+        if isinstance(table_schema, SparkDataFrameSchema):
+            schema = table_schema.to_structtype()
         df = self._ev.spark.read.format(file_format).options(**options).load(path, schema=schema)
         if df.isEmpty():
             if show_missing_table_warning:

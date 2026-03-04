@@ -298,8 +298,8 @@ class Load:
             pattern=pattern,
             cache_dir=table_cache_dir,
             table_fields=fields,
-            table_schema_func=schema_func(type="pandas"),
-            write_schema_func=schema_func(type="arrow"),
+            table_schema=schema_func(type="pandas"),
+            write_schema=schema_func(type="arrow"),
             extraction_func=extraction_function,
             parallel=parallel,
             max_workers=max_workers,
@@ -308,7 +308,7 @@ class Load:
         # Read the converted files to Spark DataFrame
         sdf = self._read.from_cache(
             path=table_cache_dir,
-            table_schema_func=schema_func()
+            table_schema=schema_func()
         )
         # Add or replace primary_location_id prefix if provided
         if primary_location_id_prefix:
@@ -413,7 +413,7 @@ class Load:
 
         sdf = self._read.from_cache(
             path=in_path,
-            table_schema_func=schema_func()
+            table_schema=schema_func()
         )
 
         if update_attrs_table and table_name == "location_attributes":

@@ -7,7 +7,7 @@ import concurrent.futures
 
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
 from pandera import DataFrameSchema as PandasDataFrameSchema
-from pyarrow import schema as arrow_schema
+from pyarrow import Schema as ArrowSchema
 
 from teehr.loading.utils import (
     merge_field_mappings,
@@ -83,7 +83,7 @@ class Extract:
         cache_dir: str | Path,
         table_fields: list[str],
         table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
-        write_schema: arrow_schema,
+        write_schema: ArrowSchema,
         extraction_func: Callable[[str | Path], dict[str]],
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -107,7 +107,7 @@ class Extract:
             The list of fields in the target table.
         table_schema : SparkDataFrameSchema | PandasDataFrameSchema
             The schema for validating the data.
-        write_schema : arrow_schema
+        write_schema : ArrowSchema
             A pyarrow schema for writing the parquet file to the cache.
         extraction_func : Callable
             A function that extracts a DataFrame from a raw data file.
