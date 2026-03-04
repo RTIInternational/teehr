@@ -7,7 +7,7 @@ from pydantic import BaseModel as PydanticBaseModel, ConfigDict, Field, model_va
 from teehr import const
 
 
-class EvaluationBase:
+class EvaluationBaseModel:
     """Base model for the Evaluation.
 
     Just to solve circular import issues?

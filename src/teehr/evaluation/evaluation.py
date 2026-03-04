@@ -48,7 +48,7 @@ import warnings
 from fsspec.implementations.local import LocalFileSystem
 from teehr.utilities import apply_migrations
 from teehr.models.evaluation_base import (
-    EvaluationBase,
+    EvaluationBaseModel,
     LocalCatalog,
     RemoteCatalog
 )
@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 
 
-class BaseEvaluation(EvaluationBase):
+class BaseEvaluation(EvaluationBaseModel):
     """The Evaluation class.
 
     This is the main class for the TEEHR evaluation.
@@ -68,9 +68,6 @@ class BaseEvaluation(EvaluationBase):
 
     def __init__(
         self,
-        dir_path: Union[str, Path],
-        create_dir: bool = False,
-        check_evaluation_version: bool = True,
         spark: SparkSession = None
     ):
         """
@@ -78,40 +75,12 @@ class BaseEvaluation(EvaluationBase):
 
         Parameters
         ----------
-        dir_path : Union[str, Path]
-            The path to the evaluation directory.
-        create_dir : bool, optional
-            Whether to create the local directory if it does not
-             exist. The default is False.
-        check_evaluation_version : bool, optional
-            Whether to check the evaluation version in the local
-            directory. The default is True.
         spark : SparkSession, optional
             The SparkSession object, by default None
         """
-        # Create local directory if it does not exist.
-        dir_path = Path(dir_path)
-
-        # Initialize cache and scripts dir. These are only valid
-        # when using a local catalog.
-        self.dataset_dir = None  # Not needed?
-        self.cache_dir = None
-        self.dir_path = dir_path
-        self.read_only_remote = False
-
+        self.read_only_remote = True
         # Cached component instances
         self._download_instance = None
-
-        if not self.dir_path.is_dir():
-            if create_dir:
-                logger.info(f"Creating directory {self.dir_path}.")
-                Path(self.dir_path).mkdir(parents=True, exist_ok=True)
-            else:
-                logger.error(
-                    f"Directory {self.dir_path} does not exist."
-                    " Set create_dir=True to create it."
-                )
-                raise NotADirectoryError
 
         # Initialize Spark session
         if spark is not None:
@@ -120,42 +89,6 @@ class BaseEvaluation(EvaluationBase):
         else:
             logger.info("Creating a new default Spark session.")
             self.spark = create_spark_session()
-        # Need to update to local warehouse path based on dir_path
-        # Note. Here 'warehouse_dir' should be 'catalog_dir'?
-        local_catalog_name = self.spark.conf.get("local_catalog_name")
-        warehouse_dir = dir_path / local_catalog_name
-        # Set local warehouse path and jdbc uri
-        self.spark.conf.set(
-            f"spark.sql.catalog.{local_catalog_name}.warehouse",
-            warehouse_dir.as_posix()
-        )
-        self.spark.conf.set(
-            f"spark.sql.catalog.{local_catalog_name}.uri",
-            f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db"
-        )
-
-        # Get the catalog metadata that was set during Spark configuration
-        self.local_catalog = LocalCatalog(
-            warehouse_dir=warehouse_dir,
-            catalog_name=local_catalog_name,
-            namespace_name=self.spark.conf.get("local_namespace_name"),
-            catalog_type=self.spark.conf.get("local_catalog_type"),
-        )
-        self.remote_catalog = RemoteCatalog(
-            warehouse_dir=self.spark.conf.get("remote_warehouse_dir"),
-            catalog_name=self.spark.conf.get("remote_catalog_name"),
-            namespace_name=self.spark.conf.get("remote_namespace_name"),
-            catalog_type=self.spark.conf.get("remote_catalog_type"),
-            catalog_uri=self.spark.conf.get("remote_catalog_uri"),
-        )
-        # Need to create the warehouse dir if it does not exist
-        if Path(warehouse_dir).is_dir() is False:
-            Path(warehouse_dir).mkdir()
-        # self.set_active_catalog("local")  # Creates the JDBC .db file
-
-        # Check version of Evaluation
-        if create_dir is False and check_evaluation_version is True:
-            self.check_evaluation_version()
 
     @property
     def table(self) -> Table:
@@ -335,6 +268,124 @@ class BaseEvaluation(EvaluationBase):
         )
         logger.setLevel(logging.DEBUG)
 
+    def list_tables(
+        self,
+        catalog_name: str = None,
+        namespace: str = None
+    ) -> pd.DataFrame:
+        """List the tables in the catalog returning a Pandas DataFrame.
+
+        Parameters
+        ----------
+        catalog_name : str, optional
+            The catalog name to list tables from, by default None, which means the
+            catalog_name of the active catalog is used.
+        namespace : str, optional
+            The namespace name to list tables from, by default None, which means the
+            namespace_name of the active catalog is used.
+        """
+        if catalog_name is None:
+            catalog_name = self.active_catalog.catalog_name
+        if namespace is None:
+            namespace = self.active_catalog.namespace_name
+        tbl_list = self.spark.catalog.listTables(
+            f"{catalog_name}.{namespace}"
+        )
+        metadata = []
+        # Note. "EXTERNAL" tables are those managed by REST catalog?
+        # (ie, not hadoop)
+        for tbl in tbl_list:
+            if tbl.tableType == "VIEW":
+                continue
+            metadata.append({
+                "name": tbl.name,
+                "database": tbl.database,
+                "description": tbl.description,
+                "tableType": tbl.tableType,
+                "isTemporary": tbl.isTemporary
+            })
+            logger.info(f"Table: {tbl.name}, Type: {tbl.tableType}")
+        return pd.DataFrame(metadata)
+
+    def list_views(self) -> pd.DataFrame:
+        """List the views in the catalog returning a Pandas DataFrame."""
+        return self.spark.sql("SHOW VIEWS").toPandas()
+
+    def log_spark_config(self):
+        """Log the current Spark session configuration."""
+        log_session_config(self.spark)
+
+
+class Evaluation(BaseEvaluation):
+    """A read-write Evaluation class for accessing local catalogs.
+
+    This class establishes a local catalog in the specified directory
+    and creates the tables according to the TEEHR schema.
+
+    It is intended for use when working locally or when you want to
+    manage your own local copy of the data.
+    """
+    def __init__(
+        self,
+        dir_path: Union[str, Path],
+        create_dir: bool = False,
+        check_evaluation_version: bool = True,
+        spark: SparkSession = None
+    ):
+        super().__init__(spark=spark)
+
+        self.cache_dir = None
+        self.dir_path = Path(dir_path)
+        if not self.dir_path.is_dir():
+            if create_dir:
+                logger.info(f"Creating directory {self.dir_path}.")
+                self.dir_path.mkdir(parents=True, exist_ok=True)
+            else:
+                logger.error(
+                    f"Directory {self.dir_path} does not exist."
+                    " Set create_dir=True to create it."
+                )
+                raise NotADirectoryError(f"Directory {self.dir_path} does not exist.")
+        else:
+            logger.info(f"Using existing directory {self.dir_path}.")
+
+        # Need to update to local warehouse path based on dir_path
+        # Note. Here 'warehouse_dir' should be 'catalog_dir'?
+        local_catalog_name = self.spark.conf.get("local_catalog_name")
+        warehouse_dir = self.dir_path / local_catalog_name
+        # Need to create the warehouse dir if it does not exist
+        if warehouse_dir.is_dir() is False:
+            warehouse_dir.mkdir()
+
+        # Set local warehouse path and jdbc uri
+        self.spark.conf.set(
+            f"spark.sql.catalog.{local_catalog_name}.warehouse",
+            warehouse_dir.as_posix()
+        )
+        self.spark.conf.set(
+            f"spark.sql.catalog.{local_catalog_name}.uri",
+            f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db"
+        )
+        # Get the catalog metadata that was set during Spark configuration
+        self.local_catalog = LocalCatalog(
+            warehouse_dir=warehouse_dir,
+            catalog_name=local_catalog_name,
+            namespace_name=self.spark.conf.get("local_namespace_name"),
+            catalog_type=self.spark.conf.get("local_catalog_type"),
+        )
+        # Check version of Evaluation
+        if create_dir is False and check_evaluation_version is True:
+            self.check_evaluation_version()
+
+        self.set_active_catalog("local")  # Creates the JDBC .db file
+
+
+        # TODO:
+        # Create cache dir -- Do I need to??
+        # Run migrations to set up tables
+        # Rename local_catalog.db to teehr_catalog.db?
+
+
     def clean_cache(self):
         """Clean temporary files.
 
@@ -403,77 +454,6 @@ class BaseEvaluation(EvaluationBase):
                 logger.info(f"Evaluation version {version} in {version_dir} is valid.")
 
 
-    def list_tables(
-        self,
-        catalog_name: str = None,
-        namespace: str = None
-    ) -> pd.DataFrame:
-        """List the tables in the catalog returning a Pandas DataFrame.
-
-        Parameters
-        ----------
-        catalog_name : str, optional
-            The catalog name to list tables from, by default None, which means the
-            catalog_name of the active catalog is used.
-        namespace : str, optional
-            The namespace name to list tables from, by default None, which means the
-            namespace_name of the active catalog is used.
-        """
-        if catalog_name is None:
-            catalog_name = self.active_catalog.catalog_name
-        if namespace is None:
-            namespace = self.active_catalog.namespace_name
-        tbl_list = self.spark.catalog.listTables(
-            f"{catalog_name}.{namespace}"
-        )
-        metadata = []
-        # Note. "EXTERNAL" tables are those managed by REST catalog?
-        # (ie, not hadoop)
-        for tbl in tbl_list:
-            if tbl.tableType == "VIEW":
-                continue
-            metadata.append({
-                "name": tbl.name,
-                "database": tbl.database,
-                "description": tbl.description,
-                "tableType": tbl.tableType,
-                "isTemporary": tbl.isTemporary
-            })
-            logger.info(f"Table: {tbl.name}, Type: {tbl.tableType}")
-        return pd.DataFrame(metadata)
-
-    def list_views(self) -> pd.DataFrame:
-        """List the views in the catalog returning a Pandas DataFrame."""
-        return self.spark.sql("SHOW VIEWS").toPandas()
-
-    def log_spark_config(self):
-        """Log the current Spark session configuration."""
-        log_session_config(self.spark)
-
-
-class Evaluation(BaseEvaluation):
-    """The Evaluation class.
-
-    This is the main class for the TEEHR evaluation.
-    """
-    def __init__(
-        self,
-        dir_path: Union[str, Path],
-        create_dir: bool = False,
-        check_evaluation_version: bool = True,
-        spark: SparkSession = None
-    ):
-        super().__init__(
-            dir_path=dir_path,
-            create_dir=create_dir,
-            check_evaluation_version=check_evaluation_version,
-            spark=spark
-        )
-
-        # Need to create the warehouse dir if it does not exist
-        self.set_active_catalog("local")  # Creates the JDBC .db file
-
-
 class RemoteReadOnlyEvaluation(BaseEvaluation):
     """A read-only Evaluation class for accessing remote catalogs.
 
@@ -534,8 +514,14 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
                 "by using the standard Evaluation class and the ev.download methods."
             )
         # Set the active catalog to remote
+        self.remote_catalog = RemoteCatalog(
+            warehouse_dir=self.spark.conf.get("remote_warehouse_dir"),
+            catalog_name=self.spark.conf.get("remote_catalog_name"),
+            namespace_name=self.spark.conf.get("remote_namespace_name"),
+            catalog_type=self.spark.conf.get("remote_catalog_type"),
+            catalog_uri=self.spark.conf.get("remote_catalog_uri"),
+        )
         self.set_active_catalog("remote")
-        self.read_only_remote = True
 
     def __del__(self):
         """Clean up the temporary directory when the object is deleted."""
@@ -581,6 +567,7 @@ class RemoteReadWriteEvaluation(BaseEvaluation):
             If not provided, a temporary directory will be created in the default location.
             If it does not exist, it will be created.
         """
+        self.read_only_remote = False  # Set to False to indicate read-write access
         # Create a temporary directory for the local catalog
         if temp_dir_path is not None:
             temp_dir_path = Path(temp_dir_path)
@@ -593,12 +580,8 @@ class RemoteReadWriteEvaluation(BaseEvaluation):
         temp_path = Path(self._temp_dir.name)
 
         # Initialize the parent Evaluation class
-        super().__init__(
-            dir_path=temp_path,
-            create_dir=False,
-            check_evaluation_version=False,
-            spark=spark
-        )
+        super().__init__(spark=spark)
+
         # Check the configuration for remote catalog access
         if self.remote_catalog.catalog_uri == "" or self.remote_catalog.warehouse_dir == "":
             raise ValueError(
@@ -608,6 +591,13 @@ class RemoteReadWriteEvaluation(BaseEvaluation):
                 "by using the standard Evaluation class and the ev.download methods."
             )
         # Set the active catalog to remote
+        self.remote_catalog = RemoteCatalog(
+            warehouse_dir=self.spark.conf.get("remote_warehouse_dir"),
+            catalog_name=self.spark.conf.get("remote_catalog_name"),
+            namespace_name=self.spark.conf.get("remote_namespace_name"),
+            catalog_type=self.spark.conf.get("remote_catalog_type"),
+            catalog_uri=self.spark.conf.get("remote_catalog_uri"),
+        )
         self.set_active_catalog("remote")
         self.read_only_remote = False
 

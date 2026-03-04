@@ -15,7 +15,7 @@ class VariableTable(DomainTable):
 
         Parameters
         ----------
-        ev : EvaluationBase
+        ev : EvaluationBaseModel
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
         """

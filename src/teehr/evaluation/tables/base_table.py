@@ -15,7 +15,7 @@ from teehr.querying.utils import (
     post_process_metric_results
 )
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
-from teehr.models.evaluation_base import EvaluationBase
+from teehr.models.evaluation_base import EvaluationBaseModel
 from teehr.models.filters import TableFilter
 from teehr.models.table_properties import TBLPROPERTIES
 from teehr.models.metrics.basemodels import MetricsBasemodel
@@ -29,12 +29,12 @@ logger = logging.getLogger(__name__)
 class BaseTable:
     """Base class inherited by all table classes."""
 
-    def __init__(self, ev: EvaluationBase):
+    def __init__(self, ev: EvaluationBaseModel):
         """Initialize the Table class.
 
         Parameters
         ----------
-        ev : EvaluationBase
+        ev : EvaluationBaseModel
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
         """
