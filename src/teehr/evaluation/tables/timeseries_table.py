@@ -1,11 +1,10 @@
 """Timeseries table base class."""
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import Union
 
-import logging
-
-import pandas as pd
 import pyspark.sql as ps
+import pandas as pd
+import logging
 
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.utils import (

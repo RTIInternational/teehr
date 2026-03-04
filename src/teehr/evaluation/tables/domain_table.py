@@ -4,9 +4,12 @@ from teehr.models.pydantic_table_models import TableBaseModel
 from teehr.querying.utils import order_df
 from teehr.models.filters import TableFilter
 from teehr.models.str_enum import StrEnum
+from teehr.models.table_enums import TableWriteEnum
 import pandas as pd
 from typing import List, Union
 import logging
+
+import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +55,7 @@ class DomainTable(BaseTable):
     def _add(
         self,
         obj: Union[TableBaseModel, List[TableBaseModel]],
-        write_mode: str = "append"
+        write_mode: TableWriteEnum = TableWriteEnum.append
     ):
         # logger.info(f"Adding attribute to {self.dir}")
         org_df = self.to_sdf()

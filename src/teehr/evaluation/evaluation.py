@@ -34,9 +34,9 @@ from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
 from teehr.evaluation.extract import Extract
 from teehr.evaluation.validate import Validate
-from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
+from teehr.evaluation.download import Download
 from teehr.evaluation.utils import copy_migrations_dir
 from teehr.evaluation.spark_session_utils import (
     create_spark_session,
@@ -97,6 +97,10 @@ class Evaluation(EvaluationBase):
         self.cache_dir = None
         self.scripts_dir = None
         self.dir_path = dir_path
+        self.read_only_remote = False
+
+        # Cached component instances
+        self._download_instance = None
 
         if not self.dir_path.is_dir():
             if create_dir:
@@ -208,11 +212,6 @@ class Evaluation(EvaluationBase):
         return Extract(self)
 
     @property
-    def workflows(self) -> Workflow:
-        """The workflow component class for managing evaluation workflows."""
-        return Workflow(self)
-
-    @property
     def write(self) -> Write:
         """The write component class for writing data."""
         return Write(self)
@@ -231,6 +230,13 @@ class Evaluation(EvaluationBase):
     def fetch(self) -> Fetch:
         """The fetch component class for accessing external data."""
         return Fetch(self)
+
+    @property
+    def download(self) -> Download:
+        """The download component class for managing data downloads."""
+        if self._download_instance is None:
+            self._download_instance = Download(self)
+        return self._download_instance
 
     @property
     def metrics(self) -> Metrics:
@@ -828,29 +834,6 @@ class Evaluation(EvaluationBase):
         """Log the current Spark session configuration."""
         log_session_config(self.spark)
 
-    # def update_spark_config(
-    #     self,
-    #     remove_configs: List[str] = None,
-    #     update_configs: Dict[str, str] = None
-    # ):
-    #     """Update the Spark session configuration.
-
-    #     Parameters
-    #     ----------
-    #     configs : Dict[str, str]
-    #         A dictionary of Spark configurations to update.
-    #     """
-    #     # NOTE: You could theoretically update catalog configs
-    #     # here, but they would not be reflected in the Local and
-    #     # RemoteCatalog objects attached to the Evaluation.
-    #     # For now, if you want to change the catalog configs,
-    #     # you need to start a new session.
-    #     remove_or_update_configs(
-    #         spark=self.spark,
-    #         remove_configs=remove_configs,
-    #         update_configs=update_configs
-    #     )
-
 
 class RemoteReadOnlyEvaluation(Evaluation):
     """A read-only Evaluation class for accessing remote catalogs.
@@ -869,7 +852,8 @@ class RemoteReadOnlyEvaluation(Evaluation):
 
     def __init__(
         self,
-        spark: SparkSession = None
+        spark: SparkSession = None,
+        temp_dir_path: Union[str, Path] = None,
     ):
         """
         Initialize the RemoteReadOnlyEvaluation class.
@@ -879,26 +863,120 @@ class RemoteReadOnlyEvaluation(Evaluation):
         spark : SparkSession, optional
             The SparkSession object. If not provided, a new default
             Spark session will be created.
+        temp_dir_path : Union[str, Path], optional
+            The directory path to use for the temporary local catalog.
+            If not provided, a temporary directory will be created in the default location.
+            If it does not exist, it will be created.
         """
         # Create a temporary directory for the local catalog
-        self._temp_dir = tempfile.TemporaryDirectory()
+        if temp_dir_path is not None:
+            temp_dir_path = Path(temp_dir_path)
+            if not temp_dir_path.is_dir():
+                logger.info(f"Creating base directory {temp_dir_path} for temporary local catalog.")
+                temp_dir_path.mkdir(parents=True, exist_ok=True)
+            self._temp_dir = tempfile.TemporaryDirectory(dir=temp_dir_path.as_posix())
+        else:
+            self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
 
         # Initialize the parent Evaluation class
         super().__init__(
             dir_path=temp_path,
-            create_dir=True,
+            create_dir=False,
             check_evaluation_version=False,
             spark=spark
         )
-
+        # Check the configuration for remote catalog access
+        if self.remote_catalog.catalog_uri == "" or self.remote_catalog.warehouse_dir == "":
+            raise ValueError(
+                "Currently you must be in the TEEHR-Hub environment to use the "
+                "RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes. "
+                "When working locally, you can access data in the TEEHR-Cloud data warehouse "
+                "by using the standard Evaluation class and the ev.download methods."
+            )
         # Set the active catalog to remote
         self.set_active_catalog("remote")
+        self.read_only_remote = True
 
     def __del__(self):
         """Clean up the temporary directory when the object is deleted."""
         if hasattr(self, '_temp_dir') and self._temp_dir is not None:
             try:
                 self._temp_dir.cleanup()
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Error cleaning up temporary directory: {e}")
+                pass  # Ignore cleanup errors during garbage collection
+
+
+class RemoteReadWriteEvaluation(Evaluation):
+    """A read-write Evaluation class for access to remote catalogs.
+
+    This class provides a convenient way to access a remote TEEHR catalog
+    without needing to manage local directories. It automatically creates
+    a temporary directory and sets the active catalog to remote.
+
+    Note: This is intended for read-write access to remote data. Write
+    operations to the remote catalog are supported through this class, however
+    an AWS profile with write permissions is required in the Spark session.
+
+    Currently only users in the TEEHR-Hub environment have access to
+    the remote catalog, so this class is intended for use within that environment,
+    until remote access is more broadly available.
+    """
+
+    def __init__(
+        self,
+        spark: SparkSession = None,
+        temp_dir_path: Union[str, Path] = None,
+    ):
+        """
+        Initialize the RemoteReadWriteEvaluation class.
+
+        Parameters
+        ----------
+        spark : SparkSession, optional
+            The SparkSession object. If not provided, a new default
+            Spark session will be created.
+        temp_dir_path : Union[str, Path], optional
+            The directory path to use for the temporary local catalog.
+            If not provided, a temporary directory will be created in the default location.
+            If it does not exist, it will be created.
+        """
+        # Create a temporary directory for the local catalog
+        if temp_dir_path is not None:
+            temp_dir_path = Path(temp_dir_path)
+            if not temp_dir_path.is_dir():
+                logger.info(f"Creating base directory {temp_dir_path} for temporary local catalog.")
+                temp_dir_path.mkdir(parents=True, exist_ok=True)
+            self._temp_dir = tempfile.TemporaryDirectory(dir=temp_dir_path.as_posix())
+        else:
+            self._temp_dir = tempfile.TemporaryDirectory()
+        temp_path = Path(self._temp_dir.name)
+
+        # Initialize the parent Evaluation class
+        super().__init__(
+            dir_path=temp_path,
+            create_dir=False,
+            check_evaluation_version=False,
+            spark=spark
+        )
+        # Check the configuration for remote catalog access
+        if self.remote_catalog.catalog_uri == "" or self.remote_catalog.warehouse_dir == "":
+            raise ValueError(
+                "Currently you must be in the TEEHR-Hub environment to use the "
+                "RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes. "
+                "When working locally, you can access data in the TEEHR-Cloud data warehouse "
+                "by using the standard Evaluation class and the ev.download methods."
+            )
+        # Set the active catalog to remote
+        self.set_active_catalog("remote")
+        self.read_only_remote = False
+
+    def __del__(self):
+        """Clean up the temporary directory when the object is deleted."""
+        if hasattr(self, '_temp_dir') and self._temp_dir is not None:
+            try:
+                self._temp_dir.cleanup()
+            except Exception as e:
+                logger.warning(f"Error cleaning up temporary directory: {e}")
                 pass  # Ignore cleanup errors during garbage collection

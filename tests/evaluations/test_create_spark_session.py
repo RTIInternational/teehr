@@ -1,6 +1,5 @@
 """Test creating a spark session."""
 from teehr.evaluation.spark_session_utils import (
-    create_spark_session,
     _update_configs_and_packages
 )
 

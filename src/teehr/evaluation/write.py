@@ -182,6 +182,15 @@ class Write:
             The namespace name to write to, by default None, which means the
             namespace_name of the active catalog is used.
         """
+        if (
+            self._ev.read_only_remote is True and
+            self._ev.active_catalog.catalog_name ==
+            self._ev.remote_catalog.catalog_name
+        ):
+            raise ValueError(
+                "Cannot write to the TEEHR-Cloud warehouse in read-only remote mode."
+            )
+
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name
         if namespace_name is None:

@@ -1,4 +1,6 @@
 """Location Attribute Table class."""
+import pyspark.sql as ps
+import pandas as pd
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.location_attributes import (
     convert_single_location_attributes
@@ -12,8 +14,6 @@ from pathlib import Path
 from typing import List, Dict, Union
 import logging
 from teehr.models.table_enums import TableWriteEnum
-import pyspark.sql as ps
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
