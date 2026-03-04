@@ -59,7 +59,8 @@ from pydantic import BaseModel as PydanticBaseModel
 logger = logging.getLogger(__name__)
 
 
-class Evaluation(EvaluationBase):
+
+class BaseEvaluation(EvaluationBase):
     """The Evaluation class.
 
     This is the main class for the TEEHR evaluation.
@@ -150,7 +151,7 @@ class Evaluation(EvaluationBase):
         # Need to create the warehouse dir if it does not exist
         if Path(warehouse_dir).is_dir() is False:
             Path(warehouse_dir).mkdir()
-        self.set_active_catalog("local")  # Creates the JDBC .db file
+        # self.set_active_catalog("local")  # Creates the JDBC .db file
 
         # Check version of Evaluation
         if create_dir is False and check_evaluation_version is True:
@@ -212,7 +213,7 @@ class Evaluation(EvaluationBase):
             future version. Use the ``query`` method on the table directly
             with the ``include_metrics`` argument instead. For example::
 
-                ev.joined_timeseries.query(
+                ev.table(table_name='joined_timeseries').query(
                     include_metrics=[...],
                     group_by=[...],
                     order_by=[...],
@@ -222,7 +223,7 @@ class Evaluation(EvaluationBase):
             "The 'metrics' property is deprecated and will be removed in a "
             "future version. Use the 'query' method on the table directly "
             "with the 'include_metrics' argument instead. For example:\n\n"
-            "    ev.joined_timeseries.query(\n"
+            "    ev.table(table_name='joined_timeseries').query(\n"
             "        include_metrics=[...],\n"
             "        group_by=[...],\n"
             "        order_by=[...],\n"
@@ -334,66 +335,6 @@ class Evaluation(EvaluationBase):
         )
         logger.setLevel(logging.DEBUG)
 
-    def clone_template(
-        self,
-        catalog_name: str = None,
-        namespace_name: str = None,
-        local_warehouse_dir: Union[str, Path] = None
-    ):
-        """Create a study from the standard template.
-
-        This method mainly copies the template directory to the specified
-        evaluation directory. It also creates a version file with the latest
-        version of TEEHR.
-
-        Parameters
-        ----------
-        catalog_name : str, optional
-            The catalog name to use, by default None which uses the
-            active catalog name.
-        namespace_name : str, optional
-            The namespace name to use, by default None which uses the
-            active namespace name.
-        local_warehouse_dir : Union[str, Path], optional
-            The local warehouse directory to use, by default None which uses the
-            active warehouse directory: Path(dir_path, catalog_name).
-        """
-        # Set to local by default.
-        if catalog_name is None:
-            catalog_name = self.active_catalog.catalog_name
-        if namespace_name is None:
-            namespace_name = self.active_catalog.namespace_name
-        if local_warehouse_dir is None:
-            local_warehouse_dir = self.active_catalog.warehouse_dir
-
-        if local_warehouse_dir is None:
-            raise ValueError("local_warehouse_dir must be specified.")
-
-        teehr_root = Path(__file__).parent.parent
-        template_dir = Path(teehr_root, "template")
-        logger.info(
-            f"Copying template from {template_dir} to {local_warehouse_dir}"
-        )
-
-        copy_template_to(template_dir, local_warehouse_dir)
-        # Copy in the schema
-        copy_migrations_dir(
-            target_dir=local_warehouse_dir
-        )
-        # Create initial iceberg tables.
-        apply_migrations.evolve_catalog_schema(
-            spark=self.spark,
-            migrations_dir_path=local_warehouse_dir,
-            local_catalog_name=catalog_name,
-            local_namespace_name=namespace_name,
-            target_catalog_name=catalog_name,
-            target_namespace_name=namespace_name
-        )
-        # Update the version file.
-        version_file = Path(local_warehouse_dir) / "version"
-        with open(version_file, "w") as f:
-            f.write(teehr.__version__)
-
     def clean_cache(self):
         """Clean temporary files.
 
@@ -461,44 +402,6 @@ class Evaluation(EvaluationBase):
             else:
                 logger.info(f"Evaluation version {version} in {version_dir} is valid.")
 
-    def apply_schema_migration(
-        self,
-        source_catalog: PydanticBaseModel = None,
-        target_catalog: PydanticBaseModel = None
-    ):
-        """Apply the latest schema migration.
-
-        Parameters
-        ----------
-        source_catalog : PydanticBaseModel, optional
-            The source catalog to use for the source of the migration files.
-            The default is None, which uses the local catalog.
-        target_catalog : PydanticBaseModel, optional
-            The target catalog to apply the migrations to.
-            The default is None, which uses the remote catalog.
-        """
-        if source_catalog is None:
-            source_catalog = self.local_catalog
-        if target_catalog is None:
-            target_catalog = self.remote_catalog
-
-        ev_dir = Path(source_catalog.warehouse_dir).parent  # Get the next dir up from here
-        if Path(ev_dir, "migrations").exists() is False:
-            logger.info("Copying migration scripts to evaluation directory.")
-            copy_migrations_dir(
-                target_dir=ev_dir
-            )
-        apply_migrations.evolve_catalog_schema(
-            spark=self.spark,
-            migrations_dir_path=source_catalog.warehouse_dir,
-            local_catalog_name=source_catalog.catalog_name,
-            local_namespace_name=source_catalog.namespace_name,
-            target_catalog_name=target_catalog.catalog_name,
-            target_namespace_name=target_catalog.namespace_name
-        )
-        logger.info(
-            f"Schema evolution completed for {target_catalog.catalog_name}."
-        )
 
     def list_tables(
         self,
@@ -548,7 +451,30 @@ class Evaluation(EvaluationBase):
         log_session_config(self.spark)
 
 
-class RemoteReadOnlyEvaluation(Evaluation):
+class Evaluation(BaseEvaluation):
+    """The Evaluation class.
+
+    This is the main class for the TEEHR evaluation.
+    """
+    def __init__(
+        self,
+        dir_path: Union[str, Path],
+        create_dir: bool = False,
+        check_evaluation_version: bool = True,
+        spark: SparkSession = None
+    ):
+        super().__init__(
+            dir_path=dir_path,
+            create_dir=create_dir,
+            check_evaluation_version=check_evaluation_version,
+            spark=spark
+        )
+
+        # Need to create the warehouse dir if it does not exist
+        self.set_active_catalog("local")  # Creates the JDBC .db file
+
+
+class RemoteReadOnlyEvaluation(BaseEvaluation):
     """A read-only Evaluation class for accessing remote catalogs.
 
     This class provides a convenient way to access a remote TEEHR catalog
@@ -621,7 +547,7 @@ class RemoteReadOnlyEvaluation(Evaluation):
                 pass  # Ignore cleanup errors during garbage collection
 
 
-class RemoteReadWriteEvaluation(Evaluation):
+class RemoteReadWriteEvaluation(BaseEvaluation):
     """A read-write Evaluation class for access to remote catalogs.
 
     This class provides a convenient way to access a remote TEEHR catalog
