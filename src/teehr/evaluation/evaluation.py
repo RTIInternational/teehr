@@ -27,9 +27,6 @@ from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
 import logging
 from teehr.loading.utils import copy_template_to
-from teehr.loading.s3.clone_from_s3 import (
-    clone_from_s3
-)
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
@@ -96,9 +93,8 @@ class Evaluation(EvaluationBase):
 
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
-        self.dataset_dir = None
+        self.dataset_dir = None  # Not needed?
         self.cache_dir = None
-        self.scripts_dir = None
         self.dir_path = dir_path
         self.read_only_remote = False
 
