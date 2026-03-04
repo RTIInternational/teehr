@@ -5,6 +5,8 @@ import logging
 
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import (
+    df_to_gdf,
+    join_geometry,
     order_df,
     group_df,
     post_process_metric_results
@@ -41,22 +43,7 @@ class DataFrameBase(ABC):
         self._ev = ev
         self._write = ev.write
         self._sdf: ps.DataFrame = None
-
-    @property
-    @abstractmethod
-    def sdf(self) -> ps.DataFrame:
-        """Get the Spark DataFrame.
-
-        Subclasses must implement this property to provide the DataFrame,
-        either by loading from storage (Table) or computing (View).
-        """
-        pass
-
-    @sdf.setter
-    @abstractmethod
-    def sdf(self, value: ps.DataFrame):
-        """Set the Spark DataFrame."""
-        pass
+        self._has_geometry = None
 
     def to_sdf(self) -> ps.DataFrame:
         """Return the PySpark DataFrame.
@@ -70,7 +57,7 @@ class DataFrameBase(ABC):
         ps.DataFrame
             The Spark DataFrame.
         """
-        return self.sdf
+        return self._sdf
 
     def to_pandas(self):
         """Return Pandas DataFrame.
@@ -80,8 +67,32 @@ class DataFrameBase(ABC):
         pd.DataFrame
             The data as a Pandas DataFrame.
         """
-        df = self.sdf.toPandas()
+        df = self.to_sdf().toPandas()
         return df
+
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame.
+
+        Returns
+        -------
+        gpd.GeoDataFrame
+            The data as a GeoPandas DataFrame.
+        """
+        if self._has_geometry:
+            logger.debug("DataFrame already has geometry. Converting to GeoPandas.")
+            gdf = df_to_gdf(self.to_pandas())
+            return gdf
+        gdf = df_to_gdf(self.add_geometry().to_pandas())
+        return gdf
+
+    def add_geometry(self):
+        """Adds geometry to the DataFrame by joining with the locations table.
+        """
+        sdf = self.to_sdf()
+        gdf = join_geometry(sdf, self._ev.locations.to_sdf())
+        self._sdf = gdf
+        self._has_geometry = True
+        return self
 
     def _apply_filters(
         self,
@@ -103,13 +114,16 @@ class DataFrameBase(ABC):
         if not isinstance(filters, list):
             filters = [filters]
 
-        validated_filters = self._ev.validate.filters_from_sdf(
-            sdf=self.sdf,
+        # Use to_sdf() to ensure computation (for Views)
+        sdf = self.to_sdf()
+        validated_filters = self._ev.validate.sdf_filters(
+            sdf=sdf,
             filters=filters,
             validate=validate
         )
         for f in validated_filters:
-            self.sdf = self.sdf.filter(f)
+            sdf = sdf.filter(f)
+        self._sdf = sdf
 
     def filter(
         self,
@@ -183,7 +197,7 @@ class DataFrameBase(ABC):
         >>> df = accessor.order_by("value_time").to_pandas()
         """
         logger.info(f"Setting order_by {fields}.")
-        self.sdf = order_df(self.sdf, fields)
+        self._sdf = order_df(self.to_sdf(), fields)
         return self
 
     def query(
@@ -197,6 +211,9 @@ class DataFrameBase(ABC):
         include_metrics: List[MetricsBasemodel] = None
     ):
         """Run a query with filters, grouping, metrics, and ordering.
+
+        Filters are applied first, then metrics are calculated on the filtered data,
+        and finally the results are ordered.
 
         Parameters
         ----------
@@ -225,15 +242,15 @@ class DataFrameBase(ABC):
         if filters is not None:
             self._apply_filters(filters)
 
-        if include_metrics is not None:
+        if include_metrics is not None and group_by is not None:
             logger.debug(f"Grouping by '{group_by}' and applying metrics.")
-            gp = group_df(self.sdf, group_by)
+            gp = group_df(self.to_sdf(), group_by)
 
             sdf = apply_aggregation_metrics(
                 gp=gp,
                 include_metrics=include_metrics,
             )
-            self.sdf = post_process_metric_results(
+            self._sdf = post_process_metric_results(
                 metrics_sdf=sdf,
                 include_metrics=include_metrics,
                 group_by=group_by
@@ -241,7 +258,7 @@ class DataFrameBase(ABC):
 
         if order_by is not None:
             logger.debug(f"Ordering by: {order_by}.")
-            self.sdf = order_df(self.sdf, order_by)
+            self._sdf = order_df(self.to_sdf(), order_by)
 
         return self
 
@@ -273,8 +290,10 @@ class DataFrameBase(ABC):
         if not isinstance(cfs, list):
             cfs = [cfs]
 
+        sdf = self.to_sdf()
         for cf in cfs:
-            self.sdf = cf.apply_to(self.sdf)
+            sdf = cf.apply_to(sdf)
+        self._sdf = sdf
 
         return self
 
@@ -307,7 +326,7 @@ class DataFrameBase(ABC):
         """
         logger.info(f"Writing to table: {table_name}.")
         self._write.to_warehouse(
-            source_data=self.sdf,
+            source_data=self.to_sdf(),
             table_name=table_name,
             write_mode=write_mode
         )
