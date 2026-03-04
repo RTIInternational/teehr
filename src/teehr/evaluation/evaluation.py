@@ -23,10 +23,10 @@ from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.joined_timeseries_table import (
     JoinedTimeseriesTable
 )
+from teehr.fetching import const
 from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
 import logging
-from teehr.loading.utils import copy_template_to
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
@@ -37,7 +37,6 @@ from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
 from teehr.evaluation.download import Download
-from teehr.evaluation.utils import copy_migrations_dir
 from teehr.evaluation.spark_session_utils import (
     create_spark_session,
     log_session_config,
@@ -226,7 +225,7 @@ class BaseEvaluation(EvaluationBaseModel):
         tbl = JoinedTimeseriesTable(self)
         return tbl()
 
-    def set_active_catalog(self, catalog: Literal["local", "remote"]):
+    def _set_active_catalog(self, catalog: Literal["local", "remote"]):
         """Set the active catalog to either local or remote.
 
         Parameters
@@ -240,8 +239,6 @@ class BaseEvaluation(EvaluationBaseModel):
                 self.local_catalog.catalog_name
             )
             self.cache_dir = self.local_catalog.cache_dir
-            self.scripts_dir = self.local_catalog.scripts_dir
-            self.dataset_dir = self.local_catalog.dataset_dir
             logger.info("Active catalog set to local.")
         elif catalog == "remote":
             self.active_catalog = self.remote_catalog
@@ -364,7 +361,7 @@ class Evaluation(BaseEvaluation):
         )
         self.spark.conf.set(
             f"spark.sql.catalog.{local_catalog_name}.uri",
-            f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db"
+            f"jdbc:sqlite:{warehouse_dir.as_posix()}/{const.LOCAL_CATALOG_DB_NAME}"
         )
         # Get the catalog metadata that was set during Spark configuration
         self.local_catalog = LocalCatalog(
@@ -377,13 +374,22 @@ class Evaluation(BaseEvaluation):
         if create_dir is False and check_evaluation_version is True:
             self.check_evaluation_version()
 
-        self.set_active_catalog("local")  # Creates the JDBC .db file
+        # Create cache dir
+        self.cache_dir = self.local_catalog.cache_dir
+        if self.cache_dir is not None and self.cache_dir.is_dir() is False:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
 
+        self._set_active_catalog("local")  # Creates the JDBC .db file
+
+        apply_migrations.evolve_catalog_schema(
+            spark=self.spark,
+            migrations_dir_path=Path(__file__).parents[1] / "migrations",
+            target_catalog_name=self.local_catalog.catalog_name,
+            target_namespace_name=self.local_catalog.namespace_name
+        )
 
         # TODO:
-        # Create cache dir -- Do I need to??
-        # Run migrations to set up tables
-        # Rename local_catalog.db to teehr_catalog.db?
+        # Rename const.LOCAL_CATALOG_DB_NAME to teehr_catalog.db?
 
 
     def clean_cache(self):
@@ -487,24 +493,25 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
             If not provided, a temporary directory will be created in the default location.
             If it does not exist, it will be created.
         """
-        # Create a temporary directory for the local catalog
+        # Initialize the parent Evaluation class
+        super().__init__(
+            spark=spark
+        )
+
+        # Create a temporary directory for the cache.
         if temp_dir_path is not None:
             temp_dir_path = Path(temp_dir_path)
             if not temp_dir_path.is_dir():
-                logger.info(f"Creating base directory {temp_dir_path} for temporary local catalog.")
+                logger.info(f"Creating base directory {temp_dir_path} for temporary caching.")
                 temp_dir_path.mkdir(parents=True, exist_ok=True)
             self._temp_dir = tempfile.TemporaryDirectory(dir=temp_dir_path.as_posix())
         else:
             self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
+        local_catalog_name = self.spark.conf.get("local_catalog_name")
+        cache_dir = temp_path / local_catalog_name / const.CACHE_DIR
+        cache_dir.mkdir(parents=True, exist_ok=True)
 
-        # Initialize the parent Evaluation class
-        super().__init__(
-            dir_path=temp_path,
-            create_dir=False,
-            check_evaluation_version=False,
-            spark=spark
-        )
         # Check the configuration for remote catalog access
         if self.remote_catalog.catalog_uri == "" or self.remote_catalog.warehouse_dir == "":
             raise ValueError(
@@ -521,7 +528,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
             catalog_type=self.spark.conf.get("remote_catalog_type"),
             catalog_uri=self.spark.conf.get("remote_catalog_uri"),
         )
-        self.set_active_catalog("remote")
+        self._set_active_catalog("remote")
 
     def __del__(self):
         """Clean up the temporary directory when the object is deleted."""
@@ -533,7 +540,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
                 pass  # Ignore cleanup errors during garbage collection
 
 
-class RemoteReadWriteEvaluation(BaseEvaluation):
+class RemoteReadWriteEvaluation(RemoteReadOnlyEvaluation):
     """A read-write Evaluation class for access to remote catalogs.
 
     This class provides a convenient way to access a remote TEEHR catalog
@@ -567,45 +574,8 @@ class RemoteReadWriteEvaluation(BaseEvaluation):
             If not provided, a temporary directory will be created in the default location.
             If it does not exist, it will be created.
         """
-        self.read_only_remote = False  # Set to False to indicate read-write access
-        # Create a temporary directory for the local catalog
-        if temp_dir_path is not None:
-            temp_dir_path = Path(temp_dir_path)
-            if not temp_dir_path.is_dir():
-                logger.info(f"Creating base directory {temp_dir_path} for temporary local catalog.")
-                temp_dir_path.mkdir(parents=True, exist_ok=True)
-            self._temp_dir = tempfile.TemporaryDirectory(dir=temp_dir_path.as_posix())
-        else:
-            self._temp_dir = tempfile.TemporaryDirectory()
-        temp_path = Path(self._temp_dir.name)
-
-        # Initialize the parent Evaluation class
-        super().__init__(spark=spark)
-
-        # Check the configuration for remote catalog access
-        if self.remote_catalog.catalog_uri == "" or self.remote_catalog.warehouse_dir == "":
-            raise ValueError(
-                "Currently you must be in the TEEHR-Hub environment to use the "
-                "RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes. "
-                "When working locally, you can access data in the TEEHR-Cloud data warehouse "
-                "by using the standard Evaluation class and the ev.download methods."
-            )
-        # Set the active catalog to remote
-        self.remote_catalog = RemoteCatalog(
-            warehouse_dir=self.spark.conf.get("remote_warehouse_dir"),
-            catalog_name=self.spark.conf.get("remote_catalog_name"),
-            namespace_name=self.spark.conf.get("remote_namespace_name"),
-            catalog_type=self.spark.conf.get("remote_catalog_type"),
-            catalog_uri=self.spark.conf.get("remote_catalog_uri"),
+        super().__init__(
+            spark=spark,
+            temp_dir_path=temp_dir_path
         )
-        self.set_active_catalog("remote")
         self.read_only_remote = False
-
-    def __del__(self):
-        """Clean up the temporary directory when the object is deleted."""
-        if hasattr(self, '_temp_dir') and self._temp_dir is not None:
-            try:
-                self._temp_dir.cleanup()
-            except Exception as e:
-                logger.warning(f"Error cleaning up temporary directory: {e}")
-                pass  # Ignore cleanup errors during garbage collection

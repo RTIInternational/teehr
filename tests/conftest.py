@@ -88,9 +88,9 @@ def function_scope_evaluation_template(session_scope_evaluation_template, reques
     """Function-level evaluation fixture with template cloned to a new namespace."""
     ev = session_scope_evaluation_template
 
-    # NOTE: Could I re-create the local_catalog.db entirely here instead
+    # NOTE: Could I re-create the catalog db entirely here instead
     # or as well?
-    # self.set_active_catalog("local")  # Creates the JDBC .db file
+    # self._set_active_catalog("local")  # Creates the JDBC .db file
     # But then you'd have to re-register all the tables too...
 
     # Clear any temp views from previous tests to ensure isolation
@@ -131,7 +131,7 @@ def function_scope_evaluation_template(session_scope_evaluation_template, reques
     ev.spark.catalog.clearCache()  # not sure if necessary
     # After the test reset the namespace name to original value to maintain isolation
     ev.local_catalog.namespace_name = original_namespace
-    ev.set_active_catalog("local")  # Reset active catalog to original
+    ev._set_active_catalog("local")  # Reset active catalog to original
 
 
 @pytest.fixture(scope="module")

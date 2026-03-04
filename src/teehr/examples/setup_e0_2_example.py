@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 import teehr
 from teehr.evaluation.spark_session_utils import create_spark_session
+from teehr import const
 import shutil
 
 session = botocore.session.Session()
@@ -57,11 +58,11 @@ def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.Evaluation:
     )
     spark.conf.set(
         f"spark.sql.catalog.local.uri",
-        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/{const.LOCAL_CATALOG_DB_NAME}"
     )
     spark.conf.set(
         f"spark.sql.catalog.local.uri",
-        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/{const.LOCAL_CATALOG_DB_NAME}"
     )
     # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")

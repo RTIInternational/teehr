@@ -14,40 +14,45 @@ logger = logging.getLogger(__name__)
 
 
 def read_available_schema_versions(
-    catalog_dir_path: Union[str, Path],
-    catalog_name: str,
-    namespace: str
+    migrations_dir_path: Union[str, Path]
 ) -> list[int]:
     """
-    Read available schema versions from the specified catalog.
+    Read available schema versions from the specified migrations directory.
 
-    Parameters:
-      catalog_name (str): The name of the catalog.
+    Parameters
+    ----------
+    migrations_dir_path : Union[str, Path]
+        The directory path where the catalog schema versions are stored.
 
-    Returns:
-      A list of integers representing the available schema versions.
+    Returns
+    -------
+    list[int]
+        A sorted list of integers representing the available schema versions.
     """
     schema_versions: list[int] = [
-        int(d) for d in os.listdir(f'{catalog_dir_path}/migrations/{catalog_name}/{namespace}')
+        int(d) for d in os.listdir(f'{migrations_dir_path}')
     ]
     return sorted(schema_versions)
 
 
 def create_schema_evolution_support(
     spark: SparkSession,
-    catalog_name: str,
-    # namespace: str
+    catalog_name: str
 ):
     """
     Create the necessary schema evolution metadata tables in the specified catalog.
 
-    Parameters:
-      catalog_name (str): Name of the catalog where schema evolution metadata will be stored
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session to use for executing SQL statements.
+    catalog_name : str
+        Name of the catalog where schema evolution metadata will be stored.
 
-    Returns:
-      None
+    Returns
+    -------
+    None
     """
-    # Note. "databaseExists()" refers to "namespace". So does "CREATE SCHEMA".
     if not spark.catalog.databaseExists(f'{catalog_name}.schema_evolution'):
         spark.sql(f"""
           CREATE SCHEMA IF NOT EXISTS {catalog_name}.schema_evolution;
@@ -71,24 +76,28 @@ def fetch_applied_catalog_schema_version(
     namespace: str
 ) -> int:
     """
-    Fetch the schema version currently applied to the specified catalog.
+    Fetch the schema version currently applied to the specified namespace.
 
-    Parameters:
-        catalog_name (str): The name of the catalog to check.
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session to use for reading schema version history.
+    catalog_name : str
+        The name of the catalog to check.
+    namespace : str
+        The name of the schema within the catalog to check.
 
-    Returns:
-        int: The schema version currently applied to the catalog.
+    Returns
+    -------
+    int
+        The schema version currently applied to the namespace.
     """
     applied_schema_version: int = 0
 
     create_schema_evolution_support(
       spark=spark,
-      catalog_name=catalog_name,
-      # namespace=namespace
+      catalog_name=catalog_name
     )
-
-    # NOTE. This will fail without updating existing schema_version_history
-    # tables to include namespace field.
     latest_applied_schema_version_df = spark.read \
         .format('iceberg') \
         .table(f'{catalog_name}.schema_evolution.schema_version_history') \
@@ -109,14 +118,22 @@ def update_applied_schema_version(
     namespace: str
 ):
     """
-    Update the applied schema version for a given catalog.
+    Update the applied schema version for a given catalog namespace.
 
-    Parameters:
-      catalog_name (str): The name of the catalog.
-      applied_schema_version (int): The new schema version applied.
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session to use for executing SQL statements.
+    catalog_name : str
+        The name of the catalog.
+    applied_schema_version : int
+        The new schema version that was applied.
+    namespace : str
+        The name of the schema within the catalog.
 
-    Returns:
-      None
+    Returns
+    -------
+    None
     """
     current_time_ms = time.time_ns() // 1000000
     spark.sql(f"""
@@ -132,12 +149,17 @@ def determine_schema_version_delta(
     """
     Determine the schema version delta between the latest available schema version and the currently applied schema version.
 
-    Parameters:
-      available_schema_versions (list): A list of integers representing the available schema versions.
-      applied_schema_version (int): An integer representing the currently applied schema version.
+    Parameters
+    ----------
+    available_schema_versions : list[int]
+        A list of integers representing the available schema versions for the catalog.
+    applied_schema_version : int
+        An integer representing the currently applied schema version for the catalog.
 
-    Returns:
-      list: A list of integers representing the schema version delta.
+    Returns
+    -------
+    list[int]
+        A list of integers representing the schema version delta.
     """
     schema_version_delta: list[int] = list()
 
@@ -155,22 +177,25 @@ def determine_schema_version_delta(
 
 def load_schema_version_evolution_statements(
     migrations_dir_path: Union[str, Path],
-    catalog_name: str,
     schema_version: int,
-    namespace: str
 ) -> list[str]:
     """
     Load the SQL statements required to evolve the schema of a catalog to a specific version.
 
-    Parameters:
-      catalog_name (str): The name of the catalog.
-      schema_version (int): The version number of the schema.
+    Parameters
+    ----------
+    migrations_dir_path : Union[str, Path]
+        The directory path where the catalog schema versions are stored.
+    schema_version : int
+        The version number of the schema to be applied.
 
-    Returns:
-      list[str]: A list of SQL statements to execute to evolve the schema to the specified version.
+    Returns
+    -------
+    list[str]
+        A list of SQL statements to execute to evolve the schema to the specified version.
     """
     schema_version_statements = []
-    version_dir_name = f'{migrations_dir_path}/migrations/{catalog_name}/{namespace}/{schema_version:04}'
+    version_dir_name = f'{migrations_dir_path}/{schema_version:04}'
 
     schema_file_names = os.listdir(version_dir_name)
     for f in schema_file_names:
@@ -194,18 +219,24 @@ def apply_schema_version_evolution_statements(
     """
     Apply a set of schema evolution statements to a given schema in a specified catalog.
 
-    Parameters:
-      catalog_name (str): The name of the catalog
-      schema_version (int): Version number of the schema to be applied
-      evolution_statements (list[str]): List of SQL statements to execute for schema evolution
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session to use for executing schema evolution statements.
+    catalog_name : str
+        The name of the catalog to evolve.
+    schema_version : int
+        The version number of the schema being applied (used for logging and updating schema version history).
+    namespace : str
+        The name of the schema within the catalog to evolve.
+    evolution_statements : list[str]
+        A list of SQL statements to execute to evolve the schema to the specified version.
 
-    Returns:
-      None
+    Returns
+    -------
+    None
     """
-    # NOTE: Here in spark, "schema" = "namespace" = "database"
-
     logger.info(f"Applying schema version {schema_version} to {catalog_name}.{namespace}")
-
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{namespace};")
     spark.sql(f"USE {catalog_name};")
     spark.sql(f"USE SCHEMA {namespace};")
@@ -224,8 +255,6 @@ def apply_schema_version_evolution_statements(
 def evolve_catalog_schema(
     spark: SparkSession,
     migrations_dir_path: Union[str, Path],
-    local_catalog_name: str,
-    local_namespace_name: str,
     target_catalog_name: str,
     target_namespace_name: str
 ):
@@ -238,16 +267,17 @@ def evolve_catalog_schema(
         The Spark session to use for executing schema evolution statements.
     migrations_dir_path : Union[str, Path]
         The directory path where the catalog schema versions are stored.
-    catalog_name : str
+    target_catalog_name : str
         The name of the catalog to evolve.
-    namespace : str
+    target_namespace_name : str
         The name of the schema within the catalog to evolve.
+
+    Returns
+    -------
+    None
     """
-    # Shouldn't schema evolution also consider namespace?
     available_schema_versions = read_available_schema_versions(
-      catalog_dir_path=migrations_dir_path,  # local warehouse dir
-      catalog_name=local_catalog_name,       # local catalog
-      namespace=local_namespace_name         # local namespace
+      migrations_dir_path=migrations_dir_path,  # local warehouse dir
     )
     applied_schema_version = fetch_applied_catalog_schema_version(
       spark=spark,
@@ -268,9 +298,7 @@ def evolve_catalog_schema(
     for schema_version in schema_version_delta:
         evolution_statements = load_schema_version_evolution_statements(
           migrations_dir_path=migrations_dir_path,
-          catalog_name=local_catalog_name,
-          schema_version=schema_version,
-          namespace=local_namespace_name
+          schema_version=schema_version
         )
         apply_schema_version_evolution_statements(
           spark=spark,
