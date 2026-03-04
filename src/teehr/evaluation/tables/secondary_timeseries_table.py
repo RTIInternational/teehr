@@ -1,6 +1,7 @@
 """Secondary timeseries table class."""
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from typing import Union
+from teehr.models.pandera_dataframe_schemas import secondary_timeseries_schema
+from typing import List, Dict, Union
 import logging
 from teehr.querying.utils import df_to_gdf
 
@@ -9,6 +10,41 @@ logger = logging.getLogger(__name__)
 
 class SecondaryTimeseriesTable(TimeseriesTable):
     """Access methods to secondary timeseries table."""
+
+    # Table metadata
+    table_name = "secondary_timeseries"
+    uniqueness_fields = [
+        "location_id",
+        "value_time",
+        "reference_time",
+        "variable_name",
+        "unit_name",
+        "configuration_name",
+        "member"
+    ]
+    foreign_keys: List[Dict[str, str]] = [
+        {
+            "column": "variable_name",
+            "domain_table": "variables",
+            "domain_column": "name",
+        },
+        {
+            "column": "unit_name",
+            "domain_table": "units",
+            "domain_column": "name",
+        },
+        {
+            "column": "configuration_name",
+            "domain_table": "configurations",
+            "domain_column": "name",
+        },
+        {
+            "column": "location_id",
+            "domain_table": "location_crosswalks",
+            "domain_column": "secondary_location_id",
+        }
+    ]
+    schema_func = staticmethod(secondary_timeseries_schema)
 
     def __init__(
         self,
@@ -35,7 +71,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         """
         super().__init__(ev, table_name, namespace_name, catalog_name)
 
-    def _join_geometry_using_crosswalk(self):
+    def add_geometry(self):
         """Join geometry via the crosswalk."""
         logger.debug("Joining locations geometry via the crosswalk.")
         catalog_name = self._ev.active_catalog.catalog_name
@@ -50,10 +86,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             JOIN {catalog_name}.{namespace_name}.locations lf
                 on cf.primary_location_id = lf.id
         """
-        joined_df = self._ev.spark.sql(sql)
-        return df_to_gdf(joined_df.toPandas())
-
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        gdf = self._join_geometry_using_crosswalk()
-        return gdf
+        gdf = self._ev.spark.sql(sql)
+        self._sdf = gdf
+        self._has_geometry = True
+        return self

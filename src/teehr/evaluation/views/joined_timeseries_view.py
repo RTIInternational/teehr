@@ -23,8 +23,8 @@ class JoinedTimeseriesView(View):
     --------
     Create different join views with different filters:
 
-    >>> winter = ev.join(primary_filters=["month IN (12, 1, 2)"])
-    >>> summer = ev.join(primary_filters=["month IN (6, 7, 8)"])
+    >>> winter = ev.join_timeseries_view(primary_filters=["month IN (12, 1, 2)"])
+    >>> summer = ev.join_timeseries_view(primary_filters=["month IN (6, 7, 8)"])
 
     Use the view directly (computes on-the-fly):
 
@@ -32,14 +32,14 @@ class JoinedTimeseriesView(View):
 
     Chain operations and materialize:
 
-    >>> ev.join().query(
+    >>> ev.join_timeseries_view().query(
     ...     include_metrics=[KGE()],
     ...     group_by=["primary_location_id"]
     ... ).write("location_kge")
 
     Materialize the joined data:
 
-    >>> ev.join(add_attrs=True).write("joined_timeseries")
+    >>> ev.join_timeseries_view(add_attrs=True).write("joined_timeseries")
     """
 
     def __init__(

@@ -1,6 +1,7 @@
 """Unit table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.pydantic_table_models import Unit
+from teehr.models.pandera_dataframe_schemas import unit_schema
 from typing import List, Union
 import logging
 
@@ -9,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 class UnitTable(DomainTable):
     """Access methods to units table."""
+
+    # Table metadata
+    table_name = "units"
+    uniqueness_fields = ["name"]
+    schema_func = staticmethod(unit_schema)
 
     def __init__(
         self,

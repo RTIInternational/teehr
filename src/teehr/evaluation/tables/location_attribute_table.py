@@ -7,8 +7,9 @@ from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
+from teehr.models.pandera_dataframe_schemas import location_attributes_schema
 from pathlib import Path
-from typing import Union
+from typing import List, Dict, Union
 import logging
 from teehr.models.table_enums import TableWriteEnum
 import pyspark.sql as ps
@@ -19,6 +20,26 @@ logger = logging.getLogger(__name__)
 
 class LocationAttributeTable(BaseTable):
     """Access methods to location attributes table."""
+
+    # Table metadata
+    table_name = "location_attributes"
+    uniqueness_fields = ["location_id", "attribute_name"]
+    foreign_keys: List[Dict[str, str]] = [
+        {
+            "column": "location_id",
+            "domain_table": "locations",
+            "domain_column": "id",
+        },
+        {
+            "column": "attribute_name",
+            "domain_table": "attributes",
+            "domain_column": "name",
+        }
+    ]
+    schema_func = staticmethod(location_attributes_schema)
+    strict_validation = True
+    validate_filter_field_types = True
+    extraction_func = staticmethod(convert_single_location_attributes)
 
     def __init__(
         self,

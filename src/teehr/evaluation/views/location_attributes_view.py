@@ -19,23 +19,23 @@ class LocationAttributesView(View):
     --------
     Pivot all attributes:
 
-    >>> ev.pivoted_location_attributes_view().to_pandas()
+    >>> ev.location_attributes_view().to_pandas()
 
     Pivot specific attributes:
 
-    >>> ev.pivoted_location_attributes_view(
+    >>> ev.location_attributes_view(
     ...     attr_list=["drainage_area", "ecoregion"]
     ... ).to_pandas()
 
     With filters (chained):
 
-    >>> ev.pivoted_location_attributes_view().filter(
+    >>> ev.location_attributes_view().filter(
     ...     "location_id LIKE 'usgs%'"
     ... ).to_pandas()
 
     Materialize for later use:
 
-    >>> ev.pivoted_location_attributes_view().write("pivoted_attrs")
+    >>> ev.location_attributes_view().write("pivoted_attrs")
     """
 
     def __init__(

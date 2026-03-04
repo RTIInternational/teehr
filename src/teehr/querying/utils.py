@@ -7,6 +7,7 @@ from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 from pydantic import BaseModel as PydanticBaseModel
 
+import teehr
 from teehr.models.str_enum import StrEnum
 
 import logging
@@ -275,7 +276,7 @@ def join_geometry(
     target_df: ps.DataFrame,
     location_df: ps.DataFrame,
     target_location_id: str = None,
-):
+) -> ps.DataFrame:
     """Join geometry."""
     logger.debug("Joining locations geometry.")
 
@@ -304,4 +305,4 @@ def join_geometry(
     joined_df = target_df.join(
         location_df, on=target_location_id
     )
-    return df_to_gdf(joined_df.toPandas())
+    return joined_df

@@ -241,7 +241,7 @@ class Evaluation(EvaluationBase):
             future version. Use the ``query`` method on the table directly
             with the ``include_metrics`` argument instead. For example::
 
-                ev.joined_timeseries.query(
+                ev.table("joined_timeseries").query(
                     include_metrics=[...],
                     group_by=[...],
                     order_by=[...],
@@ -251,7 +251,7 @@ class Evaluation(EvaluationBase):
             "The 'metrics' property is deprecated and will be removed in a "
             "future version. Use the 'query' method on the table directly "
             "with the 'include_metrics' argument instead. For example:\n\n"
-            "    ev.joined_timeseries.query(\n"
+            "    ev.table(\"joined_timeseries\").query(\n"
             "        include_metrics=[...],\n"
             "        group_by=[...],\n"
             "        order_by=[...],\n"
@@ -373,7 +373,7 @@ class Evaluation(EvaluationBase):
             attr_list=attr_list,
         )
 
-    def pivoted_location_attributes_view(
+    def location_attributes_view(
         self,
         attr_list: List[str] = None,
     ) -> LocationAttributesView:
@@ -397,23 +397,23 @@ class Evaluation(EvaluationBase):
         --------
         Pivot all attributes:
 
-        >>> ev.pivoted_location_attributes_view().to_pandas()
+        >>> ev.location_attributes_view().to_pandas()
 
         Pivot specific attributes:
 
-        >>> ev.pivoted_location_attributes_view(
+        >>> ev.location_attributes_view(
         ...     attr_list=["drainage_area", "ecoregion"]
         ... ).to_pandas()
 
         With filters (chained):
 
-        >>> ev.pivoted_location_attributes_view().filter(
+        >>> ev.location_attributes_view().filter(
         ...     "location_id LIKE 'usgs%'"
         ... ).to_pandas()
 
         Materialize for later use:
 
-        >>> ev.pivoted_location_attributes_view().write("pivoted_attrs")
+        >>> ev.location_attributes_view().write("pivoted_attrs")
         """
         return LocationAttributesView(
             ev=self,

@@ -1,11 +1,17 @@
 """Attribute table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.pydantic_table_models import Attribute
+from teehr.models.pandera_dataframe_schemas import attribute_schema
 from typing import List, Union
 
 
 class AttributeTable(DomainTable):
     """Access methods to attributes table."""
+
+    # Table metadata
+    table_name = "attributes"
+    uniqueness_fields = ["name"]
+    schema_func = staticmethod(attribute_schema)
 
     def __init__(
         self,

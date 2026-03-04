@@ -10,6 +10,7 @@ import geopandas as gpd
 from teehr.models.table_enums import TableWriteEnum
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.locations import convert_single_locations
+from teehr.models.pandera_dataframe_schemas import locations_schema
 from teehr.querying.utils import df_to_gdf
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,15 @@ logger = logging.getLogger(__name__)
 
 class LocationTable(BaseTable):
     """Access methods to locations table."""
+
+    # Table metadata
+    table_name = "locations"
+    uniqueness_fields = ["id"]
+    foreign_keys = None
+    schema_func = staticmethod(locations_schema)
+    strict_validation = True
+    validate_filter_field_types = True
+    extraction_func = staticmethod(convert_single_locations)
 
     def __init__(
         self,
@@ -43,13 +53,16 @@ class LocationTable(BaseTable):
         """
         super().__init__(ev, table_name, namespace_name, catalog_name)
         self._load = ev.load
+        self._has_geometry = True
 
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        gdf = df_to_gdf(self.to_pandas())
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.to_sdf().columns
-        return gdf
+    def add_geometry(self):
+        """Pass though.
+
+        The locations table is the source of geometry, so no join is necessary.
+        """
+        raise NotImplementedError(
+            "Geometry is already included in the locations table."
+        )
 
     def load_spatial(
         self,

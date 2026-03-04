@@ -1,6 +1,7 @@
 """Primary timeseries table class."""
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from typing import Union
+from teehr.models.pandera_dataframe_schemas import primary_timeseries_schema
+from typing import List, Dict, Union
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,40 @@ class PrimaryTimeseriesTable(TimeseriesTable):
     The TimeseriesTable class is used as a base class for both primary and
     secondary timeseries tables, as they share the same loading methods.
     """
+
+    # Table metadata
+    table_name = "primary_timeseries"
+    uniqueness_fields = [
+        "location_id",
+        "value_time",
+        "reference_time",
+        "variable_name",
+        "unit_name",
+        "configuration_name"
+    ]
+    foreign_keys: List[Dict[str, str]] = [
+        {
+            "column": "variable_name",
+            "domain_table": "variables",
+            "domain_column": "name",
+        },
+        {
+            "column": "unit_name",
+            "domain_table": "units",
+            "domain_column": "name",
+        },
+        {
+            "column": "configuration_name",
+            "domain_table": "configurations",
+            "domain_column": "name",
+        },
+        {
+            "column": "location_id",
+            "domain_table": "locations",
+            "domain_column": "id",
+        }
+    ]
+    schema_func = staticmethod(primary_timeseries_schema)
 
     def __init__(
         self,

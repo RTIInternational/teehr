@@ -1,6 +1,7 @@
 """Timeseries table base class."""
 from pathlib import Path
-from typing import Union
+from typing import List, Dict, Union
+
 import logging
 
 import pandas as pd
@@ -21,7 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 class TimeseriesTable(BaseTable):
-    """Access methods to timeseries table."""
+    """Access methods to timeseries table.
+
+    Base class for primary and secondary timeseries tables.
+    """
+
+    # Common defaults for all timeseries tables
+    strict_validation = True
+    validate_filter_field_types = True
+    extraction_func = staticmethod(convert_single_timeseries)
 
     def __init__(
         self,

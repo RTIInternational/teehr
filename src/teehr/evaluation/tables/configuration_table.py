@@ -1,11 +1,17 @@
 """Configuration table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.pydantic_table_models import Configuration
+from teehr.models.pandera_dataframe_schemas import configuration_schema
 from typing import List, Union
 
 
 class ConfigurationTable(DomainTable):
     """Access methods to configurations table."""
+
+    # Table metadata
+    table_name = "configurations"
+    uniqueness_fields = ["name"]
+    schema_func = staticmethod(configuration_schema)
 
     def __init__(
         self,

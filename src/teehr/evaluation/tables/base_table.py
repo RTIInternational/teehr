@@ -1,12 +1,11 @@
 """Base class for all tables."""
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Callable
 import logging
 
 from teehr.evaluation.dataframe_base import DataFrameBase
 from teehr.querying.utils import join_geometry
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import TableFilter
-from teehr.models.table_properties import TBLPROPERTIES
 import pyspark.sql as ps
 from pyspark.sql.functions import split, col
 
@@ -18,7 +17,25 @@ class BaseTable(DataFrameBase):
     """Base class inherited by all table classes.
 
     Tables represent persisted iceberg data that is read from storage.
+
+    Subclasses should define class-level attributes for table metadata:
+        - table_name: str - The name of the table
+        - uniqueness_fields: List[str] - Fields that uniquely identify a row
+        - foreign_keys: List[Dict] - Foreign key constraints
+        - schema_func: Callable - Function returning the table schema
+        - strict_validation: bool - Whether to use strict validation
+        - validate_filter_field_types: bool - Whether to validate filter types
+        - extraction_func: Callable - Function to extract/transform input data
     """
+
+    # Class-level defaults (None for generic/unknown tables)
+    table_name: str = None
+    uniqueness_fields: List[str] = None
+    foreign_keys: List[Dict[str, str]] = None
+    schema_func: Callable = None
+    strict_validation: bool = None
+    validate_filter_field_types: bool = None
+    extraction_func: Callable = None
 
     def __init__(
         self,
@@ -46,31 +63,20 @@ class BaseTable(DataFrameBase):
         """
         super().__init__(ev)
         self._read = ev.read
-        self.uniqueness_fields: List[str] = None
-        self.foreign_keys: List[Dict[str, str]] = None
-        self.schema_func = None
-        self.filter_model: TableFilter = None
-        self.strict_validation = None
-        self.validate_filter_field_types = None
-        self.field_enum_model = None
-        self.extraction_func = None
-        self.table_name = None
-        self.table_namespace_name = None
+
+        # Instance-level attributes for namespace/catalog
+        self.namespace_name = None
         self.catalog_name = None
 
         # Initialize for specific table if table_name provided
-        if table_name is not None:
-            self._initialize_table(table_name, namespace_name, catalog_name)
-
-    @property
-    def sdf(self) -> ps.DataFrame:
-        """Get the Spark DataFrame."""
-        return self._sdf
-
-    @sdf.setter
-    def sdf(self, value: ps.DataFrame):
-        """Set the Spark DataFrame."""
-        self._sdf = value
+        # Use class-level table_name if not provided
+        effective_table_name = table_name or self.__class__.table_name
+        if effective_table_name is not None:
+            self._initialize_table(
+                effective_table_name,
+                namespace_name,
+                catalog_name
+            )
 
     def _initialize_table(
         self,
@@ -78,7 +84,7 @@ class BaseTable(DataFrameBase):
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None
     ):
-        """Initialize the table properties for a specific table.
+        """Initialize the table for a specific table name, namespace, and catalog.
 
         Parameters
         ----------
@@ -96,36 +102,19 @@ class BaseTable(DataFrameBase):
             f".{namespace_name or ''}"
             f"{'.' if namespace_name else ''}{catalog_name or ''}"
         )
+        # Override class-level table_name if provided
         self.table_name = table_name
         self._sdf = None
 
         if namespace_name is None:
-            self.table_namespace_name = self._ev.active_catalog.namespace_name
+            self.namespace_name = self._ev.active_catalog.namespace_name
         else:
-            self.table_namespace_name = namespace_name
+            self.namespace_name = namespace_name
 
         if catalog_name is None:
             self.catalog_name = self._ev.active_catalog.catalog_name
         else:
             self.catalog_name = catalog_name
-
-        tbl_props = TBLPROPERTIES.get(table_name)
-        if tbl_props is None:
-            logger.info(
-                f"No table properties found for table: '{table_name}'."
-                " Proceeding without table properties."
-            )
-        else:
-            self.uniqueness_fields = tbl_props.get("uniqueness_fields")
-            self.foreign_keys = tbl_props.get("foreign_keys")
-            self.schema_func = tbl_props.get("schema_func")
-            self.filter_model = tbl_props.get("filter_model")
-            self.strict_validation = tbl_props.get("strict_validation")
-            self.validate_filter_field_types = tbl_props.get(
-                "validate_filter_field_types"
-            )
-            self.field_enum_model = tbl_props.get("field_enum_model")
-            self.extraction_func = tbl_props.get("extraction_func")
 
         # Load the table (lazy Spark reference - no data read until action)
         # Table may not exist yet (e.g., before data is loaded), so catch error
@@ -142,17 +131,17 @@ class BaseTable(DataFrameBase):
                 raise
 
     def _load_sdf(self):
-        """Load the table from the warehouse to self.sdf."""
+        """Load the table from the warehouse to self._sdf."""
         logger.info(
             f"Loading files from {self.catalog_name}."
-            f"{self.table_namespace_name}."
+            f"{self.namespace_name}."
             f"{self.table_name}."
         )
         self._sdf = self._read.from_warehouse(
             catalog_name=self.catalog_name,
-            namespace_name=self.table_namespace_name,
+            namespace_name=self.namespace_name,
             table_name=self.table_name
-        ).to_sdf()
+        )
 
     def _apply_filters(
         self,
@@ -208,8 +197,8 @@ class BaseTable(DataFrameBase):
         >>>     table_name="primary_timeseries"
         >>> ).validate(drop_duplicates=True)
         """
-        self._ev.validate.schema(
-            sdf=self.sdf,
+        self._ev.validate.data(
+            sdf=self.to_sdf(),
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=self.foreign_keys,
@@ -253,23 +242,18 @@ class BaseTable(DataFrameBase):
         >>>     location_prefixes=True
         >>> )
         """
-        if column not in self.sdf.columns:
+        sdf = self.to_sdf()
+        if column not in sdf.columns:
             raise ValueError(
                 f"Invalid column: '{column}' for table: '{self.table_name}'"
             )
         if location_prefixes:
             # Split in Spark, then distinct, then collect
-            prefixes_df = self._sdf.select(
+            prefixes_df = sdf.select(
                 split(col(column), '-').getItem(0).alias('prefix')
             ).distinct()
             return [row.prefix for row in prefixes_df.collect()]
 
         else:
-            unique_values_df = self._sdf.select(column).distinct()
+            unique_values_df = sdf.select(column).distinct()
             return [row[column] for row in unique_values_df.collect()]
-
-
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
-        return gdf

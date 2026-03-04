@@ -1,6 +1,7 @@
 """Variable table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.pydantic_table_models import Variable
+from teehr.models.pandera_dataframe_schemas import variable_schema
 from typing import List, Union
 import logging
 
@@ -9,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 class VariableTable(DomainTable):
     """Access methods to variables table."""
+
+    # Table metadata
+    table_name = "variables"
+    uniqueness_fields = ["name"]
+    schema_func = staticmethod(variable_schema)
 
     def __init__(
         self,

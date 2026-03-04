@@ -12,6 +12,7 @@ from teehr.evaluation.tables import (
     UnitTable,
     VariableTable,
     ConfigurationTable,
+    AttributeTable,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ TBL_CLASS_LOOKUP = {
     "units": UnitTable,
     "variables": VariableTable,
     "configurations": ConfigurationTable,
+    "attributes": AttributeTable,
 }
 
 

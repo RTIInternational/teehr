@@ -12,7 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 class DomainTable(BaseTable):
-    """Domain table class."""
+    """Domain table class.
+
+    Domain tables store reference data (units, variables, configurations,
+    attributes) that other tables reference via foreign keys.
+    """
+
+    # Common defaults for all domain tables
+    strict_validation = True
+    validate_filter_field_types = True
+    foreign_keys = None
+    extraction_func = None
 
     def __init__(
         self,
@@ -58,7 +68,7 @@ class DomainTable(BaseTable):
             f"Validating {len(obj)} objects before adding to {self.table_name} table"
             )
         # if self.foreign_keys is not None:
-        new_df_validated = self._ev.validate.data(
+        new_df_validated = self._ev.validate.schema(
             df=new_df.cache(),
             table_schema=self.schema_func(),
         )
@@ -77,7 +87,7 @@ class DomainTable(BaseTable):
                 f"Validating {self.table_name} table after adding {len(obj)} objects"
                 )
 
-            validated_df = self._ev.validate.data(
+            validated_df = self._ev.validate.schema(
                 df=combined_df.cache(),
                 table_schema=self.schema_func(),
             )
@@ -125,7 +135,7 @@ class DomainTable(BaseTable):
                 f"Validating {self.table_name} table after adding "
                 f"{new_df_not_matched.count()} new objects"
             )
-            validated_df = self._ev.validate.data(
+            validated_df = self._ev.validate.schema(
                 df=combined_df.cache(),
                 table_schema=self.schema_func(),
             )
@@ -145,109 +155,26 @@ class DomainTable(BaseTable):
         ] = None,
         order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
     ):
-        """Run a query against the table with filters and order_by.
+        """Run a query with filters and ordering.
 
-        In general a user will either use the query methods or the filter and
-        order_by methods.  The query method is a convenience method that will
-        apply filters and order_by in a single call.
+        See :meth:`DataFrameBase.query` for full documentation.
 
-        Parameters
-        ----------
-        filters : Union[
-                str, dict, TableFilter,
-                List[Union[str, dict, TableFilter]]
-            ]
-            The filters to apply to the query.  The filters can be an SQL string,
-            dictionary, TableFilter or a list of any of these. The filters
-            will be applied in the order they are provided.
-        order_by : Union[str, List[str], StrEnum, List[StrEnum]]
-            The fields to order the query by.  The fields can be a string,
-            StrEnum or a list of any of these.  The fields will be ordered in
-            the order they are provided.
-
-        Returns
-        -------
-        self : BaseTable or subclass of BaseTable
-
-        Examples
-        --------
-        Filters as dictionaries:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         {
-        >>>             "column": "value_time",
-        >>>             "operator": ">",
-        >>>             "value": "2022-01-01",
-        >>>         },
-        >>>         {
-        >>>             "column": "value_time",
-        >>>             "operator": "<",
-        >>>             "value": "2022-01-02",
-        >>>         },
-        >>>         {
-        >>>             "column": "location_id",
-        >>>             "operator": "=",
-        >>>             "value": "gage-C",
-        >>>         },
-        >>>     ],
-        >>>     order_by=["location_id", "value_time"]
-        >>> ).to_pandas()
-
-        Filters as SQL strings:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         "value_time > '2022-01-01'",
-        >>>         "value_time < '2022-01-02'",
-        >>>         "location_id = 'gage-C'"
-        >>>     ],
-        >>>     order_by=["location_id", "value_time"]
-        >>> ).to_pandas()
-
-        Filters as FilterBaseModels:
-
-        >>> from teehr.models.filters import TimeseriesFilter
-        >>> from teehr.models.filters import FilterOperators
-
-        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         TimeseriesFilter(
-        >>>             column=fields.value_time,
-        >>>             operator=FilterOperators.gt,
-        >>>             value="2022-01-01",
-        >>>         ),
-        >>>         TimeseriesFilter(
-        >>>             column=fields.value_time,
-        >>>             operator=FilterOperators.lt,
-        >>>             value="2022-01-02",
-        >>>         ),
-        >>>         TimeseriesFilter(
-        >>>             column=fields.location_id,
-        >>>             operator=FilterOperators.eq,
-        >>>             value="gage-C",
-        >>>         ),
-        >>> ]).to_pandas()
+        Note
+        ----
+        The ``group_by`` and ``include_metrics`` parameters are not
+        available for domain tables.
         """
-        logger.info("Performing the query.")
-        if filters is not None:
-            self.sdf = self._read.from_warehouse(
-                catalog_name=self.catalog_name,
-                namespace_name=self.table_namespace_name,
-                table_name=self.table_name,
-                filters=filters,
-                validate_filter_field_types=self.validate_filter_field_types,
-            ).to_sdf()
-
-        if order_by is not None:
-            logger.debug(f"Ordering the metrics by: {order_by}.")
-            self.sdf = order_df(self.sdf, order_by)
-        return self
+        super().query(filters=filters, order_by=order_by)
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         raise NotImplementedError(
             "The to_geopandas() method is not implemented for Domain Tables"
+            " because they do not contain location information."
+        )
+
+    def add_geometry(self):
+        raise NotImplementedError(
+            "The add_geometry() method is not implemented for Domain Tables"
             " because they do not contain location information."
         )

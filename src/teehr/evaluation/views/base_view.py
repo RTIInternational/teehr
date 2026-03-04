@@ -52,17 +52,18 @@ class View(DataFrameBase):
             self._sdf = self._compute()
             self._computed = True
 
-    @property
-    def sdf(self) -> ps.DataFrame:
-        """Get the computed Spark DataFrame.
+    def to_sdf(self) -> ps.DataFrame:
+        """Return the computed PySpark DataFrame.
 
-        Triggers computation if not already computed.
+        Triggers computation if not already computed. The PySpark DataFrame
+        can be further processed using PySpark. Note, PySpark DataFrames are
+        lazy and will not be executed until an action is called (e.g.,
+        show(), collect(), toPandas()).
+
+        Returns
+        -------
+        ps.DataFrame
+            The computed Spark DataFrame.
         """
         self._ensure_computed()
         return self._sdf
-
-    @sdf.setter
-    def sdf(self, value: ps.DataFrame):
-        """Set the Spark DataFrame (for chained operations)."""
-        self._sdf = value
-        self._computed = True

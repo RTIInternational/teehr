@@ -5,8 +5,9 @@ from teehr.loading.utils import (
     validate_input_is_parquet
 )
 from teehr.querying.utils import join_geometry
+from teehr.models.pandera_dataframe_schemas import location_crosswalks_schema
 from pathlib import Path
-from typing import Union
+from typing import List, Dict, Union
 import logging
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.location_crosswalks import (
@@ -20,6 +21,21 @@ logger = logging.getLogger(__name__)
 
 class LocationCrosswalkTable(BaseTable):
     """Access methods to location crosswalks table."""
+
+    # Table metadata
+    table_name = "location_crosswalks"
+    uniqueness_fields = ["secondary_location_id"]
+    foreign_keys: List[Dict[str, str]] = [
+        {
+            "column": "primary_location_id",
+            "domain_table": "locations",
+            "domain_column": "id",
+        }
+    ]
+    schema_func = staticmethod(location_crosswalks_schema)
+    strict_validation = True
+    validate_filter_field_types = True
+    extraction_func = staticmethod(convert_single_location_crosswalks)
 
     def __init__(
         self,
@@ -46,16 +62,6 @@ class LocationCrosswalkTable(BaseTable):
         """
         super().__init__(ev, table_name, namespace_name, catalog_name)
         self._load = ev.load
-
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        gdf = join_geometry(
-            self.sdf, self._ev.locations.to_sdf(),
-            "primary_location_id"
-        )
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.to_sdf().columns
-        return gdf
 
     def load_parquet(
         self,

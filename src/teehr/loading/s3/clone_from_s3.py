@@ -84,7 +84,7 @@ def clone_from_s3(
             table_name="locations",
             catalog_name=remote_catalog_name,
             namespace_name=remote_namespace_name
-        ).to_sdf().filter("id in {}".format(primary_location_ids)).select("id").rdd.flatMap(lambda x: x).collect()
+        ).filter("id in {}".format(primary_location_ids)).select("id").rdd.flatMap(lambda x: x).collect()
         missing_primary_location_ids = (
             set(primary_location_ids.strip("()").replace("'", "").split(", ")) -
             set(existing_primary_location_ids)
@@ -100,7 +100,7 @@ def clone_from_s3(
             table_name="location_crosswalks",
             catalog_name=remote_catalog_name,
             namespace_name=remote_namespace_name
-        ).to_sdf().filter("primary_location_id in {}".format(primary_location_ids)).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
+        ).filter("primary_location_id in {}".format(primary_location_ids)).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
         secondary_location_ids = f"({', '.join(repr(id) for id in secondary_location_ids)})"
 
     tables = [
@@ -169,7 +169,7 @@ def clone_from_s3(
             table_name=table.table_name,
             catalog_name=remote_catalog_name,
             namespace_name=remote_namespace_name
-        ).to_sdf()
+        )
 
         for filter in filters:
             if filter is not None:

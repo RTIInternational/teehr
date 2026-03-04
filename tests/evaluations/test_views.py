@@ -8,7 +8,7 @@ def test_location_attributes_view(function_scope_test_warehouse):
     ev = function_scope_test_warehouse
 
     # Test basic pivoted attributes view
-    pdf = ev.pivoted_location_attributes_view().to_pandas()
+    pdf = ev.location_attributes_view().to_pandas()
 
     assert "location_id" in pdf.columns
     # The test warehouse should have year_2_discharge attribute
@@ -22,7 +22,7 @@ def test_location_attributes_view_with_filter(function_scope_test_warehouse):
     ev = function_scope_test_warehouse
 
     # Get only specific attributes
-    pdf = ev.pivoted_location_attributes_view(
+    pdf = ev.location_attributes_view(
         attr_list=["year_2_discharge"]
     ).to_pandas()
 
