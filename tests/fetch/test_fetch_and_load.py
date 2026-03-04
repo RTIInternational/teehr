@@ -187,7 +187,6 @@ def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_templat
 def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
     ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 

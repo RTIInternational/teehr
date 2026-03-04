@@ -188,7 +188,6 @@ def session_scope_evaluation_template(spark_shared_session, tmp_path_factory):
         create_dir=True,
         spark=spark,
     )
-    ev.clone_template()
 
     yield ev
 

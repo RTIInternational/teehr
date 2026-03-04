@@ -23,6 +23,7 @@ from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.joined_timeseries_table import (
     JoinedTimeseriesTable
 )
+from teehr.const import LOCAL_CATALOG_DB_NAME
 from teehr.fetching import const
 from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
@@ -361,7 +362,7 @@ class Evaluation(BaseEvaluation):
         )
         self.spark.conf.set(
             f"spark.sql.catalog.{local_catalog_name}.uri",
-            f"jdbc:sqlite:{warehouse_dir.as_posix()}/{const.LOCAL_CATALOG_DB_NAME}"
+            f"jdbc:sqlite:{warehouse_dir.as_posix()}/{LOCAL_CATALOG_DB_NAME}"
         )
         # Get the catalog metadata that was set during Spark configuration
         self.local_catalog = LocalCatalog(
@@ -388,8 +389,12 @@ class Evaluation(BaseEvaluation):
             target_namespace_name=self.local_catalog.namespace_name
         )
 
-        # TODO:
-        # Rename const.LOCAL_CATALOG_DB_NAME to teehr_catalog.db?
+        # Create version file if create_dir=True.
+        if create_dir is True:
+            version_file = Path(warehouse_dir) / "version"
+            with open(version_file, "w") as f:
+                f.write(teehr.__version__)
+
 
 
     def clean_cache(self):

@@ -12,7 +12,7 @@ from pyspark.sql import SparkSession
 
 from teehr.evaluation.spark_session_utils import create_spark_session
 import teehr
-from teehr import const
+from teehr.const import LOCAL_CATALOG_DB_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def update_metadata_paths(
     spark: SparkSession = None,
     catalog_name: str = "local",
     namespace_name: str = "teehr",
-    database_name: str = const.LOCAL_CATALOG_DB_NAME,
+    database_name: str = LOCAL_CATALOG_DB_NAME,
 ) -> pd.DataFrame:
     """Import a shared evaluation from a directory path.
 

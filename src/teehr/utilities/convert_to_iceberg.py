@@ -28,9 +28,6 @@ def convert_evaluation(
         create_dir=False,
     )
 
-    # This will create a version file with the latest version.
-    ev.clone_template()
-
     # Now copy in the e4 data.
     dataset_dir = dir_path / "dataset"
 
