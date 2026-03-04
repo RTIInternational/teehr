@@ -82,8 +82,8 @@ class Extract:
         in_datapath: str | Path,
         cache_dir: str | Path,
         table_fields: list[str],
-        table_schema_func: SparkDataFrameSchema | PandasDataFrameSchema,
-        write_schema_func: arrow_schema,
+        table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
+        write_schema: arrow_schema,
         extraction_func: Callable[[str | Path], dict[str]],
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -94,6 +94,9 @@ class Extract:
     ):
         """Convert raw data to parquet format enforcing the provided table schema.
 
+        It seems to be doing a lot of things related to reading raw data, validating it,
+        and writing it to cache.
+
         Parameters
         ----------
         in_datapath : str | Path
@@ -102,9 +105,9 @@ class Extract:
             The directory to write the cached parquet files to.
         table_fields : list[str]
             The list of fields in the target table.
-        table_schema_func : Callable
-            A function that returns a pandera schema for validating the data.
-        write_schema_func : arrow_schema
+        table_schema : SparkDataFrameSchema | PandasDataFrameSchema
+            The schema for validating the data.
+        write_schema : arrow_schema
             A pyarrow schema for writing the parquet file to the cache.
         extraction_func : Callable
             A function that extracts a DataFrame from a raw data file.
@@ -158,15 +161,15 @@ class Extract:
                     for field, value in constant_field_values.items():
                         df[field] = value
                 # Validate data types and required fields
-                validated_df = self.ev.validate.data(
+                validated_df = self.ev.validate.schema(
                     df=df,
-                    table_schema=table_schema_func
+                    table_schema=table_schema
                 )
                 # Write to cache as parquet
                 self.ev.write.to_cache(
                     source_data=validated_df,
                     cache_filepath=out_filepath,
-                    write_schema=write_schema_func
+                    write_schema=write_schema
                 )
                 files_converted += 1
         elif in_datapath.is_dir() and parallel is True:
@@ -193,15 +196,15 @@ class Extract:
                         for field, value in constant_field_values.items():
                             df[field] = value
                     # Validate data types and required fields
-                    validated_df = self.ev.validate.data(
+                    validated_df = self.ev.validate.schema(
                         df=df,
-                        table_schema=table_schema_func
+                        table_schema=table_schema
                     )
                     # Write to cache as parquet
                     self.ev.write.to_cache(
                         source_data=validated_df,
                         cache_filepath=out_filepath,
-                        write_schema=write_schema_func
+                        write_schema=write_schema
                     )
                     files_converted += 1
         else:
@@ -218,15 +221,15 @@ class Extract:
                 for field, value in constant_field_values.items():
                     df[field] = value
             # Validate data types and required fields
-            validated_df = self.ev.validate.data(
+            validated_df = self.ev.validate.schema(
                 df=df,
-                table_schema=table_schema_func
+                table_schema=table_schema
             )
             # Write to cache as parquet
             self.ev.write.to_cache(
                 source_data=validated_df,
                 cache_filepath=out_filepath,
-                write_schema=write_schema_func
+                write_schema=write_schema
             )
             files_converted += 1
         logger.info(f"Converted {files_converted} files.")
