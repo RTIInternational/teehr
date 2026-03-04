@@ -4,10 +4,9 @@ from pathlib import Path
 
 import pyspark.sql as ps
 import pandas as pd
-from pyarrow import schema as arrow_schema
+from pyarrow import Schema as ArrowSchema
 import geopandas as gpd
 
-from teehr.evaluation.tables import BaseTable
 
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
 
@@ -146,7 +145,6 @@ class Write:
         source_data: pd.DataFrame | ps.DataFrame | str,
         table_name: str,
         write_mode: str = "append",
-        # @samlomant, write_mode should be an enum or something, not a string?
         uniqueness_fields: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None
@@ -162,16 +160,16 @@ class Write:
         write_mode : str, optional
             The mode to use when writing the DataFrame. Options:
 
-            - ``'append'``: Insert new rows; skip rows matching
+            - ``"append"``: Insert new rows; skip rows matching
               uniqueness_fields.
-            - ``'upsert'``: Insert new rows; update existing rows matching
+            - ``"upsert"``: Insert new rows; update existing rows matching
               uniqueness_fields.
-            - ``'overwrite'``: Replace all data in table. Preserves table
+            - ``"overwrite"``: Replace all data in table. Preserves table
               structure and history (can time-travel back).
-            - ``'create_or_replace'``: Drop and recreate table. Loses history.
+            - ``"create_or_replace"``: Drop and recreate table. Loses history.
               Can change schema.
 
-            Default is ``'append'``.
+            Default is ``"append"``.
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
@@ -265,7 +263,7 @@ class Write:
     def to_cache(
         source_data: ps.DataFrame | pd.DataFrame,
         cache_filepath: str | Path,
-        write_schema: arrow_schema,
+        write_schema: ArrowSchema,
         write_mode: str = "overwrite"
     ):
         """Write the DataFrame to a parquet file for caching.
@@ -276,7 +274,7 @@ class Write:
             The Spark or Pandas DataFrame to cache.
         cache_filepath : str
             The path to use for the cached table.
-        write_schema : arrow_schema
+        write_schema : ArrowSchema
             The pyarrow schema to use when writing the parquet file.
         write_mode : str, optional
             The mode to use when a PySpark DataFrame is written to the cache
