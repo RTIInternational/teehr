@@ -21,7 +21,15 @@ class Validate:
     """Class for validating data."""
 
     def __init__(self, ev=None) -> None:
-        """Initialize the Validate class."""
+        """Initialize the Validate class with an Evaluation instance.
+
+        Parameters
+        ----------
+        ev : Evaluation
+            An instance of the Evaluation class containing Spark session
+            and catalog details. The default is None, which allows access to
+            the class's static methods only.
+        """
         if ev is not None:
             self._ev = ev
 
@@ -59,7 +67,7 @@ class Validate:
         self._ev.spark.catalog.dropTempView("temp_table")
 
     @staticmethod
-    def data(
+    def schema(
         df: ps.DataFrame | pd.DataFrame,
         table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
     ) -> ps.DataFrame | pd.DataFrame:
@@ -70,29 +78,29 @@ class Validate:
 
         Parameters
         ----------
-        df : ps.DataFrame
-            The Spark DataFrame to validate.
-        schema : SparkDataFrameSchema | PandasDataFrameSchema
+        df : ps.DataFrame | pd.DataFrame
+            The Spark or Pandas DataFrame to validate.
+        table_schema : SparkDataFrameSchema | PandasDataFrameSchema
             The schema to validate against.
 
         Returns
         -------
         ps.DataFrame | pd.DataFrame
-            The validated Spark DataFrame.
+            The validated Spark or Pandas DataFrame.
 
         Examples
         --------
         Validate a PySpark DataFrame against the primary timeseries schema:
 
         >>> from teehr.models.pandera_dataframe_schemas import primary_timeseries_schema
-        >>> validated_sdf = ev.validate.data(
+        >>> validated_sdf = ev.validate.schema(
         ...     df=raw_sdf,
         ...     table_schema=primary_timeseries_schema()
         ... )
 
         For Pandas DataFrames:
 
-        >>> validated_pdf = ev.validate.data(
+        >>> validated_pdf = ev.validate.schema(
         ...     df=raw_pdf,
         ...     table_schema=primary_timeseries_schema(type="pandas")
         ... )
@@ -102,21 +110,23 @@ class Validate:
             if not isinstance(df, ps.DataFrame):
                 raise ValueError(
                     "df must be a Spark DataFrame if"
-                    " schema is a Spark DataFrameSchema."
+                    " table_schema is a Spark DataFrameSchema."
                 )
         elif isinstance(table_schema, PandasDataFrameSchema):
             if not isinstance(df, pd.DataFrame):
                 raise ValueError(
-                    "df must be a Pandas DataFrame."
-                    " if schema is a Pandas DataFrameSchema."
+                    "df must be a Pandas DataFrame if"
+                    " table_schema is a Pandas DataFrameSchema."
                 )
         else:
             raise ValueError(
-                "schema must be a Spark or Pandas DataFrameSchema."
+                "table_schema must be a Spark or Pandas DataFrameSchema."
             )
-        return table_schema.validate(df)
 
-    def filters_from_sdf(
+        validated_df = table_schema.validate(df)
+        return validated_df
+
+    def sdf_filters(
         self,
         sdf: ps.DataFrame,
         filters: Union[
@@ -211,9 +221,9 @@ class Validate:
         """
         tbl = self._ev.table(table_name=table_name)
         sdf = tbl.to_sdf()
-        return self.filters_from_sdf(sdf, filters, validate)
+        return self.sdf_filters(sdf, filters, validate)
 
-    def schema(
+    def data(
         self,
         sdf: ps.DataFrame,
         table_schema: SparkDataFrameSchema,
@@ -268,7 +278,8 @@ class Validate:
 
         if strict:
             # First check to make sure schema col keys are in the dataframe
-            # if not raise an error. If they are, select only those columns to enforce the schema.
+            # if not raise an error. If they are, select only those columns
+            # to enforce the schema.
             missing_cols = [col for col in schema_cols if col not in sdf.columns]
             if len(missing_cols) > 0:
                 raise ValueError(
@@ -299,5 +310,3 @@ class Validate:
         )
 
         return validated_df
-
-    # NOTE: Should these just update self.sdf and return self for chaining?

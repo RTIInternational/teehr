@@ -166,7 +166,7 @@ class Load:
                 prefix=secondary_location_id_prefix,
             )
         if foreign_keys is not None:
-            validated_df = self._validate.schema(
+            validated_df = self._validate.data(
                 sdf=df,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
@@ -174,7 +174,7 @@ class Load:
                 uniqueness_fields=uniqueness_fields
             )
         else:
-            validated_df = self._validate.data(
+            validated_df = self._validate.schema(
                 df=df,
                 table_schema=schema_func(),
             )
@@ -309,7 +309,7 @@ class Load:
         sdf = self._read.from_cache(
             path=table_cache_dir,
             table_schema_func=schema_func()
-        ).to_sdf()
+        )
         # Add or replace primary_location_id prefix if provided
         if primary_location_id_prefix:
             sdf = add_or_replace_sdf_column_prefix(
@@ -342,7 +342,7 @@ class Load:
             self._ev.attributes.add(attr_list)
 
         if foreign_keys is not None:
-            validated_df = self._validate.schema(
+            validated_df = self._validate.data(
                 sdf=sdf,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
@@ -350,7 +350,7 @@ class Load:
                 uniqueness_fields=uniqueness_fields
             )
         else:
-            validated_df = self._validate.data(
+            validated_df = self._validate.schema(
                 df=sdf,
                 table_schema=schema_func(),
             )
@@ -414,7 +414,7 @@ class Load:
         sdf = self._read.from_cache(
             path=in_path,
             table_schema_func=schema_func()
-        ).to_sdf()
+        )
 
         if update_attrs_table and table_name == "location_attributes":
             attr_names = [
@@ -433,7 +433,7 @@ class Load:
             self._ev.attributes.add(attr_list)
 
         if foreign_keys is not None:
-            validated_df = self._validate.schema(
+            validated_df = self._validate.data(
                 sdf=sdf,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
@@ -441,7 +441,7 @@ class Load:
                 uniqueness_fields=uniqueness_fields
             )
         else:
-            validated_df = self._validate.data(
+            validated_df = self._validate.schema(
                 df=sdf,
                 table_schema=schema_func(),
             )

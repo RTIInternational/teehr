@@ -2,7 +2,7 @@
 from typing import List
 from pathlib import Path
 
-from pyspark.sql import DataFrame
+import pyspark.sql as ps
 import pandas as pd
 from pyarrow import schema as arrow_schema
 import geopandas as gpd
@@ -31,9 +31,9 @@ class Write:
         if ev is not None:
             self._ev = ev
 
-    def _apply_datatype_transform(self) -> str:
+    def _apply_datatype_transform(self, view_name: str) -> str:
         """Cast fields in the DataFrame to the pre-defined types."""
-        all_columns = self._ev.spark.table("source_data").columns
+        all_columns = self._ev.spark.table(view_name).columns
         select_clauses = []
         except_clauses = []
         for col in all_columns:
@@ -46,8 +46,8 @@ class Write:
         self._ev.spark.sql(f"""
             SELECT * {except_sql},
             {select_sql}
-            FROM source_data
-        """).createOrReplaceTempView("source_data")
+            FROM {view_name}
+        """).createOrReplaceTempView(view_name)
 
     def _create_or_replace(
         self,
@@ -56,7 +56,11 @@ class Write:
         catalog_name: str,
         namespace_name: str,
     ):
-        """Upsert the DataFrame to the specified target in the catalog."""
+        """Drop and recreate the table with source data.
+
+        Creates the table if it doesn't exist. Loses table history/snapshots.
+        Can change schema if source data has different columns.
+        """
         sql_query = f"""
             CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
             AS SELECT * FROM {source_view}
@@ -126,20 +130,11 @@ class Write:
         catalog_name: str,
         namespace_name: str
     ):
-        """Replace the target table values with matching Dataframe values."""
-        # Use the <=> operator for null-safe equality comparison
-        # so that two null values are considered equal.
-        # on_sql = " AND ".join(
-        #     [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
-        # )
-        # source_fields = self._ev.spark.table(source_view).columns
-        # update_fields = list(
-        #     set(source_fields)
-        #     .symmetric_difference(set(uniqueness_fields))
-        # )
-        # update_set_sql = ", ".join(
-        #     [f"t.{fld} = s.{fld}" for fld in update_fields]
-        # )
+        """Replace all data in the table while preserving table structure.
+
+        Table must already exist. Preserves table history - creates new
+        snapshot so you can time-travel back to previous data.
+        """
         sql_query = f"""
             INSERT OVERWRITE TABLE {catalog_name}.{namespace_name}.{table_name}
             SELECT * FROM {source_view}
@@ -148,9 +143,10 @@ class Write:
 
     def to_warehouse(
         self,
-        source_data: pd.DataFrame | DataFrame | str,
+        source_data: pd.DataFrame | ps.DataFrame | str,
         table_name: str,
         write_mode: str = "append",
+        # @samlomant, write_mode should be an enum or something, not a string?
         uniqueness_fields: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None
@@ -159,13 +155,23 @@ class Write:
 
         Parameters
         ----------
-        source_data : pd.DataFrame | DataFrame | str
+        source_data : pd.DataFrame | ps.DataFrame | str
             The Spark or Pandas DataFrame or temporary view name to write.
         table_name : str
             The target table name in the catalog.
         write_mode : str, optional
-            The mode to use when writing the DataFrame
-            (e.g., 'append', 'upsert', 'create_or_replace'), by default "append".
+            The mode to use when writing the DataFrame. Options:
+
+            - ``'append'``: Insert new rows; skip rows matching
+              uniqueness_fields.
+            - ``'upsert'``: Insert new rows; update existing rows matching
+              uniqueness_fields.
+            - ``'overwrite'``: Replace all data in table. Preserves table
+              structure and history (can time-travel back).
+            - ``'create_or_replace'``: Drop and recreate table. Loses history.
+              Can change schema.
+
+            Default is ``'append'``.
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
@@ -185,16 +191,20 @@ class Write:
             tbl = self._ev.table(table_name=table_name)
             uniqueness_fields = tbl.uniqueness_fields
 
+        source_view_name = "source_view"
+
         if isinstance(source_data, pd.DataFrame):
             source_data = self._ev.spark.createDataFrame(source_data)
 
-        if isinstance(source_data, DataFrame) or isinstance(source_data, BaseTable):
-            source_data.createOrReplaceTempView("source_data")
-            source_data = "source_data"
+        if isinstance(source_data, ps.DataFrame):
+            source_data.createOrReplaceTempView(source_view_name)
 
-        tbl_columns = self._ev.spark.table(source_data).columns
+        if isinstance(source_data, str):
+            source_view_name = source_data
+
+        tbl_columns = self._ev.spark.table(source_view_name).columns
         if any(item in DATATYPE_WRITE_TRANSFORMS for item in tbl_columns):
-            self._apply_datatype_transform()
+            self._apply_datatype_transform(source_view_name)
 
         if write_mode == "append":
             if uniqueness_fields is None:
@@ -202,7 +212,7 @@ class Write:
                     "uniqueness_fields must be provided for append write mode."
                 )
             self._append(
-                source_view=source_data,
+                source_view=source_view_name,
                 table_name=table_name,
                 uniqueness_fields=uniqueness_fields,
                 catalog_name=catalog_name,
@@ -214,7 +224,7 @@ class Write:
                     "uniqueness_fields must be provided for upsert write mode."
                 )
             self._upsert(
-                source_view=source_data,
+                source_view=source_view_name,
                 table_name=table_name,
                 uniqueness_fields=uniqueness_fields,
                 catalog_name=catalog_name,
@@ -222,38 +232,41 @@ class Write:
             )
         elif write_mode == "create_or_replace":
             self._create_or_replace(
-                source_view=source_data,
+                source_view=source_view_name,
                 table_name=table_name,
                 catalog_name=catalog_name,
                 namespace_name=namespace_name
             )
-        # TODO: Is something like this needed?
-        # elif write_mode == "overwrite":
-        #     self._overwrite(
-        #         source_view=source_data,
-        #         table_name=table_name,
-        #         # uniqueness_fields=uniqueness_fields,
-        #     )
+        elif write_mode == "overwrite":
+            self._overwrite(
+                source_view=source_view_name,
+                table_name=table_name,
+                catalog_name=catalog_name,
+                namespace_name=namespace_name
+            )
         else:
             raise ValueError(
-                "write_mode must be one of 'append', 'upsert',"
-                " or 'create_or_replace',."
+                "write_mode must be one of 'append', 'upsert', "
+                "'overwrite', or 'create_or_replace'."
             )
 
-        self._ev.spark.sql("DROP VIEW IF EXISTS source_data")
+        self._ev.spark.sql(f"DROP VIEW IF EXISTS {source_view_name}")
 
     @staticmethod
     def to_cache(
-        source_data: DataFrame | pd.DataFrame,
+        source_data: ps.DataFrame | pd.DataFrame,
         cache_filepath: str | Path,
         write_schema: arrow_schema,
         write_mode: str = "overwrite"
     ):
         """Cache the DataFrame in memory for faster access.
 
+        @samlamont, this accurately describes what this method does?
+        It seems like it writes to parquet, which is not really caching in memory.
+
         Parameters
         ----------
-        source_data : DataFrame
+        source_data : ps.DataFrame | pd.DataFrame
             The Spark or Pandas DataFrame to cache.
         cache_filepath : str
             The path to use for the cached table.
@@ -273,7 +286,7 @@ class Write:
                 engine="pyarrow",
                 schema=write_schema
             )
-        elif isinstance(source_data, DataFrame):
+        elif isinstance(source_data, ps.DataFrame):
             source_data.write.mode(write_mode).parquet(cache_filepath)
         else:
             raise ValueError(
@@ -282,15 +295,17 @@ class Write:
 
     def to_view(
         self,
-        source_data: DataFrame | pd.DataFrame,
+        source_data: ps.DataFrame | pd.DataFrame,
         view_name: str,
         temporary: bool = True,
     ):
         """Create a view from the DataFrame.
 
+        @samlamont, do we use this at all?
+
         Parameters
         ----------
-        source_data : DataFrame
+        source_data : ps.DataFrame | pd.DataFrame
             The Spark or Pandas DataFrame to create a view from.
         view_name : str
             The name to use for the temporary or global view.

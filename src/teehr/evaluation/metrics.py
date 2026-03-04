@@ -14,7 +14,7 @@ class Metrics(BaseTable):
         table directly with the ``include_metrics`` argument instead.
         For example::
 
-            ev.joined_timeseries.query(
+            ev.table("joined_timeseries").query(
                 include_metrics=[...],
                 group_by=[...],
                 order_by=[...],
