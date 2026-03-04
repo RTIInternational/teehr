@@ -398,68 +398,6 @@ class Evaluation(EvaluationBase):
         with open(version_file, "w") as f:
             f.write(teehr.__version__)
 
-    def clone_from_s3(
-        self,
-        remote_catalog_name: str = None,
-        remote_namespace_name: str = None,
-        primary_location_ids: List[str] = None,
-        start_date: Union[str, datetime] = None,
-        end_date: Union[str, datetime] = None,
-        clone_template: bool = True,
-        # spatial_filter: str = None
-    ):
-        """Read data from the remote warehouse, potentially subsetting.
-
-        Parameters
-        ----------
-        remote_catalog_name : str, optional
-            The remote catalog name to pull from. The default is None,
-            which uses the remote catalog name of the Evaluation.
-        remote_namespace_name : str, optional
-            The remote namespace name to pull from. The default is None,
-            which uses the remote namespace name of the Evaluation.
-        primary_location_ids : List[str], optional
-            The list of primary location ids to subset the data.
-            The default is None.
-        start_date : Union[str, datetime], optional
-            The start date to subset the data.
-            The default is None.
-        end_date : Union[str, datetime], optional
-            The end date to subset the data.
-            The default is None.
-        clone_template : bool, optional
-            Whether to clone the template to the local warehouse
-            before pulling data from remote. The default is True.
-            If a local warehouse already exists, an error will be raised, so
-            set this to False in that case. Data will be written to the existing
-            local warehouse using 'upsert' mode.
-        """
-        # You must configure the catalogs when initializing the Evaluation.
-        if self.local_catalog.warehouse_dir is None:
-            raise ValueError("The 'local_warehouse_dir' must be specified.")
-        if remote_catalog_name is None:
-            remote_catalog_name = self.remote_catalog.catalog_name
-        if remote_namespace_name is None:
-            remote_namespace_name = self.remote_catalog.namespace_name
-
-        if clone_template is True:
-            logger.info("Cloning template to local warehouse.")
-            # This will raise an error if it already exists.
-            self.clone_template()
-
-        # Now pull down the data from remote, applying any filtering, and
-        # write to the local template.
-        clone_from_s3(
-            ev=self,
-            local_catalog_name=self.local_catalog.catalog_name,
-            local_namespace_name=self.local_catalog.namespace_name,
-            remote_catalog_name=remote_catalog_name,
-            remote_namespace_name=remote_namespace_name,
-            primary_location_ids=primary_location_ids,
-            start_date=start_date,
-            end_date=end_date
-        )
-
     def clean_cache(self):
         """Clean temporary files.
 
@@ -468,58 +406,6 @@ class Evaluation(EvaluationBase):
         logger.info(f"Removing temporary files from {self.active_catalog.cache_dir}")
         remove_dir_if_exists(self.active_catalog.cache_dir)
         self.active_catalog.cache_dir.mkdir()
-
-    def sql(self, query: str, create_temp_views: List[str]):
-        """Run a SQL query on the Spark session against the TEEHR tables.
-
-        Parameters
-        ----------
-        query : str
-            The SQL query to run.
-        create_temp_views : List[str], optional
-            A list of tables to create temporary views for.
-            The default is None which creates all.
-
-        Returns
-        -------
-        pyspark.sql.DataFrame
-            The result of the SQL query.
-            This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.
-
-        By default this method has access to the following tables preloaded as temporary views:
-            - units
-            - variables
-            - attributes
-            - configurations
-            - locations
-            - location_attributes
-            - location_crosswalks
-            - primary_timeseries
-            - secondary_timeseries
-            - joined_timeseries
-        """ # noqa
-        if "units" in create_temp_views:
-            self.units.to_sdf().createOrReplaceTempView("units")
-        if "variables" in create_temp_views:
-            self.variables.to_sdf().createOrReplaceTempView("variables")
-        if "attributes" in create_temp_views:
-            self.attributes.to_sdf().createOrReplaceTempView("attributes")
-        if "configurations" in create_temp_views:
-            self.configurations.to_sdf().createOrReplaceTempView("configurations")
-        if "locations" in create_temp_views:
-            self.locations.to_sdf().createOrReplaceTempView("locations")
-        if "location_attributes" in create_temp_views:
-            self.location_attributes.to_sdf().createOrReplaceTempView("location_attributes")
-        if "location_crosswalks" in create_temp_views:
-            self.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
-        if "primary_timeseries" in create_temp_views:
-            self.primary_timeseries.to_sdf().createOrReplaceTempView("primary_timeseries")
-        if "secondary_timeseries" in create_temp_views:
-            self.secondary_timeseries.to_sdf().createOrReplaceTempView("secondary_timeseries")
-        if "joined_timeseries" in create_temp_views:
-            self.joined_timeseries.to_sdf().createOrReplaceTempView("joined_timeseries")
-
-        return self.spark.sql(query)
 
     def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> None:
         """Check the version of the TEEHR Evaluation.
