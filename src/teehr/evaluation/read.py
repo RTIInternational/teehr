@@ -100,9 +100,15 @@ class Read:
         # read it again without the schema to ensure all fields are included.
         # Otherwise, continue.
         # TODO: What if it's Pandas schema?
+        schema = None
         if isinstance(table_schema, SparkDataFrameSchema):
             schema = table_schema.to_structtype()
-        df = self._ev.spark.read.format(file_format).options(**options).load(path, schema=schema)
+
+        reader = self._ev.spark.read.format(file_format).options(**options)
+        if schema is not None:
+            df = reader.load(path, schema=schema)
+        else:
+            df = reader.load(path)
         if df.isEmpty():
             if show_missing_table_warning:
                 logger.warning(
