@@ -4,7 +4,6 @@ import logging
 
 from teehr.evaluation.views.base_view import View
 from teehr.models.filters import TableFilter
-from teehr.evaluation.views.location_attributes_view import LocationAttributesView
 
 import pyspark.sql as ps
 
@@ -219,13 +218,9 @@ class JoinedTimeseriesView(View):
             The DataFrame with attributes added.
         """
         # Use LocationAttributesView to get pivoted attributes
-        attrs_view = LocationAttributesView(
-            ev=self._ev,
-            attr_list=self._attr_list,
-        )
-        pivot_df = attrs_view.to_sdf()
+        attrs_df = self._ev.location_attributes_view(attr_list=self._attr_list).to_sdf()
 
-        if pivot_df.isEmpty():
+        if attrs_df.isEmpty():
             logger.warning(
                 "No location attributes found. Skipping adding attributes."
             )
@@ -233,7 +228,7 @@ class JoinedTimeseriesView(View):
 
         # Join pivoted attributes to the joined timeseries
         joined_df.createOrReplaceTempView("joined")
-        pivot_df.createOrReplaceTempView("attrs")
+        attrs_df.createOrReplaceTempView("attrs")
 
         joined_df = self._ev.sql("""
             SELECT

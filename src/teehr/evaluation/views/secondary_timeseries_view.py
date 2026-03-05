@@ -3,9 +3,6 @@ from typing import List
 import logging
 
 from teehr.evaluation.views.base_view import View
-from teehr.evaluation.views.location_attributes_view import (
-    LocationAttributesView
-)
 import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
@@ -120,11 +117,7 @@ class SecondaryTimeseriesView(View):
             The DataFrame with attributes added.
         """
         # Use LocationAttributesView to get pivoted attributes
-        attrs_view = LocationAttributesView(
-            ev=self._ev,
-            attr_list=self._attr_list,
-        )
-        attrs_df = attrs_view.to_sdf()
+        attrs_df = self._ev.location_attributes_view(attr_list=self._attr_list).to_sdf()
 
         if attrs_df.isEmpty():
             logger.warning(
