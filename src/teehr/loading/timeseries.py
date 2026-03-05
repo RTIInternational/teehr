@@ -16,8 +16,8 @@ def convert_single_timeseries(
     in_filepath: Union[str, Path],
     field_mapping: dict,
     **kwargs
-):
-    """Convert timeseries data to parquet format.
+) -> pd.DataFrame:
+    """Convert timeseries data to a pandas DataFrame.
 
     Parameters
     ----------
@@ -29,6 +29,10 @@ def convert_single_timeseries(
     **kwargs
         Additional keyword arguments are passed to
             pd.read_csv(), pd.read_parquet(), or xr.open_dataset().
+
+    Returns
+    -------
+    pd.DataFrame
 
     Steps:
     1. Read the file

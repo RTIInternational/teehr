@@ -1,23 +1,36 @@
 """Domain table class."""
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.models.pydantic_table_models import TableBaseModel
-from teehr.querying.utils import order_df
 from teehr.models.filters import TableFilter
 from teehr.models.str_enum import StrEnum
-from teehr.models.table_enums import TableWriteEnum
 import pandas as pd
 from typing import List, Union
 import logging
 
-import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
 
 
 class DomainTable(BaseTable):
-    """Domain table class."""
+    """Domain table class.
 
-    def __init__(self, ev):
+    Domain tables store reference data (units, variables, configurations,
+    attributes) that other tables reference via foreign keys.
+    """
+
+    # Common defaults for all domain tables
+    strict_validation = True
+    validate_filter_field_types = True
+    foreign_keys = None
+    extraction_func = None
+
+    def __init__(
+        self,
+        ev,
+        table_name: str = None,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
+    ):
         """Initialize the Table class.
 
         Parameters
@@ -25,17 +38,23 @@ class DomainTable(BaseTable):
         ev : EvaluationBase
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
+        table_name : str, optional
+            The name of the table to operate on.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
         """
-        super().__init__(ev)
+        super().__init__(ev, table_name, namespace_name, catalog_name)
 
     def _add(
         self,
         obj: Union[TableBaseModel, List[TableBaseModel]],
-        write_mode: TableWriteEnum = TableWriteEnum.append
+        write_mode: str = "append"
     ):
         # logger.info(f"Adding attribute to {self.dir}")
-        self._check_load_table()
-
         org_df = self.to_sdf()
 
         if issubclass(type(obj), TableBaseModel):
@@ -49,7 +68,7 @@ class DomainTable(BaseTable):
             f"Validating {len(obj)} objects before adding to {self.table_name} table"
             )
         # if self.foreign_keys is not None:
-        new_df_validated = self._ev.validate.data(
+        new_df_validated = self._ev.validate.schema(
             df=new_df.cache(),
             table_schema=self.schema_func(),
         )
@@ -68,7 +87,7 @@ class DomainTable(BaseTable):
                 f"Validating {self.table_name} table after adding {len(obj)} objects"
                 )
 
-            validated_df = self._ev.validate.data(
+            validated_df = self._ev.validate.schema(
                 df=combined_df.cache(),
                 table_schema=self.schema_func(),
             )
@@ -116,7 +135,7 @@ class DomainTable(BaseTable):
                 f"Validating {self.table_name} table after adding "
                 f"{new_df_not_matched.count()} new objects"
             )
-            validated_df = self._ev.validate.data(
+            validated_df = self._ev.validate.schema(
                 df=combined_df.cache(),
                 table_schema=self.schema_func(),
             )
@@ -136,106 +155,16 @@ class DomainTable(BaseTable):
         ] = None,
         order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
     ):
-        """Run a query against the table with filters and order_by.
+        """Run a query with filters and ordering.
 
-        In general a user will either use the query methods or the filter and
-        order_by methods.  The query method is a convenience method that will
-        apply filters and order_by in a single call.
+        See :meth:`DataFrameBase.query` for full documentation.
 
-        Parameters
-        ----------
-        filters : Union[
-                str, dict, TableFilter,
-                List[Union[str, dict, TableFilter]]
-            ]
-            The filters to apply to the query.  The filters can be an SQL string,
-            dictionary, TableFilter or a list of any of these. The filters
-            will be applied in the order they are provided.
-        order_by : Union[str, List[str], StrEnum, List[StrEnum]]
-            The fields to order the query by.  The fields can be a string,
-            StrEnum or a list of any of these.  The fields will be ordered in
-            the order they are provided.
-
-        Returns
-        -------
-        self : BaseTable or subclass of BaseTable
-
-        Examples
-        --------
-        Filters as dictionaries:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         {
-        >>>             "column": "value_time",
-        >>>             "operator": ">",
-        >>>             "value": "2022-01-01",
-        >>>         },
-        >>>         {
-        >>>             "column": "value_time",
-        >>>             "operator": "<",
-        >>>             "value": "2022-01-02",
-        >>>         },
-        >>>         {
-        >>>             "column": "location_id",
-        >>>             "operator": "=",
-        >>>             "value": "gage-C",
-        >>>         },
-        >>>     ],
-        >>>     order_by=["location_id", "value_time"]
-        >>> ).to_pandas()
-
-        Filters as SQL strings:
-
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         "value_time > '2022-01-01'",
-        >>>         "value_time < '2022-01-02'",
-        >>>         "location_id = 'gage-C'"
-        >>>     ],
-        >>>     order_by=["location_id", "value_time"]
-        >>> ).to_pandas()
-
-        Filters as FilterBaseModels:
-
-        >>> from teehr.models.filters import TimeseriesFilter
-        >>> from teehr.models.filters import FilterOperators
-
-        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
-        >>> ts_df = ev.table(table_name="primary_timeseries").query(
-        >>>     filters=[
-        >>>         TimeseriesFilter(
-        >>>             column=fields.value_time,
-        >>>             operator=FilterOperators.gt,
-        >>>             value="2022-01-01",
-        >>>         ),
-        >>>         TimeseriesFilter(
-        >>>             column=fields.value_time,
-        >>>             operator=FilterOperators.lt,
-        >>>             value="2022-01-02",
-        >>>         ),
-        >>>         TimeseriesFilter(
-        >>>             column=fields.location_id,
-        >>>             operator=FilterOperators.eq,
-        >>>             value="gage-C",
-        >>>         ),
-        >>> ]).to_pandas()
+        Note
+        ----
+        The ``group_by`` and ``include_metrics`` parameters are not
+        available for domain tables.
         """
-        logger.info("Performing the query.")
-        self._check_load_table()
-        if filters is not None:
-            self.sdf = self._read.from_warehouse(
-                catalog_name=self.catalog_name,
-                namespace_name=self.table_namespace_name,
-                table_name=self.table_name,
-                filters=filters,
-                validate_filter_field_types=self.validate_filter_field_types,
-            ).to_sdf()
-
-        if order_by is not None:
-            logger.debug(f"Ordering the metrics by: {order_by}.")
-            self.sdf = order_df(self.sdf, order_by)
-        return self
+        super().query(filters=filters, order_by=order_by)
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
@@ -244,54 +173,9 @@ class DomainTable(BaseTable):
             " because they do not contain location information."
         )
 
-    def load_dataframe(
-        self,
-        df: Union[pd.DataFrame, ps.DataFrame],
-        namespace_name: str = None,
-        catalog_name: str = None,
-        field_mapping: dict = None,
-        constant_field_values: dict = None,
-        write_mode: TableWriteEnum = TableWriteEnum.append,
-        drop_duplicates: bool = True,
-    ):
-        """Load data from an in-memory dataframe.
-
-        Parameters
-        ----------
-        df : Union[pd.DataFrame, ps.DataFrame]
-            DataFrame or GeoDataFrame to load into the table.
-        namespace_name : str, optional
-            The namespace name to write to. If None, uses the
-            active catalog's namespace.
-        catalog_name : str, optional
-            The catalog name to write to. If None, uses the
-            active catalog's catalog name.
-        field_mapping : dict, optional
-            A dictionary mapping input fields to output fields.
-            Format: {input_field: output_field}
-        constant_field_values : dict, optional
-            A dictionary mapping field names to constant values.
-            Format: {field_name: value}.
-        write_mode : TableWriteEnum, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
-        drop_duplicates : bool, optional (default: True)
-            Whether to drop duplicates from the DataFrame during validation.
-        """ # noqa
-        self._load.dataframe(
-            df=df,
-            table_name=self.table_name,
-            namespace_name=namespace_name,
-            catalog_name=catalog_name,
-            field_mapping=field_mapping,
-            constant_field_values=constant_field_values,
-            write_mode=write_mode,
-            drop_duplicates=drop_duplicates,
+    def add_geometry(self):
+        """Add geometry to the DataFrame."""
+        raise NotImplementedError(
+            "The add_geometry() method is not implemented for Domain Tables"
+            " because they do not contain location information."
         )
-        self._load_table()

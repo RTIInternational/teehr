@@ -1,0 +1,332 @@
+"""Base class for DataFrame access patterns (Tables and Views)."""
+from abc import ABC
+from typing import List, Union
+import logging
+
+from teehr.models.str_enum import StrEnum
+from teehr.querying.utils import (
+    df_to_gdf,
+    join_geometry,
+    order_df,
+    group_df,
+    post_process_metric_results
+)
+from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
+from teehr.models.filters import TableFilter
+from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.querying.metric_format import apply_aggregation_metrics
+import pyspark.sql as ps
+
+logger = logging.getLogger(__name__)
+
+
+class DataFrameBase(ABC):
+    """Abstract base class for DataFrame-based data access.
+
+    This class provides the common interface and implementation for both:
+    - Tables: Read from persisted iceberg tables
+    - Views: Computed on-the-fly from other data sources
+
+    Subclasses must implement the `sdf` property to provide access to
+    the underlying Spark DataFrame.
+    """
+
+    def __init__(self, ev):
+        """Initialize the DataFrameBase.
+
+        Parameters
+        ----------
+        ev : EvaluationBase
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related operations.
+        """
+        self._ev = ev
+        self._write = ev.write
+        self._sdf: ps.DataFrame = None
+        self._has_geometry = None
+
+    def to_sdf(self) -> ps.DataFrame:
+        """Return the PySpark DataFrame.
+
+        The PySpark DataFrame can be further processed using PySpark. Note,
+        PySpark DataFrames are lazy and will not be executed until an action
+        is called (e.g., show(), collect(), toPandas()).
+
+        Returns
+        -------
+        ps.DataFrame
+            The Spark DataFrame.
+        """
+        return self._sdf
+
+    def to_pandas(self):
+        """Return Pandas DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+            The data as a Pandas DataFrame.
+        """
+        df = self.to_sdf().toPandas()
+        return df
+
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame.
+
+        Returns
+        -------
+        gpd.GeoDataFrame
+            The data as a GeoPandas DataFrame.
+        """
+        if self._has_geometry:
+            logger.debug("DataFrame already has geometry. Converting to GeoPandas.")
+            gdf = df_to_gdf(self.to_pandas())
+            return gdf
+        gdf = df_to_gdf(self.add_geometry().to_pandas())
+        return gdf
+
+    def add_geometry(self):
+        """Add geometry to the DataFrame by joining with the locations table."""
+        sdf = self.to_sdf()
+        gdf = join_geometry(sdf, self._ev.locations.to_sdf())
+        self._sdf = gdf
+        self._has_geometry = True
+        return self
+
+    def _apply_filters(
+        self,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ],
+        validate: bool = False
+    ):
+        """Apply filters to the DataFrame.
+
+        Parameters
+        ----------
+        filters : Union[str, dict, TableFilter, List[...]]
+            The filters to apply.
+        validate : bool, optional
+            Whether to validate filter field types. Default is False.
+        """
+        if not isinstance(filters, list):
+            filters = [filters]
+
+        # Use to_sdf() to ensure computation (for Views)
+        sdf = self.to_sdf()
+        validated_filters = self._ev.validate.sdf_filters(
+            sdf=sdf,
+            filters=filters,
+            validate=validate
+        )
+        for f in validated_filters:
+            sdf = sdf.filter(f)
+        self._sdf = sdf
+
+    def filter(
+        self,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ] = None
+    ):
+        """Apply filters to the DataFrame.
+
+        Parameters
+        ----------
+        filters : Union[str, dict, TableFilter, List[...]]
+            The filters to apply. Can be SQL strings, dictionaries,
+            or TableFilter objects.
+
+        Returns
+        -------
+        self
+            Returns self for method chaining.
+
+        Examples
+        --------
+        Filters as dictionary:
+
+        >>> df = accessor.filter(
+        >>>     filters=[
+        >>>         {
+        >>>             "column": "value_time",
+        >>>             "operator": ">",
+        >>>             "value": "2022-01-01",
+        >>>         },
+        >>>     ]
+        >>> ).to_pandas()
+
+        Filters as string:
+
+        >>> df = accessor.filter(
+        >>>     filters=["value_time > '2022-01-01'"]
+        >>> ).to_pandas()
+        """
+        if filters is None:
+            logger.info(
+                "No filters provided to filter method. "
+                "Returning unfiltered data."
+            )
+            return self
+
+        logger.info(f"Setting filter {filters}.")
+        self._apply_filters(filters)
+        return self
+
+    def order_by(
+        self,
+        fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
+    ):
+        """Apply ordering to the DataFrame.
+
+        Parameters
+        ----------
+        fields : Union[str, StrEnum, List[...]]
+            The fields to order by.
+
+        Returns
+        -------
+        self
+            Returns self for method chaining.
+
+        Examples
+        --------
+        >>> df = accessor.order_by("value_time").to_pandas()
+        """
+        logger.info(f"Setting order_by {fields}.")
+        self._sdf = order_df(self.to_sdf(), fields)
+        return self
+
+    def query(
+        self,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ] = None,
+        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
+        group_by: Union[str, List[str]] = None,
+        include_metrics: List[MetricsBasemodel] = None
+    ):
+        """Run a query with filters, grouping, metrics, and ordering.
+
+        Filters are applied first, then metrics are calculated on the filtered data,
+        and finally the results are ordered.
+
+        Parameters
+        ----------
+        filters : Union[str, dict, TableFilter, List[...]], optional
+            Filters to apply before aggregation.
+        order_by : Union[str, StrEnum, List[...]], optional
+            Fields to order the results by.
+        group_by : Union[str, List[str]], optional
+            Fields to group by for metric calculation.
+        include_metrics : List[MetricsBasemodel], optional
+            Metrics to calculate.
+
+        Returns
+        -------
+        self
+            Returns self for method chaining.
+
+        Examples
+        --------
+        >>> df = accessor.query(
+        >>>     filters=["value_time > '2022-01-01'"],
+        >>>     order_by=["location_id", "value_time"]
+        >>> ).to_pandas()
+        """
+        logger.info("Performing the query.")
+        if filters is not None:
+            self._apply_filters(filters)
+
+        if include_metrics is not None and group_by is not None:
+            logger.debug(f"Grouping by '{group_by}' and applying metrics.")
+            gp = group_df(self.to_sdf(), group_by)
+
+            sdf = apply_aggregation_metrics(
+                gp=gp,
+                include_metrics=include_metrics,
+            )
+            self._sdf = post_process_metric_results(
+                metrics_sdf=sdf,
+                include_metrics=include_metrics,
+                group_by=group_by
+            )
+
+        if order_by is not None:
+            logger.debug(f"Ordering by: {order_by}.")
+            self._sdf = order_df(self.to_sdf(), order_by)
+
+        return self
+
+    def add_calculated_fields(
+        self,
+        cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
+    ):
+        """Add calculated fields to the DataFrame.
+
+        Parameters
+        ----------
+        cfs : Union[CalculatedFieldBaseModel, List[...]]
+            The calculated fields to add.
+
+        Returns
+        -------
+        self
+            Returns self for method chaining.
+
+        Examples
+        --------
+        >>> import teehr
+        >>> from teehr import RowLevelCalculatedFields as rcf
+        >>>
+        >>> df = accessor.add_calculated_fields([
+        >>>     rcf.Month()
+        >>> ]).to_pandas()
+        """
+        if not isinstance(cfs, list):
+            cfs = [cfs]
+
+        sdf = self.to_sdf()
+        for cf in cfs:
+            sdf = cf.apply_to(sdf)
+        self._sdf = sdf
+
+        return self
+
+    def write(
+        self,
+        table_name: str,
+        write_mode: str = "create_or_replace"
+    ):
+        """Write the DataFrame to an iceberg table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to write to.
+        write_mode : str, optional
+            The write mode. Options: "create", "append", "overwrite",
+            "create_or_replace". Default is "create_or_replace".
+
+        Returns
+        -------
+        self
+            Returns self for method chaining.
+
+        Examples
+        --------
+        >>> accessor.query(
+        ...     include_metrics=[KGE()],
+        ...     group_by=["primary_location_id"]
+        ... ).write("location_metrics")
+        """
+        logger.info(f"Writing to table: {table_name}.")
+        self._write.to_warehouse(
+            source_data=self.to_sdf(),
+            table_name=table_name,
+            write_mode=write_mode
+        )
+        return self

@@ -9,7 +9,6 @@ import geopandas as gpd
 import requests
 
 from teehr.loading.teehr_api import teehr_api_timeseries_to_dataframe
-from teehr.models.table_enums import TableWriteEnum
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +169,7 @@ class Download:
         include_attributes: bool = False,
         limit: int = 10000,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[gpd.GeoDataFrame, None]:
         """Fetch locations from the warehouse API as a GeoDataFrame.
@@ -190,7 +189,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "locations" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs
@@ -256,7 +255,7 @@ class Download:
         name: str = None,
         type: str = None,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch attributes from the warehouse API.
@@ -270,7 +269,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "attributes" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs
@@ -318,7 +317,7 @@ class Download:
         location_id: Union[str, List[str]] = None,
         attribute_name: str = None,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch location attributes from the warehouse API.
@@ -332,7 +331,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_attributes" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs
@@ -382,7 +381,7 @@ class Download:
         self,
         name: str = None,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch units from the warehouse API.
@@ -394,7 +393,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "units" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs
@@ -439,7 +438,7 @@ class Download:
         self,
         name: str = None,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch variables from the warehouse API.
@@ -451,7 +450,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "variables" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs
@@ -497,7 +496,7 @@ class Download:
         name: str = None,
         type: str = None,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch configurations from the warehouse API.
@@ -511,7 +510,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "configurations" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs
@@ -559,7 +558,7 @@ class Download:
         primary_location_id: Union[str, List[str]] = None,
         secondary_location_id: Union[str, List[str]] = None,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch location crosswalks from the warehouse API.
@@ -573,7 +572,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_crosswalks" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs
@@ -627,7 +626,7 @@ class Download:
         start_date: Union[str, datetime, pd.Timestamp] = None,
         end_date: Union[str, datetime, pd.Timestamp] = None,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch primary timeseries from the warehouse API.
@@ -650,7 +649,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "primary_timeseries" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs
@@ -719,7 +718,7 @@ class Download:
         start_date: Union[str, datetime, pd.Timestamp] = None,
         end_date: Union[str, datetime, pd.Timestamp] = None,
         load: bool = False,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch secondary timeseries from the warehouse API.
@@ -746,7 +745,7 @@ class Download:
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "secondary_timeseries" table. Default: False
-        write_mode : TableWriteEnum, optional
+        write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         **kwargs

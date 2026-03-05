@@ -471,8 +471,10 @@ def usgs_to_parquet(
             )
             continue
         else:
-            usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= dts["start_dt"].tz_localize("UTC")) &
-                            (usgs_df[VALUE_TIME] <= dts["end_dt"].tz_localize("UTC"))]
+            usgs_df = usgs_df[
+                (usgs_df[VALUE_TIME] >= dts["start_dt"].tz_localize("UTC")) &
+                (usgs_df[VALUE_TIME] <= dts["end_dt"].tz_localize("UTC"))
+            ]
 
             output_filename = _format_output_filename(
                 chunk_by, dts["start_dt"], dts["end_dt"]

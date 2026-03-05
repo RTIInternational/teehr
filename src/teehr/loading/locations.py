@@ -3,6 +3,7 @@ from typing import Union
 from pathlib import Path
 import teehr.loading.utils as tpu
 import logging
+import geopandas as gpd
 
 logger = logging.getLogger(__name__)
 
@@ -11,18 +12,13 @@ def convert_single_locations(
     in_filepath: Union[str, Path],
     field_mapping: dict,
     **kwargs
-):
-    """Import locations from a file.
-
-    This function reads a geodata file, formats for TEEHR,
-    converts to geoparquet and writes to disk..
+) -> gpd.GeoDataFrame:
+    """Import locations from a file and convert to a GeoDataFrame.
 
     Parameters
     ----------
     in_filepath : Union[str, Path]
         The input file path.
-    output_filepath : Union[str, Path]
-        The output file path.
     field_mapping : dict, optional
         A dictionary mapping input fields to output fields.
         format: {input_field: output_field}
@@ -31,7 +27,7 @@ def convert_single_locations(
 
     Returns
     -------
-    None
+    gpd.GeoDataFrame
 
     field_mapping = {"id_field": "id", "name_field": "name"}
     Note, not consistent with the field_mapping in pre/timeseries.py

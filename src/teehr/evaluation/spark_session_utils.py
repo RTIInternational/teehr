@@ -258,6 +258,11 @@ def _create_spark_base_session(
     conf.set("spark.driver.memory", f"{driver_memory}")
     conf.set("spark.driver.maxResultSize", f"{driver_maxresultsize}")
 
+    # Driver binding configuration for local mode
+    conf.set("spark.driver.bindAddress", "127.0.0.1")
+    conf.set("spark.driver.host", "127.0.0.1")
+    conf.set("spark.driver.port", "0")  # Let Spark choose an available port
+
     return conf
 
 

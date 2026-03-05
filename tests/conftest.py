@@ -3,10 +3,6 @@ import logging
 import pytest
 import shutil
 from pathlib import Path
-import glob
-import json
-import fastavro
-from pyspark.sql.functions import regexp_replace
 import time
 
 from teehr.evaluation.spark_session_utils import create_spark_session

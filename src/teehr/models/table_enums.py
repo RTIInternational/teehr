@@ -14,7 +14,6 @@ class TableNamesEnum(StrEnum):
     attributes = "attributes"
     location_attributes = "location_attributes"
     location_crosswalks = "location_crosswalks"
-    joined_timeseries = "joined_timeseries"
 
 
 class TableWriteEnum(StrEnum):

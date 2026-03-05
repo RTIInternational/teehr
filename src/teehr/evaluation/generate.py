@@ -51,7 +51,7 @@ class GeneratedTimeSeriesBasemodel:
                 f"Invalid destination table: {destination_table}"
                 " Must be one of: primary_timeseries, secondary_timeseries"
             )
-        validated_df = self._ev.validate.schema(
+        validated_df = self._ev.validate.schema_and_data(
             sdf=self.sdf,
             table_schema=tbl.schema_func(),
             drop_duplicates=drop_duplicates,
@@ -181,8 +181,9 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         >>>     end_datetime="2024-11-21 13:00:00",
         >>> ).write()
         """
-        input_dataframe = self._ev.read.from_warehouse(
-            table_name=input_table_name,
+        input_dataframe = self._ev.table(
+            table_name=input_table_name
+        ).filter(
             filters=input_table_filters
         ).to_sdf()
         if input_dataframe.isEmpty():
@@ -305,14 +306,16 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         >>>     output_configuration_name="benchmark_forecast_hourly_normals"
         >>> ).write(destination_table="secondary_timeseries")
         """
-        reference_dataframe = self._ev.read.from_warehouse(
-            table_name=reference_table_name,
+        reference_dataframe = self._ev.table(
+            table_name=reference_table_name
+        ).filter(
             filters=reference_table_filters
-        ).to_sdf()
-        template_dataframe = self._ev.read.from_warehouse(
-            table_name=template_table_name,
+        )
+        template_dataframe = self._ev.table(
+            table_name=template_table_name
+        ).filter(
             filters=template_table_filters
-        ).to_sdf()
+        )
 
         if reference_table_name == "primary_timeseries":
             partition_by = self._ev.primary_timeseries.uniqueness_fields

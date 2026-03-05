@@ -13,24 +13,25 @@ def convert_single_location_attributes(
     in_filepath: Union[str, Path],
     field_mapping: dict,
     **kwargs
-):
-    """Convert location_attributes data to parquet format.
+) -> pd.DataFrame:
+    """Convert location_attributes data to a pandas DataFrame.
 
     Parameters
     ----------
     in_filepath : Union[str, Path]
         The input file path.
-    out_filepath : Union[str, Path]
-        The output file path.
     field_mapping : dict
         A dictionary mapping input fields to output fields.
         format: {input_field: output_field}
     **kwargs
         Additional keyword arguments are passed to
             pd.read_csv() or pd.read_parquet().
+
+    Returns
+    -------
+    pd.DataFrame
     """
     in_filepath = Path(in_filepath)
-    # out_filepath = Path(out_filepath)
 
     logger.info(f"Converting location attributes data from: {in_filepath}")
 

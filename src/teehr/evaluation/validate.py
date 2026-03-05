@@ -21,7 +21,15 @@ class Validate:
     """Class for validating data."""
 
     def __init__(self, ev=None) -> None:
-        """Initialize the Validate class."""
+        """Initialize the Validate class with an Evaluation instance.
+
+        Parameters
+        ----------
+        ev : Evaluation
+            An instance of the Evaluation class containing Spark session
+            and catalog details. The default is None, which allows access to
+            the class's static methods only.
+        """
         if ev is not None:
             self._ev = ev
 
@@ -45,9 +53,7 @@ class Validate:
                 LEFT ANTI JOIN {fk['domain_table']} d
                 ON t.{fk['column']} = d.{fk['domain_column']}
             """
-            result_sdf = self._ev.sql(
-                query=sql, create_temp_views=[fk["domain_table"]]
-            )
+            result_sdf = self._ev.sql(sql)
             self._ev.spark.catalog.dropTempView(fk["domain_table"])
             if not result_sdf.isEmpty():
                 self._ev.spark.catalog.dropTempView("temp_table")
@@ -59,7 +65,7 @@ class Validate:
         self._ev.spark.catalog.dropTempView("temp_table")
 
     @staticmethod
-    def data(
+    def schema(
         df: ps.DataFrame | pd.DataFrame,
         table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
     ) -> ps.DataFrame | pd.DataFrame:
@@ -70,29 +76,29 @@ class Validate:
 
         Parameters
         ----------
-        df : ps.DataFrame
-            The Spark DataFrame to validate.
-        schema : SparkDataFrameSchema | PandasDataFrameSchema
+        df : ps.DataFrame | pd.DataFrame
+            The Spark or Pandas DataFrame to validate.
+        table_schema : SparkDataFrameSchema | PandasDataFrameSchema
             The schema to validate against.
 
         Returns
         -------
         ps.DataFrame | pd.DataFrame
-            The validated Spark DataFrame.
+            The validated Spark or Pandas DataFrame.
 
         Examples
         --------
         Validate a PySpark DataFrame against the primary timeseries schema:
 
         >>> from teehr.models.pandera_dataframe_schemas import primary_timeseries_schema
-        >>> validated_sdf = ev.validate.data(
+        >>> validated_sdf = ev.validate.schema(
         ...     df=raw_sdf,
         ...     table_schema=primary_timeseries_schema()
         ... )
 
         For Pandas DataFrames:
 
-        >>> validated_pdf = ev.validate.data(
+        >>> validated_pdf = ev.validate.schema(
         ...     df=raw_pdf,
         ...     table_schema=primary_timeseries_schema(type="pandas")
         ... )
@@ -102,66 +108,61 @@ class Validate:
             if not isinstance(df, ps.DataFrame):
                 raise ValueError(
                     "df must be a Spark DataFrame if"
-                    " schema is a Spark DataFrameSchema."
+                    " table_schema is a Spark DataFrameSchema."
                 )
         elif isinstance(table_schema, PandasDataFrameSchema):
             if not isinstance(df, pd.DataFrame):
                 raise ValueError(
-                    "df must be a Pandas DataFrame."
-                    " if schema is a Pandas DataFrameSchema."
+                    "df must be a Pandas DataFrame if"
+                    " table_schema is a Pandas DataFrameSchema."
                 )
         else:
             raise ValueError(
-                "schema must be a Spark or Pandas DataFrameSchema."
+                "table_schema must be a Spark or Pandas DataFrameSchema."
             )
-        return table_schema.validate(df)
 
-    def table_filters(
+        validated_df = table_schema.validate(df)
+        return validated_df
+
+    def sdf_filters(
         self,
-        table_name: str,
+        sdf: ps.DataFrame,
         filters: Union[
             str, dict, TableFilter,
             List[Union[str, dict, TableFilter]]
         ],
         validate: bool = True
-    ) -> Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-    ]:
-        """Validate table filter(s).
+    ) -> List[str]:
+        """Validate and format filter(s) against an existing DataFrame.
+
+        This method validates filters against the schema and columns of an
+        in-memory DataFrame, allowing filtering on calculated fields that
+        don't exist in the warehouse table.
 
         Parameters
         ----------
-        table_name : str
-            The name of the table to validate filters for.
+        sdf : ps.DataFrame
+            The Spark DataFrame to validate filters against.
         filters : Union[
             str, dict, TableFilter,
             List[Union[str, dict, TableFilter]]
         ]
             The filters to validate.
         validate : bool, optional
-            Whether to validate the filter field types against the table schema.
+            Whether to validate the filter field types against the schema.
             The default is True.
 
         Returns
         -------
-        Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-        ]
-            The validated filter(s).
+        List[str]
+            List of validated filter strings ready to apply with sdf.filter().
         """
-        if isinstance(filters, str):
-            logger.debug(f"Filter {filters} is already string, returning as is")
-            # return filters
-
         if not isinstance(filters, List):
-            logger.debug("Filter is not a list.  Making a list.")
+            logger.debug("Filter is not a list. Making a list.")
             filters = [filters]
 
-        tbl = self._ev.table(table_name=table_name)
-        table_fields = tbl.to_sdf().columns
-        table_schema = tbl.to_sdf().schema
+        table_fields = sdf.columns
+        table_schema = sdf.schema
         validated_filters = []
         for filter in filters:
             logger.debug(f"Validating and applying {filter}")
@@ -187,7 +188,40 @@ class Validate:
 
         return validated_filters
 
-    def schema(
+    def table_filters(
+        self,
+        table_name: str,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ],
+        validate: bool = True
+    ) -> List[str]:
+        """Validate table filter(s) by reading the table schema.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to validate filters for.
+        filters : Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ]
+            The filters to validate.
+        validate : bool, optional
+            Whether to validate the filter field types against the table schema.
+            The default is True.
+
+        Returns
+        -------
+        List[str]
+            List of validated filter strings ready to apply with sdf.filter().
+        """
+        tbl = self._ev.table(table_name=table_name)
+        sdf = tbl.to_sdf()
+        return self.sdf_filters(sdf, filters, validate)
+
+    def schema_and_data(
         self,
         sdf: ps.DataFrame,
         table_schema: SparkDataFrameSchema,
@@ -242,7 +276,8 @@ class Validate:
 
         if strict:
             # First check to make sure schema col keys are in the dataframe
-            # if not raise an error. If they are, select only those columns to enforce the schema.
+            # if not raise an error. If they are, select only those columns
+            # to enforce the schema.
             missing_cols = [col for col in schema_cols if col not in sdf.columns]
             if len(missing_cols) > 0:
                 raise ValueError(
@@ -259,7 +294,7 @@ class Validate:
                 )
             sdf = sdf.dropDuplicates(subset=uniqueness_fields)
 
-        validated_df = table_schema.validate(sdf)
+        validated_df = self.schema(sdf, table_schema)
 
         if len(validated_df.pandera.errors) > 0:
             logger.error(f"Validation failed: {validated_df.pandera.errors}")
@@ -273,5 +308,3 @@ class Validate:
         )
 
         return validated_df
-
-    # NOTE: Should these just update self.sdf and return self for chaining?

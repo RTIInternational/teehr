@@ -7,10 +7,9 @@ import pandas as pd
 import pyspark.sql as ps
 import geopandas as gpd
 
-from teehr.models.table_enums import TableWriteEnum
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.locations import convert_single_locations
-from teehr.querying.utils import df_to_gdf
+from teehr.models.pandera_dataframe_schemas import locations_schema
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,23 @@ logger = logging.getLogger(__name__)
 class LocationTable(BaseTable):
     """Access methods to locations table."""
 
-    def __init__(self, ev):
+    # Table metadata
+    table_name = "locations"
+    uniqueness_fields = ["id"]
+    foreign_keys = None
+    schema_func = staticmethod(locations_schema)
+    strict_validation = True
+    validate_filter_field_types = True
+    extraction_func = staticmethod(convert_single_locations)
+    primary_location_id_field = "id"
+
+    def __init__(
+        self,
+        ev,
+        table_name: str = "locations",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
         """Initialize the Table class.
 
         Parameters
@@ -26,20 +41,7 @@ class LocationTable(BaseTable):
         ev : EvaluationBase
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
-        """
-        super().__init__(ev)
-
-    def __call__(
-        self,
-        table_name: str = "locations",
-        namespace_name: Union[str, None] = None,
-        catalog_name: Union[str, None] = None,
-    ) -> "BaseTable":
-        """Initialize the Table class for a specific table.
-
-        Parameters
-        ----------
-        table_name : str
+        table_name : str, optional
             The name of the table to operate on. Defaults to 'locations'.
         namespace_name : Union[str, None], optional
             The namespace containing the table. If None, uses the
@@ -47,43 +49,31 @@ class LocationTable(BaseTable):
         catalog_name : Union[str, None], optional
             The catalog containing the table. If None, uses the
             active catalog name.
-
-        Returns
-        -------
-        "BaseTable"
-            The initialized Table instance ready for operations.
-
-        Note
-        ----
-        Creates an instance of a Table class with 'locations'
-        properties. If namespace_name or catalog_name are None, they are
-        derived from the active catalog, which is 'local' by default.
         """
-        return super().__call__(
-            table_name=table_name,
-            namespace_name=namespace_name,
-            catalog_name=catalog_name
-        )
+        super().__init__(ev, table_name, namespace_name, catalog_name)
+        self._load = ev.load
+        self._has_geometry = True
 
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        self._check_load_table()
-        gdf = df_to_gdf(self.to_pandas())
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.to_sdf().columns
-        return gdf
+    def add_geometry(self):
+        """Pass though.
+
+        The locations table is the source of geometry, so no join is necessary.
+        """
+        raise NotImplementedError(
+            "Geometry is already included in the locations table."
+        )
 
     def load_spatial(
         self,
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_locations,
+        extraction_function: callable = None,
         field_mapping: dict = None,
         constant_field_values: dict = None,
         pattern: str = "**/*.parquet",
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
     ):
@@ -101,8 +91,9 @@ class LocationTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -118,7 +109,7 @@ class LocationTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -152,6 +143,7 @@ class LocationTable(BaseTable):
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name
+        extraction_function = extraction_function or self.extraction_func
 
         table_name = self.table_name
 
@@ -167,10 +159,10 @@ class LocationTable(BaseTable):
             primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field="id",
+            primary_location_id_field=self.primary_location_id_field,
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_dataframe(
         self,
@@ -180,7 +172,7 @@ class LocationTable(BaseTable):
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Load data from an in-memory dataframe.
@@ -207,7 +199,7 @@ class LocationTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -229,6 +221,6 @@ class LocationTable(BaseTable):
             primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field="id"
+            primary_location_id_field=self.primary_location_id_field
         )
-        self._load_table()
+        self._load_sdf()

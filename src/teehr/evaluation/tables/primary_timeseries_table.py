@@ -1,6 +1,7 @@
 """Primary timeseries table class."""
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from typing import Union
+from teehr.models.pandera_dataframe_schemas import primary_timeseries_schema
+from typing import List, Dict, Union
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,47 @@ class PrimaryTimeseriesTable(TimeseriesTable):
     secondary timeseries tables, as they share the same loading methods.
     """
 
-    def __init__(self, ev):
+    # Table metadata
+    table_name = "primary_timeseries"
+    uniqueness_fields = [
+        "location_id",
+        "value_time",
+        "reference_time",
+        "variable_name",
+        "unit_name",
+        "configuration_name"
+    ]
+    foreign_keys: List[Dict[str, str]] = [
+        {
+            "column": "variable_name",
+            "domain_table": "variables",
+            "domain_column": "name",
+        },
+        {
+            "column": "unit_name",
+            "domain_table": "units",
+            "domain_column": "name",
+        },
+        {
+            "column": "configuration_name",
+            "domain_table": "configurations",
+            "domain_column": "name",
+        },
+        {
+            "column": "location_id",
+            "domain_table": "locations",
+            "domain_column": "id",
+        }
+    ]
+    schema_func = staticmethod(primary_timeseries_schema)
+
+    def __init__(
+        self,
+        ev,
+        table_name: str = "primary_timeseries",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
         """Initialize the Table class.
 
         Parameters
@@ -23,20 +64,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         ev : EvaluationBase
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
-        """
-        super().__init__(ev)
-
-    def __call__(
-        self,
-        table_name: str = "primary_timeseries",
-        namespace_name: Union[str, None] = None,
-        catalog_name: Union[str, None] = None,
-    ) -> "TimeseriesTable":
-        """Initialize the Table class for a specific table.
-
-        Parameters
-        ----------
-        table_name : str
+        table_name : str, optional
             The name of the table to operate on. Defaults to 'primary_timeseries'.
         namespace_name : Union[str, None], optional
             The namespace containing the table. If None, uses the
@@ -44,20 +72,5 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         catalog_name : Union[str, None], optional
             The catalog containing the table. If None, uses the
             active catalog name.
-
-        Returns
-        -------
-        "TimeseriesTable"
-            The initialized Table instance ready for operations.
-
-        Note
-        ----
-        Creates an instance of a Table class with 'primary_timeseries'
-        properties. If namespace_name or catalog_name are None, they are
-        derived from the active catalog, which is 'local' by default.
         """
-        return super().__call__(
-            table_name=table_name,
-            namespace_name=namespace_name,
-            catalog_name=catalog_name
-        )
+        super().__init__(ev, table_name, namespace_name, catalog_name)

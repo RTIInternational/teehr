@@ -1,6 +1,7 @@
 """Secondary timeseries table class."""
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from typing import Union
+from teehr.models.pandera_dataframe_schemas import secondary_timeseries_schema
+from typing import List, Dict, Union
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,7 +10,48 @@ logger = logging.getLogger(__name__)
 class SecondaryTimeseriesTable(TimeseriesTable):
     """Access methods to secondary timeseries table."""
 
-    def __init__(self, ev):
+    # Table metadata
+    table_name = "secondary_timeseries"
+    uniqueness_fields = [
+        "location_id",
+        "value_time",
+        "reference_time",
+        "variable_name",
+        "unit_name",
+        "configuration_name",
+        "member"
+    ]
+    foreign_keys: List[Dict[str, str]] = [
+        {
+            "column": "variable_name",
+            "domain_table": "variables",
+            "domain_column": "name",
+        },
+        {
+            "column": "unit_name",
+            "domain_table": "units",
+            "domain_column": "name",
+        },
+        {
+            "column": "configuration_name",
+            "domain_table": "configurations",
+            "domain_column": "name",
+        },
+        {
+            "column": "location_id",
+            "domain_table": "location_crosswalks",
+            "domain_column": "secondary_location_id",
+        }
+    ]
+    schema_func = staticmethod(secondary_timeseries_schema)
+
+    def __init__(
+        self,
+        ev,
+        table_name: str = "secondary_timeseries",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
         """Initialize the Table class.
 
         Parameters
@@ -17,20 +59,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         ev : EvaluationBase
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
-        """
-        super().__init__(ev)
-
-    def __call__(
-        self,
-        table_name: str = "secondary_timeseries",
-        namespace_name: Union[str, None] = None,
-        catalog_name: Union[str, None] = None,
-    ) -> "TimeseriesTable":
-        """Initialize the Table class for a specific table.
-
-        Parameters
-        ----------
-        table_name : str
+        table_name : str, optional
             The name of the table to operate on. Defaults to 'secondary_timeseries'.
         namespace_name : Union[str, None], optional
             The namespace containing the table. If None, uses the
@@ -38,28 +67,26 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         catalog_name : Union[str, None], optional
             The catalog containing the table. If None, uses the
             active catalog name.
-
-        Returns
-        -------
-        "TimeseriesTable"
-            The initialized Table instance ready for operations.
-
-        Note
-        ----
-        Creates an instance of a Table class with 'secondary_timeseries'
-        properties. If namespace_name or catalog_name are None, they are
-        derived from the active catalog, which is 'local' by default.
         """
-        return super().__call__(
-            table_name=table_name,
-            namespace_name=namespace_name,
-            catalog_name=catalog_name
-        )
+        super().__init__(ev, table_name, namespace_name, catalog_name)
 
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        self._check_load_table()
-        gdf = self._join_geometry_using_crosswalk()
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.to_sdf().columns
-        return gdf
+    def add_geometry(self):
+        """Join geometry via the crosswalk."""
+        logger.debug("Joining locations geometry via the crosswalk.")
+        self._sdf.createOrReplaceTempView("temp_secondary_timeseries")
+
+        sql = """
+            SELECT
+                sf.*,
+                lf.geometry as geometry
+            FROM temp_secondary_timeseries sf
+            JOIN location_crosswalks cf
+                on cf.secondary_location_id = sf.location_id
+            JOIN locations lf
+                on cf.primary_location_id = lf.id
+        """
+        gdf = self._ev.sql(sql)
+        self._sdf = gdf
+        self._has_geometry = True
+        self._ev.spark.catalog.dropTempView("temp_secondary_timeseries")
+        return self

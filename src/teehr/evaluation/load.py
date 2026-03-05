@@ -11,7 +11,6 @@ import geopandas as gpd
 
 from teehr.models.pydantic_table_models import Attribute
 from teehr import const
-from teehr.models.table_enums import TableWriteEnum
 from teehr.utils.utils import remove_dir_if_exists
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
 
@@ -50,7 +49,7 @@ class Load:
         primary_location_id_field: str = "location_id",
         secondary_location_id_prefix: str = None,
         secondary_location_id_field: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True
     ):
         """Load data from an in-memory dataframe.
@@ -84,7 +83,7 @@ class Load:
             Used to ensure unique location IDs across configurations.
         secondary_location_id_field : str, optional
             The name of the secondary location ID field in the dataframe.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -166,7 +165,7 @@ class Load:
                 prefix=secondary_location_id_prefix,
             )
         if foreign_keys is not None:
-            validated_df = self._validate.schema(
+            validated_df = self._validate.schema_and_data(
                 sdf=df,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
@@ -174,7 +173,7 @@ class Load:
                 uniqueness_fields=uniqueness_fields
             )
         else:
-            validated_df = self._validate.data(
+            validated_df = self._validate.schema(
                 df=df,
                 table_schema=schema_func(),
             )
@@ -201,7 +200,7 @@ class Load:
         primary_location_id_field: str = "location_id",
         secondary_location_id_prefix: str = None,
         secondary_location_id_field: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         update_attrs_table: bool = True,
         parallel: bool = False,
@@ -245,7 +244,7 @@ class Load:
             Used to ensure unique location IDs across configurations.
         secondary_location_id_field : str, optional
             The name of the secondary location ID field in the dataframe.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -298,8 +297,8 @@ class Load:
             pattern=pattern,
             cache_dir=table_cache_dir,
             table_fields=fields,
-            table_schema_func=schema_func(type="pandas"),
-            write_schema_func=schema_func(type="arrow"),
+            table_schema=schema_func(type="pandas"),
+            write_schema=schema_func(type="arrow"),
             extraction_func=extraction_function,
             parallel=parallel,
             max_workers=max_workers,
@@ -308,8 +307,8 @@ class Load:
         # Read the converted files to Spark DataFrame
         sdf = self._read.from_cache(
             path=table_cache_dir,
-            table_schema_func=schema_func()
-        ).to_sdf()
+            table_schema=schema_func()
+        )
         # Add or replace primary_location_id prefix if provided
         if primary_location_id_prefix:
             sdf = add_or_replace_sdf_column_prefix(
@@ -342,7 +341,7 @@ class Load:
             self._ev.attributes.add(attr_list)
 
         if foreign_keys is not None:
-            validated_df = self._validate.schema(
+            validated_df = self._validate.schema_and_data(
                 sdf=sdf,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
@@ -350,7 +349,7 @@ class Load:
                 uniqueness_fields=uniqueness_fields
             )
         else:
-            validated_df = self._validate.data(
+            validated_df = self._validate.schema(
                 df=sdf,
                 table_schema=schema_func(),
             )
@@ -369,7 +368,7 @@ class Load:
         table_name: str,
         namespace_name: str = None,
         catalog_name: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         update_attrs_table: bool = True
     ):
@@ -387,7 +386,7 @@ class Load:
         catalog_name : str, optional
             The catalog name to load the data into. The default is None,
             which uses the active catalog of the Evaluation.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -411,10 +410,16 @@ class Load:
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
 
+        if None in [schema_func, uniqueness_fields, foreign_keys]:
+            raise ValueError(
+                "Table properties schema_func, uniqueness_fields, and "
+                "foreign_keys must be defined to load from cache."
+            )
+
         sdf = self._read.from_cache(
             path=in_path,
-            table_schema_func=schema_func()
-        ).to_sdf()
+            table_schema=schema_func()
+        )
 
         if update_attrs_table and table_name == "location_attributes":
             attr_names = [
@@ -432,8 +437,11 @@ class Load:
                 )
             self._ev.attributes.add(attr_list)
 
-        if foreign_keys is not None:
-            validated_df = self._validate.schema(
+        if (
+            foreign_keys is not None and
+            uniqueness_fields is not None
+        ):
+            validated_df = self._validate.schema_and_data(
                 sdf=sdf,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
@@ -441,7 +449,7 @@ class Load:
                 uniqueness_fields=uniqueness_fields
             )
         else:
-            validated_df = self._validate.data(
+            validated_df = self._validate.schema(
                 df=sdf,
                 table_schema=schema_func(),
             )

@@ -4,11 +4,10 @@ from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
-from teehr.querying.utils import join_geometry
+from teehr.models.pandera_dataframe_schemas import location_crosswalks_schema
 from pathlib import Path
-from typing import Union
+from typing import List, Dict, Union
 import logging
-from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.location_crosswalks import (
     convert_single_location_crosswalks
 )
@@ -21,7 +20,30 @@ logger = logging.getLogger(__name__)
 class LocationCrosswalkTable(BaseTable):
     """Access methods to location crosswalks table."""
 
-    def __init__(self, ev):
+    # Table metadata
+    table_name = "location_crosswalks"
+    uniqueness_fields = ["secondary_location_id"]
+    foreign_keys: List[Dict[str, str]] = [
+        {
+            "column": "primary_location_id",
+            "domain_table": "locations",
+            "domain_column": "id",
+        }
+    ]
+    schema_func = staticmethod(location_crosswalks_schema)
+    strict_validation = True
+    validate_filter_field_types = True
+    extraction_func = staticmethod(convert_single_location_crosswalks)
+    primary_location_id_field = "primary_location_id"
+    secondary_location_id_field = "secondary_location_id"
+
+    def __init__(
+        self,
+        ev,
+        table_name: str = "location_crosswalks",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
         """Initialize the Table class.
 
         Parameters
@@ -29,20 +51,7 @@ class LocationCrosswalkTable(BaseTable):
         ev : EvaluationBase
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
-        """
-        super().__init__(ev)
-
-    def __call__(
-        self,
-        table_name: str = "location_crosswalks",
-        namespace_name: Union[str, None] = None,
-        catalog_name: Union[str, None] = None,
-    ) -> "BaseTable":
-        """Initialize the Table class for a specific table.
-
-        Parameters
-        ----------
-        table_name : str
+        table_name : str, optional
             The name of the table to operate on. Defaults to 'location_crosswalks'.
         namespace_name : Union[str, None], optional
             The namespace containing the table. If None, uses the
@@ -50,46 +59,21 @@ class LocationCrosswalkTable(BaseTable):
         catalog_name : Union[str, None], optional
             The catalog containing the table. If None, uses the
             active catalog name.
-
-        Returns
-        -------
-        "BaseTable"
-            The initialized Table instance ready for operations.
-
-        Note
-        ----
-        Creates an instance of a Table class with 'location_crosswalks'
-        properties. If namespace_name or catalog_name are None, they are
-        derived from the active catalog, which is 'local' by default.
         """
-        return super().__call__(
-            table_name=table_name,
-            namespace_name=namespace_name,
-            catalog_name=catalog_name
-        )
-
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        self._check_load_table()
-        gdf = join_geometry(
-            self.sdf, self._ev.locations.to_sdf(),
-            "primary_location_id"
-        )
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.to_sdf().columns
-        return gdf
+        super().__init__(ev, table_name, namespace_name, catalog_name)
+        self._load = ev.load
 
     def load_parquet(
         self,
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_location_crosswalks,
+        extraction_function: callable = None,
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
     ):
@@ -107,8 +91,9 @@ class LocationCrosswalkTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         pattern : str, optional
             The glob pattern to use when searching for files in a directory.
             Default is '**/*.parquet' to search for all parquet files recursively.
@@ -127,7 +112,7 @@ class LocationCrosswalkTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -150,6 +135,7 @@ class LocationCrosswalkTable(BaseTable):
         - secondary_location_id
         """
         validate_input_is_parquet(in_path)
+        extraction_function = extraction_function or self.extraction_func
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
@@ -164,26 +150,26 @@ class LocationCrosswalkTable(BaseTable):
             extraction_function=extraction_function,
             field_mapping=field_mapping,
             primary_location_id_prefix=primary_location_id_prefix,
-            primary_location_id_field="primary_location_id",
+            primary_location_id_field=self.primary_location_id_field,
             secondary_location_id_prefix=secondary_location_id_prefix,
-            secondary_location_id_field="secondary_location_id",
+            secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_csv(
         self,
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_location_crosswalks,
+        extraction_function: callable = None,
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
     ):
@@ -201,8 +187,9 @@ class LocationCrosswalkTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         pattern : str, optional
             The glob pattern to use when searching for files in a directory.
             Default is '**/*.csv' to search for all CSV files recursively.
@@ -221,7 +208,7 @@ class LocationCrosswalkTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -244,6 +231,7 @@ class LocationCrosswalkTable(BaseTable):
         - secondary_location_id
         """ # noqa
         validate_input_is_csv(in_path)
+        extraction_function = extraction_function or self.extraction_func
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
@@ -258,14 +246,14 @@ class LocationCrosswalkTable(BaseTable):
             extraction_function=extraction_function,
             field_mapping=field_mapping,
             primary_location_id_prefix=primary_location_id_prefix,
-            primary_location_id_field="primary_location_id",
+            primary_location_id_field=self.primary_location_id_field,
             secondary_location_id_prefix=secondary_location_id_prefix,
-            secondary_location_id_field="secondary_location_id",
+            secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
             **kwargs
         )
-        self._load_table()
+        self._load_sdf()
 
     def load_dataframe(
         self,
@@ -276,7 +264,7 @@ class LocationCrosswalkTable(BaseTable):
         constant_field_values: dict = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Import data from an in-memory dataframe.
@@ -309,7 +297,7 @@ class LocationCrosswalkTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -335,9 +323,9 @@ class LocationCrosswalkTable(BaseTable):
             constant_field_values=constant_field_values,
             primary_location_id_prefix=primary_location_id_prefix,
             secondary_location_id_prefix=secondary_location_id_prefix,
-            primary_location_id_field="primary_location_id",
-            secondary_location_id_field="secondary_location_id",
+            primary_location_id_field=self.primary_location_id_field,
+            secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates
         )
-        self._load_table()
+        self._load_sdf()
