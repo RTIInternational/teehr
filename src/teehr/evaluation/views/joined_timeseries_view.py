@@ -128,14 +128,8 @@ class JoinedTimeseriesView(View):
             st = st.filter(self._secondary_filters)
         st.to_sdf().createOrReplaceTempView("filtered_secondary_timeseries")
 
-        # Get crosswalks and variables
-        self._ev.location_crosswalks.to_sdf().createOrReplaceTempView(
-            "location_crosswalks"
-        )
-        self._ev.variables.to_sdf().createOrReplaceTempView("variables")
-
         # Execute the join query
-        joined_df = self._ev.spark.sql("""
+        joined_df = self._ev.sql("""
             WITH exploded_variables AS (
                 SELECT
                     name,
@@ -203,8 +197,6 @@ class JoinedTimeseriesView(View):
         # Clean up temp views
         self._ev.spark.catalog.dropTempView("filtered_primary_timeseries")
         self._ev.spark.catalog.dropTempView("filtered_secondary_timeseries")
-        self._ev.spark.catalog.dropTempView("location_crosswalks")
-        self._ev.spark.catalog.dropTempView("variables")
 
         return joined_df
 
@@ -240,10 +232,10 @@ class JoinedTimeseriesView(View):
             return joined_df
 
         # Join pivoted attributes to the joined timeseries
-        joined_df.createTempView("joined")
-        pivot_df.createTempView("attrs")
+        joined_df.createOrReplaceTempView("joined")
+        pivot_df.createOrReplaceTempView("attrs")
 
-        joined_df = self._ev.spark.sql("""
+        joined_df = self._ev.sql("""
             SELECT
                 joined.*
                 , attrs.*

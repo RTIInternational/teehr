@@ -30,7 +30,7 @@ class Write:
         if ev is not None:
             self._ev = ev
 
-    def _apply_datatype_transform(self, view_name: str) -> str:
+    def _apply_datatype_transform(self, view_name: str):
         """Cast fields in the DataFrame to the pre-defined types."""
         all_columns = self._ev.spark.table(view_name).columns
         select_clauses = []
@@ -42,7 +42,7 @@ class Write:
         select_sql = ", ".join(select_clauses)
         except_sql = ", ".join(except_clauses)
 
-        self._ev.spark.sql(f"""
+        self._ev.sql(f"""
             SELECT * {except_sql},
             {select_sql}
             FROM {view_name}
@@ -64,7 +64,7 @@ class Write:
             CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
             AS SELECT * FROM {source_view}
         """  # noqa: E501
-        self._ev.spark.sql(sql_query)
+        self._ev.sql(sql_query)
 
     def _upsert(
         self,
@@ -98,7 +98,7 @@ class Write:
             WHEN MATCHED THEN UPDATE SET {update_set_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
-        self._ev.spark.sql(sql_query)
+        self._ev.sql(sql_query)
 
     def _append(
         self,
@@ -120,7 +120,7 @@ class Write:
             ON {on_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
-        self._ev.spark.sql(sql_query)
+        self._ev.sql(sql_query)
 
     def _overwrite(
         self,
@@ -138,7 +138,7 @@ class Write:
             INSERT OVERWRITE TABLE {catalog_name}.{namespace_name}.{table_name}
             SELECT * FROM {source_view}
         """  # noqa: E501
-        self._ev.spark.sql(sql_query)
+        self._ev.sql(sql_query)
 
     def to_warehouse(
         self,
@@ -260,7 +260,7 @@ class Write:
             )
 
         if created_temp_view:
-            self._ev.spark.sql(f"DROP VIEW IF EXISTS {source_view_name}")
+            self._ev.sql(f"DROP VIEW IF EXISTS {source_view_name}")
 
     @staticmethod
     def to_cache(

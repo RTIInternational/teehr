@@ -869,19 +869,6 @@ class Evaluation(EvaluationBase):
         """
         catalog_name = self.active_catalog.catalog_name
         namespace_name = self.active_catalog.namespace_name
-        _valid_identifier = re.compile(r'^[A-Za-z_][A-Za-z0-9_\-]*$')
-        if not _valid_identifier.match(catalog_name):
-            raise ValueError(
-                f"Invalid catalog name '{catalog_name}': "
-                "must start with a letter or underscore and contain only "
-                "letters, digits, underscores, or hyphens."
-            )
-        if not _valid_identifier.match(namespace_name):
-            raise ValueError(
-                f"Invalid namespace name '{namespace_name}': "
-                "must start with a letter or underscore and contain only "
-                "letters, digits, underscores, or hyphens."
-            )
         self.spark.sql(f"USE {catalog_name}")
         self.spark.sql(f"USE SCHEMA {namespace_name}")
         return self.spark.sql(query)

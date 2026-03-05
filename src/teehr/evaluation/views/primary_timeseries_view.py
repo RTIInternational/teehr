@@ -103,9 +103,9 @@ class PrimaryTimeseriesView(View):
             ev=self._ev,
             attr_list=self._attr_list,
         )
-        pivot_df = attrs_view.to_sdf()
+        attrs_df = attrs_view.to_sdf()
 
-        if pivot_df.isEmpty():
+        if attrs_df.isEmpty():
             logger.warning(
                 "No location attributes found. Skipping adding attributes."
             )
@@ -113,13 +113,13 @@ class PrimaryTimeseriesView(View):
 
         # Join pivoted attributes to primary timeseries on location_id
         df.createOrReplaceTempView("primary_ts")
-        pivot_df.createOrReplaceTempView("attrs")
+        attrs_df.createOrReplaceTempView("attrs")
 
         # Get attr columns excluding location_id
-        attr_cols = [c for c in pivot_df.columns if c != "location_id"]
+        attr_cols = [c for c in attrs_df.columns if c != "location_id"]
         attr_select = ", ".join([f"attrs.{c}" for c in attr_cols])
 
-        result_df = self._ev.spark.sql(f"""
+        result_df = self._ev.sql(f"""
             SELECT
                 primary_ts.*,
                 {attr_select}

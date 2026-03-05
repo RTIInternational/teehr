@@ -103,8 +103,6 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
                 time_window=self.aggregation_time_window
             )
         # Join the reference sdf  to the template secondary forecast
-        xwalk_sdf = ev.location_crosswalks.to_sdf()
-        xwalk_sdf.createOrReplaceTempView("location_crosswalks")
         reference_sdf.createOrReplaceTempView("reference_timeseries")
         template_sdf.createOrReplaceTempView("template_timeseries")
         logger.debug(
@@ -128,16 +126,12 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
                 and tf.unit_name = rf.unit_name
                 and tf.value_time = rf.value_time
         """  # noqa
-        results_sdf = ev.spark.sql(query)
-        ev.spark.catalog.dropTempView("location_crosswalks")
+        results_sdf = ev.sql(query)
         ev.spark.catalog.dropTempView("reference_timeseries")
         ev.spark.catalog.dropTempView("template_timeseries")
 
         logger.debug("Filling NaNs with forward fill and backward fill.")
         results_sdf = ffill_and_bfill_nans(results_sdf)
-
-        #  # TODO: Is this needed?
-        # results_sdf = results_sdf.dropna(subset=["value"])
 
         return results_sdf
 

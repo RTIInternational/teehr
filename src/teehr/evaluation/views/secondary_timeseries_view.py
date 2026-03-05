@@ -82,13 +82,8 @@ class SecondaryTimeseriesView(View):
             "secondary_ts"
         )
 
-        # Get location crosswalks
-        self._ev.location_crosswalks.to_sdf().createOrReplaceTempView(
-            "location_crosswalks"
-        )
-
         # Join secondary timeseries with crosswalks to add primary_location_id
-        result_df = self._ev.spark.sql("""
+        result_df = self._ev.sql("""
             SELECT
                 st.*,
                 cf.primary_location_id
@@ -98,7 +93,6 @@ class SecondaryTimeseriesView(View):
         """)
 
         self._ev.spark.catalog.dropTempView("secondary_ts")
-        self._ev.spark.catalog.dropTempView("location_crosswalks")
 
         # Add attributes if requested
         if self._add_attrs:
@@ -130,9 +124,9 @@ class SecondaryTimeseriesView(View):
             ev=self._ev,
             attr_list=self._attr_list,
         )
-        pivot_df = attrs_view.to_sdf()
+        attrs_df = attrs_view.to_sdf()
 
-        if pivot_df.isEmpty():
+        if attrs_df.isEmpty():
             logger.warning(
                 "No location attributes found. Skipping adding attributes."
             )
@@ -140,13 +134,13 @@ class SecondaryTimeseriesView(View):
 
         # Join pivoted attributes on primary_location_id
         df.createOrReplaceTempView("secondary_with_crosswalk")
-        pivot_df.createOrReplaceTempView("attrs")
+        attrs_df.createOrReplaceTempView("attrs")
 
         # Get attr columns excluding location_id
-        attr_cols = [c for c in pivot_df.columns if c != "location_id"]
+        attr_cols = [c for c in attrs_df.columns if c != "location_id"]
         attr_select = ", ".join([f"attrs.{c}" for c in attr_cols])
 
-        result_df = self._ev.spark.sql(f"""
+        result_df = self._ev.sql(f"""
             SELECT
                 st.*,
                 {attr_select}
