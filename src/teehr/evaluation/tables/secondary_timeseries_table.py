@@ -73,12 +73,13 @@ class SecondaryTimeseriesTable(TimeseriesTable):
     def add_geometry(self):
         """Join geometry via the crosswalk."""
         logger.debug("Joining locations geometry via the crosswalk.")
+        self._sdf.createOrReplaceTempView("temp_secondary_timeseries")
 
         sql = """
             SELECT
                 sf.*,
                 lf.geometry as geometry
-            FROM secondary_timeseries sf
+            FROM temp_secondary_timeseries sf
             JOIN location_crosswalks cf
                 on cf.secondary_location_id = sf.location_id
             JOIN locations lf
@@ -87,4 +88,5 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         gdf = self._ev.sql(sql)
         self._sdf = gdf
         self._has_geometry = True
+        self._ev.spark_session.catalog.dropTempView("temp_secondary_timeseries")
         return self
