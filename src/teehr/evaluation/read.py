@@ -1,5 +1,5 @@
 """Read class for TEEHR evaluations."""
-from typing import Union, List
+from typing import Union
 import logging
 from pathlib import Path
 
@@ -9,7 +9,6 @@ import pyspark.sql as ps
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
 from pandera import DataFrameSchema as PandasDataFrameSchema
 
-from teehr.models.filters import TableFilter
 from teehr.utils.utils import path_to_spark
 
 logger = logging.getLogger(__name__)
@@ -68,7 +67,7 @@ class Read:
 
         Parameters
         ----------
-        path : Union[str, Path, S3Path]
+        path : Union[str, Path]
             The path to the cache directory containing the files.
         table_schema : SparkDataFrameSchema | PandasDataFrameSchema
             The schema of the table.
