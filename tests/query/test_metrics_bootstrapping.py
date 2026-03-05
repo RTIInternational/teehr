@@ -44,7 +44,7 @@ def test_bootstrapping_signatures(session_scope_test_warehouse):
         reps=50
     )
     fdc.unpack_results = True
-    sig_metrics_df = ev.metrics.query(
+    sig_metrics_df = ev.table("joined_timeseries").query(
         include_metrics=[fdc],
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
@@ -79,7 +79,7 @@ def test_unpacking_bootstrap_results(session_scope_test_warehouse):
             value="gage-A"
         )
     ]
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=[kge],
         filters=filters,
         group_by=["primary_location_id"],
@@ -113,7 +113,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
     # kge.unpack_results = True
 
     # Manual bootstrapping.
-    df = ev.joined_timeseries.to_pandas()
+    df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -141,7 +141,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=[kge],
         filters=filters,
         group_by=["primary_location_id"],
@@ -176,7 +176,7 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     kge.bootstrap = boot
 
     # Manual bootstrapping.
-    df = ev.joined_timeseries.to_pandas()
+    df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -204,7 +204,7 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=[kge],
         filters=filters,
         group_by=["primary_location_id"]
@@ -267,7 +267,7 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
     nse = DeterministicMetrics.NashSutcliffeEfficiency(bootstrap=boot)
 
     # Manually calling Gumboot.
-    df = ev.joined_timeseries.to_pandas()
+    df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -297,13 +297,13 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=[kge, nse],
         filters=filters,
         group_by=["primary_location_id"]
     ).to_pandas()
 
-    _ = ev.metrics.query(
+    _ = ev.table("joined_timeseries").query(
         include_metrics=[kge, nse],
         filters=filters,
         group_by=["primary_location_id"]
@@ -341,7 +341,7 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
     kge.transform = 'log'
 
     # Manual bootstrapping.
-    df = ev.joined_timeseries.to_pandas()
+    df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -369,7 +369,7 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=[kge],
         filters=filters,
         group_by=["primary_location_id"],
@@ -410,7 +410,7 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
             value="gage-A"
         )
     ]
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.table("joined_timeseries").query(
         include_metrics=[fdc],
         filters=filters,
         group_by=["primary_location_id"],

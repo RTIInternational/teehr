@@ -2,25 +2,23 @@
 import tempfile
 from typing import Union, Literal, List
 from pathlib import Path
-from teehr.evaluation.tables.attribute_table import AttributeTable
-from teehr.evaluation.tables.configuration_table import ConfigurationTable
-from teehr.evaluation.tables.location_attribute_table import (
-    LocationAttributeTable
+from teehr.evaluation.tables import (
+    AttributeTable,
+    ConfigurationTable,
+    LocationAttributeTable,
+    LocationCrosswalkTable,
+    LocationTable,
+    PrimaryTimeseriesTable,
+    SecondaryTimeseriesTable,
+    UnitTable,
+    VariableTable,
+    get_table,
 )
-from teehr.evaluation.tables.location_crosswalk_table import (
-    LocationCrosswalkTable
-)
-from teehr.evaluation.tables.location_table import LocationTable
-from teehr.evaluation.tables.primary_timeseries_table import (
-    PrimaryTimeseriesTable
-)
-from teehr.evaluation.tables.secondary_timeseries_table import (
-    SecondaryTimeseriesTable
-)
-from teehr.evaluation.tables.unit_table import UnitTable
-from teehr.evaluation.tables.variable_table import VariableTable
-from teehr.evaluation.tables.joined_timeseries_table import (
-    JoinedTimeseriesTable
+from teehr.evaluation.views import (
+    JoinedTimeseriesView,
+    LocationAttributesView,
+    PrimaryTimeseriesView,
+    SecondaryTimeseriesView,
 )
 from teehr.const import (
     LOCAL_CATALOG_DB_NAME,
@@ -37,7 +35,6 @@ from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
 from teehr.evaluation.extract import Extract
 from teehr.evaluation.validate import Validate
-from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
 from teehr.evaluation.download import Download
@@ -90,10 +87,44 @@ class BaseEvaluation(EvaluationBaseModel):
             logger.info("Creating a new default Spark session.")
             self.spark = create_spark_session()
 
-    @property
-    def table(self) -> Table:
-        """The table component class for managing data tables."""
-        return Table(self)
+    def table(
+        self,
+        table_name: str,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
+    ):
+        """Get a table instance by name.
+
+        This is a factory method that returns the appropriate table class
+        for the given table name. For known table names (like 'primary_timeseries'),
+        returns the specialized table class. For unknown names, returns a
+        generic BaseTable instance.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to access.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Returns
+        -------
+        BaseTable
+            The appropriate table instance.
+
+        Examples
+        --------
+        >>> # Access a known table
+        >>> ev.table("primary_timeseries").query(...)
+
+        >>> # Access a custom/user-defined table
+        >>> ev.table("my_custom_table").to_pandas()
+        """
+        return get_table(self, table_name, namespace_name, catalog_name)
 
     @property
     def validate(self) -> Validate:
@@ -146,7 +177,7 @@ class BaseEvaluation(EvaluationBaseModel):
             future version. Use the ``query`` method on the table directly
             with the ``include_metrics`` argument instead. For example::
 
-                ev.table(table_name='joined_timeseries').query(
+                ev.table("joined_timeseries").query(
                     include_metrics=[...],
                     group_by=[...],
                     order_by=[...],
@@ -156,7 +187,7 @@ class BaseEvaluation(EvaluationBaseModel):
             "The 'metrics' property is deprecated and will be removed in a "
             "future version. Use the 'query' method on the table directly "
             "with the 'include_metrics' argument instead. For example:\n\n"
-            "    ev.table(table_name='joined_timeseries').query(\n"
+            "    ev.table(\"joined_timeseries\").query(\n"
             "        include_metrics=[...],\n"
             "        group_by=[...],\n"
             "        order_by=[...],\n"
@@ -169,62 +200,252 @@ class BaseEvaluation(EvaluationBaseModel):
     @property
     def units(self) -> UnitTable:
         """Access the units table."""
-        tbl = UnitTable(self)
-        return tbl()
+        return UnitTable(self)
 
     @property
     def variables(self) -> VariableTable:
         """Access the variables table."""
-        tbl = VariableTable(self)
-        return tbl()
+        return VariableTable(self)
 
     @property
     def attributes(self) -> AttributeTable:
         """Access the attributes table."""
-        tbl = AttributeTable(self)
-        return tbl()
+        return AttributeTable(self)
 
     @property
     def configurations(self) -> ConfigurationTable:
         """Access the configurations table."""
-        tbl = ConfigurationTable(self)
-        return tbl()
+        return ConfigurationTable(self)
 
     @property
     def locations(self) -> LocationTable:
         """Access the locations table."""
-        tbl = LocationTable(self)
-        return tbl()
+        return LocationTable(self)
 
     @property
     def location_attributes(self) -> LocationAttributeTable:
         """Access the location attributes table."""
-        tbl = LocationAttributeTable(self)
-        return tbl()
+        return LocationAttributeTable(self)
 
     @property
     def location_crosswalks(self) -> LocationCrosswalkTable:
         """Access the location crosswalks table."""
-        tbl = LocationCrosswalkTable(self)
-        return tbl()
+        return LocationCrosswalkTable(self)
 
     @property
     def primary_timeseries(self) -> PrimaryTimeseriesTable:
         """Access the primary timeseries table."""
-        tbl = PrimaryTimeseriesTable(self)
-        return tbl()
+        return PrimaryTimeseriesTable(self)
 
     @property
     def secondary_timeseries(self) -> SecondaryTimeseriesTable:
         """Access the secondary timeseries table."""
-        tbl = SecondaryTimeseriesTable(self)
-        return tbl()
+        return SecondaryTimeseriesTable(self)
 
-    @property
-    def joined_timeseries(self) -> JoinedTimeseriesTable:
-        """Access the joined timeseries table."""
-        tbl = JoinedTimeseriesTable(self)
-        return tbl()
+    def joined_timeseries_view(
+        self,
+        primary_filters: Union[
+            str, dict, List[Union[str, dict]]
+        ] = None,
+        secondary_filters: Union[
+            str, dict, List[Union[str, dict]]
+        ] = None,
+        add_attrs: bool = False,
+        attr_list: List[str] = None,
+    ) -> JoinedTimeseriesView:
+        """Create a computed view that joins primary and secondary timeseries.
+
+        This returns a lazy view that computes the join on-the-fly when
+        accessed. The view can be filtered, transformed, and optionally
+        materialized to an iceberg table via write().
+
+        Parameters
+        ----------
+        primary_filters : Union[str, dict, List[...]], optional
+            Filters to apply to primary timeseries before joining.
+        secondary_filters : Union[str, dict, List[...]], optional
+            Filters to apply to secondary timeseries before joining.
+        add_attrs : bool, optional
+            Whether to add location attributes. Default False.
+        attr_list : List[str], optional
+            Specific attributes to add (if add_attrs=True).
+
+        Returns
+        -------
+        JoinedTimeseriesView
+            A lazy view of the joined timeseries.
+
+        Examples
+        --------
+        Create different join views:
+
+        >>> winter = ev.joined_timeseries_view(primary_filters=["month IN (12, 1, 2)"])
+        >>> summer = ev.joined_timeseries_view(primary_filters=["month IN (6, 7, 8)"])
+
+        Use directly (computes on-the-fly):
+
+        >>> ev.joined_timeseries_view().to_pandas()
+
+        Chain operations:
+
+        >>> ev.joined_timeseries_view().filter("primary_location_id LIKE 'usgs%'").to_pandas()
+
+        Compute metrics and materialize:
+
+        >>> ev.joined_timeseries_view().query(
+        ...     include_metrics=[KGE()],
+        ...     group_by=["primary_location_id"]
+        ... ).write("location_kge")
+
+        Materialize joined data:
+
+        >>> ev.joined_timeseries_view(add_attrs=True).write("joined_timeseries")
+        """
+        return JoinedTimeseriesView(
+            ev=self,
+            primary_filters=primary_filters,
+            secondary_filters=secondary_filters,
+            add_attrs=add_attrs,
+            attr_list=attr_list,
+        )
+
+    def location_attributes_view(
+        self,
+        attr_list: List[str] = None,
+    ) -> LocationAttributesView:
+        """Create a computed view of pivoted location attributes.
+
+        Transforms the location_attributes table from long format
+        (location_id, attribute_name, value) to wide format where
+        each attribute becomes a column.
+
+        Parameters
+        ----------
+        attr_list : List[str], optional
+            Specific attributes to include. If None, includes all.
+
+        Returns
+        -------
+        LocationAttributesView
+            A lazy view of the pivoted attributes.
+
+        Examples
+        --------
+        Pivot all attributes:
+
+        >>> ev.location_attributes_view().to_pandas()
+
+        Pivot specific attributes:
+
+        >>> ev.location_attributes_view(
+        ...     attr_list=["drainage_area", "ecoregion"]
+        ... ).to_pandas()
+
+        With filters (chained):
+
+        >>> ev.location_attributes_view().filter(
+        ...     "location_id LIKE 'usgs%'"
+        ... ).to_pandas()
+
+        Materialize for later use:
+
+        >>> ev.location_attributes_view().write("pivoted_attrs")
+        """
+        return LocationAttributesView(
+            ev=self,
+            attr_list=attr_list,
+        )
+
+    def primary_timeseries_view(
+        self,
+        add_attrs: bool = False,
+        attr_list: List[str] = None,
+    ) -> PrimaryTimeseriesView:
+        """Create a computed view of primary timeseries with optional attrs.
+
+        Parameters
+        ----------
+        add_attrs : bool, optional
+            Whether to add location attributes. Default False.
+        attr_list : List[str], optional
+            Specific attributes to add. If None and add_attrs=True, adds all.
+
+        Returns
+        -------
+        PrimaryTimeseriesView
+            A lazy view of the primary timeseries.
+
+        Examples
+        --------
+        Basic usage:
+
+        >>> ev.primary_timeseries_view().to_pandas()
+
+        With filters (chained):
+
+        >>> ev.primary_timeseries_view().filter(
+        ...     "location_id LIKE 'usgs%'"
+        ... ).to_pandas()
+
+        With location attributes:
+
+        >>> ev.primary_timeseries_view(
+        ...     add_attrs=True,
+        ...     attr_list=["drainage_area", "ecoregion"]
+        ... ).to_pandas()
+        """
+        return PrimaryTimeseriesView(
+            ev=self,
+            add_attrs=add_attrs,
+            attr_list=attr_list,
+        )
+
+    def secondary_timeseries_view(
+        self,
+        add_attrs: bool = False,
+        attr_list: List[str] = None,
+    ) -> SecondaryTimeseriesView:
+        """Create a computed view of secondary timeseries with crosswalk.
+
+        Joins secondary timeseries with location_crosswalks to add
+        primary_location_id, and optionally joins location attributes.
+
+        Parameters
+        ----------
+        add_attrs : bool, optional
+            Whether to add location attributes. Default False.
+        attr_list : List[str], optional
+            Specific attributes to add. If None and add_attrs=True, adds all.
+
+        Returns
+        -------
+        SecondaryTimeseriesView
+            A lazy view of the secondary timeseries with primary_location_id.
+
+        Examples
+        --------
+        Basic usage (adds primary_location_id via crosswalk):
+
+        >>> ev.secondary_timeseries_view().to_pandas()
+
+        With filters (chained):
+
+        >>> ev.secondary_timeseries_view().filter(
+        ...     "configuration_name = 'nwm30_retrospective'"
+        ... ).to_pandas()
+
+        With location attributes:
+
+        >>> ev.secondary_timeseries_view(
+        ...     add_attrs=True,
+        ...     attr_list=["drainage_area", "ecoregion"]
+        ... ).to_pandas()
+        """
+        return SecondaryTimeseriesView(
+            ev=self,
+            add_attrs=add_attrs,
+            attr_list=attr_list,
+        )
 
     def _set_active_catalog(self, catalog: Literal["local", "remote"]):
         """Set the active catalog to either local or remote.
@@ -527,7 +748,8 @@ class Evaluation(BaseEvaluation):
                 err_msg = (
                     f"Evaluation version {version} in {version_dir} is less than 0.6."
                     " Please run the migration script to upgrade to this Evaluation to v0.6."
-                    " To run the conversion to v0.6, import the function using: 'from teehr.utilities.convert_to_iceberg import convert_evaluation'"
+                    " To run the conversion to v0.6, import the function using: "
+                    "'from teehr.utilities.convert_to_iceberg import convert_evaluation'"
                     f" and then call: 'convert_evaluation(\"{self.dir_path.as_posix()}\")'"
                 )
                 logger.error(err_msg)

@@ -214,7 +214,7 @@ def update_metadata_paths(
     for row in updated_tables_df.itertuples():
         table_name = row.table_name
         metadata_file = row.metadata_location
-        ev.spark.sql(f"""
+        ev.sql(f"""
         CALL local.system.register_table(
             table => 'teehr.{table_name}',
             metadata_file => '{metadata_file}'

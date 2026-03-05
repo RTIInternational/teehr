@@ -41,6 +41,7 @@ MIZU_LOCATIONS = Path(
     TEST_STUDY_DATA_DIR, "geo", "mizu_locations.parquet"
 )
 
+
 @pytest.mark.function_scope_evaluation_template
 def test_load_spark_dataframe(function_scope_evaluation_template):
     """Test the load_dataframe function."""
@@ -89,6 +90,7 @@ def test_load_spark_dataframe(function_scope_evaluation_template):
     assert loaded_row["variable_name"] == "streamflow"
     assert loaded_row["location_id"] == "gage-A"
     assert loaded_row["value"] == 1.9
+
 
 @pytest.mark.function_scope_evaluation_template
 def test_dropping_duplicates(function_scope_evaluation_template):
@@ -462,7 +464,7 @@ def test_validate_and_insert_fews_xml_timeseries(function_scope_evaluation_templ
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    ev.joined_timeseries.create(execute_scripts=False)
+    ev.joined_timeseries_view().write("joined_timeseries")
 
     # Now, metrics.
     kge = m.KlingGuptaEfficiency()
@@ -517,7 +519,7 @@ def test_validate_and_insert_in_memory_timeseries(function_scope_evaluation_temp
             long_name="Streamflow"
         )
     )
-    print("Domain variables added in %.2f seconds." % (time.time() - t0)) # ~ 40 secs!
+    print("Domain variables added in %.2f seconds." % (time.time() - t0))  # ~ 40 secs!
 
     t0 = time.time()
     df = pd.read_parquet(PRIMARY_TIMESERIES_FILEPATH)

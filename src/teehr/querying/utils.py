@@ -7,6 +7,7 @@ from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 from pydantic import BaseModel as PydanticBaseModel
 
+import teehr
 from teehr.models.str_enum import StrEnum
 
 import logging
@@ -274,18 +275,34 @@ def group_df(df, group_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
 def join_geometry(
     target_df: ps.DataFrame,
     location_df: ps.DataFrame,
-    target_location_id: str = "location_id",
-):
+    target_location_id: str = None,
+) -> ps.DataFrame:
     """Join geometry."""
     logger.debug("Joining locations geometry.")
 
-    joined_df = target_df.join(
-        location_df.withColumnRenamed(
-            "id",
-            target_location_id
-        ).select(
-            target_location_id,
-            "geometry"
-        ), on=target_location_id
+    target_df_columns = target_df.columns
+    if target_location_id is None:
+        if "location_id" in target_df_columns:
+            target_location_id = "location_id"
+        elif "primary_location_id" in target_df_columns:
+            target_location_id = "primary_location_id"
+        else:
+            error_msg = """
+                No 'location_id' or 'primary_location_id' column
+                found in target DataFrame.
+            """
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+    location_df = location_df.withColumnRenamed(
+        "id",
+        target_location_id
+    ).select(
+        target_location_id,
+        "geometry"
     )
-    return df_to_gdf(joined_df.toPandas())
+
+    joined_df = target_df.join(
+        location_df, on=target_location_id
+    )
+    return joined_df

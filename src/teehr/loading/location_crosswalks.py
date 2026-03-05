@@ -13,21 +13,23 @@ def convert_single_location_crosswalks(
     in_filepath: Union[str, Path],
     field_mapping: dict,
     **kwargs
-):
-    """Convert location_crosswalks data to parquet format.
+) -> pd.DataFrame:
+    """Convert location_crosswalks data to a pandas DataFrame.
 
     Parameters
     ----------
     in_filepath : Union[str, Path]
         The input file path.
-    out_filepath : Union[str, Path]
-        The output file path.
     field_mapping : dict
         A dictionary mapping input fields to output fields.
         format: {input_field: output_field}
     **kwargs
         Additional keyword arguments are passed to
             pd.read_csv() or pd.read_parquet().
+
+    Returns
+    -------
+    pd.DataFrame
     """
     in_filepath = Path(in_filepath)
 
@@ -53,4 +55,3 @@ def convert_single_location_crosswalks(
     location_crosswalks.rename(columns=field_mapping, inplace=True)
 
     return location_crosswalks
-

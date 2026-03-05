@@ -1,13 +1,25 @@
 """Attribute table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.pydantic_table_models import Attribute
+from teehr.models.pandera_dataframe_schemas import attribute_schema
 from typing import List, Union
 
 
 class AttributeTable(DomainTable):
     """Access methods to attributes table."""
 
-    def __init__(self, ev):
+    # Table metadata
+    table_name = "attributes"
+    uniqueness_fields = ["name"]
+    schema_func = staticmethod(attribute_schema)
+
+    def __init__(
+        self,
+        ev,
+        table_name: str = "attributes",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
         """Initialize the Table class.
 
         Parameters
@@ -15,20 +27,7 @@ class AttributeTable(DomainTable):
         ev : EvaluationBaseModel
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
-        """
-        super().__init__(ev)
-
-    def __call__(
-        self,
-        table_name: str = "attributes",
-        namespace_name: Union[str, None] = None,
-        catalog_name: Union[str, None] = None,
-    ) -> "DomainTable":
-        """Initialize the Table class for a specific table.
-
-        Parameters
-        ----------
-        table_name : str
+        table_name : str, optional
             The name of the table to operate on. Defaults to 'attributes'.
         namespace_name : Union[str, None], optional
             The namespace containing the table. If None, uses the
@@ -36,23 +35,8 @@ class AttributeTable(DomainTable):
         catalog_name : Union[str, None], optional
             The catalog containing the table. If None, uses the
             active catalog name.
-
-        Returns
-        -------
-        "DomainTable"
-            The initialized Table instance ready for operations.
-
-        Note
-        ----
-        Creates an instance of a Table class with 'attributes'
-        properties. If namespace_name or catalog_name are None, they are
-        derived from the active catalog, which is 'local' by default.
         """
-        return super().__call__(
-            table_name=table_name,
-            namespace_name=namespace_name,
-            catalog_name=catalog_name
-        )
+        super().__init__(ev, table_name, namespace_name, catalog_name)
 
     def add(
         self,
