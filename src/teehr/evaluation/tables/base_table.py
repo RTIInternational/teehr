@@ -39,7 +39,7 @@ class BaseTable(DataFrameBase):
 
     def __init__(
         self,
-        ev: EvaluationBase,
+        ev: EvaluationBaseModel,
         table_name: str = None,
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None

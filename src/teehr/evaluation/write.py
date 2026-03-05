@@ -7,7 +7,6 @@ import pandas as pd
 from pyarrow import Schema as ArrowSchema
 import geopandas as gpd
 
-from teehr.evaluation.tables.base_table import BaseTable
 from teehr.const import REMOTE_CATALOG_NAME
 
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}

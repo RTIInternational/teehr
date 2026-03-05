@@ -532,57 +532,46 @@ class BaseEvaluation(EvaluationBaseModel):
         """Log the current Spark session configuration."""
         log_session_config(self.spark)
 
-    def sql(self, query: str, create_temp_views: List[str]):
-        """Run a SQL query on the Spark session against the TEEHR tables.
+    def sql(self, query: str):
+        """Execute a SQL query using the active catalog and namespace.
+
+        This is a thin wrapper around ``spark.sql()`` that automatically sets
+        the active catalog and namespace so the user does not have to qualify
+        table names in their queries.
 
         Parameters
         ----------
         query : str
-            The SQL query to run.
-        create_temp_views : List[str], optional
-            A list of tables to create temporary views for.
-            The default is None which creates all.
+            The SQL query to execute. Table names can be unqualified (e.g.
+            ``primary_timeseries``) or partially qualified (e.g.
+            ``teehr.primary_timeseries``).  The active catalog
+            (``ev.active_catalog.catalog_name``) and active namespace
+            (``ev.active_catalog.namespace_name``) are set automatically
+            before the query runs.
 
         Returns
         -------
         pyspark.sql.DataFrame
-            The result of the SQL query.
-            This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.
+            The result of the SQL query as a Spark DataFrame.
 
-        By default this method has access to the following tables preloaded as temporary views:
-            - units
-            - variables
-            - attributes
-            - configurations
-            - locations
-            - location_attributes
-            - location_crosswalks
-            - primary_timeseries
-            - secondary_timeseries
-            - joined_timeseries
-        """ # noqa
-        # TODO: Remove this method!!
-        if "units" in create_temp_views:
-            self.units.to_sdf().createOrReplaceTempView("units")
-        if "variables" in create_temp_views:
-            self.variables.to_sdf().createOrReplaceTempView("variables")
-        if "attributes" in create_temp_views:
-            self.attributes.to_sdf().createOrReplaceTempView("attributes")
-        if "configurations" in create_temp_views:
-            self.configurations.to_sdf().createOrReplaceTempView("configurations")
-        if "locations" in create_temp_views:
-            self.locations.to_sdf().createOrReplaceTempView("locations")
-        if "location_attributes" in create_temp_views:
-            self.location_attributes.to_sdf().createOrReplaceTempView("location_attributes")
-        if "location_crosswalks" in create_temp_views:
-            self.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
-        if "primary_timeseries" in create_temp_views:
-            self.primary_timeseries.to_sdf().createOrReplaceTempView("primary_timeseries")
-        if "secondary_timeseries" in create_temp_views:
-            self.secondary_timeseries.to_sdf().createOrReplaceTempView("secondary_timeseries")
-        if "joined_timeseries" in create_temp_views:
-            self.joined_timeseries.to_sdf().createOrReplaceTempView("joined_timeseries")
+        Examples
+        --------
+        Query a table without specifying the catalog or namespace:
 
+        >>> df = ev.sql("SELECT * FROM primary_timeseries LIMIT 10")
+        >>> df.toPandas()
+
+        Use aggregate functions:
+
+        >>> df = ev.sql(
+        ...     "SELECT location_id, COUNT(*) as n "
+        ...     "FROM primary_timeseries GROUP BY location_id"
+        ... )
+        """
+        catalog_name = self.active_catalog.catalog_name
+        namespace_name = self.active_catalog.namespace_name
+        self.spark.sql(f"USE {catalog_name}")
+        self.spark.sql(f"USE SCHEMA {namespace_name}")
         return self.spark.sql(query)
 
 
