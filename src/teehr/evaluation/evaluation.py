@@ -831,6 +831,61 @@ class Evaluation(EvaluationBase):
         """List the views in the catalog returning a Pandas DataFrame."""
         return self.spark.sql("SHOW VIEWS").toPandas()
 
+    def sql(self, query: str):
+        """Execute a SQL query using the active catalog and namespace.
+
+        This is a thin wrapper around ``spark.sql()`` that automatically sets
+        the active catalog and namespace so the user does not have to qualify
+        table names in their queries.
+
+        Parameters
+        ----------
+        query : str
+            The SQL query to execute. Table names can be unqualified (e.g.
+            ``primary_timeseries``) or partially qualified (e.g.
+            ``teehr.primary_timeseries``).  The active catalog
+            (``ev.active_catalog.catalog_name``) and active namespace
+            (``ev.active_catalog.namespace_name``) are set automatically
+            before the query runs.
+
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            The result of the SQL query as a Spark DataFrame.
+
+        Examples
+        --------
+        Query a table without specifying the catalog or namespace:
+
+        >>> df = ev.sql("SELECT * FROM primary_timeseries LIMIT 10")
+        >>> df.toPandas()
+
+        Use aggregate functions:
+
+        >>> df = ev.sql(
+        ...     "SELECT location_id, COUNT(*) as n "
+        ...     "FROM primary_timeseries GROUP BY location_id"
+        ... )
+        """
+        catalog_name = self.active_catalog.catalog_name
+        namespace_name = self.active_catalog.namespace_name
+        _valid_identifier = re.compile(r'^[A-Za-z_][A-Za-z0-9_\-]*$')
+        if not _valid_identifier.match(catalog_name):
+            raise ValueError(
+                f"Invalid catalog name '{catalog_name}': "
+                "must start with a letter or underscore and contain only "
+                "letters, digits, underscores, or hyphens."
+            )
+        if not _valid_identifier.match(namespace_name):
+            raise ValueError(
+                f"Invalid namespace name '{namespace_name}': "
+                "must start with a letter or underscore and contain only "
+                "letters, digits, underscores, or hyphens."
+            )
+        self.spark.sql(f"USE {catalog_name}")
+        self.spark.sql(f"USE SCHEMA {namespace_name}")
+        return self.spark.sql(query)
+
     def log_spark_config(self):
         """Log the current Spark session configuration."""
         log_session_config(self.spark)
