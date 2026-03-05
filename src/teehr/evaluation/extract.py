@@ -2,7 +2,6 @@
 from pathlib import Path
 from typing import List, Callable
 import logging
-import shutil
 import concurrent.futures
 
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
