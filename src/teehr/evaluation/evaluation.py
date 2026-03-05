@@ -22,7 +22,12 @@ from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.joined_timeseries_table import (
     JoinedTimeseriesTable
 )
-from teehr.const import LOCAL_CATALOG_DB_NAME, CACHE_DIR
+from teehr.const import (
+    LOCAL_CATALOG_DB_NAME,
+    CACHE_DIR,
+    REMOTE_CATALOG_REST_URI,
+    REMOTE_WAREHOUSE_S3_PATH
+)
 from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
 import logging
@@ -491,18 +496,20 @@ class Evaluation(BaseEvaluation):
         fs = LocalFileSystem()
 
         if fs.exists(warehouse_dir):
-            # This is a v0.6+ evaluation, check for version file in warehouse dir:
+            # This is a v0.6+ evaluation,
+            # check for version file in warehouse dir:
             version_dir = warehouse_dir
         else:
-            # This is a pre-v0.6 evaluation, check for version file in eval dir:
+            # This is a pre-v0.6 evaluation,
+            # check for version file in eval dir:
             version_dir = self.dir_path
 
         version_file = Path(version_dir, "version")
         if not fs.exists(version_file):
             err_msg = (
                 f"No version file was found in {version_dir}."
-                " Please first upgrade to v0.5 or create a text file named 'version'"
-                f" in {version_dir} with the version number (e.g., '0.5.0')."
+                " Please first upgrade to v0.5 or create a text file named"
+                f" 'version' in {version_dir} with the version number (e.g., '0.5.0')."
             )
             logger.error(err_msg)
             raise Exception(err_msg)
@@ -566,6 +573,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
         super().__init__(
             spark=spark
         )
+        self.remote_catalog = None
 
         # Create a temporary directory for the cache.
         if temp_dir_path is not None:
@@ -582,7 +590,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Check the configuration for remote catalog access
-        if self.remote_catalog.catalog_uri == "" or self.remote_catalog.warehouse_dir == "":
+        if REMOTE_CATALOG_REST_URI == "" or REMOTE_WAREHOUSE_S3_PATH == "":
             raise ValueError(
                 "Currently you must be in the TEEHR-Hub environment to use the "
                 "RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes. "
