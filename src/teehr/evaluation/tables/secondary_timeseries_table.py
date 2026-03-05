@@ -88,5 +88,5 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         gdf = self._ev.sql(sql)
         self._sdf = gdf
         self._has_geometry = True
-        self._ev.spark_session.catalog.dropTempView("temp_secondary_timeseries")
+        self._ev.spark.catalog.dropTempView("temp_secondary_timeseries")
         return self
