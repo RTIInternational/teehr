@@ -1,6 +1,5 @@
 """Evaluation module."""
 import tempfile
-from datetime import datetime
 from typing import Union, Literal, List
 from pathlib import Path
 from teehr.evaluation.tables.attribute_table import AttributeTable
@@ -23,8 +22,7 @@ from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.joined_timeseries_table import (
     JoinedTimeseriesTable
 )
-from teehr.const import LOCAL_CATALOG_DB_NAME
-from teehr.fetching import const
+from teehr.const import LOCAL_CATALOG_DB_NAME, CACHE_DIR
 from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
 import logging
@@ -53,11 +51,9 @@ from teehr.models.evaluation_base import (
     RemoteCatalog
 )
 import teehr
-from pydantic import BaseModel as PydanticBaseModel
 
 
 logger = logging.getLogger(__name__)
-
 
 
 class BaseEvaluation(EvaluationBaseModel):
@@ -79,7 +75,6 @@ class BaseEvaluation(EvaluationBaseModel):
             The SparkSession object, by default None
         """
         self.read_only_remote = True
-        # Cached component instances
         self._download_instance = None
 
         # Initialize Spark session
@@ -276,11 +271,11 @@ class BaseEvaluation(EvaluationBaseModel):
         Parameters
         ----------
         catalog_name : str, optional
-            The catalog name to list tables from, by default None, which means the
-            catalog_name of the active catalog is used.
+            The catalog name to list tables from, by default None,
+             which means the catalog_name of the active catalog is used.
         namespace : str, optional
-            The namespace name to list tables from, by default None, which means the
-            namespace_name of the active catalog is used.
+            The namespace name to list tables from, by default None,
+             which means the namespace_name of the active catalog is used.
         """
         if catalog_name is None:
             catalog_name = self.active_catalog.catalog_name
@@ -290,8 +285,6 @@ class BaseEvaluation(EvaluationBaseModel):
             f"{catalog_name}.{namespace}"
         )
         metadata = []
-        # Note. "EXTERNAL" tables are those managed by REST catalog?
-        # (ie, not hadoop)
         for tbl in tbl_list:
             if tbl.tableType == "VIEW":
                 continue
@@ -313,6 +306,59 @@ class BaseEvaluation(EvaluationBaseModel):
         """Log the current Spark session configuration."""
         log_session_config(self.spark)
 
+    def sql(self, query: str, create_temp_views: List[str]):
+        """Run a SQL query on the Spark session against the TEEHR tables.
+
+        Parameters
+        ----------
+        query : str
+            The SQL query to run.
+        create_temp_views : List[str], optional
+            A list of tables to create temporary views for.
+            The default is None which creates all.
+
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            The result of the SQL query.
+            This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.
+
+        By default this method has access to the following tables preloaded as temporary views:
+            - units
+            - variables
+            - attributes
+            - configurations
+            - locations
+            - location_attributes
+            - location_crosswalks
+            - primary_timeseries
+            - secondary_timeseries
+            - joined_timeseries
+        """ # noqa
+        # TODO: Remove this method!!
+        if "units" in create_temp_views:
+            self.units.to_sdf().createOrReplaceTempView("units")
+        if "variables" in create_temp_views:
+            self.variables.to_sdf().createOrReplaceTempView("variables")
+        if "attributes" in create_temp_views:
+            self.attributes.to_sdf().createOrReplaceTempView("attributes")
+        if "configurations" in create_temp_views:
+            self.configurations.to_sdf().createOrReplaceTempView("configurations")
+        if "locations" in create_temp_views:
+            self.locations.to_sdf().createOrReplaceTempView("locations")
+        if "location_attributes" in create_temp_views:
+            self.location_attributes.to_sdf().createOrReplaceTempView("location_attributes")
+        if "location_crosswalks" in create_temp_views:
+            self.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
+        if "primary_timeseries" in create_temp_views:
+            self.primary_timeseries.to_sdf().createOrReplaceTempView("primary_timeseries")
+        if "secondary_timeseries" in create_temp_views:
+            self.secondary_timeseries.to_sdf().createOrReplaceTempView("secondary_timeseries")
+        if "joined_timeseries" in create_temp_views:
+            self.joined_timeseries.to_sdf().createOrReplaceTempView("joined_timeseries")
+
+        return self.spark.sql(query)
+
 
 class Evaluation(BaseEvaluation):
     """A read-write Evaluation class for accessing local catalogs.
@@ -323,6 +369,7 @@ class Evaluation(BaseEvaluation):
     It is intended for use when working locally or when you want to
     manage your own local copy of the data.
     """
+
     def __init__(
         self,
         dir_path: Union[str, Path],
@@ -330,10 +377,32 @@ class Evaluation(BaseEvaluation):
         check_evaluation_version: bool = True,
         spark: SparkSession = None
     ):
+        """Initialize the Evaluation class.
+
+        Parameters
+        ----------
+        dir_path : Union[str, Path]
+            The directory path to use for the local catalog. This is where the
+            local catalog's warehouse directory will be created. If the
+             directory does not exist, it will be created if create_dir=True,
+            otherwise an error will be raised.
+        create_dir : bool, optional
+            Whether to create the directory if it does not exist.
+            Default is False.
+        check_evaluation_version : bool, optional
+            Whether to check the evaluation version if the directory already
+            exists. Default is True.
+        spark : SparkSession, optional
+            The SparkSession object. If not provided, a new default Spark
+            session will be created.
+        """
         super().__init__(spark=spark)
 
         self.cache_dir = None
         self.dir_path = Path(dir_path)
+        local_catalog_name = self.spark.conf.get("local_catalog_name")
+        warehouse_dir = self.dir_path / local_catalog_name
+
         if not self.dir_path.is_dir():
             if create_dir:
                 logger.info(f"Creating directory {self.dir_path}.")
@@ -343,17 +412,11 @@ class Evaluation(BaseEvaluation):
                     f"Directory {self.dir_path} does not exist."
                     " Set create_dir=True to create it."
                 )
-                raise NotADirectoryError(f"Directory {self.dir_path} does not exist.")
+                raise NotADirectoryError(
+                    f"Directory {self.dir_path} does not exist."
+                )
         else:
             logger.info(f"Using existing directory {self.dir_path}.")
-
-        # Need to update to local warehouse path based on dir_path
-        # Note. Here 'warehouse_dir' should be 'catalog_dir'?
-        local_catalog_name = self.spark.conf.get("local_catalog_name")
-        warehouse_dir = self.dir_path / local_catalog_name
-        # Need to create the warehouse dir if it does not exist
-        if warehouse_dir.is_dir() is False:
-            warehouse_dir.mkdir()
 
         # Set local warehouse path and jdbc uri
         self.spark.conf.set(
@@ -371,42 +434,43 @@ class Evaluation(BaseEvaluation):
             namespace_name=self.spark.conf.get("local_namespace_name"),
             catalog_type=self.spark.conf.get("local_catalog_type"),
         )
-        # Check version of Evaluation
-        if create_dir is False and check_evaluation_version is True:
+        # If the warehouse directory exists, check the Evaluation version.
+        if warehouse_dir.is_dir() is True and check_evaluation_version is True:
             self.check_evaluation_version()
 
-        # Create cache dir
-        self.cache_dir = self.local_catalog.cache_dir
-        if self.cache_dir is not None and self.cache_dir.is_dir() is False:
-            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        # Need to create the warehouse dir if it does not exist,
+        # along with the cache dir.
+        if warehouse_dir.is_dir() is False:
+            self.local_catalog.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        self._set_active_catalog("local")  # Creates the JDBC .db file
-
-        apply_migrations.evolve_catalog_schema(
-            spark=self.spark,
-            migrations_dir_path=Path(__file__).parents[1] / "migrations",
-            target_catalog_name=self.local_catalog.catalog_name,
-            target_namespace_name=self.local_catalog.namespace_name
-        )
-
-        # Create version file if create_dir=True.
-        if create_dir is True:
             version_file = Path(warehouse_dir) / "version"
             with open(version_file, "w") as f:
                 f.write(teehr.__version__)
 
+            apply_migrations.evolve_catalog_schema(
+                spark=self.spark,
+                migrations_dir_path=Path(__file__).parents[1] / "migrations",
+                target_catalog_name=self.local_catalog.catalog_name,
+                target_namespace_name=self.local_catalog.namespace_name
+            )
 
+        self._set_active_catalog("local")  # Creates the JDBC .db file
 
     def clean_cache(self):
         """Clean temporary files.
 
         Includes removing temporary files.
         """
-        logger.info(f"Removing temporary files from {self.active_catalog.cache_dir}")
+        logger.info(
+            f"Removing temporary files from {self.active_catalog.cache_dir}"
+        )
         remove_dir_if_exists(self.active_catalog.cache_dir)
         self.active_catalog.cache_dir.mkdir()
 
-    def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> None:
+    def check_evaluation_version(
+        self,
+        warehouse_dir: Union[str, Path] = None
+    ) -> None:
         """Check the version of the TEEHR Evaluation.
 
         Parameters
@@ -476,8 +540,8 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
     operations to the remote catalog are not supported through this class.
 
     Currently only users in the TEEHR-Hub environment have access to
-    the remote catalog, so this class is intended for use within that environment,
-    until remote access is more broadly available.
+    the remote catalog, so this class is intended for use within that
+    environment, until remote access is more broadly available.
     """
 
     def __init__(
@@ -495,8 +559,8 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
             Spark session will be created.
         temp_dir_path : Union[str, Path], optional
             The directory path to use for the temporary local catalog.
-            If not provided, a temporary directory will be created in the default location.
-            If it does not exist, it will be created.
+            If not provided, a temporary directory will be created in the
+            default location. If it does not exist, it will be created.
         """
         # Initialize the parent Evaluation class
         super().__init__(
@@ -514,7 +578,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
             self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
         local_catalog_name = self.spark.conf.get("local_catalog_name")
-        cache_dir = temp_path / local_catalog_name / const.CACHE_DIR
+        cache_dir = temp_path / local_catalog_name / CACHE_DIR
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Check the configuration for remote catalog access
@@ -557,8 +621,8 @@ class RemoteReadWriteEvaluation(RemoteReadOnlyEvaluation):
     an AWS profile with write permissions is required in the Spark session.
 
     Currently only users in the TEEHR-Hub environment have access to
-    the remote catalog, so this class is intended for use within that environment,
-    until remote access is more broadly available.
+    the remote catalog, so this class is intended for use within that
+    environment, until remote access is more broadly available.
     """
 
     def __init__(
@@ -576,8 +640,8 @@ class RemoteReadWriteEvaluation(RemoteReadOnlyEvaluation):
             Spark session will be created.
         temp_dir_path : Union[str, Path], optional
             The directory path to use for the temporary local catalog.
-            If not provided, a temporary directory will be created in the default location.
-            If it does not exist, it will be created.
+            If not provided, a temporary directory will be created in the
+            default location. If it does not exist, it will be created.
         """
         super().__init__(
             spark=spark,

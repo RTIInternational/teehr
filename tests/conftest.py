@@ -3,10 +3,6 @@ import logging
 import pytest
 import shutil
 from pathlib import Path
-import glob
-import json
-import fastavro
-from pyspark.sql.functions import regexp_replace
 import time
 
 from teehr.evaluation.spark_session_utils import create_spark_session
@@ -116,11 +112,10 @@ def function_scope_evaluation_template(session_scope_evaluation_template, reques
     ev.local_catalog.namespace_name = test_namespace
 
     # Set up the tables in the new namespace.
+    migrations_dir = Path(__file__).parents[1] / "src/teehr/migrations"
     apply_migrations.evolve_catalog_schema(
         spark=ev.spark,
-        migrations_dir_path=ev.dir_path / "local",
-        local_catalog_name="local",
-        local_namespace_name="teehr",
+        migrations_dir_path=migrations_dir,
         target_catalog_name="local",
         target_namespace_name=test_namespace
     )
@@ -169,7 +164,8 @@ def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
 
     ev = update_metadata_paths(
         dir_path=temp_extract_dir,
-        spark=spark_shared_session
+        spark=spark_shared_session,
+        database_name="local_catalog.db"
     )
 
     yield ev

@@ -8,6 +8,7 @@ from pyarrow import schema as arrow_schema
 import geopandas as gpd
 
 from teehr.evaluation.tables.base_table import BaseTable
+from teehr.const import REMOTE_CATALOG_NAME
 
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
 
@@ -178,8 +179,7 @@ class Write:
         """
         if (
             self._ev.read_only_remote is True and
-            self._ev.active_catalog.catalog_name ==
-            self._ev.remote_catalog.catalog_name
+            self._ev.active_catalog.catalog_name == REMOTE_CATALOG_NAME
         ):
             raise ValueError(
                 "Cannot write to the TEEHR-Cloud warehouse in read-only remote mode."
