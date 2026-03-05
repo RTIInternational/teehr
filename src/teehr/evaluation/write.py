@@ -199,12 +199,14 @@ class Write:
             uniqueness_fields = tbl.uniqueness_fields
 
         source_view_name = "source_view"
+        created_temp_view = False
 
         if isinstance(source_data, pd.DataFrame):
             source_data = self._ev.spark.createDataFrame(source_data)
 
         if isinstance(source_data, ps.DataFrame):
             source_data.createOrReplaceTempView(source_view_name)
+            created_temp_view = True
 
         if isinstance(source_data, str):
             source_view_name = source_data
@@ -257,7 +259,8 @@ class Write:
                 "'overwrite', or 'create_or_replace'."
             )
 
-        self._ev.spark.sql(f"DROP VIEW IF EXISTS {source_view_name}")
+        if created_temp_view:
+            self._ev.spark.sql(f"DROP VIEW IF EXISTS {source_view_name}")
 
     @staticmethod
     def to_cache(
