@@ -2,10 +2,10 @@
 import pytest
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_location_attributes_view(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_location_attributes_view(module_scope_test_warehouse):
     """Test the LocationAttributesView (pivoted attributes)."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Test basic pivoted attributes view
     pdf = ev.location_attributes_view().to_pandas()
@@ -16,10 +16,10 @@ def test_location_attributes_view(function_scope_test_warehouse):
     assert len(pdf) > 0
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_location_attributes_view_with_filter(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_location_attributes_view_with_filter(module_scope_test_warehouse):
     """Test LocationAttributesView with specific attributes."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Get only specific attributes
     pdf = ev.location_attributes_view(
@@ -32,10 +32,10 @@ def test_location_attributes_view_with_filter(function_scope_test_warehouse):
     assert len(pdf.columns) == 2
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_primary_timeseries_view_basic(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_primary_timeseries_view_basic(module_scope_test_warehouse):
     """Test basic PrimaryTimeseriesView."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Basic view without attributes
     pdf = ev.primary_timeseries_view().to_pandas()
@@ -46,10 +46,10 @@ def test_primary_timeseries_view_basic(function_scope_test_warehouse):
     assert len(pdf) > 0
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_primary_timeseries_view_with_filter(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_primary_timeseries_view_with_filter(module_scope_test_warehouse):
     """Test PrimaryTimeseriesView with chained filter."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Get primary timeseries for one location using chained filter
     pdf = ev.primary_timeseries_view().filter(
@@ -60,10 +60,10 @@ def test_primary_timeseries_view_with_filter(function_scope_test_warehouse):
     assert len(pdf) > 0
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_primary_timeseries_view_with_attrs(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_primary_timeseries_view_with_attrs(module_scope_test_warehouse):
     """Test PrimaryTimeseriesView with location attributes."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Get primary timeseries with attributes
     pdf = ev.primary_timeseries_view(
@@ -77,10 +77,10 @@ def test_primary_timeseries_view_with_attrs(function_scope_test_warehouse):
     assert len(pdf) > 0
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_secondary_timeseries_view_basic(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_secondary_timeseries_view_basic(module_scope_test_warehouse):
     """Test basic SecondaryTimeseriesView adds primary_location_id."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Basic view - should add primary_location_id via crosswalk
     pdf = ev.secondary_timeseries_view().to_pandas()
@@ -92,10 +92,10 @@ def test_secondary_timeseries_view_basic(function_scope_test_warehouse):
     assert len(pdf) > 0
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_secondary_timeseries_view_with_filter(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_secondary_timeseries_view_with_filter(module_scope_test_warehouse):
     """Test SecondaryTimeseriesView with chained filter."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Get secondary timeseries for one configuration using chained filter
     pdf = ev.secondary_timeseries_view().filter(
@@ -107,10 +107,10 @@ def test_secondary_timeseries_view_with_filter(function_scope_test_warehouse):
     assert len(pdf) > 0
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_secondary_timeseries_view_with_attrs(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_secondary_timeseries_view_with_attrs(module_scope_test_warehouse):
     """Test SecondaryTimeseriesView with location attributes."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Get secondary timeseries with attributes
     pdf = ev.secondary_timeseries_view(
@@ -125,10 +125,10 @@ def test_secondary_timeseries_view_with_attrs(function_scope_test_warehouse):
     assert len(pdf) > 0
 
 
-@pytest.mark.function_scope_test_warehouse
-def test_views_chain_operations(function_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_views_chain_operations(module_scope_test_warehouse):
     """Test that views can be chained with filter, order_by, etc."""
-    ev = function_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Chain operations on primary timeseries view
     pdf = (
