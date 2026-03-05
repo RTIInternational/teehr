@@ -13,7 +13,6 @@ from teehr.models.pandera_dataframe_schemas import location_attributes_schema
 from pathlib import Path
 from typing import List, Dict, Union
 import logging
-from teehr.models.table_enums import TableWriteEnum
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +76,7 @@ class LocationAttributeTable(BaseTable):
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
     ):
@@ -110,7 +109,7 @@ class LocationAttributeTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -164,7 +163,7 @@ class LocationAttributeTable(BaseTable):
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
     ):
@@ -197,7 +196,7 @@ class LocationAttributeTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -250,7 +249,7 @@ class LocationAttributeTable(BaseTable):
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Import data from an in-memory dataframe.
@@ -277,7 +276,7 @@ class LocationAttributeTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking

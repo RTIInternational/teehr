@@ -7,7 +7,6 @@ import pandas as pd
 import pyspark.sql as ps
 import geopandas as gpd
 
-from teehr.models.table_enums import TableWriteEnum
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.locations import convert_single_locations
 from teehr.models.pandera_dataframe_schemas import locations_schema
@@ -75,7 +74,7 @@ class LocationTable(BaseTable):
         constant_field_values: dict = None,
         pattern: str = "**/*.parquet",
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
     ):
@@ -111,7 +110,7 @@ class LocationTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -174,7 +173,7 @@ class LocationTable(BaseTable):
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Load data from an in-memory dataframe.
@@ -201,7 +200,7 @@ class LocationTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking

@@ -30,7 +30,6 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
-from teehr.models.table_enums import TableWriteEnum
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
     USGS_VARIABLE_MAPPER,
@@ -136,7 +135,7 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
         table_name: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
@@ -180,7 +179,7 @@ class Fetch:
             The name of the table to load the data into. Must be either
             "primary_timeseries" or "secondary_timeseries". This is redundant to,
             and takes precedence over timeseries_type, which is deprecated.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
             that does not already exist.
@@ -318,7 +317,7 @@ class Fetch:
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         timeseries_type: TimeseriesTypeEnum = "secondary",
         table_name: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
@@ -369,7 +368,7 @@ class Fetch:
             The name of the table to load the data into. Must be either
             "primary_timeseries" or "secondary_timeseries". This is redundant to,
             and takes precendence over timeseries_type, which is deprecated.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
             that does not already exist.
@@ -494,7 +493,7 @@ class Fetch:
         location_id_prefix: Optional[str] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
         table_name: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
     ):
@@ -559,7 +558,7 @@ class Fetch:
             The name of the table to load the data into. Must be either
             "primary_timeseries" or "secondary_timeseries". This is redundant to,
             and takes precedence over timeseries_type, which is deprecated.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append", "upsert",
             or "create_or_replace".
         zonal_weights_filepath : Optional[Union[Path, str]]
@@ -715,7 +714,7 @@ class Fetch:
         table_name: str = None,
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         drop_overlapping_assimilation_values: Optional[bool] = True
     ):
@@ -816,7 +815,7 @@ class Fetch:
             for the last day are determined by ``end_date`` if provided, otherwise
             all z_hours are included in the final day. Default is None.
             Must be between 0 and 23.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
             that does not already exist.
@@ -993,7 +992,7 @@ class Fetch:
         table_name: str = None,
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
         drop_overlapping_assimilation_values: bool = True,
@@ -1098,7 +1097,7 @@ class Fetch:
             for the last day are determined by ``end_date`` if provided, otherwise
             all z_hours are included in the final day. Default is None.
             Must be between 0 and 23.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
             that does not already exist.

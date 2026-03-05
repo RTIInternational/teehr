@@ -9,7 +9,6 @@ from teehr.models.pandera_dataframe_schemas import location_crosswalks_schema
 from pathlib import Path
 from typing import List, Dict, Union
 import logging
-from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.location_crosswalks import (
     convert_single_location_crosswalks
 )
@@ -75,7 +74,7 @@ class LocationCrosswalkTable(BaseTable):
         field_mapping: dict = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
     ):
@@ -114,7 +113,7 @@ class LocationCrosswalkTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -171,7 +170,7 @@ class LocationCrosswalkTable(BaseTable):
         field_mapping: dict = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
     ):
@@ -210,7 +209,7 @@ class LocationCrosswalkTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -266,7 +265,7 @@ class LocationCrosswalkTable(BaseTable):
         constant_field_values: dict = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Import data from an in-memory dataframe.
@@ -299,7 +298,7 @@ class LocationCrosswalkTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking

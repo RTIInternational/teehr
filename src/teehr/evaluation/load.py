@@ -11,7 +11,6 @@ import geopandas as gpd
 
 from teehr.models.pydantic_table_models import Attribute
 from teehr import const
-from teehr.models.table_enums import TableWriteEnum
 from teehr.utils.utils import remove_dir_if_exists
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
 
@@ -50,7 +49,7 @@ class Load:
         primary_location_id_field: str = "location_id",
         secondary_location_id_prefix: str = None,
         secondary_location_id_field: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True
     ):
         """Load data from an in-memory dataframe.
@@ -84,7 +83,7 @@ class Load:
             Used to ensure unique location IDs across configurations.
         secondary_location_id_field : str, optional
             The name of the secondary location ID field in the dataframe.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -201,7 +200,7 @@ class Load:
         primary_location_id_field: str = "location_id",
         secondary_location_id_prefix: str = None,
         secondary_location_id_field: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         update_attrs_table: bool = True,
         parallel: bool = False,
@@ -245,7 +244,7 @@ class Load:
             Used to ensure unique location IDs across configurations.
         secondary_location_id_field : str, optional
             The name of the secondary location ID field in the dataframe.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -369,7 +368,7 @@ class Load:
         table_name: str,
         namespace_name: str = None,
         catalog_name: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         update_attrs_table: bool = True
     ):
@@ -387,7 +386,7 @@ class Load:
         catalog_name : str, optional
             The catalog name to load the data into. The default is None,
             which uses the active catalog of the Evaluation.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking

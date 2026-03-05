@@ -13,7 +13,6 @@ from teehr.loading.utils import (
     validate_input_is_netcdf,
     validate_input_is_parquet
 )
-from teehr.models.table_enums import TableWriteEnum
 from teehr.const import MAX_CPUS
 from teehr.loading.timeseries import convert_single_timeseries
 
@@ -68,7 +67,7 @@ class TimeseriesTable(BaseTable):
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
         drop_duplicates: bool = True,
@@ -106,7 +105,7 @@ class TimeseriesTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -182,7 +181,7 @@ class TimeseriesTable(BaseTable):
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
         drop_duplicates: bool = True,
@@ -220,7 +219,7 @@ class TimeseriesTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -296,7 +295,7 @@ class TimeseriesTable(BaseTable):
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
         drop_duplicates: bool = True,
@@ -334,7 +333,7 @@ class TimeseriesTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -418,7 +417,7 @@ class TimeseriesTable(BaseTable):
         },
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
         drop_duplicates: bool = True,
@@ -470,7 +469,7 @@ class TimeseriesTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
@@ -550,7 +549,7 @@ class TimeseriesTable(BaseTable):
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Load data from an in-memory dataframe.
@@ -577,7 +576,7 @@ class TimeseriesTable(BaseTable):
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table.
             Options are "append", "upsert", and "create_or_replace".
             If "append", the table will be appended without checking
