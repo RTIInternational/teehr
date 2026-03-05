@@ -165,7 +165,7 @@ class Load:
                 prefix=secondary_location_id_prefix,
             )
         if foreign_keys is not None:
-            validated_df = self._validate.data(
+            validated_df = self._validate.schema_and_data(
                 sdf=df,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
@@ -341,7 +341,7 @@ class Load:
             self._ev.attributes.add(attr_list)
 
         if foreign_keys is not None:
-            validated_df = self._validate.data(
+            validated_df = self._validate.schema_and_data(
                 sdf=sdf,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
@@ -410,6 +410,12 @@ class Load:
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
 
+        if None in [schema_func, uniqueness_fields, foreign_keys]:
+            raise ValueError(
+                "Table properties schema_func, uniqueness_fields, and "
+                "foreign_keys must be defined to load from cache."
+            )
+
         sdf = self._read.from_cache(
             path=in_path,
             table_schema=schema_func()
@@ -431,8 +437,11 @@ class Load:
                 )
             self._ev.attributes.add(attr_list)
 
-        if foreign_keys is not None:
-            validated_df = self._validate.data(
+        if (
+            foreign_keys is not None and
+            uniqueness_fields is not None
+        ):
+            validated_df = self._validate.schema_and_data(
                 sdf=sdf,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,

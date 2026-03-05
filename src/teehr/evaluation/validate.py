@@ -221,7 +221,7 @@ class Validate:
         sdf = tbl.to_sdf()
         return self.sdf_filters(sdf, filters, validate)
 
-    def data(
+    def schema_and_data(
         self,
         sdf: ps.DataFrame,
         table_schema: SparkDataFrameSchema,
@@ -294,7 +294,7 @@ class Validate:
                 )
             sdf = sdf.dropDuplicates(subset=uniqueness_fields)
 
-        validated_df = table_schema.validate(sdf)
+        validated_df = self.schema(sdf, table_schema)
 
         if len(validated_df.pandera.errors) > 0:
             logger.error(f"Validation failed: {validated_df.pandera.errors}")

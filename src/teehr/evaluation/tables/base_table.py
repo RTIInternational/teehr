@@ -199,7 +199,7 @@ class BaseTable(DataFrameBase):
         >>>     table_name="primary_timeseries"
         >>> ).validate(drop_duplicates=True)
         """
-        self._ev.validate.data(
+        self._ev.validate.schema_and_data(
             sdf=self.to_sdf(),
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
