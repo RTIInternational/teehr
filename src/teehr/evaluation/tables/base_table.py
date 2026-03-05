@@ -36,6 +36,8 @@ class BaseTable(DataFrameBase):
     strict_validation: bool = None
     validate_filter_field_types: bool = None
     extraction_func: Callable = None
+    primary_location_id_field: str = None
+    secondary_location_id_field: str = None
 
     def __init__(
         self,

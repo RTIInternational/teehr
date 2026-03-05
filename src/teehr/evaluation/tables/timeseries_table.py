@@ -30,6 +30,7 @@ class TimeseriesTable(BaseTable):
     strict_validation = True
     validate_filter_field_types = True
     extraction_func = staticmethod(convert_single_timeseries)
+    primary_location_id_field = "location_id"
 
     def __init__(
         self,
@@ -62,7 +63,7 @@ class TimeseriesTable(BaseTable):
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_timeseries,
+        extraction_function: callable = None,
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -87,8 +88,9 @@ class TimeseriesTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         pattern : str, optional
             The glob pattern to use when searching for files in a directory.
             Default is '**/*.parquet' to search for all parquet files recursively.
@@ -142,6 +144,7 @@ class TimeseriesTable(BaseTable):
         """
         logger.info(f"Loading timeseries parquet data: {in_path}")
         validate_input_is_parquet(in_path)
+        extraction_function = extraction_function or self.extraction_func
 
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
@@ -164,7 +167,7 @@ class TimeseriesTable(BaseTable):
             parallel=parallel,
             max_workers=max_workers,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field="location_id",
+            primary_location_id_field=self.primary_location_id_field,
             **kwargs
         )
         self._load_sdf()
@@ -174,7 +177,7 @@ class TimeseriesTable(BaseTable):
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_timeseries,
+        extraction_function: callable = None,
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -199,8 +202,9 @@ class TimeseriesTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         pattern : str, optional (default: "**/*.csv")
             The pattern to match files. Controls which files are loaded from
             the directory. If in_path is a file, this parameter is ignored.
@@ -254,6 +258,7 @@ class TimeseriesTable(BaseTable):
         """
         logger.info(f"Loading timeseries csv data: {in_path}")
         validate_input_is_csv(in_path)
+        extraction_function = extraction_function or self.extraction_func
 
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
@@ -276,7 +281,7 @@ class TimeseriesTable(BaseTable):
             parallel=parallel,
             max_workers=max_workers,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field="location_id",
+            primary_location_id_field=self.primary_location_id_field,
             **kwargs
         )
         self._load_sdf()
@@ -286,7 +291,7 @@ class TimeseriesTable(BaseTable):
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_timeseries,
+        extraction_function: callable = None,
         pattern: str = "**/*.nc",
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -311,8 +316,9 @@ class TimeseriesTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         pattern : str, optional (default: "**/*.nc")
             The pattern to match files. Controls which files are loaded from
             the directory. If in_path is a file, this parameter is ignored.
@@ -366,6 +372,7 @@ class TimeseriesTable(BaseTable):
         """
         logger.info(f"Loading timeseries netcdf data: {in_path}")
         validate_input_is_netcdf(in_path)
+        extraction_function = extraction_function or self.extraction_func
 
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
@@ -388,7 +395,7 @@ class TimeseriesTable(BaseTable):
             parallel=parallel,
             max_workers=max_workers,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field="location_id",
+            primary_location_id_field=self.primary_location_id_field,
             **kwargs
         )
         self._load_sdf()
@@ -398,7 +405,7 @@ class TimeseriesTable(BaseTable):
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_timeseries,
+        extraction_function: callable = None,
         pattern: str = "**/*.xml",
         field_mapping: dict = {
             "locationId": "location_id",
@@ -431,8 +438,9 @@ class TimeseriesTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         pattern : str, optional (default: "**/*.xml")
             The pattern to match files. Controls which files are loaded from
             the directory. If in_path is a file, this parameter is ignored.
@@ -506,6 +514,7 @@ class TimeseriesTable(BaseTable):
         """
         logger.info(f"Loading timeseries xml data: {in_path}")
         validate_input_is_xml(in_path)
+        extraction_function = extraction_function or self.extraction_func
 
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
@@ -528,7 +537,7 @@ class TimeseriesTable(BaseTable):
             parallel=parallel,
             max_workers=max_workers,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field="location_id",
+            primary_location_id_field=self.primary_location_id_field,
             **kwargs
         )
         self._load_sdf()
@@ -595,7 +604,7 @@ class TimeseriesTable(BaseTable):
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
             primary_location_id_prefix=location_id_prefix,
-            primary_location_id_field="location_id",
+            primary_location_id_field=self.primary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates
         )

@@ -27,6 +27,7 @@ class LocationTable(BaseTable):
     strict_validation = True
     validate_filter_field_types = True
     extraction_func = staticmethod(convert_single_locations)
+    primary_location_id_field = "id"
 
     def __init__(
         self,
@@ -69,7 +70,7 @@ class LocationTable(BaseTable):
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_locations,
+        extraction_function: callable = None,
         field_mapping: dict = None,
         constant_field_values: dict = None,
         pattern: str = "**/*.parquet",
@@ -92,8 +93,9 @@ class LocationTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -143,6 +145,7 @@ class LocationTable(BaseTable):
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name
+        extraction_function = extraction_function or self.extraction_func
 
         table_name = self.table_name
 
@@ -158,7 +161,7 @@ class LocationTable(BaseTable):
             primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field="id",
+            primary_location_id_field=self.primary_location_id_field,
             **kwargs
         )
         self._load_sdf()
@@ -220,6 +223,6 @@ class LocationTable(BaseTable):
             primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field="id"
+            primary_location_id_field=self.primary_location_id_field
         )
         self._load_sdf()

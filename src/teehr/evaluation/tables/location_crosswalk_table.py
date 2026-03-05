@@ -36,6 +36,8 @@ class LocationCrosswalkTable(BaseTable):
     strict_validation = True
     validate_filter_field_types = True
     extraction_func = staticmethod(convert_single_location_crosswalks)
+    primary_location_id_field = "primary_location_id"
+    secondary_location_id_field = "secondary_location_id"
 
     def __init__(
         self,
@@ -68,7 +70,7 @@ class LocationCrosswalkTable(BaseTable):
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_location_crosswalks,
+        extraction_function: callable = None,
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         primary_location_id_prefix: str = None,
@@ -91,8 +93,9 @@ class LocationCrosswalkTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         pattern : str, optional
             The glob pattern to use when searching for files in a directory.
             Default is '**/*.parquet' to search for all parquet files recursively.
@@ -134,6 +137,7 @@ class LocationCrosswalkTable(BaseTable):
         - secondary_location_id
         """
         validate_input_is_parquet(in_path)
+        extraction_function = extraction_function or self.extraction_func
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
@@ -148,9 +152,9 @@ class LocationCrosswalkTable(BaseTable):
             extraction_function=extraction_function,
             field_mapping=field_mapping,
             primary_location_id_prefix=primary_location_id_prefix,
-            primary_location_id_field="primary_location_id",
+            primary_location_id_field=self.primary_location_id_field,
             secondary_location_id_prefix=secondary_location_id_prefix,
-            secondary_location_id_field="secondary_location_id",
+            secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
             **kwargs
@@ -162,7 +166,7 @@ class LocationCrosswalkTable(BaseTable):
         in_path: Union[Path, str],
         namespace_name: str = None,
         catalog_name: str = None,
-        extraction_function: callable = convert_single_location_crosswalks,
+        extraction_function: callable = None,
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
         primary_location_id_prefix: str = None,
@@ -185,8 +189,9 @@ class LocationCrosswalkTable(BaseTable):
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
         extraction_function : callable, optional
-            A function to extract and transform the data from the input files
-            to the TEEHR data model.
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
         pattern : str, optional
             The glob pattern to use when searching for files in a directory.
             Default is '**/*.csv' to search for all CSV files recursively.
@@ -228,6 +233,7 @@ class LocationCrosswalkTable(BaseTable):
         - secondary_location_id
         """ # noqa
         validate_input_is_csv(in_path)
+        extraction_function = extraction_function or self.extraction_func
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
@@ -242,9 +248,9 @@ class LocationCrosswalkTable(BaseTable):
             extraction_function=extraction_function,
             field_mapping=field_mapping,
             primary_location_id_prefix=primary_location_id_prefix,
-            primary_location_id_field="primary_location_id",
+            primary_location_id_field=self.primary_location_id_field,
             secondary_location_id_prefix=secondary_location_id_prefix,
-            secondary_location_id_field="secondary_location_id",
+            secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
             **kwargs
@@ -319,8 +325,8 @@ class LocationCrosswalkTable(BaseTable):
             constant_field_values=constant_field_values,
             primary_location_id_prefix=primary_location_id_prefix,
             secondary_location_id_prefix=secondary_location_id_prefix,
-            primary_location_id_field="primary_location_id",
-            secondary_location_id_field="secondary_location_id",
+            primary_location_id_field=self.primary_location_id_field,
+            secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates
         )
