@@ -7,8 +7,6 @@ import pyspark.sql.types as T
 import pyspark.sql.functions as F
 import pyspark.sql as ps
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
-from pandera import DataFrameSchema as PandasDataFrameSchema
-
 from teehr.utils.utils import path_to_spark
 
 logger = logging.getLogger(__name__)
@@ -57,7 +55,7 @@ class Read:
     def from_cache(
         self,
         path: Union[str, Path],
-        table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
+        table_schema: SparkDataFrameSchema,
         pattern: str = "**/*.parquet",
         file_format: str = "parquet",
         show_missing_table_warning: bool = False,
@@ -69,7 +67,7 @@ class Read:
         ----------
         path : Union[str, Path]
             The path to the cache directory containing the files.
-        table_schema : SparkDataFrameSchema | PandasDataFrameSchema
+        table_schema : SparkDataFrameSchema
             The schema of the table.
         pattern : str, optional
             The pattern to match files. The default is "**/*.parquet".
@@ -94,20 +92,11 @@ class Read:
             }
 
         path = path_to_spark(path, pattern)
-        # First, read the file with the schema and check if it's empty.
-        # If it's not empty and it's the joined timeseries table,
-        # read it again without the schema to ensure all fields are included.
-        # Otherwise, continue.
-        # TODO: What if it's Pandas schema?
-        schema = None
-        if isinstance(table_schema, SparkDataFrameSchema):
-            schema = table_schema.to_structtype()
 
-        reader = self._ev.spark.read.format(file_format).options(**options)
-        if schema is not None:
-            df = reader.load(path, schema=schema)
-        else:
-            df = reader.load(path)
+        schema = table_schema.to_structtype()
+
+        df = self._ev.spark.read.format(file_format).options(**options).load(path, schema=schema)
+
         if df.isEmpty():
             if show_missing_table_warning:
                 logger.warning(

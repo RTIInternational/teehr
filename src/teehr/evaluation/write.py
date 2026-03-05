@@ -261,7 +261,7 @@ class Write:
 
     @staticmethod
     def to_cache(
-        source_data: ps.DataFrame | pd.DataFrame,
+        source_data: ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame,
         cache_filepath: str | Path,
         write_schema: ArrowSchema,
         write_mode: str = "overwrite"
@@ -270,8 +270,8 @@ class Write:
 
         Parameters
         ----------
-        source_data : ps.DataFrame | pd.DataFrame
-            The Spark or Pandas DataFrame to cache.
+        source_data : ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The Spark, Pandas, or GeoPandas DataFrame to cache.
         cache_filepath : str
             The path to use for the cached table.
         write_schema : ArrowSchema
