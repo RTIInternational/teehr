@@ -1,14 +1,12 @@
 """Domain table class."""
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.models.pydantic_table_models import TableBaseModel
-from teehr.querying.utils import order_df
 from teehr.models.filters import TableFilter
 from teehr.models.str_enum import StrEnum
 import pandas as pd
 from typing import List, Union
 import logging
 
-import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +174,7 @@ class DomainTable(BaseTable):
         )
 
     def add_geometry(self):
+        """Add geometry to the DataFrame."""
         raise NotImplementedError(
             "The add_geometry() method is not implemented for Domain Tables"
             " because they do not contain location information."

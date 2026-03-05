@@ -1,5 +1,5 @@
 """Base class for DataFrame access patterns (Tables and Views)."""
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List, Union
 import logging
 
@@ -86,8 +86,7 @@ class DataFrameBase(ABC):
         return gdf
 
     def add_geometry(self):
-        """Adds geometry to the DataFrame by joining with the locations table.
-        """
+        """Add geometry to the DataFrame by joining with the locations table."""
         sdf = self.to_sdf()
         gdf = join_geometry(sdf, self._ev.locations.to_sdf())
         self._sdf = gdf

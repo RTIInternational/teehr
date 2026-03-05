@@ -4,7 +4,6 @@ from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
-from teehr.querying.utils import join_geometry
 from teehr.models.pandera_dataframe_schemas import location_crosswalks_schema
 from pathlib import Path
 from typing import List, Dict, Union

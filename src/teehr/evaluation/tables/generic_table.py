@@ -36,7 +36,7 @@ def get_table(
     namespace_name: Union[str, None] = None,
     catalog_name: Union[str, None] = None
 ) -> BaseTable:
-    """Factory function to get the appropriate table class for a table name.
+    """Return the appropriate table class for a table name.
 
     This function returns the specialized table class if one exists for the
     given table_name, otherwise returns a generic BaseTable instance.

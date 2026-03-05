@@ -249,10 +249,10 @@ class Fetch:
             filters={
                 "column": "id",
                 "operator": "like",
-                "value": f"usgs-%"
+                "value": "usgs-%"
             }
         ).to_pandas()
-        sites = locations_df["id"].str.removeprefix(f"usgs-").to_list()
+        sites = locations_df["id"].str.removeprefix("usgs-").to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 

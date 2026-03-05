@@ -740,7 +740,8 @@ class Evaluation(EvaluationBase):
                 err_msg = (
                     f"Evaluation version {version} in {version_dir} is less than 0.6."
                     " Please run the migration script to upgrade to this Evaluation to v0.6."
-                    " To run the conversion to v0.6, import the function using: 'from teehr.utilities.convert_to_iceberg import convert_evaluation'"
+                    " To run the conversion to v0.6, import the function using: "
+                    "'from teehr.utilities.convert_to_iceberg import convert_evaluation'"
                     f" and then call: 'convert_evaluation(\"{self.dir_path.as_posix()}\")'"
                 )
                 logger.error(err_msg)

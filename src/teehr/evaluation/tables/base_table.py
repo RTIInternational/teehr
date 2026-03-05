@@ -3,10 +3,8 @@ from typing import List, Dict, Union, Callable
 import logging
 
 from teehr.evaluation.dataframe_base import DataFrameBase
-from teehr.querying.utils import join_geometry
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import TableFilter
-import pyspark.sql as ps
 from pyspark.sql.functions import split, col
 
 
@@ -86,7 +84,9 @@ class BaseTable(DataFrameBase):
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None
     ):
-        """Initialize the table for a specific table name, namespace, and catalog.
+        """Initialize the table.
+
+        Initialize for a specific table name, namespace, and catalog.
 
         Parameters
         ----------

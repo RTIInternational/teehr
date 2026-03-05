@@ -10,7 +10,6 @@ import geopandas as gpd
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.locations import convert_single_locations
 from teehr.models.pandera_dataframe_schemas import locations_schema
-from teehr.querying.utils import df_to_gdf
 
 logger = logging.getLogger(__name__)
 

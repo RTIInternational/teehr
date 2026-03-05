@@ -3,7 +3,6 @@ from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.models.pandera_dataframe_schemas import secondary_timeseries_schema
 from typing import List, Dict, Union
 import logging
-from teehr.querying.utils import df_to_gdf
 
 logger = logging.getLogger(__name__)
 
