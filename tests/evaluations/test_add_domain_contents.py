@@ -8,6 +8,7 @@ from teehr.models.pydantic_table_models import (
 import pytest
 import time
 
+
 @pytest.mark.function_scope_evaluation_template
 def test_add_domains(function_scope_evaluation_template):
     """Test creating a new study."""

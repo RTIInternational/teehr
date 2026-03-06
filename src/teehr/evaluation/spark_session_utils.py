@@ -311,6 +311,14 @@ def _set_spark_cluster_configuration(
     # Create Spark configuration
     conf.setMaster(f"k8s://{k8s_api_server}")
 
+    # Check project ID to specify appropriate node group name.
+    teehr_project_id = os.environ.get("TEEHR_PROJECT_ID", "")
+    if teehr_project_id != "TEEHR" and teehr_project_id != "":
+        conf.set(
+            "spark.kubernetes.executor.node.selector.teehr-hub/nodegroup-name",
+            f"spark-r5-4xlarge-spot-{teehr_project_id.lower()}"
+        )
+
     # Basic Kubernetes settings
     conf.set("spark.executor.instances", str(executor_instances))
     conf.set("spark.executor.memory", executor_memory)

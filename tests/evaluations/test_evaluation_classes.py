@@ -1,4 +1,4 @@
-"""Test the subclasses of the Evaluation class."""
+"""Test the Remote LocalReadWriteEvaluation class."""
 import pytest
 
 from teehr.evaluation.evaluation import (

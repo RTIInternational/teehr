@@ -1,9 +1,8 @@
 """Test fetching and loading data into the dataset."""
 from pathlib import Path
 from datetime import datetime
-import tempfile
 
-from teehr import Evaluation
+from teehr import LocalReadWriteEvaluation
 import pandas as pd
 import numpy as np
 import pytest
@@ -186,8 +185,7 @@ def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_templat
 @pytest.mark.skip(reason="This takes forever!")
 def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
+    ev = LocalReadWriteEvaluation(dir_path=tmpdir, create_dir=True)
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 

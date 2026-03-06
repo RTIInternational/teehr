@@ -8,12 +8,13 @@ from pathlib import Path
 import os
 import teehr
 from teehr.evaluation.spark_session_utils import create_spark_session
+from teehr.const import LOCAL_CATALOG_DB_NAME
 import shutil
 
 session = botocore.session.Session()
 
 
-def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.Evaluation:
+def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.LocalReadWriteEvaluation:
     """Download and extract the e0_2_location_example Evaluation dataset from S3."""
     if not Path(temp_dir).is_dir():
         os.makedirs(temp_dir, exist_ok=True)
@@ -57,11 +58,11 @@ def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.Evaluation:
     )
     spark.conf.set(
         f"spark.sql.catalog.local.uri",
-        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/{LOCAL_CATALOG_DB_NAME}"
     )
     spark.conf.set(
         f"spark.sql.catalog.local.uri",
-        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/{LOCAL_CATALOG_DB_NAME}"
     )
     # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
@@ -92,7 +93,7 @@ def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.Evaluation:
     # Clean up temp extraction directory
     shutil.rmtree(temp_extract_dir)
 
-    ev = teehr.Evaluation(
+    ev = teehr.LocalReadWriteEvaluation(
         Path(temp_dir),
         create_dir=False,
         spark=spark,

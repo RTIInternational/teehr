@@ -1,6 +1,5 @@
 """Tests for the TEEHR UDFs."""
 import pytest
-from teehr.examples.setup_e0_2_example import download_e0_2_example
 
 import teehr
 from teehr import RowLevelCalculatedFields as rcf

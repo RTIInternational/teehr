@@ -306,7 +306,7 @@ poetry install
    ```python
    def test_something(session_scope_test_warehouse):
        ev = session_scope_test_warehouse
-       print(f"Evaluation dir: {ev.dir_path}")
+       print(f"LocalReadWriteEvaluation dir: {ev.dir_path}")
        print(f"Tables: {ev.spark.sql('SHOW TABLES').collect()}")
    ```
 

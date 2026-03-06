@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Callable
 import logging
 
 from teehr.evaluation.dataframe_base import DataFrameBase
-from teehr.models.evaluation_base import EvaluationBase
+from teehr.models.evaluation_base import EvaluationBaseModel
 from teehr.models.filters import TableFilter
 from pyspark.sql.functions import split, col
 
@@ -39,7 +39,7 @@ class BaseTable(DataFrameBase):
 
     def __init__(
         self,
-        ev: EvaluationBase,
+        ev: EvaluationBaseModel,
         table_name: str = None,
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None
@@ -48,7 +48,7 @@ class BaseTable(DataFrameBase):
 
         Parameters
         ----------
-        ev : EvaluationBase
+        ev : EvaluationBaseModel
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related table operations.
         table_name : str, optional

@@ -1,12 +1,12 @@
 """Tests for Iceberg."""
 from pathlib import Path
 import shutil
-import tempfile
 
 import pytest
 
 import teehr
 from teehr.utilities.convert_to_iceberg import convert_evaluation
+
 
 @pytest.mark.skip(reason="This requires an isolated spark session.")
 def test_upgrade_evaluation(tmpdir):
@@ -16,21 +16,24 @@ def test_upgrade_evaluation(tmpdir):
     shutil.copytree(Path("tests", "data", "v0_4_e0_evaluation"), v04_ev_dir)
 
     # This should raise an error due to the version.
-    with pytest.raises(Exception):
-        ev = teehr.Evaluation(
+    with pytest.raises(
+        ValueError,
+        match="Please run the migration script to upgrade to this Evaluation to v0\\.6\\."
+    ):
+        ev = teehr.LocalReadWriteEvaluation(
             dir_path=v04_ev_dir,
         )
-
     convert_evaluation(v04_ev_dir)
 
     # Now we should be able to load the evaluation and read from the warehouse.
-    ev = teehr.Evaluation(
+    ev = teehr.LocalReadWriteEvaluation(
         dir_path=v04_ev_dir,
     )
 
     # Test a spark query.
     attribute_names = [row.attribute_name for row in ev.spark.sql(f"""
-        SELECT DISTINCT(attribute_name) FROM {ev.local_catalog.catalog_name}.{ev.local_catalog.namespace_name}.location_attributes
+        SELECT DISTINCT(attribute_name)
+        FROM {ev.local_catalog.catalog_name}.{ev.local_catalog.namespace_name}.location_attributes
     """).collect()]
     attribute_names_sql = ", ".join([f"'{name}'" for name in attribute_names])
 

@@ -11,6 +11,7 @@ REMOTE_CATALOG_NAME = "iceberg"
 REMOTE_CATALOG_TYPE = os.environ.get("REMOTE_CATALOG_TYPE", "rest")
 REMOTE_NAMESPACE_NAME = "teehr"
 AWS_REGION = "us-east-2"
+LOCAL_CATALOG_DB_NAME = "local_catalog.db"
 
 
 # Primary evaluation directories

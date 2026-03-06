@@ -6,7 +6,7 @@ from pathlib import Path
 import time
 
 from teehr.evaluation.spark_session_utils import create_spark_session
-from teehr import Evaluation
+from teehr import LocalReadWriteEvaluation
 from teehr.utilities import apply_migrations
 from teehr.utilities.import_evaluation import update_metadata_paths
 
@@ -22,6 +22,7 @@ def spark_shared_session():
     yield spark
     spark.stop()
 
+
 @pytest.fixture(scope="function")
 def function_scope_two_location_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
@@ -35,6 +36,7 @@ def function_scope_two_location_warehouse(tmp_path_factory, spark_shared_session
         spark=spark_shared_session
     )
     yield ev
+
 
 @pytest.fixture(scope="function")
 def function_scope_small_ensemble_warehouse(tmp_path_factory, spark_shared_session):
@@ -50,6 +52,7 @@ def function_scope_small_ensemble_warehouse(tmp_path_factory, spark_shared_sessi
     )
     yield ev
 
+
 @pytest.fixture(scope="function")
 def function_scope_large_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
@@ -63,6 +66,7 @@ def function_scope_large_ensemble_warehouse(tmp_path_factory, spark_shared_sessi
         spark=spark_shared_session
     )
     yield ev
+
 
 @pytest.fixture(scope="function")
 def function_scope_test_warehouse(tmp_path_factory, spark_shared_session):
@@ -84,9 +88,9 @@ def function_scope_evaluation_template(session_scope_evaluation_template, reques
     """Function-level evaluation fixture with template cloned to a new namespace."""
     ev = session_scope_evaluation_template
 
-    # NOTE: Could I re-create the local_catalog.db entirely here instead
+    # NOTE: Could I re-create the catalog db entirely here instead
     # or as well?
-    # self.set_active_catalog("local")  # Creates the JDBC .db file
+    # self._set_active_catalog("local")  # Creates the JDBC .db file
     # But then you'd have to re-register all the tables too...
 
     # Clear any temp views from previous tests to ensure isolation
@@ -112,11 +116,10 @@ def function_scope_evaluation_template(session_scope_evaluation_template, reques
     ev.local_catalog.namespace_name = test_namespace
 
     # Set up the tables in the new namespace.
+    migrations_dir = Path(__file__).parents[1] / "src/teehr/migrations"
     apply_migrations.evolve_catalog_schema(
         spark=ev.spark,
-        migrations_dir_path=ev.dir_path / "local",
-        local_catalog_name="local",
-        local_namespace_name="teehr",
+        migrations_dir_path=migrations_dir,
         target_catalog_name="local",
         target_namespace_name=test_namespace
     )
@@ -127,7 +130,7 @@ def function_scope_evaluation_template(session_scope_evaluation_template, reques
     ev.spark.catalog.clearCache()  # not sure if necessary
     # After the test reset the namespace name to original value to maintain isolation
     ev.local_catalog.namespace_name = original_namespace
-    ev.set_active_catalog("local")  # Reset active catalog to original
+    ev._set_active_catalog("local")  # Reset active catalog to original
 
 
 @pytest.fixture(scope="module")
@@ -143,6 +146,7 @@ def module_scope_test_warehouse(tmp_path_factory, spark_shared_session):
         spark=spark_shared_session
     )
     yield ev
+
 
 @pytest.fixture(scope="session")
 def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
@@ -165,7 +169,7 @@ def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
 
     ev = update_metadata_paths(
         dir_path=temp_extract_dir,
-        spark=spark_shared_session
+        spark=spark_shared_session,
     )
 
     yield ev
@@ -178,15 +182,15 @@ def session_scope_evaluation_template(spark_shared_session, tmp_path_factory):
     spark = spark_shared_session
     warehouse_dir = Path(base_dir) / "session-scoped-warehouse"
 
-    # Create Evaluation with custom namespace
-    ev = Evaluation(
+    # Create LocalReadWriteEvaluation with custom namespace
+    ev = LocalReadWriteEvaluation(
         dir_path=warehouse_dir,
         create_dir=True,
         spark=spark,
     )
-    ev.clone_template()
 
     yield ev
+
 
 # To hide warnings from py4j during pytest shutdown
 def pytest_configure(config):
