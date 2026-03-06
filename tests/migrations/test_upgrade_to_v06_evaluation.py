@@ -8,7 +8,7 @@ import teehr
 from teehr.utilities.convert_to_iceberg import convert_evaluation
 
 
-# @pytest.mark.skip(reason="This requires an isolated spark session.")
+@pytest.mark.skip(reason="This requires an isolated spark session.")
 def test_upgrade_evaluation(tmpdir):
     """Test upgrading a pre-v0.6 evaluation to v0.6."""
     # Copy test pre-v0.6 evaluation into the temp directory.
@@ -18,7 +18,7 @@ def test_upgrade_evaluation(tmpdir):
     # This should raise an error due to the version.
     with pytest.raises(
         ValueError,
-        match="Please run the migration script to upgrade to this LocalReadWriteEvaluation to v0\\.6\\."
+        match="Please run the migration script to upgrade to this Evaluation to v0\\.6\\."
     ):
         ev = teehr.LocalReadWriteEvaluation(
             dir_path=v04_ev_dir,
@@ -32,7 +32,8 @@ def test_upgrade_evaluation(tmpdir):
 
     # Test a spark query.
     attribute_names = [row.attribute_name for row in ev.spark.sql(f"""
-        SELECT DISTINCT(attribute_name) FROM {ev.local_catalog.catalog_name}.{ev.local_catalog.namespace_name}.location_attributes
+        SELECT DISTINCT(attribute_name)
+        FROM {ev.local_catalog.catalog_name}.{ev.local_catalog.namespace_name}.location_attributes
     """).collect()]
     attribute_names_sql = ", ".join([f"'{name}'" for name in attribute_names])
 
