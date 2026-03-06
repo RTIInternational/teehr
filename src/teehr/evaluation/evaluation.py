@@ -599,7 +599,7 @@ class Evaluation(BaseEvaluation):
         dir_path : Union[str, Path]
             The directory path to use for the local catalog. This is where the
             local catalog's warehouse directory will be created. If the
-             directory does not exist, it will be created if create_dir=True,
+            evaluation directory does not exist, it will be created if create_dir=True,
             otherwise an error will be raised.
         create_dir : bool, optional
             Whether to create the directory if it does not exist.
@@ -649,9 +649,8 @@ class Evaluation(BaseEvaluation):
             namespace_name=self.spark.conf.get("local_namespace_name"),
             catalog_type=self.spark.conf.get("local_catalog_type"),
         )
-        # If the warehouse directory exists, check the Evaluation version.
-        if warehouse_dir.is_dir() is True and check_evaluation_version is True:
-            self.check_evaluation_version()
+        if check_evaluation_version is True:
+            self.check_evaluation_version(warehouse_dir=warehouse_dir)
 
         # Need to create the warehouse dir if it does not exist,
         # along with the cache dir.
@@ -692,7 +691,7 @@ class Evaluation(BaseEvaluation):
         ----------
         warehouse_dir : Union[str, Path], optional
             Path to the warehouse directory containing the version file.
-            If None, uses the active catalog's warehouse directory.
+            If None, uses the local catalog's warehouse directory.
 
         Raises
         ------
@@ -702,18 +701,20 @@ class Evaluation(BaseEvaluation):
             If the version format in the file is invalid.
         """
         if warehouse_dir is None:
-            warehouse_dir = self.active_catalog.warehouse_dir
-        fs = LocalFileSystem()
+            warehouse_dir = self.local_catalog.warehouse_dir
+        else:
+            warehouse_dir = Path(warehouse_dir)
 
-        if fs.exists(warehouse_dir):
+        if warehouse_dir.is_dir():
             # This is a v0.6+ evaluation,
             # check for version file in warehouse dir:
             version_dir = warehouse_dir
         else:
             # This is a pre-v0.6 evaluation,
-            # check for version file in eval dir:
+            # check for version file in evaluation dir:
             version_dir = self.dir_path
 
+        fs = LocalFileSystem()
         version_file = Path(version_dir, "version")
         if not fs.exists(version_file):
             err_msg = (
@@ -722,7 +723,7 @@ class Evaluation(BaseEvaluation):
                 f" 'version' in {version_dir} with the version number (e.g., '0.5.0')."
             )
             logger.error(err_msg)
-            raise Exception(err_msg)
+            raise ValueError(err_msg)
         else:
             with fs.open(version_file) as f:
                 version_txt = str(f.read().strip())
