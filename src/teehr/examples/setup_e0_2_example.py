@@ -14,7 +14,7 @@ import shutil
 session = botocore.session.Session()
 
 
-def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.Evaluation:
+def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.LocalReadWriteEvaluation:
     """Download and extract the e0_2_location_example Evaluation dataset from S3."""
     if not Path(temp_dir).is_dir():
         os.makedirs(temp_dir, exist_ok=True)
@@ -93,7 +93,7 @@ def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.Evaluation:
     # Clean up temp extraction directory
     shutil.rmtree(temp_extract_dir)
 
-    ev = teehr.Evaluation(
+    ev = teehr.LocalReadWriteEvaluation(
         Path(temp_dir),
         create_dir=False,
         spark=spark,

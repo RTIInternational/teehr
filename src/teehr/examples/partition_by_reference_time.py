@@ -27,7 +27,7 @@ def _check_for_null_reference_time(partition_by: List[str], sdf: ps.DataFrame):
 
 
 def rewrite_secondary_timeseries(
-    ev: teehr.Evaluation,
+    ev: teehr.LocalReadWriteEvaluation,
     partition_by: List[str] = PARTITION_BY
 ):
     """Rewrite secondary timeseries partitioning on reference time."""
@@ -62,7 +62,7 @@ def rewrite_secondary_timeseries(
 
 
 def rewrite_primary_timeseries(
-    ev: teehr.Evaluation,
+    ev: teehr.LocalReadWriteEvaluation,
     partition_by: List[str] = PARTITION_BY
 ):
     """Rewrite primary timeseries partitioning on reference time."""
@@ -97,7 +97,7 @@ def rewrite_primary_timeseries(
 
 
 def rewrite_joined_timeseries(
-    ev: teehr.Evaluation,
+    ev: teehr.LocalReadWriteEvaluation,
     partition_by: List[str] = PARTITION_BY
 ):
     """Rewrite joined timeseries partitioning on reference time."""
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     test_eval_dir = Path("/mnt/data/ciroh/teehr/test_stuff/temp_repartition_ev/temp_ev")
 
     # Create an Evaluation object and create the directory
-    ev = teehr.Evaluation(dir_path=test_eval_dir)
+    ev = teehr.LocalReadWriteEvaluation(dir_path=test_eval_dir)
 
     # Re-write the primary timeseries with reference time as a partition,
     # if it is not null.

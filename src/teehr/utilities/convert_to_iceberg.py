@@ -22,7 +22,7 @@ def convert_evaluation(
     """
     dir_path = Path(dir_path)
 
-    ev = teehr.Evaluation(
+    ev = teehr.LocalReadWriteEvaluation(
         dir_path=dir_path,
         check_evaluation_version=False,
         create_dir=False,

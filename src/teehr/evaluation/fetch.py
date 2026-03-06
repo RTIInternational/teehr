@@ -216,7 +216,7 @@ class Fetch:
         validated and loaded into the TEEHR dataset.
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         Fetch the data for locations in the locations table.
 
@@ -392,7 +392,7 @@ class Fetch:
         loaded into the TEEHR dataset.
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         >>> ev.fetch.nwm_retrospective_points(
         >>>     nwm_version="nwm30",
@@ -578,7 +578,7 @@ class Fetch:
         <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         >>> ev.fetch.nwm_retrospective_grids(
         >>>     nwm_version="nwm30",
@@ -853,7 +853,7 @@ class Fetch:
         load into the TEEHR dataset.
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         >>> ev.fetch.nwm_operational_points(
         >>>     nwm_configuration="short_range",
@@ -1144,7 +1144,7 @@ class Fetch:
         <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         >>> ev.fetch.nwm_operational_grids(
         >>>     nwm_configuration="forcing_short_range",

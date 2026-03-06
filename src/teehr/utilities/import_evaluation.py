@@ -199,7 +199,7 @@ def update_metadata_paths(
         .save()
 
     # Test reading the evaluation tables
-    ev = teehr.Evaluation(
+    ev = teehr.LocalReadWriteEvaluation(
         dir_path,
         create_dir=False,
         spark=spark,
