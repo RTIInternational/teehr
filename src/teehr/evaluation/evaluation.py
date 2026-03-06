@@ -66,6 +66,7 @@ class BaseEvaluation(EvaluationBaseModel):
 
     def __init__(
         self,
+        dir_path: Union[str, Path],
         spark: SparkSession = None
     ):
         """
@@ -73,11 +74,15 @@ class BaseEvaluation(EvaluationBaseModel):
 
         Parameters
         ----------
+        dir_path : Union[str, Path]
+            The directory path to use for the local catalog.
         spark : SparkSession, optional
             The SparkSession object, by default None
         """
         self.read_only_remote = True
         self._download_instance = None
+        self.dir_path = Path(dir_path)
+        self.cache_dir = None
 
         # Initialize Spark session
         if spark is not None:
@@ -611,10 +616,11 @@ class Evaluation(BaseEvaluation):
             The SparkSession object. If not provided, a new default Spark
             session will be created.
         """
-        super().__init__(spark=spark)
+        super().__init__(
+            spark=spark,
+            dir_path=Path(dir_path)
+        )
 
-        self.cache_dir = None
-        self.dir_path = Path(dir_path)
         local_catalog_name = self.spark.conf.get("local_catalog_name")
         warehouse_dir = self.dir_path / local_catalog_name
 
@@ -781,12 +787,6 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
             If not provided, a temporary directory will be created in the
             default location. If it does not exist, it will be created.
         """
-        # Initialize the parent Evaluation class
-        super().__init__(
-            spark=spark
-        )
-        self.remote_catalog = None
-
         # Create a temporary directory for the cache.
         if temp_dir_path is not None:
             temp_dir_path = Path(temp_dir_path)
@@ -797,9 +797,17 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
         else:
             self._temp_dir = tempfile.TemporaryDirectory()
         temp_path = Path(self._temp_dir.name)
+
+        # Initialize the parent Evaluation class
+        super().__init__(
+            spark=spark,
+            dir_path=temp_path
+        )
         local_catalog_name = self.spark.conf.get("local_catalog_name")
         cache_dir = temp_path / local_catalog_name / CACHE_DIR
         cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_dir = cache_dir
+        self.remote_catalog = None
 
         # Check the configuration for remote catalog access
         if REMOTE_CATALOG_REST_URI == "" or REMOTE_WAREHOUSE_S3_PATH == "":
