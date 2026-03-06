@@ -165,7 +165,6 @@ def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     ev = update_metadata_paths(
         dir_path=temp_extract_dir,
         spark=spark_shared_session,
-        database_name="local_catalog.db"
     )
 
     yield ev
