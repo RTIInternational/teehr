@@ -580,7 +580,7 @@ class BaseEvaluation(EvaluationBaseModel):
         return self.spark.sql(query)
 
 
-class Evaluation(BaseEvaluation):
+class LocalReadWriteEvaluation(BaseEvaluation):
     """A read-write Evaluation class for accessing local catalogs.
 
     This class establishes a local catalog in the specified directory
@@ -655,7 +655,7 @@ class Evaluation(BaseEvaluation):
             namespace_name=self.spark.conf.get("local_namespace_name"),
             catalog_type=self.spark.conf.get("local_catalog_type"),
         )
-        if check_evaluation_version is True:
+        if create_dir is False and check_evaluation_version is True:
             self.check_evaluation_version(warehouse_dir=warehouse_dir)
 
         # Need to create the warehouse dir if it does not exist,
@@ -752,6 +752,55 @@ class Evaluation(BaseEvaluation):
                 raise ValueError(err_msg)
             else:
                 logger.info(f"Evaluation version {version} in {version_dir} is valid.")
+
+
+class Evaluation(LocalReadWriteEvaluation):
+    """A read-write Evaluation class for accessing local catalogs.
+
+    This class establishes a local catalog in the specified directory
+    and creates the tables according to the TEEHR schema.
+
+    It is intended for use when working locally or when you want to
+    manage your own local copy of the data.
+
+    .. deprecated::
+        This class is provided for convenience and backwards compatibility.
+        It will be deprecated in favor of the more explicit
+        :class:`LocalReadWriteEvaluation` class.
+    """
+
+    def __init__(
+        self,
+        dir_path: Union[str, Path],
+        create_dir: bool = False,
+        check_evaluation_version: bool = True,
+        spark: SparkSession = None
+    ):
+        """Initialize the Evaluation class.
+
+        Parameters
+        ----------
+        dir_path : Union[str, Path]
+            The directory path to use for the local catalog. This is where the
+            local catalog's warehouse directory will be created. If the
+            evaluation directory does not exist, it will be created if create_dir=True,
+            otherwise an error will be raised.
+        create_dir : bool, optional
+            Whether to create the directory if it does not exist.
+            Default is False.
+        check_evaluation_version : bool, optional
+            Whether to check the evaluation version if the directory already
+            exists. Default is True.
+        spark : SparkSession, optional
+            The SparkSession object. If not provided, a new default Spark
+            session will be created.
+        """
+        super().__init__(
+            spark=spark,
+            dir_path=dir_path,
+            create_dir=create_dir,
+            check_evaluation_version=check_evaluation_version
+        )
 
 
 class RemoteReadOnlyEvaluation(BaseEvaluation):
