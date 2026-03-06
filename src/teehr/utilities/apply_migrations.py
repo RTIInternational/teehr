@@ -300,7 +300,7 @@ def evolve_catalog_schema(
     ... )
     """
     available_schema_versions = read_available_schema_versions(
-      migrations_dir_path=migrations_dir_path,  # local warehouse dir
+      migrations_dir_path=migrations_dir_path
     )
     applied_schema_version = fetch_applied_catalog_schema_version(
       spark=spark,
