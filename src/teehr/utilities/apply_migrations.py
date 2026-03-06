@@ -278,6 +278,17 @@ def evolve_catalog_schema(
 
     Examples
     --------
+    The ``migrations_dir_path`` must point to a directory organised by
+    zero-padded version sub-directories, each containing one or more ``.sql``
+    files with schema evolution statements separated by blank lines::
+
+        migrations/
+        ├── 0001/
+        │   └── v0_6_0_template.sql   # CREATE TABLE IF NOT EXISTS ...
+        ├── 0002/
+        │   └── v0_6_1_add_column.sql # ALTER TABLE ... ADD COLUMN ...
+        └── ...
+
     Apply migrations to an existing catalog namespace:
 
     >>> from teehr.utilities.apply_migrations import evolve_catalog_schema
