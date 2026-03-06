@@ -5,7 +5,6 @@ import pytest
 from teehr.models.pydantic_table_models import (
     Attribute
 )
-import teehr
 
 
 @pytest.mark.function_scope_evaluation_template

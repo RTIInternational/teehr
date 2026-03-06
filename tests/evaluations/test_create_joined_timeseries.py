@@ -1,4 +1,4 @@
-"""Test the import_timeseries function in the Evaluation class."""
+"""Test the import_timeseries function in the LocalReadWriteEvaluation class."""
 from pathlib import Path
 from teehr import Configuration
 from teehr.models.pydantic_table_models import Variable, Unit
@@ -25,7 +25,7 @@ def test_create_joined_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
     t0 = time.time()
     ev = function_scope_evaluation_template
-    print("Evaluation setup time:", time.time() - t0)
+    print("LocalReadWriteEvaluation setup time:", time.time() - t0)
 
     t0 = time.time()
     # Load the location data

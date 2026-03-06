@@ -1,4 +1,4 @@
-"""Test the import_timeseries function in the Evaluation class."""
+"""Test the import_timeseries function in the LocalReadWriteEvaluation class."""
 from pathlib import Path
 
 import pytest
@@ -485,7 +485,7 @@ def test_validate_and_insert_in_memory_timeseries(function_scope_evaluation_temp
     """Test the validate_locations function."""
     t0 = time.time()
     ev = function_scope_evaluation_template
-    print("Evaluation template loaded in %.2f seconds." % (time.time() - t0))
+    print("LocalReadWriteEvaluation template loaded in %.2f seconds." % (time.time() - t0))
 
     t0 = time.time()
     gdf = gpd.read_file(GEOJSON_GAGES_FILEPATH)

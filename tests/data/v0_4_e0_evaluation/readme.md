@@ -1,4 +1,4 @@
-This directory contains a TEEHR Evaluation template.
+This directory contains a TEEHR LocalReadWriteEvaluation template.
 It is intended to be used as a starting point for starting a new evaluation.
 
 The following directories should contain CSV files of "domain tables" that are used to

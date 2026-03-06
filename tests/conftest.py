@@ -6,7 +6,7 @@ from pathlib import Path
 import time
 
 from teehr.evaluation.spark_session_utils import create_spark_session
-from teehr import Evaluation
+from teehr import LocalReadWriteEvaluation
 from teehr.utilities import apply_migrations
 from teehr.utilities.import_evaluation import update_metadata_paths
 
@@ -22,6 +22,7 @@ def spark_shared_session():
     yield spark
     spark.stop()
 
+
 @pytest.fixture(scope="function")
 def function_scope_two_location_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
@@ -35,6 +36,7 @@ def function_scope_two_location_warehouse(tmp_path_factory, spark_shared_session
         spark=spark_shared_session
     )
     yield ev
+
 
 @pytest.fixture(scope="function")
 def function_scope_small_ensemble_warehouse(tmp_path_factory, spark_shared_session):
@@ -50,6 +52,7 @@ def function_scope_small_ensemble_warehouse(tmp_path_factory, spark_shared_sessi
     )
     yield ev
 
+
 @pytest.fixture(scope="function")
 def function_scope_large_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
@@ -63,6 +66,7 @@ def function_scope_large_ensemble_warehouse(tmp_path_factory, spark_shared_sessi
         spark=spark_shared_session
     )
     yield ev
+
 
 @pytest.fixture(scope="function")
 def function_scope_test_warehouse(tmp_path_factory, spark_shared_session):
@@ -143,6 +147,7 @@ def module_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     )
     yield ev
 
+
 @pytest.fixture(scope="session")
 def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test warehouse once per test SESSION (not per test function).
@@ -177,14 +182,15 @@ def session_scope_evaluation_template(spark_shared_session, tmp_path_factory):
     spark = spark_shared_session
     warehouse_dir = Path(base_dir) / "session-scoped-warehouse"
 
-    # Create Evaluation with custom namespace
-    ev = Evaluation(
+    # Create LocalReadWriteEvaluation with custom namespace
+    ev = LocalReadWriteEvaluation(
         dir_path=warehouse_dir,
         create_dir=True,
         spark=spark,
     )
 
     yield ev
+
 
 # To hide warnings from py4j during pytest shutdown
 def pytest_configure(config):

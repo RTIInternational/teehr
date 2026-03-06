@@ -18,15 +18,15 @@ def test_upgrade_evaluation(tmpdir):
     # This should raise an error due to the version.
     with pytest.raises(
         ValueError,
-        match="Please run the migration script to upgrade to this Evaluation to v0\\.6\\."
+        match="Please run the migration script to upgrade to this LocalReadWriteEvaluation to v0\\.6\\."
     ):
-        ev = teehr.Evaluation(
+        ev = teehr.LocalReadWriteEvaluation(
             dir_path=v04_ev_dir,
         )
     convert_evaluation(v04_ev_dir)
 
     # Now we should be able to load the evaluation and read from the warehouse.
-    ev = teehr.Evaluation(
+    ev = teehr.LocalReadWriteEvaluation(
         dir_path=v04_ev_dir,
     )
 
