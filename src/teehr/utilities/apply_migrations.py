@@ -275,6 +275,18 @@ def evolve_catalog_schema(
     Returns
     -------
     None
+
+    Examples
+    --------
+    Apply migrations to an existing catalog namespace:
+
+    >>> from teehr.utilities.apply_migrations import evolve_catalog_schema
+    >>> evolve_catalog_schema(
+    ...     spark=spark,
+    ...     migrations_dir_path="/path/to/teehr/migrations",
+    ...     target_catalog_name="local",
+    ...     target_namespace_name="teehr"
+    ... )
     """
     available_schema_versions = read_available_schema_versions(
       migrations_dir_path=migrations_dir_path,  # local warehouse dir
