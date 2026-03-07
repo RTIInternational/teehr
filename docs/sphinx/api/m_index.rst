@@ -4,6 +4,11 @@ Metrics and Analysis
 
 Metrics Class
 -------------
+
+.. note::
+   The ``metrics`` property on Evaluation is deprecated. Use the ``query()`` method
+   directly on tables or views with the ``include_metrics`` argument instead.
+
 .. currentmodule:: teehr.evaluation.metrics
 
 .. autosummary::
@@ -40,6 +45,7 @@ Metric Functions
    deterministic_funcs
    signature_funcs
    probabilistic_funcs
+   bootstrap_funcs
 
 
 Metric Models
@@ -55,6 +61,7 @@ Metric Models
    Signatures
    ProbabilisticMetrics
    Bootstrappers
+   Operators
 
 
 Generated Timeseries
@@ -80,3 +87,4 @@ Generated Timeseries Models
 
    Normals
    ReferenceForecast
+   Persistence
