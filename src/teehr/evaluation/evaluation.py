@@ -588,6 +588,19 @@ class LocalReadWriteEvaluation(BaseEvaluation):
 
     It is intended for use when working locally or when you want to
     manage your own local copy of the data.
+
+    Examples
+    --------
+    Create a new evaluation with a new directory:
+    >>> ev = LocalReadWriteEvaluation(dir_path="path/to/evaluation_dir", create_dir=True)
+
+    Create an evaluation using an existing directory:
+    >>> ev = LocalReadWriteEvaluation(dir_path="path/to/existing_evaluation_dir")
+
+    Access tables and views:
+    >>> ev.primary_timeseries.query(...).to_pandas()
+    >>> ev.joined_timeseries_view(...).query(...).to_pandas()
+
     """
 
     def __init__(

@@ -2,7 +2,7 @@
 from typing import List, Dict, Union, Callable
 import logging
 
-from teehr.evaluation.dataframe_base import DataFrameBase
+from teehr.evaluation.dataframe_base import TeehrDataFrameBase
 from teehr.models.evaluation_base import EvaluationBaseModel
 from teehr.models.filters import TableFilter
 from pyspark.sql.functions import split, col
@@ -11,7 +11,7 @@ from pyspark.sql.functions import split, col
 logger = logging.getLogger(__name__)
 
 
-class BaseTable(DataFrameBase):
+class BaseTable(TeehrDataFrameBase):
     """Base class inherited by all table classes.
 
     Tables represent persisted iceberg data that is read from storage.
