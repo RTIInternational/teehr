@@ -19,7 +19,7 @@ TEEHR uses a structured schema with three categories of tables:
 
 **Domain Tables** (small reference data, CSV-like):
 
-- ``units`` - Measurement units (e.g., "m3 s-1", "ft3 s-1")
+- ``units`` - Measurement units (e.g., "m3/s", "ft3/s")
 - ``variables`` - Variable names (e.g., "streamflow_hourly_inst")
 - ``configurations`` - Data source configurations (e.g., "nwm30_retrospective")
 - ``attributes`` - Attribute definitions (e.g., "drainage_area", "ecoregion")
@@ -108,7 +108,7 @@ Primary and secondary timeseries tables support multiple formats:
        constant_field_values={
            "configuration_name": "usgs_observations",
            "variable_name": "streamflow_hourly_inst",
-           "unit_name": "m3 s-1"
+           "unit_name": "m3/s"
        },
        location_id_prefix="usgs"
    )
@@ -128,7 +128,7 @@ Primary and secondary timeseries tables support multiple formats:
        constant_field_values={
            "configuration_name": "my_model_v1",
            "variable_name": "streamflow_hourly_inst",
-           "unit_name": "m3 s-1"
+           "unit_name": "m3/s"
        }
    )
 
@@ -165,7 +165,7 @@ Common parameters for loading methods:
 ``constant_field_values`` : dict
     Sets constant values for fields not in source data::
 
-        {"configuration_name": "my_config", "unit_name": "m3 s-1"}
+        {"configuration_name": "my_config", "unit_name": "m3/s"}
 
 ``location_id_prefix`` : str
     Prefix added to location IDs for uniqueness::

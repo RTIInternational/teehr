@@ -19,36 +19,43 @@ TEEHR provides several Evaluation classes for different use cases:
 
    * - Class
      - Description
-   * - ``Evaluation`` / ``LocalReadWriteEvaluation``
+   * - ``LocalReadWriteEvaluation`` / ``Evaluation``
      - Full read-write access to a local evaluation directory. Use this when working
-       locally or managing your own data.
+       locally or managing your own data.  ``Evaluation`` is an alias for ``LocalReadWriteEvaluation``
+       and is provided for backwards compatibility.  It will be removed in a future release,
+       so please switch to using ``LocalReadWriteEvaluation``.
    * - ``RemoteReadOnlyEvaluation``
      - Read-only access to a remote TEEHR catalog. Use this for querying data in
        TEEHR-Hub without local storage.
    * - ``RemoteReadWriteEvaluation``
-     - Read-write access to a remote TEEHR catalog. Requires appropriate AWS credentials.
+     - Read-write access to a remote TEEHR catalog. This will primarily be used by remote catalog administrators.
+       Requires appropriate AWS credentials.
 
+.
 
 Creating a Local Evaluation
 ===========================
 
-The most common way to work with TEEHR is to create a local evaluation:
+If you are working with TEEHR locally and or want to create your own evaluation dataset,
+the most common way to work with TEEHR is to create a local evaluation:
 
 .. code-block:: python
 
    import teehr
 
    # Create a new evaluation (creates directory if it doesn't exist)
-   ev = teehr.Evaluation(
+   ev = teehr.LocalReadWriteEvaluation(
        dir_path="/path/to/my_evaluation",
        create_dir=True
    )
 
    # Or open an existing evaluation
-   ev = teehr.Evaluation(dir_path="/path/to/existing_evaluation")
+   ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/existing_evaluation")
 
 
-The ``Evaluation`` class is an alias for ``LocalReadWriteEvaluation``. Both work identically:
+The ``Evaluation`` class is an alias for ``LocalReadWriteEvaluation``. Both work identically
+but you should use ``LocalReadWriteEvaluation`` moving forward since ``Evaluation`` will be deprecated
+in a future release.:
 
 .. code-block:: python
 
@@ -100,10 +107,12 @@ When you create an evaluation, TEEHR sets up the following directory structure:
        └── version         # Version file
 
 
-Remote Evaluations (TEEHR-Hub)
+Remote Evaluations (TEEHR-HUB)
 ==============================
 
-When running in the TEEHR-Hub environment, you can access remote catalogs directly:
+When running in the TEEHR-HUB environment, you can access remote catalogs directly to
+access the data that is in the TEEHR warehouse without needing to download it. This evaluation type is
+only available in TEEHR-HUB where the necessary permissions and configurations are in place.
 
 Read-Only Access
 ----------------
@@ -116,9 +125,13 @@ Read-Only Access
    ev = teehr.RemoteReadOnlyEvaluation()
 
    # Query data without local storage
-   df = ev.primary_timeseries.filter("location_id LIKE 'usgs%'").to_pandas()
+   df = ev.primary_timeseries.filter("location_id = 'usgs-02424000'").to_pandas()
 
-This creates a temporary directory for caching and sets the active catalog to remote.
+This evaluation provides read-only access to the TEEHR Data Warehouse. It is ideal for users who
+want to query and analyze data in TEEHR-HUB without needing to manage local storage. It does not
+require AWS credentials when used in TEEHR-HUB since it only accesses the remote catalog in
+read-only mode. For users who need temporary storage for caching and logging, it creates a
+temporary directory and sets the active catalog to remote.
 
 Read-Write Access
 -----------------
@@ -132,9 +145,12 @@ Read-Write Access
 
 .. note::
 
-   Remote evaluation classes are currently only available within the TEEHR-Hub
-   environment. For local access to TEEHR warehouse data, use the ``Download``
-   class with a local evaluation.
+   This evaluation creates a read-write remote evaluation. This is primarily intended for TEEHR-HUB
+   administrators who need to manage the remote catalogs. It requires appropriate AWS credentials with
+   write permissions to the remote catalogs. Use with caution, as changes will affect all users accessing
+   the remote catalogs. For typical TEEHR-HUB users, the ``RemoteReadOnlyEvaluation`` is recommended to
+   safely access data without risking unintended modifications. For local access to TEEHR warehouse data,
+   use the ``Download`` class with a local evaluation.
 
 
 Upgrading Existing Evaluations
@@ -144,7 +160,9 @@ If you have an evaluation created with an earlier version of TEEHR (pre-v0.6),
 you'll need to migrate it to the new Iceberg-based format.
 
 When opening an older evaluation, TEEHR will detect the version mismatch and
-provide instructions:
+provide instructions for migrating your data to the new format. The migration process involves converting
+your existing evaluation in-place to the new structure. You can use the provided utility function to perform
+the conversion.:
 
 .. code-block:: python
 
@@ -163,12 +181,19 @@ To migrate:
    # Now you can open it
    ev = teehr.Evaluation(dir_path="/path/to/old_evaluation")
 
+Note this will leave your existing data intact and create the necessary Iceberg t
+ables and structure. However, it's always a good idea to back up your data before
+performing the conversion, just in case.  Once you are convinced the new format is
+working well for you, you can delete the backup of the old evaluation and the old
+version files in the evaluation directory.
+
 
 Apache Spark Configuration
 ==========================
 
 TEEHR uses Apache Spark with Apache Iceberg for scalable data processing. By default,
-TEEHR creates an optimized Spark session automatically.
+TEEHR automatically creates an optimized Spark session for local usage on your machine
+or within TEEHR-HUB.
 
 Default Configuration
 ---------------------
@@ -183,7 +208,9 @@ The default configuration:
 Custom Spark Session
 --------------------
 
-For advanced use cases, you can create a custom Spark session:
+For advanced use cases, you can create a custom Spark session that will allow your analyics
+to scale beyond your local machine or to customize Spark settings. You can create a Spark
+session using the ``create_spark_session`` utility function and pass it to your evaluation:
 
 .. code-block:: python
 
@@ -208,7 +235,7 @@ For advanced use cases, you can create a custom Spark session:
 Spark Cluster Mode (Kubernetes)
 -------------------------------
 
-In TEEHR-Hub or other Kubernetes environments, you can start executor pods:
+In TEEHR-HUB or other Kubernetes environments, you can start executor pods:
 
 .. code-block:: python
 
@@ -219,6 +246,14 @@ In TEEHR-Hub or other Kubernetes environments, you can start executor pods:
        executor_cores=2
    )
 
+.. note::
+   When running in cluster mode, the Spark UI will be accessible through the TEEHR-HUB interface,
+   and logs will be written to the temporary evaluation directory for easier debugging.
+
+.. warning::
+   It is very important to stop your Spark session when running in cluster mode to avoid
+   leaving orphaned executor pods running in your Kubernetes cluster. Always call ``spark.stop()``
+   when you are done with your analysis, especially in scripts or notebooks that may be left open.
 
 Logging and Debugging
 ---------------------
@@ -253,13 +288,14 @@ Always stop the Spark session when done (especially in scripts):
 Common Operations
 =================
 
-Once you have an evaluation, you can access its components:
+Once you have an evaluation, you can access its components.  The following
+are common operations you can perform with an Evaluation instance:
 
 .. code-block:: python
 
    import teehr
 
-   ev = teehr.Evaluation(dir_path="./my_eval", create_dir=True)
+   ev = teehr.LocalReadWriteEvaluation(dir_path="./my_eval", create_dir=True)
 
    # Access tables
    ev.locations          # LocationTable

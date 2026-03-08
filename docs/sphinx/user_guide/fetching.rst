@@ -25,7 +25,7 @@ Fetch observed streamflow data from USGS gages:
    import teehr
    from datetime import datetime
 
-   ev = teehr.Evaluation(dir_path="./my_eval", create_dir=True)
+   ev = teehr.LocalReadWriteEvaluation(dir_path="./my_eval", create_dir=True)
 
    # First, load your USGS gage locations
    ev.locations.load_spatial("./data/usgs_gages.geojson")
@@ -89,6 +89,9 @@ the underlying function directly with a dictionary:
        end_date="2024-01-31",
        output_parquet_dir="./cache/usgs"
    )
+
+   # Then load the resulting Parquet files into TEEHR
+   ev.load.primary_timeseries.from_parquet("./cache/usgs/*.parquet")
 
 
 NWM Retrospective Data (Points)
