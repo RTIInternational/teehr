@@ -130,7 +130,7 @@ def function_scope_evaluation_template(session_scope_evaluation_template, reques
     ev.spark.catalog.clearCache()  # not sure if necessary
     # After the test reset the namespace name to original value to maintain isolation
     ev.local_catalog.namespace_name = original_namespace
-    ev._set_active_catalog("local")  # Reset active catalog to original
+    ev._activate_catalog()  # Reset active catalog to original
 
 
 @pytest.fixture(scope="module")
