@@ -165,6 +165,7 @@ class Download:
     def locations(
         self,
         prefix: str = None,
+        ids: Union[str, List[str]] = None,
         bbox: List[float] = None,
         include_attributes: bool = False,
         limit: int = 10000,
@@ -178,6 +179,8 @@ class Download:
         ----------
         prefix : str, optional
             Filter locations by ID prefix (e.g., "usgs", "nwm30")
+        ids : str or list of str, optional
+            Filter locations by specific IDs.
         bbox : list of float, optional
             Bounding box to filter locations by spatial extent,
             in the format [minx, miny, maxx, maxy].
@@ -224,6 +227,8 @@ class Download:
             params["include_attributes"] = "true"
         if bbox:
             params["bbox"] = ",".join(map(str, bbox))
+        if id:
+            params["id"] = ids
 
         response = self._make_request(
             "collections/locations/items",
@@ -823,6 +828,7 @@ class Download:
         end_date: Union[str, datetime, pd.Timestamp],
         primary_configuration_name: str,
         secondary_configuration_name: str,
+        location_ids: Union[str, List[str]] = None,
         prefix: str = None,
         bbox: List[float] = None,
     ) -> None:
@@ -838,6 +844,8 @@ class Download:
             Name of the primary configuration to include.
         secondary_configuration_name : str
             Name of the secondary configuration to include.
+        location_ids : str or list of str, optional
+            Location ID or list of location IDs to include in the subset.
         prefix : str, optional
             Filter locations by ID prefix (e.g., "usgs", "nwm30").
         bbox : list of float, optional
@@ -860,9 +868,9 @@ class Download:
         ...     secondary_configuration_name="nwm30_retrospective"
         ... )
         """
-        if prefix is None and bbox is None:
+        if prefix is None and bbox is None and location_ids is None:
             raise ValueError(
-                "At least one of prefix or bbox must be provided to filter locations"
+                "At least one of prefix, bbox, or location_ids must be provided to filter locations"
             )
         logger.info("Loading the units, variables, and attributes tables")
         self.units(load=True)
@@ -881,6 +889,7 @@ class Download:
         logger.info("Loading the locations table")
         self.locations(
             prefix=prefix,
+            ids=location_ids,
             include_attributes=False,
             bbox=bbox,
             load=True
