@@ -1,3 +1,179 @@
+.. _metrics:
+
+*******
+Metrics
+*******
+
+TEEHR provides comprehensive metrics for evaluating hydrologic model performance.
+The ``query()`` method on tables and views computes metrics across grouped data,
+with support for bootstrapping, transforms, and multiple metric categories.
+
+Using the Query Method
+======================
+
+The ``query()`` method is available on all Table and View objects. It computes
+specified metrics grouped by selected fields:
+
+.. code-block:: python
+
+    import teehr
+    from teehr.metrics import DeterministicMetrics
+
+    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+
+    # Basic metrics query
+    metrics_df = ev.table("joined_timeseries").query(
+        include_metrics=[
+            DeterministicMetrics.KlingGuptaEfficiency(),
+            DeterministicMetrics.NashSutcliffeEfficiency(),
+        ],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+Query Parameters
+----------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Parameter
+     - Description
+   * - ``include_metrics``
+     - List of metric instances to compute
+   * - ``group_by``
+     - Fields to group by (e.g., location, configuration, month)
+   * - ``order_by``
+     - Fields to sort results by
+   * - ``filters``
+     - List of filter conditions to apply before computing metrics
+   * - ``include_geometry``
+     - Whether to include location geometry in results (for GeoDataFrame output)
+
+Group By Fields
+---------------
+
+The ``group_by`` parameter controls how metrics are aggregated. Common groupings:
+
+.. code-block:: python
+
+    import teehr.models.calculated_fields.row_level as rcf
+
+    # Group by location only
+    jt.query(include_metrics=[...], group_by=["primary_location_id"])
+
+    # Group by location and configuration
+    jt.query(include_metrics=[...], group_by=["primary_location_id", "configuration_name"])
+
+    # Group by calculated fields
+    jt = ev.joined_timeseries_view().add_calculated_fields([
+        rcf.Month(),
+        rcf.WaterYear(),
+    ])
+    jt.query(include_metrics=[...], group_by=["primary_location_id", "water_year", "month"])
+
+
+Using Metrics
+=============
+
+Import metric classes and instantiate them:
+
+.. code-block:: python
+
+    from teehr.metrics import DeterministicMetrics, Signatures, ProbabilisticMetrics
+
+    # Deterministic metrics
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    nse = DeterministicMetrics.NashSutcliffeEfficiency()
+    rmse = DeterministicMetrics.RootMeanSquareError()
+
+    # Signatures (single field statistics)
+    avg = Signatures.Average()
+    fdc = Signatures.FlowDurationCurveSlope()
+
+    # Probabilistic metrics (ensemble forecasts)
+    crps = ProbabilisticMetrics.CRPS()
+
+
+Transforms
+----------
+
+Apply mathematical transformations before computing metrics:
+
+.. code-block:: python
+
+    from teehr.models.metrics.basemodels import TransformEnum
+
+    # Log-transformed RMSE
+    rmse = DeterministicMetrics.RootMeanSquareError()
+    rmse.transform = TransformEnum.log
+    rmse.add_epsilon = True  # Avoid log(0)
+
+Available transforms: ``log``, ``sqrt``, ``square``, ``cube``, ``exp``, ``inv``, ``abs``
+
+
+Bootstrapping
+-------------
+
+Compute confidence intervals using bootstrap resampling:
+
+.. code-block:: python
+
+    from teehr.models.metrics.bootstrap_models import Bootstrappers
+
+    # Configure bootstrap
+    boot = Bootstrappers.CircularBlock(
+        reps=1000,
+        block_size=365,
+        seed=42,
+        quantiles=[0.05, 0.5, 0.95]
+    )
+
+    # Apply to metric
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+    kge.unpack_results = True  # Separate columns for quantiles
+
+    metrics_df = jt.query(
+        include_metrics=[kge],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+    # Results: kling_gupta_efficiency_0.05, _0.5, _0.95
+
+
+Complete Example
+----------------
+
+.. code-block:: python
+
+    import teehr
+    from teehr.metrics import DeterministicMetrics, Signatures
+    import teehr.models.calculated_fields.row_level as rcf
+
+    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+
+    # Build view with calculated fields
+    metrics_df = (
+        ev.joined_timeseries_view(add_attrs=True)
+        .add_calculated_fields([rcf.WaterYear(), rcf.Seasons()])
+        .filter("water_year >= 2015")
+        .query(
+            include_metrics=[
+                DeterministicMetrics.KlingGuptaEfficiency(),
+                DeterministicMetrics.RelativeBias(),
+                Signatures.Average(),
+            ],
+            group_by=["primary_location_id", "season"],
+            order_by=["primary_location_id", "season"],
+        )
+        .to_pandas()
+    )
+
+    print(metrics_df.head())
+    ev.spark.stop()
+
+
 =================
 Available Metrics
 =================
