@@ -2,6 +2,7 @@
 from typing import Union
 import pandas as pd
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,8 @@ def teehr_api_timeseries_to_dataframe(
         json_data = [json_data]
 
     all_rows = []
+
+    start_time = time.time()
 
     for item in json_data:
         # Extract metadata
@@ -97,6 +100,8 @@ def teehr_api_timeseries_to_dataframe(
     # Remove null values
     df = df[df['value'].notna()]
 
-    logger.info(f"Converted {len(df)} timeseries values from TEEHR API response")
+    logger.info(
+        f"Converted {len(df)} timeseries values from TEEHR API response in {time.time() - start_time:.2f} s"
+    )
 
     return df
