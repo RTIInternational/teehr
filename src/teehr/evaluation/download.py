@@ -64,6 +64,7 @@ class Download:
         """
         self._ev = ev
         self._load = ev.load
+        self._write = ev.write
         self.api_base_url = "https://api.teehr.rtiamanzi.org"
         self.verify_ssl = True
 
@@ -623,6 +624,57 @@ class Download:
             return
         return df
 
+    def _fetch_paginated_timeseries(
+        self,
+        endpoint: str,
+        params: dict,
+        page_size: int,
+    ) -> list:
+        """Fetch all pages from a timeseries endpoint using limit/offset pagination.
+
+        Parameters
+        ----------
+        endpoint : str
+            API endpoint path (e.g., "collections/primary_timeseries/items")
+        params : dict
+            Base query parameters (without limit/offset)
+        page_size : int
+            Number of series items to request per page
+
+        Returns
+        -------
+        list
+            All series items accumulated across all pages
+        """
+        all_items = []
+        offset = 0
+        page_params = {**params, 'limit': page_size}
+
+        while True:
+            page_params['offset'] = offset
+            response = self._make_request(
+                endpoint,
+                self.api_base_url,
+                self.verify_ssl,
+                page_params
+            )
+            page_data = response.json()
+
+            # Normalise to list — API may return a single dict or a list
+            page_items = [page_data] if isinstance(page_data, dict) else page_data
+
+            all_items.extend(page_items)
+            logger.debug(
+                f"Fetched page offset={offset} with {len(page_items)} items from {endpoint}"
+            )
+
+            if len(page_items) < page_size:
+                break
+
+            offset += page_size
+
+        return all_items
+
     def primary_timeseries(
         self,
         primary_location_id: Union[str, List[str]],
@@ -632,6 +684,7 @@ class Download:
         end_date: Union[str, datetime, pd.Timestamp] = None,
         load: bool = False,
         write_mode: str = "append",
+        page_size: int = 10000,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch primary timeseries from the warehouse API.
@@ -657,6 +710,8 @@ class Download:
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        page_size : int, optional
+            Number of series items to fetch per API request. Default: 500
         **kwargs
             Additional query parameters to pass to the API
 
@@ -696,13 +751,12 @@ class Download:
         if datetime_range:
             params["datetime"] = datetime_range
 
-        response = self._make_request(
+        items = self._fetch_paginated_timeseries(
             "collections/primary_timeseries/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
         )
-        df = teehr_api_timeseries_to_dataframe(response.json())
+        df = teehr_api_timeseries_to_dataframe(items)
 
         logger.info(f"Fetched {len(df)} primary timeseries values from warehouse API")
         if load:
@@ -724,6 +778,7 @@ class Download:
         end_date: Union[str, datetime, pd.Timestamp] = None,
         load: bool = False,
         write_mode: str = "append",
+        page_size: int = 10000,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch secondary timeseries from the warehouse API.
@@ -753,6 +808,8 @@ class Download:
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        page_size : int, optional
+            Number of series items to fetch per API request. Default: 500
         **kwargs
             Additional query parameters to pass to the API
 
@@ -804,13 +861,12 @@ class Download:
         if datetime_range:
             params["datetime"] = datetime_range
 
-        response = self._make_request(
+        items = self._fetch_paginated_timeseries(
             "collections/secondary_timeseries/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
         )
-        df = teehr_api_timeseries_to_dataframe(response.json())
+        df = teehr_api_timeseries_to_dataframe(items)
 
         logger.info(f"Fetched {len(df)} secondary timeseries values from warehouse API")
         if load:
