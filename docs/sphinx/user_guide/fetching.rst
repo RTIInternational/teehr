@@ -211,7 +211,8 @@ Downloading from TEEHR Warehouse
 ================================
 
 The ``download`` component retrieves pre-processed data from the TEEHR data warehouse
-via REST API. This is useful for quickly setting up evaluations with curated datasets.
+via the TEEHR-HUB REST API. This is useful for quickly setting up evaluations with
+curated datasets.
 
 Configure the API
 -----------------
@@ -263,7 +264,7 @@ Download Domain Data
    ev.download.configurations(load=True)
 
    # Download specific unit
-   ev.download.units(name="m3 s-1", load=True)
+   ev.download.units(name="m3/s", load=True)
 
    # Download variables
    ev.download.variables(load=True)
@@ -306,7 +307,7 @@ Download Timeseries
 
    # Download primary (observed) timeseries
    ev.download.primary_timeseries(
-       location_id=["usgs-01010000"],
+       primary_location_id=["usgs-01010000"],
        start_date="2020-01-01",
        end_date="2020-12-31",
        load=True
@@ -315,6 +316,7 @@ Download Timeseries
    # Download secondary (simulated) timeseries
    ev.download.secondary_timeseries(
        configuration_name="nwm30_retrospective",
+       primary_location_id=["usgs-01010000"],
        start_date="2020-01-01",
        end_date="2020-12-31",
        load=True
@@ -344,21 +346,24 @@ Example 1: New Evaluation with TEEHR Warehouse Data
    ev.download.attributes(load=True)
 
    # Get locations and crosswalks
-   ev.download.locations(prefix="usgs", load=True)
-   ev.download.location_attributes(load=True)
+   ev.download.locations(primary_location_id=["usgs-01010000"], load=True)
+   ev.download.location_attributes(primary_location_id=["usgs-01010000"], load=True)
    ev.download.location_crosswalks(secondary_prefix="nwm30", load=True)
 
    # Get timeseries data
    ev.download.primary_timeseries(
-       start_date="2020-01-01",
-       end_date="2020-12-31",
-       load=True
+        configuration_name="usgs_observations",
+        primary_location_id=["usgs-01010000"],
+        start_date="2020-01-01",
+        end_date="2020-12-31",
+        load=True
    )
    ev.download.secondary_timeseries(
-       configuration_name="nwm30_retrospective",
-       start_date="2020-01-01",
-       end_date="2020-12-31",
-       load=True
+        configuration_name="nwm30_retrospective",
+        primary_location_id=["usgs-01010000"],
+        start_date="2020-01-01",
+        end_date="2020-12-31",
+        load=True
    )
 
 

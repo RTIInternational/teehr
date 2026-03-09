@@ -259,24 +259,24 @@ Filter tables to select specific subsets of data:
 
 .. code-block:: python
 
-   df = ev.primary_timeseries.filter(
+   ev.primary_timeseries.filter(
        "location_id LIKE 'usgs%'"
-   ).to_pandas()
+   ).to_sdf().show()
 
-   df = ev.primary_timeseries.filter([
+   ev.primary_timeseries.filter([
        "value_time > '2024-01-01'",
        "value_time < '2024-02-01'"
-   ]).to_pandas()
+   ]).to_sdf().show()
 
 **Dictionary Filters:**
 
 .. code-block:: python
 
-   df = ev.primary_timeseries.filter({
+   ev.primary_timeseries.filter({
        "column": "location_id",
        "operator": "like",
        "value": "usgs%"
-   }).to_pandas()
+   }).to_sdf().show()
 
 **TableFilter Objects:**
 
@@ -285,9 +285,9 @@ Filter tables to select specific subsets of data:
    from teehr.models.filters import TableFilter
    from teehr import Operators as ops
 
-   df = ev.primary_timeseries.filter(
+   ev.primary_timeseries.filter(
        TableFilter(column="value", operator=ops.gt, value=100)
-   ).to_pandas()
+   ).to_sdf().show()
 
 
 Method Chaining

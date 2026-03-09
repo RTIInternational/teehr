@@ -125,7 +125,7 @@ Read-Only Access
    ev = teehr.RemoteReadOnlyEvaluation()
 
    # Query data without local storage
-   df = ev.primary_timeseries.filter("location_id = 'usgs-02424000'").to_pandas()
+   ev.primary_timeseries.filter("location_id = 'usgs-02424000'").to_sdf().show()
 
 This evaluation provides read-only access to the TEEHR Data Warehouse. It is ideal for users who
 want to query and analyze data in TEEHR-HUB without needing to manage local storage. It does not

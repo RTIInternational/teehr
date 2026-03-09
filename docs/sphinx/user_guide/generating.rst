@@ -128,9 +128,9 @@ Example: Daily Normals
     ).write()
 
     # Query the generated normals
-    normals_df = ev.primary_timeseries.filter(
+    ev.primary_timeseries.filter(
         "variable_name LIKE '%day_of_year_mean%'"
-    ).to_pandas()
+    ).to_sdf().show()
 
 
 Benchmark Forecasts

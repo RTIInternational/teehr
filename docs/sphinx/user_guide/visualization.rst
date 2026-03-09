@@ -76,14 +76,15 @@ Plot ensemble forecast with spread:
 
     # Filter for forecast data with multiple members
     df = ev.secondary_timeseries.filter(
-        "configuration_name = 'nwm30_medium_range'"
+        "configuration_name = 'nwm30_medium_range'",
+        "primary_location_id = 'usgs-01184000'"
     ).to_pandas()
 
     # Plot ensemble members
     plot = df.hvplot.line(
         x='value_time',
         y='value',
-        by='member',
+        by='reference_time',
         title='Ensemble Forecast',
         xlabel='Time',
         ylabel='Streamflow (cfs)',
@@ -186,14 +187,16 @@ Compare observed and simulated hydrographs with metrics overlay:
 
     # Get timeseries
     df = ev.joined_timeseries_view().filter(
-        "primary_location_id = 'usgs-01184000'"
+        "primary_location_id = 'usgs-01184000'",
+        "configuration_name = 'nwm30_retrospective'"
     ).to_pandas()
 
     # Calculate metrics
     from teehr.metrics import DeterministicMetrics
 
     metrics = ev.joined_timeseries_view().filter(
-        "primary_location_id = 'usgs-01184000'"
+        "primary_location_id = 'usgs-01184000'",
+        "configuration_name = 'nwm30_retrospective'"
     ).query(
         include_metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),

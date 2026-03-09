@@ -11,8 +11,9 @@ and can optionally be materialized to tables for performance.
 JoinedTimeseriesView
 ====================
 
-The ``JoinedTimeseriesView`` is the most commonly used view, joining primary and secondary
-timeseries data with location crosswalks and optionally adding location attributes.
+The ``JoinedTimeseriesView`` is the most commonly used view and typically the starting
+point for generating metrics and doing analysis.  It joins primary and secondary
+timeseries data with the location crosswalks and optionally adds location attributes.
 
 Understanding the Join Process
 ------------------------------
@@ -26,16 +27,19 @@ The view brings together multiple tables:
 
 - **Primary Timeseries**: Observed data (e.g., USGS streamflow)
 - **Secondary Timeseries**: Simulated data (e.g., NWM forecasts)
-- **Crosswalk**: Mapping between primary and secondary location IDs
 - **Locations**: Point geometries
-- **Attributes**: Additional location metadata
+- **Location Crosswalks**: Mapping between primary and secondary location IDs
+- **Location Attributes**: Attribute values for each location
 
 .. figure:: ../../images/tutorials/joining/joinedTS_tutorial-2.png
    :scale: 55%
 
-   Joining primary and secondary values by location, time, variable name, and unit.
+   Joining primary and secondary values by location, time, variable name, and unit.  The variable
+   joining has some special behavior that allows any instantaneous values to be joined to any
+   other instantaneous values regardless of the interval, which is covered in the documentation
+   for the view method parameters.
 
-The result is a unified table for analysis:
+The result is a unified table for analysis such as calculating metrics or generating visualizations.
 
 .. figure:: ../../images/tutorials/joining/joinedTS_tutorial-3.png
    :scale: 40%
@@ -51,16 +55,16 @@ Create a joined timeseries view:
 
     import teehr
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Basic joined view
     jt = ev.joined_timeseries_view()
 
-    # Convert to pandas DataFrame
-    df = jt.to_pandas()
+    # View as Spark DataFrame (recommended for large datasets)
+    jt.to_sdf().show()
 
-    # Or keep as Spark DataFrame for large datasets
-    sdf = jt.to_sdf()
+    # Or convert to pandas for smaller datasets
+    df = jt.to_pandas()
 
 Adding Location Attributes
 --------------------------
@@ -92,7 +96,7 @@ Apply SQL-style filters to narrow results:
 
     # Filter by location pattern
     jt = ev.joined_timeseries_view().filter(
-        "primary_location_id LIKE 'usgs-%'"
+        "primary_location_id LIKE 'usgs-02424000'"
     )
 
     # Filter by date range
@@ -102,8 +106,8 @@ Apply SQL-style filters to narrow results:
 
     # Multiple filter conditions
     jt = ev.joined_timeseries_view(add_attrs=True).filter("""
-        primary_location_id LIKE 'usgs-%'
-        AND drainage_area > 100
+        primary_location_id LIKE 'usgs-02424000'
+        AND CAST(drainage_area AS DOUBLE) > 100
         AND configuration_name = 'nwm30_retrospective'
     """)
 
@@ -111,6 +115,16 @@ Materializing Views to Tables
 -----------------------------
 
 For repeated queries, materialize a view to an Iceberg table:
+
+.. note::
+
+   Writing a view to a table is only available for users with write permissions,
+   so ``LocalReadWriteEvaluation`` is required.
+
+.. note::
+
+   Materializing a view creates a physical table with the current data. Future changes
+   to source tables won't affect the materialized table unless you overwrite it.
 
 .. code-block:: python
 
@@ -131,23 +145,25 @@ LocationAttributesView
 ----------------------
 
 Pivots the ``location_attributes`` table from long format to wide format, with
-each attribute as a column:
+each attribute as a column.  This view is useful for joining location attributes
+to timeseries data or for other analyses that require a wide format, similar to a
+traditional geospatial "attributes table".
 
 .. code-block:: python
 
     # Pivot all attributes
     la = ev.location_attributes_view()
-    df = la.to_pandas()
+    la.to_sdf().show()
 
     # Pivot specific attributes
     la = ev.location_attributes_view(
         attr_list=["drainage_area", "percent_forest"]
     )
 
-    # Filter and convert
-    df = ev.location_attributes_view().filter(
-        "location_id LIKE 'usgs%'"
-    ).to_pandas()
+    # Filter and view
+    la.filter(
+        "CAST(drainage_area AS DOUBLE) > 100"
+    ).to_sdf().show()
 
     # Materialize for reuse
     ev.location_attributes_view().write("pivoted_attrs")
@@ -168,15 +184,17 @@ View of primary timeseries with optional location attributes:
         attr_list=["drainage_area", "ecoregion"]
     )
 
-    # Filter and export
-    df = ev.primary_timeseries_view().filter(
-        "location_id LIKE 'usgs%'"
-    ).to_pandas()
+    # Filter and view
+    ev.primary_timeseries_view().filter(
+        "ecoregion = 'Coastal Plains'"
+    ).to_sdf().show()
 
 SecondaryTimeseriesView
 -----------------------
 
-View of secondary timeseries with optional location attributes:
+View of secondary timeseries with optional location attributes.  Tis view also adds
+the ``primary_location_id`` so you can filter both the ``primary_timeseries`` and
+the ``secondary_timeseries_view()`` by the same ``location_id`` value for convenience.
 
 .. code-block:: python
 
@@ -188,6 +206,10 @@ View of secondary timeseries with optional location attributes:
         add_attrs=True,
         attr_list=["drainage_area"]
     )
+
+    sv = ev.secondary_timeseries_view().filter(
+        "primary_location_id = 'usgs-02424000'"
+    ).to_sdf().show()
 
 
 Calculated Fields
@@ -201,7 +223,8 @@ TEEHR provides two categories of calculated fields that can be added to views:
 Row-Level Calculated Fields
 ---------------------------
 
-These fields operate on individual rows without aggregation:
+These fields operate on individual rows without aggregation or consideration of other rows.  They 
+are useful for extracting components from timestamps, normalizing values.:
 
 .. code-block:: python
 
@@ -214,7 +237,7 @@ These fields operate on individual rows without aggregation:
         rcf.WaterYear(),   # Computes water year (Oct-Sep)
     ])
 
-    df = jt.to_pandas()
+    jt.to_sdf().show()
 
 Available row-level fields:
 
@@ -353,7 +376,7 @@ Detect events when values exceed a percentile threshold:
     )
 
     jt = ev.joined_timeseries_view().add_calculated_fields([event_detection])
-    df = jt.to_pandas()
+    jt.to_sdf().show()
 
     # Result includes:
     # - event_above (bool): True if value > 85th percentile
@@ -460,7 +483,7 @@ A typical workflow combining views, calculated fields, and metrics:
     jt = jt.filter("""
         primary_location_id LIKE 'usgs-%'
         AND value_time >= '2019-10-01'
-        AND drainage_area < 1000
+        AND CAST(drainage_area AS DOUBLE) < 1000
     """)
 
     # Query metrics grouped by computed fields
