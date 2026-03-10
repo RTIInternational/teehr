@@ -64,7 +64,6 @@ class Download:
         """
         self._ev = ev
         self._load = ev.load
-        self._write = ev.write
         self.api_base_url = "https://api.teehr.rtiamanzi.org"
         self.verify_ssl = True
 
@@ -887,6 +886,7 @@ class Download:
         location_ids: Union[str, List[str]] = None,
         prefix: str = None,
         bbox: List[float] = None,
+        page_size: int = 10000,
     ) -> None:
         """Download a subset of evaluation data based on location IDs, date range, and configurations.
 
@@ -907,6 +907,9 @@ class Download:
         bbox : list of float, optional
             Bounding box to filter locations by spatial extent,
             in the format [minx, miny, maxx, maxy].
+        page_size : int, optional
+            Number of series items to fetch per API request for timeseries.
+            Default: 10000
 
         Returns
         -------
@@ -961,7 +964,8 @@ class Download:
             configuration_name=primary_configuration_name,
             start_date=start_date,
             end_date=end_date,
-            load=True
+            load=True,
+            page_size=page_size
         )
         logger.info("Loading the location crosswalks")
         self.location_crosswalks(
@@ -974,7 +978,8 @@ class Download:
             configuration_name=secondary_configuration_name,
             start_date=start_date,
             end_date=end_date,
-            load=True
+            load=True,
+            page_size=page_size
         )
         logger.info("Loading the location attributes")
         self.location_attributes(
