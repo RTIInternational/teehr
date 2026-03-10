@@ -1,5 +1,5 @@
 """Base class for all tables."""
-from typing import List, Dict, Union, Callable
+from typing import ClassVar, List, Dict, Union, Callable
 import logging
 
 from teehr.evaluation.dataframe_base import TeehrDataFrameBase

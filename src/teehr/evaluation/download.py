@@ -1,4 +1,4 @@
-"""Component class for fetching data from external sources."""
+"""Component class for fetching data from from the TEEHR data warehouse."""
 from typing import Union, List, Optional
 from datetime import datetime
 import logging
@@ -51,7 +51,7 @@ def _format_datetime_range(
 
 
 class Download:
-    """Component class for downloading data from the TEEHR warehouse."""
+    """A component class for downloading data from the TEEHR-Cloud data warehouse."""
 
     def __init__(self, ev) -> None:
         """Initialize the Download class.
@@ -888,8 +888,7 @@ class Download:
         bbox: List[float] = None,
         page_size: int = 10000,
     ) -> None:
-        """Download a subset of evaluation data based on location IDs, date range,
-        configuration names, bounding box, and/or location ID prefix.
+        """Download a subset of evaluation data from the warehouse API.
 
         Parameters
         ----------
