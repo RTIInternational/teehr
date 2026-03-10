@@ -34,12 +34,13 @@ def convert_single_timeseries(
     -------
     pd.DataFrame
 
-    Steps:
-    1. Read the file
-    2. Rename the columns based on the field_mapping
-    3. Add constant field values to dataframe,
-        this may result in too many columns.
-    4. Subset only the columns in the field_mapping
+    Notes
+    -----
+    The input file can be in CSV, Parquet, NetCDF, or XML format.
+    The field_mapping is used to rename the columns in the resulting DataFrame
+    to match the TEEHR data model. The function will read the file, convert it
+    to a DataFrame, rename the columns based on the field_mapping, and return
+    the resulting DataFrame.
     """
     in_filepath = Path(in_filepath)
 

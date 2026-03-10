@@ -710,7 +710,8 @@ class Download:
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         page_size : int, optional
-            Number of series items to fetch per API request. Default: 500
+            Number of series items to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         **kwargs
             Additional query parameters to pass to the API
 
@@ -808,7 +809,8 @@ class Download:
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         page_size : int, optional
-            Number of series items to fetch per API request. Default: 500
+            Number of series items to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         **kwargs
             Additional query parameters to pass to the API
 
@@ -909,7 +911,7 @@ class Download:
             in the format [minx, miny, maxx, maxy].
         page_size : int, optional
             Number of series items to fetch per API request for timeseries.
-            Default: 10000
+            Decrease if timeout errors are encountered. Default: 10000
 
         Returns
         -------
@@ -921,10 +923,11 @@ class Download:
         >>> ev.download.evaluation_subset(
         ...     prefix="usgs",
         ...     bbox=[-120.0, 35.0, -119.0, 36.0],
-        ...     start_date="2020-01-01",
+        ...     start_date="2005-01-01",
         ...     end_date="2020-01-02",
         ...     primary_configuration_name="usgs_observations",
-        ...     secondary_configuration_name="nwm30_retrospective"
+        ...     secondary_configuration_name="nwm30_retrospective",
+        ...     page_size=5000
         ... )
         """
         if prefix is None and bbox is None and location_ids is None:
