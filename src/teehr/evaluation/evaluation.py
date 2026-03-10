@@ -1,5 +1,6 @@
 """Evaluation module."""
 import tempfile
+from functools import cached_property
 from typing import Union, Literal, List
 from pathlib import Path
 from teehr.evaluation.tables import (
@@ -80,7 +81,6 @@ class BaseEvaluation(EvaluationBaseModel):
             The SparkSession object, by default None
         """
         self.read_only_remote = True
-        self._download_instance = None
         self.dir_path = Path(dir_path)
         self.cache_dir = None
 
@@ -166,12 +166,10 @@ class BaseEvaluation(EvaluationBaseModel):
         """The fetch component class for accessing external data."""
         return Fetch(self)
 
-    @property
+    @cached_property
     def download(self) -> Download:
         """The download component class for managing data downloads."""
-        if self._download_instance is None:
-            self._download_instance = Download(self)
-        return self._download_instance
+        return Download(self)
 
     @property
     def metrics(self) -> Metrics:
