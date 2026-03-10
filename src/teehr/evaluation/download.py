@@ -826,7 +826,8 @@ class Download:
         prefix: str = None,
         bbox: List[float] = None,
     ) -> None:
-        """Download a subset of evaluation data based on location IDs, date range, and configurations.
+        """Download a subset of evaluation data based on location IDs, date range,
+        configuration names, bounding box, and/or location ID prefix.
 
         Parameters
         ----------

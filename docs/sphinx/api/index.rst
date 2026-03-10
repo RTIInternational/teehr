@@ -65,12 +65,12 @@ Data I/O
 Classes and methods related to data input and output.
 
 * :class:`Fetching USGS and NWM Data <teehr.evaluation.fetch.Fetch>`
+* :class:`Downloading Data from TEEHR Warehouse <teehr.evaluation.download.Download>`
 * :class:`Reading Data <teehr.evaluation.read.Read>`
 * :class:`Writing Data <teehr.evaluation.write.Write>`
 * :class:`Loading Data <teehr.evaluation.load.Load>`
 * :class:`Extracting Data <teehr.evaluation.extract.Extract>`
 * :class:`Validating Data <teehr.evaluation.validate.Validate>`
-* :class:`Downloading Data from TEEHR Warehouse <teehr.evaluation.download.Download>`
 
 Analysis & Metrics
 ------------------

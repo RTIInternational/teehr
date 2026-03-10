@@ -177,10 +177,12 @@ class BaseEvaluation(EvaluationBaseModel):
     def metrics(self) -> Metrics:
         """The metrics component class for calculating performance metrics.
 
-        .. deprecated::
+        .. deprecated:: 0.6.0
             The ``metrics`` property is deprecated and will be removed in a
             future version. Use the ``query`` method on the table directly
-            with the ``include_metrics`` argument instead. For example::
+            with the ``include_metrics`` argument instead. For example:
+
+            .. code-block:: python
 
                 ev.table("joined_timeseries").query(
                     include_metrics=[...],
