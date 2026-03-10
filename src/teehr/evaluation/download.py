@@ -165,6 +165,7 @@ class Download:
     def locations(
         self,
         prefix: str = None,
+        ids: Union[str, List[str]] = None,
         bbox: List[float] = None,
         include_attributes: bool = False,
         limit: int = 10000,
@@ -178,6 +179,8 @@ class Download:
         ----------
         prefix : str, optional
             Filter locations by ID prefix (e.g., "usgs", "nwm30")
+        ids : str or list of str, optional
+            Filter locations by specific IDs.
         bbox : list of float, optional
             Bounding box to filter locations by spatial extent,
             in the format [minx, miny, maxx, maxy].
@@ -224,6 +227,8 @@ class Download:
             params["include_attributes"] = "true"
         if bbox:
             params["bbox"] = ",".join(map(str, bbox))
+        if id:
+            params["id"] = ids
 
         response = self._make_request(
             "collections/locations/items",
@@ -618,6 +623,57 @@ class Download:
             return
         return df
 
+    def _fetch_paginated_timeseries(
+        self,
+        endpoint: str,
+        params: dict,
+        page_size: int,
+    ) -> list:
+        """Fetch all pages from a timeseries endpoint using limit/offset pagination.
+
+        Parameters
+        ----------
+        endpoint : str
+            API endpoint path (e.g., "collections/primary_timeseries/items")
+        params : dict
+            Base query parameters (without limit/offset)
+        page_size : int
+            Number of series items to request per page
+
+        Returns
+        -------
+        list
+            All series items accumulated across all pages
+        """
+        all_items = []
+        offset = 0
+        page_params = {**params, 'limit': page_size}
+
+        while True:
+            page_params['offset'] = offset
+            response = self._make_request(
+                endpoint,
+                self.api_base_url,
+                self.verify_ssl,
+                page_params
+            )
+            page_data = response.json()
+
+            # Normalise to list — API may return a single dict or a list
+            page_items = [page_data] if isinstance(page_data, dict) else page_data
+
+            all_items.extend(page_items)
+            logger.debug(
+                f"Fetched page offset={offset} with {len(page_items)} items from {endpoint}"
+            )
+
+            if len(page_items) < page_size:
+                break
+
+            offset += page_size
+
+        return all_items
+
     def primary_timeseries(
         self,
         primary_location_id: Union[str, List[str]],
@@ -627,6 +683,7 @@ class Download:
         end_date: Union[str, datetime, pd.Timestamp] = None,
         load: bool = False,
         write_mode: str = "append",
+        page_size: int = 10000,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch primary timeseries from the warehouse API.
@@ -652,6 +709,8 @@ class Download:
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        page_size : int, optional
+            Number of series items to fetch per API request. Default: 500
         **kwargs
             Additional query parameters to pass to the API
 
@@ -691,13 +750,12 @@ class Download:
         if datetime_range:
             params["datetime"] = datetime_range
 
-        response = self._make_request(
+        items = self._fetch_paginated_timeseries(
             "collections/primary_timeseries/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
         )
-        df = teehr_api_timeseries_to_dataframe(response.json())
+        df = teehr_api_timeseries_to_dataframe(items)
 
         logger.info(f"Fetched {len(df)} primary timeseries values from warehouse API")
         if load:
@@ -719,6 +777,7 @@ class Download:
         end_date: Union[str, datetime, pd.Timestamp] = None,
         load: bool = False,
         write_mode: str = "append",
+        page_size: int = 10000,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch secondary timeseries from the warehouse API.
@@ -748,6 +807,8 @@ class Download:
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        page_size : int, optional
+            Number of series items to fetch per API request. Default: 500
         **kwargs
             Additional query parameters to pass to the API
 
@@ -799,13 +860,12 @@ class Download:
         if datetime_range:
             params["datetime"] = datetime_range
 
-        response = self._make_request(
+        items = self._fetch_paginated_timeseries(
             "collections/secondary_timeseries/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
         )
-        df = teehr_api_timeseries_to_dataframe(response.json())
+        df = teehr_api_timeseries_to_dataframe(items)
 
         logger.info(f"Fetched {len(df)} secondary timeseries values from warehouse API")
         if load:
@@ -823,8 +883,10 @@ class Download:
         end_date: Union[str, datetime, pd.Timestamp],
         primary_configuration_name: str,
         secondary_configuration_name: str,
+        location_ids: Union[str, List[str]] = None,
         prefix: str = None,
         bbox: List[float] = None,
+        page_size: int = 10000,
     ) -> None:
         """Download a subset of evaluation data based on location IDs, date range, and configurations.
 
@@ -838,11 +900,16 @@ class Download:
             Name of the primary configuration to include.
         secondary_configuration_name : str
             Name of the secondary configuration to include.
+        location_ids : str or list of str, optional
+            Location ID or list of location IDs to include in the subset.
         prefix : str, optional
             Filter locations by ID prefix (e.g., "usgs", "nwm30").
         bbox : list of float, optional
             Bounding box to filter locations by spatial extent,
             in the format [minx, miny, maxx, maxy].
+        page_size : int, optional
+            Number of series items to fetch per API request for timeseries.
+            Default: 10000
 
         Returns
         -------
@@ -860,9 +927,9 @@ class Download:
         ...     secondary_configuration_name="nwm30_retrospective"
         ... )
         """
-        if prefix is None and bbox is None:
+        if prefix is None and bbox is None and location_ids is None:
             raise ValueError(
-                "At least one of prefix or bbox must be provided to filter locations"
+                "At least one of prefix, bbox, or location_ids must be provided to filter locations"
             )
         logger.info("Loading the units, variables, and attributes tables")
         self.units(load=True)
@@ -881,6 +948,7 @@ class Download:
         logger.info("Loading the locations table")
         self.locations(
             prefix=prefix,
+            ids=location_ids,
             include_attributes=False,
             bbox=bbox,
             load=True
@@ -896,7 +964,8 @@ class Download:
             configuration_name=primary_configuration_name,
             start_date=start_date,
             end_date=end_date,
-            load=True
+            load=True,
+            page_size=page_size
         )
         logger.info("Loading the location crosswalks")
         self.location_crosswalks(
@@ -909,7 +978,8 @@ class Download:
             configuration_name=secondary_configuration_name,
             start_date=start_date,
             end_date=end_date,
-            load=True
+            load=True,
+            page_size=page_size
         )
         logger.info("Loading the location attributes")
         self.location_attributes(

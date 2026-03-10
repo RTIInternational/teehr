@@ -16,13 +16,25 @@ def test_download_locations(function_scope_evaluation_template):
     assert "geometry" in gdf.columns
     assert "name" in gdf.columns
 
+@pytest.mark.function_scope_evaluation_template
+def test_download_locations_by_ids(function_scope_evaluation_template):
+    """Test downloading from the S3 warehouse via the TEEHR API."""
+    ev = function_scope_evaluation_template
+    gdf = ev.download.locations(
+        ids=["usgs-02424000", "usgs-03068800"],
+        include_attributes=False,
+    )
+    assert len(gdf) == 2
+    assert "id" in gdf.columns
+    assert "geometry" in gdf.columns
+    assert "name" in gdf.columns
 
 @pytest.mark.function_scope_evaluation_template
 def test_download_evaluation_subset(function_scope_evaluation_template):
     """Test downloading from the S3 warehouse via the TEEHR API."""
     ev = function_scope_evaluation_template
     ev.download.evaluation_subset(
-        bbox=[-79.49, 39.11, -79.44, 39.14],
+        location_ids="usgs-03068800",
         start_date="2020-01-01",
         end_date="2020-01-02",
         primary_configuration_name="usgs_observations",

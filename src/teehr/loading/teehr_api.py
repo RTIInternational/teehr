@@ -2,6 +2,7 @@
 from typing import Union
 import pandas as pd
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,17 @@ def teehr_api_timeseries_to_dataframe(
     if isinstance(json_data, dict):
         json_data = [json_data]
 
-    all_rows = []
+    reference_times = []
+    value_times = []
+    values = []
+    variable_names = []
+    configuration_names = []
+    unit_names = []
+    location_ids = []
+    members = []
+    has_member = False
+
+    start_time = time.time()
 
     for item in json_data:
         # Extract metadata
@@ -46,6 +57,7 @@ def teehr_api_timeseries_to_dataframe(
             location_id = item.get('primary_location_id')
         elif series_type == 'secondary':
             location_id = item.get('secondary_location_id')
+            has_member = True
         else:
             raise ValueError(f"Series type not recognized: {series_type}")
 
@@ -59,44 +71,44 @@ def teehr_api_timeseries_to_dataframe(
         if reference_time == 'null':
             reference_time = None
 
-        # Expand timeseries array
         timeseries = item.get('timeseries', [])
+        if not timeseries:
+            continue
 
-        for ts_point in timeseries:
-            row = {
-                'reference_time': pd.to_datetime(reference_time) if reference_time else pd.NaT,
-                'value_time': pd.to_datetime(ts_point['value_time']),
-                'value': ts_point['value'],
-                'variable_name': variable_name,
-                'configuration_name': configuration_name,
-                'unit_name': unit_name,
-                'location_id': location_id
-            }
+        n = len(timeseries)
+        reference_times.extend([reference_time] * n)
+        value_times.extend(ts['value_time'] for ts in timeseries)
+        values.extend(ts['value'] for ts in timeseries)
+        variable_names.extend([variable_name] * n)
+        configuration_names.extend([configuration_name] * n)
+        unit_names.extend([unit_name] * n)
+        location_ids.extend([location_id] * n)
+        if series_type == 'secondary':
+            members.extend([member] * n)
 
-            # Add member field for secondary timeseries
-            if series_type == 'secondary':
-                row['member'] = member
-
-            all_rows.append(row)
-
-    # Create DataFrame
-    df = pd.DataFrame(all_rows)
-    if df.index.size == 0:
+    if not value_times:
         raise ValueError("No timeseries data found in the API response.")
 
-    # Reorder columns to match TEEHR schema
-    if 'member' in df.columns:
-        # Secondary timeseries schema
-        df = df[['reference_time', 'value_time', 'value', 'variable_name',
-                 'configuration_name', 'unit_name', 'location_id', 'member']]
-    else:
-        # Primary timeseries schema
-        df = df[['reference_time', 'value_time', 'value', 'variable_name',
-                 'configuration_name', 'unit_name', 'location_id']]
+    col_data = {
+        'reference_time': pd.to_datetime(reference_times),
+        'value_time': pd.to_datetime(value_times),
+        'value': values,
+        'variable_name': variable_names,
+        'configuration_name': configuration_names,
+        'unit_name': unit_names,
+        'location_id': location_ids,
+    }
+    if has_member:
+        col_data['member'] = members
+
+    # col_data keys are already in TEEHR schema order
+    df = pd.DataFrame(col_data)
 
     # Remove null values
-    df = df[df['value'].notna()]
+    df.dropna(subset=['value'], inplace=True)
 
-    logger.info(f"Converted {len(df)} timeseries values from TEEHR API response")
+    logger.info(
+        f"Converted {len(df)} timeseries values from TEEHR API response in {time.time() - start_time:.2f} s"
+    )
 
     return df
