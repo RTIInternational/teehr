@@ -4,6 +4,11 @@
 User Guide
 ==========
 
+.. contents::
+   :local:
+   :depth: 1
+   :backlinks: none
+
 This guide provides comprehensive documentation for working with TEEHR. Each section contains
 detailed explanations and code examples that you can copy, paste, and adapt for your own use.
 
@@ -65,28 +70,6 @@ Create maps and plots from TEEHR query results using HoloViews.
 :doc:`visualization`
 
 
-Example Notebooks
------------------
-Interactive Jupyter notebooks demonstrating complete workflows. Download and run these
-to see TEEHR in action.
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Notebooks
-
-   notebooks/01_introduction_schema
-   notebooks/02_loading_local_data
-   notebooks/03_introduction_class
-   notebooks/04_setup_simple_example
-   notebooks/05_clone_from_s3
-   notebooks/06_grouping_and_filtering
-   notebooks/07_read_from_s3
-   notebooks/08_adding_calculated_fields
-   notebooks/09_ensemble_metrics
-   notebooks/10_fetching_nwm_streamflow
-   notebooks/11_fetching_nwm_gridded_data
-
-
 Additional Resources
 --------------------
 
@@ -94,15 +77,22 @@ Additional Resources
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :caption: User Guide Sections
    :hidden:
 
    evaluation
    tables
-   fetching
    views
-   metrics/metrics
+   fetching
    generating
    visualization
+
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Additional Resources
+
    tutorials/joining_timeseries
    legacy_content/legacy_content

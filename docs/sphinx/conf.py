@@ -95,14 +95,15 @@ myst_enable_extensions = [
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 html_theme_options = {
-  "footer_start": ["copyright", "version"],
-  "show_toc_level": 2,
-  "github_url": "https://github.com/RTIInternational/teehr",
-  "footer_center": ["footer_center.html"],
-  "logo": {
-      "image_light": "../images/teehr.png",
-      "image_dark": "../images/TEEHR_Icon_DarkMode.png",
-   }
+    "footer_start": ["copyright", "version"],
+    "show_toc_level": 2,
+    "github_url": "https://github.com/RTIInternational/teehr",
+    "footer_center": ["footer_center.html"],
+    "logo": {
+        "image_light": "../images/teehr.png",
+        "image_dark": "../images/TEEHR_Icon_DarkMode.png",
+    },
+    "navbar_align": "left",
 }
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
