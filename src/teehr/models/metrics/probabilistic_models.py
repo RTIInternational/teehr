@@ -18,20 +18,25 @@ class CRPS(ProbabilisticBasemodel):
     ----------
     estimator : str
         CRPS estimator, can be ("pwm", "nrg", or "fair"). Default is "pwm".
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
     backend : str
         The backend to use, by default "numba". Can be ("numba" or "numpy").
-    summary_func : Callable
-        The function to apply to the results, by default np.mean.
     output_field_name : str
         The output field name, by default "mean_crps_ensemble".
     func : Callable
         The function to apply to the data, by default
         :func:`probabilistic_funcs.ensemble_crps`.
+    summary_func : Callable
+        The function to apply to the results, by default np.mean.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default
         ["primary_value", "secondary_value", "member"].
     attrs : Dict
         The static attributes for the metric.
+    reference_configuration : str
+        The reference configuration for skill score calculation, by default None.
+        If specified skill score will be included in the results.
     """
 
     estimator: CRPSEstimators = Field(default="pwm")
@@ -53,6 +58,8 @@ class BrierScore(ProbabilisticBasemodel):
     ----------
     threshold : float
         The threshold to use for binary event definition.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
     backend : str
         The backend to use, by default "numba". Can be ("numba" or "numpy").
     summary_func : Callable
@@ -67,6 +74,9 @@ class BrierScore(ProbabilisticBasemodel):
         ["primary_value", "secondary_value", "member"].
     attrs : Dict
         The static attributes for the metric.
+    reference_configuration : str
+        The reference configuration for skill score calculation, by default None.
+        If specified skill score will be included in the results.
     """
 
     threshold: float = Field(default=0.75)
@@ -91,6 +101,13 @@ class ProbabilisticMetrics:
     include:
 
     - CRPS (Continuous Ranked Probability Score)
+    - Brier Score
+
+    Skill score metrics (CRPSS and BSS) are enabled by setting the ``reference_configuration``
+    attribute to a valid reference forecast, such as "climatology" or "persistence".
+
+    See :class:`teehr.evaluation.generate.GeneratedTimeseries` for more information
+    on generating reference forecasts.
     """
 
     CRPS = CRPS
