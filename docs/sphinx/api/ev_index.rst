@@ -30,6 +30,7 @@ Tables
    :nosignatures:
 
    base_table.BaseTable
+   domain_table.DomainTable
    unit_table.UnitTable
    variable_table.VariableTable
    attribute_table.AttributeTable
@@ -37,6 +38,7 @@ Tables
    location_table.LocationTable
    location_attribute_table.LocationAttributeTable
    location_crosswalk_table.LocationCrosswalkTable
+   timeseries_table.TimeseriesTable
    primary_timeseries_table.PrimaryTimeseriesTable
    secondary_timeseries_table.SecondaryTimeseriesTable
 

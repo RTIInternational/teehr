@@ -113,5 +113,8 @@ html_css_files = [
     # "css/getting_started.css",
     "css/teehr.css",
 ]
+html_js_files = [
+    "js/toc_strip_classname.js",
+]
 html_favicon = '_static/favicon.png'
 
