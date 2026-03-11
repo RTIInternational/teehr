@@ -8,6 +8,7 @@
    :members:
    :special-members: __call__, __add__, __mul__
    :no-inherited-members:
+   :exclude-members: model_config
 
    {% block methods %}
    {% if methods %}
