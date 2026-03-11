@@ -207,7 +207,8 @@ def load_schema_version_evolution_statements(
             # statements contained in the same file.
             schema_version_statements.extend(sql_file.read().split('\n\n'))
 
-    schema_version_statements = [stmt.strip() for stmt in schema_version_statements]
+    # Strip whitespace and filter out empty statements
+    schema_version_statements = [stmt.strip() for stmt in schema_version_statements if stmt.strip()]
 
     return schema_version_statements
 
