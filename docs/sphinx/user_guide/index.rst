@@ -4,10 +4,6 @@
 User Guide
 ==========
 
-.. contents::
-   :local:
-   :depth: 1
-   :backlinks: none
 
 This guide provides comprehensive documentation for working with TEEHR. Each section contains
 detailed explanations and code examples that you can copy, paste, and adapt for your own use.

@@ -4,10 +4,6 @@
 Getting started
 ===============
 
-.. contents::
-   :local:
-   :depth: 1
-   :backlinks: none
 
 Introducing TEEHR
 =================
