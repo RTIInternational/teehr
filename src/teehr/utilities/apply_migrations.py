@@ -197,8 +197,10 @@ def load_schema_version_evolution_statements(
     schema_version_statements = []
     version_dir_name = f'{migrations_dir_path}/{schema_version:04}'
 
-    # Sort filenames for deterministic application order
-    schema_file_names = sorted(os.listdir(version_dir_name))
+    # Sort filenames for deterministic application order, filter to .sql files only
+    schema_file_names = sorted(
+        f for f in os.listdir(version_dir_name) if f.endswith('.sql')
+    )
     for f in schema_file_names:
         with open(f'{version_dir_name}/{f}', 'r') as sql_file:
             # Split on empty lines to separate multiple
