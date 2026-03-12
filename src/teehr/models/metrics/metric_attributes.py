@@ -317,3 +317,21 @@ CSI_ATTRS = {
     "optimal_value": None,
     "requires_threshold_field": True,
 }
+
+SR_ATTRS = {
+    "short_name": "success_ratio",
+    "display_name": "Success Ratio",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+FBIAS_ATTRS = {
+    "short_name": "frequency_bias_index",
+    "display_name": "Frequency Bias Index",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}

@@ -945,6 +945,84 @@ class CriticalSuccessIndex(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.CSI_ATTRS, frozen=True)
 
 
+class SuccessRatio(DeterministicBasemodel):
+    """Success Ratio.
+
+    Parameters
+    ----------
+    bootstrap : BootstrapBasemodel
+        The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    threshold_field_name : str
+        The field name for the location-specific threshold values.
+        Required for Success Ratio, by default None.
+    output_field_name : str
+        The output field name, by default "success_ratio".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`deterministic_funcs.success_ratio`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
+    transform: TransformEnum = Field(default=None)
+    threshold_field_name: str = Field(default=None)
+    output_field_name: str = Field(default="success_ratio")
+    func: Callable = Field(metric_funcs.success_ratio, frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.SR_ATTRS, frozen=True)
+
+
+class FrequencyBiasIndex(DeterministicBasemodel):
+    """Frequency Bias Index.
+
+    Parameters
+    ----------
+    bootstrap : BootstrapBasemodel
+        The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    threshold_field_name : str
+        The field name for the location-specific threshold values.
+        Required for Frequency Bias Index, by default None.
+    output_field_name : str
+        The output field name, by default "frequency_bias_index".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`deterministic_funcs.frequency_bias_index`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
+    transform: TransformEnum = Field(default=None)
+    threshold_field_name: str = Field(default=None)
+    output_field_name: str = Field(default="frequency_bias_index")
+    func: Callable = Field(metric_funcs.frequency_bias_index, frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.FBIAS_ATTRS, frozen=True)
+
+
 class DeterministicMetrics:
     """Define and customize determinisitic metrics.
 
@@ -977,6 +1055,8 @@ class DeterministicMetrics:
     - ProbabilityOfDetection
     - ProbabilityOfFalseDetection
     - CriticalSuccessIndex
+    - SuccessRatio
+    - FrequencyBiasIndex
     """
 
     AnnualPeakRelativeBias = AnnualPeakRelativeBias
@@ -1003,3 +1083,5 @@ class DeterministicMetrics:
     ProbabilityOfDetection = ProbabilityOfDetection
     ProbabilityOfFalseDetection = ProbabilityOfFalseDetection
     CriticalSuccessIndex = CriticalSuccessIndex
+    SuccessRatio = SuccessRatio
+    FrequencyBiasIndex = FrequencyBiasIndex
