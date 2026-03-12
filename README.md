@@ -26,15 +26,15 @@ The TEEHR-Python package is comprised of three main features:
 
 <table>
   <tr>
-    <td><img src="docs/images/readme/fetching-and-loading.png" alt="Fetching and Loading" width="180"></td>
+    <td><img src="docs/images/readme/fetching-and-loading.png" alt="Fetching and Loading" width="220"></td>
     <td><strong>Fetching and Loading</strong> - Tools to bring external or local data into your Evaluation from a variety of sources and file formats.</td>
   </tr>
   <tr>
-    <td><img src="docs/images/readme/data-validation-and-storage.png" alt="Data Validation and Storage" width="180"></td>
+    <td><img src="docs/images/readme/data-validation-and-storage.png" alt="Data Validation and Storage" width="220"></td>
     <td><strong>Data Validation and Storage</strong> - TEEHR's data model helps ensure consistency in field values and types, and interfaces with Apache Iceberg for underlying data storage functionality.</td>
   </tr>
   <tr>
-    <td><img src="docs/images/readme/analytics.png" alt="Analytics" width="180"></td>
+    <td><img src="docs/images/readme/analytics.png" alt="Analytics" width="220"></td>
     <td><strong>Analytics</strong> - TEEHR contains a suite of robust and scalable analytic methods that enable users to fully interrogate their datasets.</td>
   </tr>
 </table>
