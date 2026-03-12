@@ -22,19 +22,19 @@ The TEEHR project follows semantic versioning as described here: [https://semver
 Note, per the specification, "Major version zero (0.y.z) is for initial development. Anything MAY change at any time. The public API SHOULD NOT be considered stable.".  We are solidly in "major version zero" territory, and trying to move fast, so expect breaking changes often.
 
 ## Main Features
-The TEEHR-Python framework is comprised of three main features:
+The TEEHR-Python package is comprised of three main features:
 
 <table>
   <tr>
-    <td><img src="docs/images/readme/fetching-and-loading.png" alt="Fetching and Loading" width="120"></td>
+    <td><img src="docs/images/readme/fetching-and-loading.png" alt="Fetching and Loading" width="180"></td>
     <td><strong>Fetching and Loading</strong> - Tools to bring external or local data into your Evaluation from a variety of sources and file formats.</td>
   </tr>
   <tr>
-    <td><img src="docs/images/readme/data-validation-and-storage.png" alt="Data Validation and Storage" width="120"></td>
+    <td><img src="docs/images/readme/data-validation-and-storage.png" alt="Data Validation and Storage" width="180"></td>
     <td><strong>Data Validation and Storage</strong> - TEEHR's data model helps ensure consistency in field values and types, and interfaces with Apache Iceberg for underlying data storage functionality.</td>
   </tr>
   <tr>
-    <td><img src="docs/images/readme/analytics.png" alt="Analytics" width="120"></td>
+    <td><img src="docs/images/readme/analytics.png" alt="Analytics" width="180"></td>
     <td><strong>Analytics</strong> - TEEHR contains a suite of robust and scalable analytic methods that enable users to fully interrogate their datasets.</td>
   </tr>
 </table>
