@@ -80,6 +80,7 @@ Additional Resources
    evaluation
    tables
    views
+   metrics/metrics
    fetching
    generating
    visualization
