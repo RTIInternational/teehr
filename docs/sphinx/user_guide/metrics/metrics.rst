@@ -338,12 +338,12 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - :math:`Slope\ FDC\ Error`
      - :math:`\frac{q66_{sec}-q33_{sec}}{33}-\frac{q66_{prim}-q33_{prim}}{33}`
      - `N/A`
-   * - `Coming Soon`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Event Peak Flow Relative Bias
      - :math:`Peak\ Bias`
      - :math:`\frac{\sum(peak_{sec}-peak_{prim})}{\sum(peak_{prim})}`
      - `N/A`
-   * - `Coming Soon`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Event Peak Flow Timing Error
      - :math:`Peak\ Time\ Error`
      - :math:`\frac{\sum(peak\ time_{sec}-peak\ time_{prim})}{count}`
@@ -368,26 +368,26 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - :math:`RR\ Error`
      - :math:`abs\left\|\frac{\mu(volume_{sec})}{\mu(precip\ volume)}-\frac{\mu(volume_{prim})}{\mu(precip\ volume)}\right\|`
      - `N/A`
-   * - `Coming Soon`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - False Alarm Ratio
      - :math:`FAR`
      - :math:`\frac{n_{FP}}{n_{TP}+n_{FP}}`
-     - `N/A`
-   * - `Coming Soon`
+     - `False Alarm Ratio <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.FalseAlarmRatio>`__
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Probability of Detection
      - :math:`POD`
      - :math:`\frac{n_{TP}}{n_{TP}+n_{FN}}`
-     - `N/A`
-   * - `Coming Soon`
+     - `Probability of Detection <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.ProbabilityOfDetection>`__
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Probability of False Detection
      - :math:`POFD`
      - :math:`\frac{n_{FP}}{n_{TN}+n_{FP}}`
-     - `N/A`
-   * - `Coming Soon`
+     - `Probability of False Detection <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.ProbabilityOfFalseDetection>`__
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Critical Success Index (Threat Score)
      - :math:`CSI`
      - :math:`\frac{n_{TP}}{n_{TP}+n_{FN}+n_{FP}}`
-     - `N/A`
+     - `Critical Success Index <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.CriticalSuccessIndex>`__
 
 
 Probabilistic Metrics
@@ -409,17 +409,17 @@ Probabilistic metrics compare a value against a distribution of predicted values
      - :math:`CRPS`
      - :math:`\int_{-\infty}^{\infty} (F(x) - \mathbf{1}_{x \geq y})^2 dx`
      - `Continuous Ranked Probability Score <https://rtiinternational.github.io/teehr/api/generated/teehr.ProbabilisticMetrics.html#teehr.ProbabilisticMetrics.ContinuousRankedProbabilityScore>`__
-   * - `Coming Soon`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Brier Score
      - :math:`BS`
      - :math:`\frac{\sum(sec\ ensemble\ prob-prim\ outcome)^2}{n}`
-     - `N/A`
-   * - `Coming Soon`
+     - `Brier Score <https://rtiinternational.github.io/teehr/api/generated/teehr.ProbabilisticMetrics.html#teehr.ProbabilisticMetrics.BrierScore>`__
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Brier Skill Score
      - :math:`BSS`
      - :math:`1-\frac{BS}{BS_{ref}}`
      - `N/A`
-   * - `Coming Soon`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Continuous Ranked Probability Skill Score
      - :math:`CRPSS`
      - :math:`1-\frac{CRPS}{CRPS_{ref}}`
