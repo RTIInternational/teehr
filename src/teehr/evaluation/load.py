@@ -410,10 +410,9 @@ class Load:
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
 
-        if None in [schema_func, uniqueness_fields, foreign_keys]:
+        if schema_func is None:
             raise ValueError(
-                "Table properties schema_func, uniqueness_fields, and "
-                "foreign_keys must be defined to load from cache."
+                "The table schema must be defined to load from cache."
             )
 
         sdf = self._read.from_cache(
