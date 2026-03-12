@@ -15,23 +15,15 @@ is in the Evaluation.
 
 Directory Structure
 -------------------
-The TEEHR directory structure contains the following subdirectories:
-
-* Cache
-
-* Dataset
-
-* Scripts
 
 .. code-block:: text
     :caption: Example TEEHR Evaluation Directory Structure
 
     ├── cache
     │   └── loading
-    ├── dataset
+    ├── local
     │   ├── attributes
     │   ├── configurations
-    │   ├── joined_timeseries
     │   ├── location_attributes
     │   ├── location_crosswalks
     │   ├── locations
@@ -39,23 +31,23 @@ The TEEHR directory structure contains the following subdirectories:
     │   ├── secondary_timeseries
     │   ├── units
     │   └── variables
-    └── scripts
+    └── local_catalog.db
 
 Cache
 ^^^^^
 The cache directory is used internally by TEEHR to save temporary files during processing of fetching and loading methods.
 
-Dataset
-^^^^^^^
-The files and data within the dataset directory make up the TEEHR database.  Each subfolder within the dataset directory can be thought of as a database table and contains one or more files that contain the data.  All the files within a “table folder” conform to the specified schema and file format for that table. Subfolders within the “table folder” must conform to the hive partitioning specification.
+Local
+^^^^^
+The files and data within the local directory make up the TEEHR local data warehouse.  Each subfolder within the local directory can be thought of as a database table and contains one or more files that contain the data.  All the files within a “table folder” conform to the specified schema and file format for that table. Subfolders within the “table folder” must conform to the hive partitioning specification.
 
-Scripts
-^^^^^^^
-The scripts directory contains processing scripts that are specific to a given evaluation.  These are typically data setup and preprocessing scripts, not the evaluation code used to explore the data or calculate metrics.
+Local Catalog
+^^^^^^^^^^^^^
+The local_catalog.db file is a SQLite database that contains metadata about the data in the local directory. This is used internally by TEEHR via Apache Iceberg to manage the data in the local directory and to speed up queries.
 
 Schema
 ------
-There are 9 tables in the standard TEEHR dataset that users can enter data into and one table (Joined Timeseries) that acts as a materialized view to speed up analytic queries, for a total of 10 tables. They fall into three categories, domain tables, location data tables, and timeseries tables.  The domain tables are populated with values automatically and the data is stored in plain text as CSV files so that they are more easily edited by the user. These tables tend to have a relatively small amount of data compared to the timeseries data tables which tend to contain much more data and utilize the Apache Parquet format. This is managed for the user, but is provided here for reference.
+There are 8 tables in the standard TEEHR dataset that users can enter data into. They fall into three categories, domain tables, location data tables, and timeseries tables.  The domain tables are populated with values automatically and the data is stored in plain text as CSV files so that they are more easily edited by the user. These tables tend to have a relatively small amount of data compared to the timeseries data tables which tend to contain much more data and utilize the Apache Parquet format. This is managed for the user, but is provided here for reference.
 
 .. figure:: ../../images/getting_started/TEEHR_schema.png
   :scale: 85%
@@ -85,8 +77,6 @@ Timeseries Tables
 **Primary Timeseries** - the primary timeseries table stores the primary timeseries data ("observations") that is used in the evaluation.
 
 **Secondary Timeseries** - the secondary timeseries table stores the secondary timeseries data ("model simulations") that is used in the evaluation.
-
-**Joined Timeseries** - the joined timeseries table is the primary and secondary timeseries joined on primary location ID. This table is a materialized view that is used to speed up analytic queries.
 
 .. Note:: The TEEHR dataset uses the concept of foreign keys where the values in some columns must exist in the column of a a different table, but this is only checked once when data is being inserted and is not enforced beyond that.
 
