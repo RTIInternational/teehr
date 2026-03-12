@@ -19,21 +19,21 @@ TEEHR uses a structured schema with three categories of tables:
 
 **Domain Tables** (small reference data, CSV-like):
 
-- ``units`` - Measurement units (e.g., "m3/s", "ft3/s")
-- ``variables`` - Variable names (e.g., "streamflow_hourly_inst")
-- ``configurations`` - Data source configurations (e.g., "nwm30_retrospective")
-- ``attributes`` - Attribute definitions (e.g., "drainage_area", "ecoregion")
+- :class:`units <teehr.evaluation.tables.unit_table.UnitTable>` - Measurement units (e.g., "m3/s", "ft3/s")
+- :class:`variables <teehr.evaluation.tables.variable_table.VariableTable>` - Variable names (e.g., "streamflow_hourly_inst")
+- :class:`configurations <teehr.evaluation.tables.configuration_table.ConfigurationTable>` - Data source configurations (e.g., "nwm30_retrospective")
+- :class:`attributes <teehr.evaluation.tables.attribute_table.AttributeTable>` - Attribute definitions (e.g., "drainage_area", "ecoregion")
 
 **Location Data**:
 
-- ``locations`` - Point geometries with IDs (e.g., USGS gage locations)
-- ``location_attributes`` - Attribute values for each location
-- ``location_crosswalks`` - Maps primary IDs to secondary IDs (e.g., USGS to NWM)
+- :class:`locations <teehr.evaluation.tables.location_table.LocationTable>` - Point geometries with IDs (e.g., USGS gage locations)
+- :class:`location_attributes <teehr.evaluation.tables.location_attribute_table.LocationAttributeTable>` - Attribute values for each location
+- :class:`location_crosswalks <teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable>` - Maps primary IDs to secondary IDs (e.g., USGS to NWM)
 
 **Timeseries Data**:
 
-- ``primary_timeseries`` - Observed/reference data (e.g., USGS streamflow)
-- ``secondary_timeseries`` - Simulated/forecast data (e.g., NWM outputs)
+- :class:`primary_timeseries <teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable>` - Observed/reference data (e.g., USGS streamflow)
+- :class:`secondary_timeseries <teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable>` - Simulated/forecast data (e.g., NWM outputs)
 
 
 Accessing Tables
@@ -62,25 +62,25 @@ Both methods return a table object with the same methods.
 Table Methods Overview
 ======================
 
-All tables inherit common methods from the ``DataFrameBase`` class:
+All tables inherit common methods from the :class:`BaseTable <teehr.evaluation.tables.base_table.BaseTable>` class:
 
 **Output Methods:**
 
-- ``to_sdf()`` - Return a PySpark DataFrame (lazy)
-- ``to_pandas()`` - Return a Pandas DataFrame (eager)
-- ``to_geopandas()`` - Return a GeoPandas GeoDataFrame (eager)
+- :meth:`to_sdf() <teehr.evaluation.tables.base_table.BaseTable.to_sdf>` - Return a PySpark DataFrame (lazy)
+- :meth:`to_pandas() <teehr.evaluation.tables.base_table.BaseTable.to_pandas>` - Return a Pandas DataFrame (eager)
+- :meth:`to_geopandas() <teehr.evaluation.tables.base_table.BaseTable.to_geopandas>` - Return a GeoPandas GeoDataFrame (eager)
 
 **Query Methods:**
 
-- ``filter(filters)`` - Apply filters
-- ``order_by(fields)`` - Sort results
-- ``query(...)`` - Combined filter, group, metrics, order
-- ``add_calculated_fields(cfs)`` - Add computed columns
-- ``add_geometry()`` - Join geometry from locations table
+- :meth:`filter() <teehr.evaluation.tables.base_table.BaseTable.filter>` - Apply filters
+- :meth:`order_by() <teehr.evaluation.tables.base_table.BaseTable.order_by>` - Sort results
+- :meth:`query() <teehr.evaluation.tables.base_table.BaseTable.query>` - Combined filter, group, metrics, order
+- :meth:`add_calculated_fields() <teehr.evaluation.tables.base_table.BaseTable.add_calculated_fields>` - Add computed columns
+- :meth:`add_geometry() <teehr.evaluation.tables.base_table.BaseTable.add_geometry>` - Join geometry from locations table
 
 **Output Operations:**
 
-- ``write(table_name)`` - Write results to a new table
+- :meth:`write() <teehr.evaluation.tables.base_table.BaseTable.write>` - Write results to a new table
 
 
 Loading Data
@@ -92,7 +92,7 @@ validates data against the table schema and handles duplicates.
 Loading Timeseries Data
 -----------------------
 
-Primary and secondary timeseries tables support multiple formats:
+Primary and secondary timeseries tables support multiple formats.
 
 **From Parquet:**
 
@@ -113,6 +113,8 @@ Primary and secondary timeseries tables support multiple formats:
        location_id_prefix="usgs"
    )
 
+See also: :meth:`PrimaryTimeseriesTable.load_parquet() <teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.load_parquet>`
+
 **From CSV:**
 
 .. code-block:: python
@@ -132,6 +134,8 @@ Primary and secondary timeseries tables support multiple formats:
        }
    )
 
+See also: :meth:`SecondaryTimeseriesTable.load_csv() <teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.load_csv>`
+
 **From NetCDF:**
 
 .. code-block:: python
@@ -142,6 +146,8 @@ Primary and secondary timeseries tables support multiple formats:
        constant_field_values={"configuration_name": "model_run_001"}
    )
 
+See also: :meth:`SecondaryTimeseriesTable.load_netcdf() <teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.load_netcdf>`
+
 **From FEWS PI-XML:**
 
 .. code-block:: python
@@ -150,6 +156,8 @@ Primary and secondary timeseries tables support multiple formats:
        in_path="./data/observed.xml",
        location_id_prefix="fews"
    )
+
+See also: :meth:`PrimaryTimeseriesTable.load_fews_xml() <teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.load_fews_xml>`
 
 
 Loading Parameters
@@ -184,7 +192,7 @@ Common parameters for loading methods:
 Loading Location Data
 ---------------------
 
-Load locations from GeoJSON or other spatial formats:
+Load locations from GeoJSON or other spatial formats.
 
 .. code-block:: python
 
@@ -192,7 +200,9 @@ Load locations from GeoJSON or other spatial formats:
        in_path="./data/gages.geojson"
    )
 
-Load location attributes:
+See also: :meth:`LocationTable.load_spatial() <teehr.evaluation.tables.location_table.LocationTable.load_spatial>`
+
+Load location attributes.
 
 .. code-block:: python
 
@@ -200,7 +210,9 @@ Load location attributes:
        in_path="./data/attributes.csv"
    )
 
-Load crosswalks:
+See also: :meth:`LocationAttributeTable.load_csv() <teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.load_csv>`
+
+Load crosswalks.
 
 .. code-block:: python
 
@@ -212,21 +224,22 @@ Load crosswalks:
        }
    )
 
+See also: :meth:`LocationCrosswalkTable.load_csv() <teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.load_csv>`
+
 
 Loading Domain Data
 -------------------
 
-Domain tables can be populated automatically or manually:
+Domain tables can be populated manually.
 
 .. code-block:: python
-
-   # Load configurations
-   ev.configurations.load_csv("./data/configs.csv")
 
    # Or add individual records
    ev.configurations.add(
        teehr.Configuration(name="my_model", type="model", description="My custom model")
    )
+
+See also: :meth:`ConfigurationTable.add() <teehr.evaluation.tables.configuration_table.ConfigurationTable.add>`
 
 
 Using DataFrames
@@ -253,7 +266,7 @@ You can also load from Pandas/GeoPandas DataFrames:
 Filtering Data
 ==============
 
-Filter tables to select specific subsets of data:
+Filter tables to select specific subsets of data.
 
 **SQL String Filters:**
 
@@ -288,6 +301,8 @@ Filter tables to select specific subsets of data:
    ev.primary_timeseries.filter(
        TableFilter(column="value", operator=ops.gt, value=100)
    ).to_sdf().show()
+
+See also: :meth:`PrimaryTimeseriesTable.filter() <teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.filter>`
 
 
 Method Chaining

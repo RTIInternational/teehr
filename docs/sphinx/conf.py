@@ -104,10 +104,7 @@ html_theme_options = {
         "image_dark": "../images/TEEHR_Icon_DarkMode.png",
     },
     "navbar_align": "left",
-    "header_links_before_dropdown": 6,
-    "switcher": {
-        "json_url": "https://github.com/RTIInternational/teehr/blob/mdenno/update-docs-with-copilot/docs/sphinx/version_switcher.json",
-    }
+    "header_links_before_dropdown": 6
 }
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

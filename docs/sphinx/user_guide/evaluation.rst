@@ -103,8 +103,10 @@ When you create an evaluation, TEEHR sets up the following directory structure:
        │   ├── secondary_timeseries/
        │   ├── units/
        │   └── variables/
-       ├── cache/          # Temporary files
-       └── version         # Version file
+       ├── cache/              # Temporary files
+       ├── schema_evolution/   # Tracks schema migrations
+       ├── local_catalog.db    # Iceberg catalog (SQLite)
+       └── version             # Version file
 
 
 Remote Evaluations (TEEHR-HUB)
