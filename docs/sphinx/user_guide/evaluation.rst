@@ -19,15 +19,15 @@ TEEHR provides several Evaluation classes for different use cases:
 
    * - Class
      - Description
-   * - ``LocalReadWriteEvaluation`` / ``Evaluation``
+   * - :class:`LocalReadWriteEvaluation <teehr.LocalReadWriteEvaluation>` / :class:`Evaluation <teehr.Evaluation>`
      - Full read-write access to a local evaluation directory. Use this when working
        locally or managing your own data.  ``Evaluation`` is an alias for ``LocalReadWriteEvaluation``
        and is provided for backwards compatibility.  It will be removed in a future release,
        so please switch to using ``LocalReadWriteEvaluation``.
-   * - ``RemoteReadOnlyEvaluation``
+   * - :class:`RemoteReadOnlyEvaluation <teehr.RemoteReadOnlyEvaluation>`
      - Read-only access to a remote TEEHR catalog. Use this for querying data in
        TEEHR-Hub without local storage.
-   * - ``RemoteReadWriteEvaluation``
+   * - :class:`RemoteReadWriteEvaluation <teehr.RemoteReadWriteEvaluation>`
      - Read-write access to a remote TEEHR catalog. This will primarily be used by remote catalog administrators.
        Requires appropriate AWS credentials.
 

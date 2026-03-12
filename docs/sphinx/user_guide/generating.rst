@@ -49,6 +49,8 @@ Basic Usage
         update_variable_table=True
     ).write()  # Writes to primary_timeseries by default
 
+See also: :meth:`GeneratedTimeseries.signature_timeseries() <teehr.evaluation.generate.GeneratedTimeseries.signature_timeseries>`
+
 Configuration Options
 ---------------------
 
@@ -183,6 +185,8 @@ historical reference values (e.g., climatology) to forecast timesteps:
         ],
         output_configuration_name="benchmark_forecast_daily_normals"
     ).write(destination_table="secondary_timeseries")
+
+See also: :meth:`GeneratedTimeseries.benchmark_forecast() <teehr.evaluation.generate.GeneratedTimeseries.benchmark_forecast>`
 
 Benchmark Forecast Parameters
 -----------------------------

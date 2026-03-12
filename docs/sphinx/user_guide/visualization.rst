@@ -243,4 +243,4 @@ For more visualization examples, see:
 - `GeoViews Documentation <https://geoviews.org/>`_
 
 Example notebooks demonstrating TEEHR visualizations are available in the
-:ref:`examples` section.
+:ref:`example_notebooks_index` section.
