@@ -15,6 +15,8 @@ The ``JoinedTimeseriesView`` is the most commonly used view and typically the st
 point for generating metrics and doing analysis.  It joins primary and secondary
 timeseries data with the location crosswalks and optionally adds location attributes.
 
+See also: :class:`JoinedTimeseriesView <teehr.evaluation.views.joined_timeseries_view.JoinedTimeseriesView>`
+
 Understanding the Join Process
 ------------------------------
 
@@ -168,6 +170,8 @@ traditional geospatial "attributes table".
     # Materialize for reuse
     ev.location_attributes_view().write("pivoted_attrs")
 
+See also: :class:`LocationAttributesView <teehr.evaluation.views.location_attributes_view.LocationAttributesView>`
+
 PrimaryTimeseriesView
 ---------------------
 
@@ -188,6 +192,8 @@ View of primary timeseries with optional location attributes:
     ev.primary_timeseries_view().filter(
         "ecoregion = 'Coastal Plains'"
     ).to_sdf().show()
+
+See also: :class:`PrimaryTimeseriesView <teehr.evaluation.views.primary_timeseries_view.PrimaryTimeseriesView>`
 
 SecondaryTimeseriesView
 -----------------------
@@ -211,6 +217,8 @@ the ``secondary_timeseries_view()`` by the same ``location_id`` value for conven
         "primary_location_id = 'usgs-02424000'"
     ).to_sdf().show()
 
+See also: :class:`SecondaryTimeseriesView <teehr.evaluation.views.secondary_timeseries_view.SecondaryTimeseriesView>`
+
 
 Calculated Fields
 =================
@@ -223,8 +231,10 @@ TEEHR provides two categories of calculated fields that can be added to views:
 Row-Level Calculated Fields
 ---------------------------
 
-These fields operate on individual rows without aggregation or consideration of other rows.  They 
-are useful for extracting components from timestamps, normalizing values.:
+These fields operate on individual rows without aggregation or consideration of other rows.  They
+are useful for extracting components from timestamps, normalizing values.
+
+See also: :class:`RowLevelCalculatedFields <teehr.models.calculated_fields.row_level.RowLevelCalculatedFields>`
 
 .. code-block:: python
 
@@ -247,27 +257,27 @@ Available row-level fields:
 
    * - Field
      - Description
-   * - ``Month``
+   * - :class:`Month <teehr.models.calculated_fields.row_level.Month>`
      - Extracts month (1-12) from timestamp
-   * - ``Year``
+   * - :class:`Year <teehr.models.calculated_fields.row_level.Year>`
      - Extracts calendar year from timestamp
-   * - ``WaterYear``
+   * - :class:`WaterYear <teehr.models.calculated_fields.row_level.WaterYear>`
      - Computes water year (year + 1 if month >= October)
-   * - ``DayOfYear``
+   * - :class:`DayOfYear <teehr.models.calculated_fields.row_level.DayOfYear>`
      - Day of year (1-366)
-   * - ``HourOfYear``
+   * - :class:`HourOfYear <teehr.models.calculated_fields.row_level.HourOfYear>`
      - Hour of year (0-8784)
-   * - ``Seasons``
+   * - :class:`Seasons <teehr.models.calculated_fields.row_level.Seasons>`
      - Maps months to seasons (winter, spring, summer, fall)
-   * - ``NormalizedFlow``
+   * - :class:`NormalizedFlow <teehr.models.calculated_fields.row_level.NormalizedFlow>`
      - Divides flow by drainage area
-   * - ``ForecastLeadTime``
+   * - :class:`ForecastLeadTime <teehr.models.calculated_fields.row_level.ForecastLeadTime>`
      - Computes lead time from reference_time to value_time
-   * - ``ForecastLeadTimeBins``
+   * - :class:`ForecastLeadTimeBins <teehr.models.calculated_fields.row_level.ForecastLeadTimeBins>`
      - Groups lead times into bins
-   * - ``ThresholdValueExceeded``
+   * - :class:`ThresholdValueExceeded <teehr.models.calculated_fields.row_level.ThresholdValueExceeded>`
      - Boolean indicating if value exceeds threshold
-   * - ``ThresholdValueNotExceeded``
+   * - :class:`ThresholdValueNotExceeded <teehr.models.calculated_fields.row_level.ThresholdValueNotExceeded>`
      - Boolean indicating if value is at or below threshold
 
 Configuring Row-Level Fields
@@ -311,7 +321,9 @@ Timeseries-Aware Calculated Fields
 ----------------------------------
 
 These fields perform computations that require knowledge of the full timeseries,
-such as percentile calculations or event detection:
+such as percentile calculations or event detection.
+
+See also: :class:`TimeseriesAwareCalculatedFields <teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields>`
 
 .. code-block:: python
 
@@ -335,19 +347,19 @@ Available timeseries-aware fields:
 
    * - Field
      - Description
-   * - ``AbovePercentileEventDetection``
+   * - :class:`AbovePercentileEventDetection <teehr.models.calculated_fields.timeseries_aware.AbovePercentileEventDetection>`
      - Flags values above a percentile threshold, assigns event IDs
-   * - ``BelowPercentileEventDetection``
+   * - :class:`BelowPercentileEventDetection <teehr.models.calculated_fields.timeseries_aware.BelowPercentileEventDetection>`
      - Flags values below a percentile threshold, assigns event IDs
-   * - ``ExceedanceProbability``
+   * - :class:`ExceedanceProbability <teehr.models.calculated_fields.timeseries_aware.ExceedanceProbability>`
      - Computes probability of value being exceeded
-   * - ``BaseflowPeriodDetection``
+   * - :class:`BaseflowPeriodDetection <teehr.models.calculated_fields.timeseries_aware.BaseflowPeriodDetection>`
      - Identifies baseflow periods in hydrograph
-   * - ``LyneHollickBaseflow``
+   * - :class:`LyneHollickBaseflow <teehr.models.calculated_fields.timeseries_aware.LyneHollickBaseflow>`
      - Baseflow separation using Lyne-Hollick filter
-   * - ``ChapmanBaseflow``
+   * - :class:`ChapmanBaseflow <teehr.models.calculated_fields.timeseries_aware.ChapmanBaseflow>`
      - Baseflow separation using Chapman filter
-   * - ``ChapmanMaxwellBaseflow``
+   * - :class:`ChapmanMaxwellBaseflow <teehr.models.calculated_fields.timeseries_aware.ChapmanMaxwellBaseflow>`
      - Baseflow separation using Chapman-Maxwell filter
 
 
@@ -426,7 +438,7 @@ Chain multiple calculated fields together:
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],
-        group_by=["primary_location_id", "water_year", "season"],
+        group_by=["primary_location_id", "water_year", "season", "event_above_id"],
         order_by=["primary_location_id", "water_year"],
     ).to_pandas()
 
@@ -493,7 +505,7 @@ A typical workflow combining views, calculated fields, and metrics:
             DeterministicMetrics.RelativeBias(),
             DeterministicMetrics.RootMeanSquareError(),
         ],
-        group_by=["primary_location_id", "water_year", "ecoregion"],
+        group_by=["primary_location_id", "water_year", "ecoregion", "event_above_id"],
         order_by=["primary_location_id", "water_year"],
     ).to_pandas()
 
