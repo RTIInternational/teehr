@@ -5,13 +5,13 @@ Metrics
 *******
 
 TEEHR provides comprehensive metrics for evaluating hydrologic model performance.
-The ``query()`` method on tables and views computes metrics across grouped data,
+The :meth:`query() <teehr.evaluation.tables.base_table.BaseTable.query>` method on tables and views computes metrics across grouped data,
 with support for bootstrapping, transforms, and multiple metric categories.
 
 Using the Query Method
 ======================
 
-The ``query()`` method is available on all Table and View objects. It computes
+The :meth:`query() <teehr.evaluation.tables.base_table.BaseTable.query>` method is available on all Table and View objects. It computes
 specified metrics grouped by selected fields:
 
 .. code-block:: python
@@ -140,6 +140,8 @@ Compute confidence intervals using bootstrap resampling:
     ).to_pandas()
 
     # Results: kling_gupta_efficiency_0.05, _0.5, _0.95
+
+See also: :class:`Bootstrappers <teehr.Bootstrappers>`
 
 
 Complete Example

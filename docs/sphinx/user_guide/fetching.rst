@@ -39,6 +39,8 @@ Fetch observed streamflow data from USGS gages:
        convert_to_si=True         # Convert from ft³/s to m³/s
    )
 
+See also: :meth:`Fetch.usgs_streamflow() <teehr.evaluation.fetch.Fetch.usgs_streamflow>`
+
 The data is automatically:
 
 1. Fetched from USGS NWIS
@@ -113,6 +115,8 @@ Fetch NWM retrospective streamflow simulations at point locations:
        chunk_by="month"
    )
 
+See also: :meth:`Fetch.nwm_retrospective_points() <teehr.evaluation.fetch.Fetch.nwm_retrospective_points>`
+
 Supported NWM Versions
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -150,6 +154,8 @@ Fetch real-time NWM forecast data:
        end_date=datetime(2024, 1, 7)
    )
 
+See also: :meth:`Fetch.nwm_operational_points() <teehr.evaluation.fetch.Fetch.nwm_operational_points>`
+
 Forecast Configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -174,6 +180,8 @@ Fetch gridded NWM data (e.g., forcing variables) and compute zonal statistics:
        calculate_zonal_weights=True,  # Compute weights first time
        domain="CONUS"
    )
+
+See also: :meth:`Fetch.nwm_retrospective_grids() <teehr.evaluation.fetch.Fetch.nwm_retrospective_grids>`
 
 Zonal Weights
 ^^^^^^^^^^^^^
@@ -228,6 +236,8 @@ Configure the API
        verify_ssl=True
    )
 
+See also: :meth:`Download.configure() <teehr.evaluation.download.Download.configure>`
+
 
 Download Locations
 ------------------
@@ -254,6 +264,8 @@ Download Locations
        include_attributes=True
    )
 
+See also: :meth:`Download.locations() <teehr.evaluation.download.Download.locations>`
+
 
 Download Domain Data
 --------------------
@@ -272,6 +284,11 @@ Download Domain Data
    # Download attributes (definitions)
    ev.download.attributes(type="continuous", load=True)
 
+See also: :meth:`Download.configurations() <teehr.evaluation.download.Download.configurations>`,
+:meth:`Download.units() <teehr.evaluation.download.Download.units>`,
+:meth:`Download.variables() <teehr.evaluation.download.Download.variables>`,
+:meth:`Download.attributes() <teehr.evaluation.download.Download.attributes>`
+
 
 Download Location Attributes
 ----------------------------
@@ -287,6 +304,8 @@ Download Location Attributes
    # Download all attributes for locations with a prefix
    ev.download.location_attributes(load=True)
 
+See also: :meth:`Download.location_attributes() <teehr.evaluation.download.Download.location_attributes>`
+
 
 Download Crosswalks
 -------------------
@@ -298,6 +317,8 @@ Download Crosswalks
        secondary_prefix="nwm30",
        load=True
    )
+
+See also: :meth:`Download.location_crosswalks() <teehr.evaluation.download.Download.location_crosswalks>`
 
 
 Download Timeseries
@@ -321,6 +342,9 @@ Download Timeseries
        end_date="2020-12-31",
        load=True
    )
+
+See also: :meth:`Download.primary_timeseries() <teehr.evaluation.download.Download.primary_timeseries>`,
+:meth:`Download.secondary_timeseries() <teehr.evaluation.download.Download.secondary_timeseries>`
 
 
 Complete Workflow Examples
