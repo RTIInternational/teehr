@@ -175,10 +175,12 @@ class BaseEvaluation(EvaluationBaseModel):
     def metrics(self) -> Metrics:
         """The metrics component class for calculating performance metrics.
 
-        .. deprecated::
+        .. deprecated:: 0.6.0
             The ``metrics`` property is deprecated and will be removed in a
             future version. Use the ``query`` method on the table directly
-            with the ``include_metrics`` argument instead. For example::
+            with the ``include_metrics`` argument instead. For example:
+
+            .. code-block:: python
 
                 ev.table("joined_timeseries").query(
                     include_metrics=[...],
@@ -622,8 +624,24 @@ class LocalReadWriteEvaluation(BaseEvaluation):
     This class establishes a local catalog in the specified directory
     and creates the tables according to the TEEHR schema.
 
-    It is intended for use when working locally or when you want to
+    It is intended for use when working locally and when you want to
     manage your own local copy of the data.
+
+    Examples
+    --------
+    Create a new evaluation with a new directory:
+
+    >>> ev = LocalReadWriteEvaluation(dir_path="path/to/evaluation_dir", create_dir=True)
+
+    Create an evaluation using an existing directory:
+
+    >>> ev = LocalReadWriteEvaluation(dir_path="path/to/existing_evaluation_dir")
+
+    Access tables and views:
+
+    >>> ev.primary_timeseries.query(...).to_pandas()
+    >>> ev.joined_timeseries_view(...).query(...).to_pandas()
+
     """
 
     def __init__(
@@ -796,10 +814,10 @@ class Evaluation(LocalReadWriteEvaluation):
     This class establishes a local catalog in the specified directory
     and creates the tables according to the TEEHR schema.
 
-    It is intended for use when working locally or when you want to
+    It is intended for use when working locally and when you want to
     manage your own local copy of the data.
 
-    .. deprecated::
+    .. deprecated:: 0.6.0
         This class is provided for convenience and backwards compatibility.
         It will be deprecated in favor of the more explicit
         :class:`LocalReadWriteEvaluation` class.
@@ -851,7 +869,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
 
     Currently only users in the TEEHR-Hub environment have access to
     the remote catalog, so this class is intended for use within that
-    environment, until remote access is more broadly available.
+    environment until remote access is more broadly available.
     """
 
     def __init__(
@@ -935,7 +953,7 @@ class RemoteReadWriteEvaluation(RemoteReadOnlyEvaluation):
 
     Currently only users in the TEEHR-Hub environment have access to
     the remote catalog, so this class is intended for use within that
-    environment, until remote access is more broadly available.
+    environment until remote access is more broadly available.
     """
 
     def __init__(

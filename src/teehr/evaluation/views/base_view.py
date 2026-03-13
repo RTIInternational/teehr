@@ -2,13 +2,13 @@
 from abc import abstractmethod
 import logging
 
-from teehr.evaluation.dataframe_base import DataFrameBase
+from teehr.evaluation.dataframe_base import TeehrDataFrameBase
 import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
 
 
-class View(DataFrameBase):
+class View(TeehrDataFrameBase):
     """Base class for computed views.
 
     A View represents a computed DataFrame that is evaluated lazily.

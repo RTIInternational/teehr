@@ -61,6 +61,50 @@
     background: none !important;
   }
 
+  /* Example notebook grid cards */
+
+  .notebook-card {
+    border-top: 3px solid var(--pst-color-primary) !important;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+  }
+
+  .notebook-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    transform: translateY(-2px);
+  }
+
+  .notebook-card .sd-card-title {
+    color: var(--pst-color-primary);
+    font-size: var(--pst-font-size-h5);
+  }
+
+  .notebook-card .sd-card-footer {
+    /* z-index: 2 creates a stacking context above the stretched-link ::after
+       overlay (z-index: 1), so pointer events reach the download button */
+    position: relative;
+    z-index: 2;
+    border-top: 1px solid var(--pst-color-border);
+    padding: 0.6rem 1rem;
+    text-align: center;
+    background: none !important;
+  }
+
+  .notebook-card .sd-card-footer a {
+    display: inline-block;
+    padding: 0.3rem 0.9rem;
+    border: 1px solid var(--pst-color-secondary);
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: var(--pst-color-secondary) !important;
+    text-decoration: none !important;
+    transition: background-color 0.15s, color 0.15s;
+  }
+
+  .notebook-card .sd-card-footer a:hover {
+    background-color: var(--pst-color-secondary);
+    color: white !important;
+  }
+
   /* Styling Pandas DataFrame HTML rendering */
   .dataframe th {
     font-size: 14px;

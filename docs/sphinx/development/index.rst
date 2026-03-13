@@ -4,6 +4,8 @@
 Developer Guide
 ===============
 
+
+
 Setting up the Development Environment
 --------------------------------------
 Setting up the development environment is a critical step in contributing to TEEHR.
@@ -164,18 +166,15 @@ To run these manually and print the results to a text file `pre-commit-output.tx
 
    pre-commit run --all-files > pre-commit-output.txt
 
-TEEHR Development CI/CD
------------------------
-The TEEHR repository uses GitHub Actions for continuous integration and continuous deployment (CI/CD).
 
-.. figure:: ../../images/development/dev_cicd_schematic.png
-  :scale: 55%
+Testing
+-------
 
-When a pull request is opened or re-opened, the tests are run in multiple python environments using ``nox`` and ``pytest``,
-and the documentation is built and published. After any necessary changes are made, the pull request can be merged,
-which triggers the deployment of the ``Dev Version`` (built from main) to TEEHR-Hub.
+We primarily use ``pytest`` for testing.  To run all tests, navigate to the repo root and run:
 
-When a new version of TEEHR is released, a new tag is created, which triggers the deployment of the tagged version to TEEHR-Hub.
+.. code-block:: bash
+
+   pytest tests/
 
 ``nox`` can also be used locally to run the tests in multiple python environments which must be installed separately (using ``pyenv`` for example).
 

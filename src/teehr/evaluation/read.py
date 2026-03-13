@@ -14,9 +14,8 @@ logger = logging.getLogger(__name__)
 DATATYPE_READ_TRANSFORMS = {"forecast_lead_time": T.DayTimeIntervalType(0, 3)}
 
 
-# NOTE: Should this inherit the Table class?
 class Read:
-    """Class to handle reading evaluation results from storage."""
+    """Class to handle reading evaluation data from storage."""
 
     def __init__(self, ev=None):
         """Initialize the Reader with an Evaluation instance.
@@ -120,29 +119,21 @@ class Read:
             The catalog name. If None, uses the active catalog. The default is None.
         namespace_name : str, optional
             The namespace name. If None, uses the active namespace. The default is None.
-        filters : Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-        ], optional
-            The filters to apply to the table. The default is None.
-        validate_filter_field_types : bool, optional
-            Whether to validate the filter field types. The default is True.
 
         Returns
         -------
         df : ps.DataFrame
             The spark dataframe.
 
-        Example
-        -------
-        >>> ts_sdf = ev.read.from_warehouse(
-        >>>     table_name="primary_timeseries",
-        >>>     filters=[
-        >>>         "value_time > '2022-01-01'",
-        >>>         "value_time < '2022-01-02'",
-        >>>         "location_id = 'gage-C'"
-        >>>     ]
-        >>> ).to_sdf()
+        Notes
+        -----
+        Users are directed to the ``ev.table`` class for reading
+        tables which will call this method under the hood. This method is available for direct
+        use if users want to read from the warehouse outside of the context of a table.
+
+        For example:
+
+        >>> sdf = ev.table("my_table").to_sdf()
         """
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name

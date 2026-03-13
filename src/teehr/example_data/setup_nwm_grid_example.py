@@ -1,6 +1,7 @@
 """Utility function for setting up the NWM streamflow fetching example."""
 from pathlib import Path
 import shutil
+import pandas as pd
 
 import teehr
 import teehr.example_data.nwm_gridded_example_data as fetch_nwm_grid_data
@@ -10,9 +11,6 @@ def setup_nwm_example(tmpdir):
     """Set up the NWM streamflow fetching example."""
     # Create an Evaluation object and create the directory
     ev = teehr.LocalReadWriteEvaluation(dir_path=tmpdir, create_dir=True)
-
-    # Clone the template
-    ev.clone_template()
 
     # Fetch the test data
     location_data_path = Path(tmpdir, "usgs_at_radford_location.parquet")
@@ -42,25 +40,33 @@ def setup_nwm_example(tmpdir):
     weights_path = Path(tmpdir, "nwm30_forcing_analysis_assim_pixel_weights.parquet")
     fetch_nwm_grid_data.fetch_file("nwm30_forcing_analysis_assim_pixel_weights.parquet", weights_path)
 
-    # Manually load the data into the Evaluation
+    # Load forcing location data
     ev.locations.load_spatial(
         wbd_location_data_path,
         field_mapping={
             "huc10": "id"
         },
-        location_id_prefix="wbd",
-        write_mode="append"  # this is the default
+        location_id_prefix="wbd"
     )
     ev.location_crosswalks.load_parquet(
-        in_path=forcing_crosswalk_data_path,
-        write_mode="append"  # this is the default
+        in_path=forcing_crosswalk_data_path
     )
-    ev.load.from_cache(in_path=location_data_path, table_name="locations")
-    ev.load.from_cache(in_path=crosswalk_data_path, table_name="location_crosswalks")
-    ev.load.from_cache(in_path=configurations_path, table_name="configurations")
-    ev.load.from_cache(in_path=primary_timeseries_path, table_name="primary_timeseries")
-    ev.load.from_cache(in_path=secondary_timeseries_path, table_name="secondary_timeseries")
-    ev.load.from_cache(in_path=joined_timeseries_path, table_name="joined_timeseries", write_mode="create_or_replace")
+    # Load the rest of the data
+    ev.locations.load_spatial(in_path=location_data_path)
+    ev.location_crosswalks.load_parquet(in_path=crosswalk_data_path)
+    configs_df = pd.read_parquet(configurations_path)
+    configs_list = []
+    for tpl in configs_df.itertuples():
+        config_obj = teehr.Configuration(
+            name=tpl.name,
+            type=tpl.type,
+            description=tpl.description
+        )
+        configs_list.append(config_obj)
+    ev.configurations.add(configs_list)
+
+    ev.primary_timeseries.load_parquet(in_path=primary_timeseries_path)
+    ev.secondary_timeseries.load_parquet(in_path=secondary_timeseries_path)
 
     # Weights file
     Path(ev.cache_dir, "fetching", "weights", "nwm30_forcing_analysis_assim").mkdir(parents=True)
