@@ -20,7 +20,7 @@ import pyspark.sql as ps
 logger = logging.getLogger(__name__)
 
 
-class DataFrameBase(ABC):
+class TeehrDataFrameBase(ABC):
     """Abstract base class for DataFrame-based data access.
 
     This class provides the common interface and implementation for both:
@@ -32,7 +32,7 @@ class DataFrameBase(ABC):
     """
 
     def __init__(self, ev):
-        """Initialize the DataFrameBase.
+        """Initialize the TeehrDataFrameBase.
 
         Parameters
         ----------

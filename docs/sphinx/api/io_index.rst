@@ -74,3 +74,16 @@ Validating Data
    :nosignatures:
 
    Validate
+
+Downloading Data from TEEHR Warehouse
+-------------------------------------
+The Download class provides methods to retrieve data from the TEEHR data warehouse API.
+
+.. currentmodule:: teehr.evaluation.download
+
+.. autosummary::
+   :template: custom-class-template.rst
+   :toctree: generated
+   :nosignatures:
+
+   Download

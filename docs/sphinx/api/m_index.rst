@@ -4,6 +4,7 @@ Metrics and Analysis
 
 Metrics Class
 -------------
+
 .. currentmodule:: teehr.evaluation.metrics
 
 .. autosummary::
@@ -40,6 +41,7 @@ Metric Functions
    deterministic_funcs
    signature_funcs
    probabilistic_funcs
+   bootstrap_funcs
 
 
 Metric Models
@@ -55,6 +57,7 @@ Metric Models
    Signatures
    ProbabilisticMetrics
    Bootstrappers
+   Operators
 
 
 Generated Timeseries
@@ -80,3 +83,4 @@ Generated Timeseries Models
 
    Normals
    ReferenceForecast
+   Persistence
