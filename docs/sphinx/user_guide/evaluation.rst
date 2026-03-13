@@ -319,3 +319,6 @@ are common operations you can perform with an Evaluation instance:
 
    # List available tables
    ev.list_tables()
+
+   # Drop a user-created table
+   ev.drop_table("my_saved_results")
