@@ -527,6 +527,44 @@ class BaseEvaluation(EvaluationBaseModel):
             logger.info(f"Table: {tbl.name}, Type: {tbl.tableType}")
         return pd.DataFrame(metadata)
 
+    def drop_table(
+        self,
+        table_name: str,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
+    ):
+        """Drop a user-created table from the catalog.
+
+        Only non-core tables (user-created tables, materialized views, saved
+        query results) can be dropped. Attempting to drop a core table
+        (e.g., primary_timeseries, locations, units) will raise a ValueError.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to drop.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Raises
+        ------
+        ValueError
+            If the table is a core TEEHR table.
+
+        Examples
+        --------
+        Write and then drop a user-created table:
+
+        >>> ev.joined_timeseries_view().write("my_results")
+        >>> ev.drop_table("my_results")
+        """
+        tbl = self.table(table_name, namespace_name, catalog_name)
+        tbl.drop()
+
     def list_views(self) -> pd.DataFrame:
         """List the views in the catalog returning a Pandas DataFrame."""
         return self.spark.sql("SHOW VIEWS").toPandas()

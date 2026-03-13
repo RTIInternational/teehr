@@ -5,6 +5,7 @@ import logging
 from teehr.evaluation.dataframe_base import DataFrameBase
 from teehr.models.evaluation_base import EvaluationBaseModel
 from teehr.models.filters import TableFilter
+from teehr.models.table_enums import TableNamesEnum
 from pyspark.sql.functions import split, col
 
 
@@ -205,6 +206,56 @@ class BaseTable(DataFrameBase):
             drop_duplicates=drop_duplicates,
             foreign_keys=self.foreign_keys,
             uniqueness_fields=self.uniqueness_fields,
+        )
+
+    @property
+    def is_core_table(self) -> bool:
+        """Return True if this table is a core (built-in) TEEHR table.
+
+        Core tables (e.g., primary_timeseries, locations, units) are part of
+        the standard TEEHR schema and cannot be dropped. User-created tables
+        (e.g., materialized views or saved query results) are not core tables
+        and can be dropped.
+
+        Returns
+        -------
+        bool
+            True if the table is a core TEEHR table, False otherwise.
+        """
+        return self.table_name in [e.value for e in TableNamesEnum]
+
+    def drop(self):
+        """Drop this table from the catalog.
+
+        Only non-core tables (user-created tables, materialized views, saved
+        query results) can be dropped. Attempting to drop a core table
+        (e.g., primary_timeseries, locations, units) will raise a ValueError.
+
+        Raises
+        ------
+        ValueError
+            If the table is a core TEEHR table.
+
+        Examples
+        --------
+        Write and then drop a user-created table:
+
+        >>> ev.joined_timeseries_view().write("my_results")
+        >>> ev.table("my_results").drop()
+        """
+        if self.is_core_table:
+            raise ValueError(
+                f"Cannot drop core table '{self.table_name}'. "
+                "Only user-created tables (e.g., materialized views or "
+                "saved query results) can be dropped."
+            )
+        logger.info(
+            f"Dropping table: {self.catalog_name}."
+            f"{self.namespace_name}.{self.table_name}"
+        )
+        self._ev.sql(
+            f"DROP TABLE IF EXISTS "
+            f"{self.catalog_name}.{self.namespace_name}.{self.table_name}"
         )
 
     def distinct_values(
