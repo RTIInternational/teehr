@@ -139,7 +139,8 @@ def test_metrics_filter_and_geometry(module_scope_test_warehouse):
 
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
-    assert metrics_df.columns.size == 6
+    assert metrics_df.columns.size == 7
+    assert "name" in metrics_df.columns
 
 
 @pytest.mark.module_scope_test_warehouse

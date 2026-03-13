@@ -78,6 +78,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         sql = """
             SELECT
                 sf.*,
+                lf.name as name,
                 lf.geometry as geometry
             FROM temp_secondary_timeseries sf
             JOIN location_crosswalks cf

@@ -299,6 +299,7 @@ def join_geometry(
         target_location_id
     ).select(
         target_location_id,
+        "name",
         "geometry"
     )
 
