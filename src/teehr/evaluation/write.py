@@ -1,5 +1,5 @@
 """Writer class for TEEHR evaluations."""
-from typing import List
+from typing import List, Union
 from pathlib import Path
 
 import pyspark.sql as ps
@@ -8,12 +8,10 @@ from pyarrow import Schema as ArrowSchema
 import geopandas as gpd
 
 from teehr.const import REMOTE_CATALOG_NAME
+from teehr.models.filters import TableFilter
 
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
 
-
-# TODO: Should the Writer class contain DELETE FROM? That's how it's
-# organized in the docs: https://iceberg.apache.org/docs/1.9.1/spark-writes/#delete-from
 
 class Write:
     """Class to handle writing evaluation results to storage."""
@@ -123,6 +121,25 @@ class Write:
         """  # noqa: E501
         self._ev.sql(sql_query)
 
+    def _insert(
+        self,
+        source_view: str,
+        table_name: str,
+        catalog_name: str,
+        namespace_name: str
+    ):
+        """Insert the DataFrame into the target table without duplicate checking.
+
+        This is faster than ``_append`` because it uses a simple
+        ``INSERT INTO`` statement instead of ``MERGE INTO``.
+        Duplicate rows will be inserted if they exist in the source data.
+        """
+        sql_query = f"""
+            INSERT INTO {catalog_name}.{namespace_name}.{table_name}
+            SELECT * FROM {source_view}
+        """  # noqa: E501
+        self._ev.sql(sql_query)
+
     def _overwrite(
         self,
         source_view: str,
@@ -161,8 +178,10 @@ class Write:
         write_mode : str, optional
             The mode to use when writing the DataFrame. Options:
 
+            - ``"insert"``: Insert all rows directly without duplicate
+              checking. Faster than ``"append"`` but may create duplicates.
             - ``"append"``: Insert new rows; skip rows matching
-              uniqueness_fields.
+              uniqueness_fields (uses ``MERGE INTO``).
             - ``"upsert"``: Insert new rows; update existing rows matching
               uniqueness_fields.
             - ``"overwrite"``: Replace all data in table. Preserves table
@@ -174,6 +193,7 @@ class Write:
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
+            Only used for ``"append"`` and ``"upsert"`` write modes.
         catalog_name : str, optional
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
@@ -215,7 +235,14 @@ class Write:
         if any(item in DATATYPE_WRITE_TRANSFORMS for item in tbl_columns):
             self._apply_datatype_transform(source_view_name)
 
-        if write_mode == "append":
+        if write_mode == "insert":
+            self._insert(
+                source_view=source_view_name,
+                table_name=table_name,
+                catalog_name=catalog_name,
+                namespace_name=namespace_name
+            )
+        elif write_mode == "append":
             if uniqueness_fields is None:
                 raise ValueError(
                     "uniqueness_fields must be provided for append write mode."
@@ -255,12 +282,132 @@ class Write:
             )
         else:
             raise ValueError(
-                "write_mode must be one of 'append', 'upsert', "
+                "write_mode must be one of 'insert', 'append', 'upsert', "
                 "'overwrite', or 'create_or_replace'."
             )
 
         if created_temp_view:
             self._ev.sql(f"DROP VIEW IF EXISTS {source_view_name}")
+
+    def delete_from(
+        self,
+        table_name: str,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ] = None,
+        catalog_name: str = None,
+        namespace_name: str = None,
+        dry_run: bool = False,
+    ) -> Union[int, ps.DataFrame]:
+        """Delete rows from a table based on filter conditions.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to delete rows from.
+        filters : Union[str, dict, TableFilter, List[...]], optional
+            Filter conditions specifying which rows to delete.
+            Supports SQL strings, dictionaries, or
+            :class:`~teehr.models.filters.TableFilter` objects.
+            If ``None``, all rows in the table will be deleted.
+        catalog_name : str, optional
+            The catalog name, by default None, which uses the active catalog.
+        namespace_name : str, optional
+            The namespace name, by default None, which uses the active
+            namespace.
+        dry_run : bool, optional
+            If ``True``, returns a Spark DataFrame of rows that would be
+            deleted without performing the actual deletion. This allows the
+            user to inspect or count the rows before committing the delete.
+            Default is ``False``.
+
+        Returns
+        -------
+        int or ps.DataFrame
+            If ``dry_run=False``, returns the number of rows deleted (int).
+            If ``dry_run=True``, returns a Spark DataFrame of rows that
+            would be deleted.
+
+        Examples
+        --------
+        Preview rows that would be deleted (dry run):
+
+        >>> sdf = ev.write.delete_from(
+        >>>     table_name="primary_timeseries",
+        >>>     filters=["location_id = 'usgs-01234567'"],
+        >>>     dry_run=True,
+        >>> )
+        >>> sdf.show()
+        >>> print(f"Rows to delete: {sdf.count()}")
+
+        Delete rows and get the count:
+
+        >>> count = ev.write.delete_from(
+        >>>     table_name="primary_timeseries",
+        >>>     filters=["location_id = 'usgs-01234567'"],
+        >>> )
+        >>> print(f"Deleted {count} rows.")
+
+        Delete using a TableFilter object:
+
+        >>> from teehr.models.filters import TableFilter
+        >>> from teehr import Operators as ops
+        >>> count = ev.write.delete_from(
+        >>>     table_name="primary_timeseries",
+        >>>     filters=TableFilter(
+        >>>         column="location_id",
+        >>>         operator=ops.eq,
+        >>>         value="usgs-01234567"
+        >>>     ),
+        >>> )
+        """
+        if (
+            self._ev.read_only_remote is True and
+            self._ev.active_catalog.catalog_name == REMOTE_CATALOG_NAME
+        ):
+            raise ValueError(
+                "Cannot delete from the TEEHR-Cloud warehouse in read-only remote mode."
+            )
+
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+
+        full_table_name = f"{catalog_name}.{namespace_name}.{table_name}"
+
+        # Build the WHERE clause from filters
+        where_clause = None
+        if filters is not None:
+            sdf = self._ev.spark.table(full_table_name)
+            validated_filters = self._ev.validate.sdf_filters(
+                sdf=sdf,
+                filters=filters,
+                validate=False
+            )
+            where_clause = " AND ".join(validated_filters)
+
+        # Build matching query for counting or dry run
+        if where_clause:
+            match_sql = f"SELECT * FROM {full_table_name} WHERE {where_clause}"
+        else:
+            match_sql = f"SELECT * FROM {full_table_name}"
+
+        matching_sdf = self._ev.sql(match_sql)
+
+        if dry_run:
+            return matching_sdf
+
+        # Count before deletion, then execute delete
+        count = matching_sdf.count()
+
+        if where_clause:
+            self._ev.sql(f"DELETE FROM {full_table_name} WHERE {where_clause}")
+        else:
+            self._ev.sql(f"DELETE FROM {full_table_name}")
+
+        return count
 
     @staticmethod
     def to_cache(
