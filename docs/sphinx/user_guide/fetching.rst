@@ -358,7 +358,7 @@ Example 1: New Evaluation with TEEHR Warehouse Data
    import teehr
 
    # Create evaluation
-   ev = teehr.Evaluation(dir_path="./nwm_eval", create_dir=True)
+   ev = teehr.LocalReadWriteEvaluation(dir_path="./nwm_eval", create_dir=True)
 
    # Download curated data from warehouse
    ev.download.configure()
@@ -399,7 +399,7 @@ Example 2: Fresh Data from USGS and NWM
    import teehr
    from datetime import datetime
 
-   ev = teehr.Evaluation(dir_path="./fresh_eval", create_dir=True)
+   ev = teehr.LocalReadWriteEvaluation(dir_path="./fresh_eval", create_dir=True)
 
    # Load your location data
    ev.locations.load_spatial("./data/my_gages.geojson")

@@ -45,7 +45,7 @@ There are two ways to access a table:
 
    import teehr
 
-   ev = teehr.Evaluation(dir_path="./my_eval")
+   ev = teehr.LocalReadWriteEvaluation(dir_path="./my_eval")
 
    # Method 1: Named property (for standard tables)
    locs = ev.locations

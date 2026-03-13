@@ -45,7 +45,7 @@ Plot observed vs. simulated timeseries for a single location:
     import teehr
     import hvplot.pandas
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Get joined timeseries for a specific location
     df = ev.joined_timeseries_view().filter(
@@ -107,7 +107,7 @@ Display locations with attributes:
 
     gv.extension('bokeh')
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Get locations as GeoDataFrame
     gdf = ev.locations.to_geopandas()
@@ -137,7 +137,7 @@ Visualize performance metrics spatially:
     import geoviews as gv
     from bokeh.palettes import RdYlGn11
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Calculate metrics with geometry
     from teehr.metrics import DeterministicMetrics
@@ -183,7 +183,7 @@ Compare observed and simulated hydrographs with metrics overlay:
     import holoviews as hv
     import hvplot.pandas
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Get timeseries
     df = ev.joined_timeseries_view().filter(

@@ -32,7 +32,7 @@ Spark session using TEEHR's default configuration is shown below:
     from pathlib import Path
 
     # Create a TEEHR evaluation
-    ev = teehr.Evaluation(dir_path=Path("path/to/your/evaluation"), create_dir=True)
+    ev = teehr.LocalReadWriteEvaluation(dir_path=Path("path/to/your/evaluation"), create_dir=True)
 
     # Access the Spark session
     spark_session = ev.spark
@@ -41,7 +41,7 @@ Spark session using TEEHR's default configuration is shown below:
 Within the TEEHR framework, the Spark session is automatically configured with the necessary settings to work with
 the TEEHR data model. The default spark configuration created by TEEHR dynamically updates the driver memory and
 max result size to equal 75% and 50% of your on-board system memory, respectively. Advanced TEEHR users can also define
-their own Spark session configuration by passing a custom configuration to the `teehr.Evaluation` constructor. For example,
+their own Spark session configuration by passing a custom configuration to the `teehr.LocalReadWriteEvaluation` constructor. For example,
 if the user encountered a memory management issue, they could create a custom Spark session with increased memory settings
 as follows:
 
@@ -68,7 +68,7 @@ as follows:
     spark_session = SparkSession.builder.config(conf=conf).getOrCreate()
 
     # Create a TEEHR evaluation with the custom Spark session
-    ev = teehr.Evaluation(
+    ev = teehr.LocalReadWriteEvaluation(
         dir_path=Path("path/to/your/evaluation"),
         create_dir=True,
         spark=spark_session

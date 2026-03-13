@@ -474,7 +474,7 @@ A typical workflow combining views, calculated fields, and metrics:
     import teehr.models.calculated_fields.timeseries_aware as tcf
 
     # Open evaluation
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Create view with attributes and calculated fields
     jt = ev.joined_timeseries_view(

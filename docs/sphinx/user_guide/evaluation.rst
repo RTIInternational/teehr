@@ -168,7 +168,7 @@ the conversion.:
 
 .. code-block:: python
 
-   ev = teehr.Evaluation(dir_path="./old_evaluation")
+   ev = teehr.LocalReadWriteEvaluation(dir_path="./old_evaluation")
    # Raises ValueError with migration instructions
 
 To migrate:
@@ -181,7 +181,7 @@ To migrate:
    convert_evaluation("/path/to/old_evaluation")
 
    # Now you can open it
-   ev = teehr.Evaluation(dir_path="/path/to/old_evaluation")
+   ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/old_evaluation")
 
 Note this will leave your existing data intact and create the necessary Iceberg t
 ables and structure. However, it's always a good idea to back up your data before
@@ -227,7 +227,7 @@ session using the ``create_spark_session`` utility function and pass it to your 
    )
 
    # Use it with your evaluation
-   ev = teehr.Evaluation(
+   ev = teehr.LocalReadWriteEvaluation(
        dir_path="./my_eval",
        create_dir=True,
        spark=spark
@@ -264,7 +264,7 @@ Enable logging to troubleshoot issues:
 
 .. code-block:: python
 
-   ev = teehr.Evaluation(dir_path="./my_eval")
+   ev = teehr.LocalReadWriteEvaluation(dir_path="./my_eval")
    ev.enable_logging()  # Writes to teehr.log in evaluation directory
 
    # View current Spark configuration

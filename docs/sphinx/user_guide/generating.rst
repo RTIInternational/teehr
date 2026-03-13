@@ -30,7 +30,7 @@ Basic Usage
     import teehr
     from teehr import SignatureTimeseriesGenerators as sts
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Configure the normals generator
     normals = sts.Normals()
@@ -99,7 +99,7 @@ Example: Daily Normals
     import teehr
     from teehr import SignatureTimeseriesGenerators as sts
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Add configuration for USGS observations
     ev.configurations.add(
@@ -152,7 +152,7 @@ historical reference values (e.g., climatology) to forecast timesteps:
     import teehr
     from teehr import BenchmarkForecastGenerators as bm
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Configure reference forecast generator
     ref_fcst = bm.ReferenceForecast()
@@ -237,7 +237,7 @@ A typical workflow for generating benchmark forecasts:
     from teehr import SignatureTimeseriesGenerators as sts
     from teehr import BenchmarkForecastGenerators as bm
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Step 1: Load locations and crosswalks
     ev.locations.load_spatial(in_path="locations.parquet")

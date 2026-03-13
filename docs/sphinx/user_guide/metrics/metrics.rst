@@ -19,7 +19,7 @@ specified metrics grouped by selected fields:
     import teehr
     from teehr.metrics import DeterministicMetrics
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Basic metrics query
     metrics_df = ev.table("joined_timeseries").query(
@@ -153,7 +153,7 @@ Complete Example
     from teehr.metrics import DeterministicMetrics, Signatures
     import teehr.models.calculated_fields.row_level as rcf
 
-    ev = teehr.Evaluation(dir_path="/path/to/evaluation")
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Build view with calculated fields
     metrics_df = (
