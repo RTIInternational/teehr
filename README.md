@@ -38,3 +38,13 @@ The TEEHR-Python package is comprised of three main features:
     <td><strong>Analytics</strong> - TEEHR contains a suite of robust and scalable analytic methods that enable users to fully interrogate their datasets.</td>
   </tr>
 </table>
+
+## The TEEHR-Cloud Framework
+The TEEHR-Cloud framework is made up of three components:
+- **TEEHR-Python**: Acts as the underlying analytics engine for computing metrics and analyzing data.
+- **The TEEHR Data Warehouse**: A cloud-hosted data warehouse build on Apache Iceberg conforming to TEEHR's data model.
+- **TEEHR Services Stack**: A suite of cloud-based services acting as an Evaluation Manager enabling automated data ingestion, metric calculations, and dashboard visualizations.
+
+<p align="center">
+  <img src="docs/images/readme/teehr-cloud-venn-diagram.png" alt="TEEHR Cloud Venn Diagram" width="333">
+</p>
