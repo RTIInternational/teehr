@@ -105,6 +105,11 @@ class TeehrDataFrameBase(ABC):
         is auto-detected from common location ID field names ('location_id',
         'primary_location_id') unless specified.
 
+        This is especially useful when called *after* a ``query()`` with
+        GROUP BY and aggregation metrics, so that attributes do not need
+        to be included in the ``group_by`` clause in order to pass through
+        to the result.
+
         Parameters
         ----------
         attr_list : List[str], optional
@@ -135,6 +140,20 @@ class TeehrDataFrameBase(ABC):
         >>> df = accessor.add_attributes(
         ...     location_id_col="primary_location_id"
         ... ).to_pandas()
+
+        Add attributes after metric aggregation — avoids including them
+        in ``group_by``:
+
+        >>> from teehr.metrics import KGE
+        >>> df = (
+        ...     ev.joined_timeseries_view()
+        ...     .query(
+        ...         group_by=["primary_location_id"],
+        ...         include_metrics=[KGE()]
+        ...     )
+        ...     .add_attributes(attr_list=["drainage_area", "ecoregion"])
+        ...     .to_pandas()
+        ... )
         """
         attrs_sdf = self._ev.location_attributes_view(attr_list=attr_list).to_sdf()
 
