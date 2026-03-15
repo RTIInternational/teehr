@@ -2,6 +2,8 @@
 from typing import List, Dict, Union, Callable
 import logging
 
+import pyspark.sql as ps
+
 from teehr.evaluation.dataframe_base import TeehrDataFrameBase
 from teehr.models.evaluation_base import EvaluationBaseModel
 from teehr.models.filters import TableFilter
@@ -256,6 +258,67 @@ class BaseTable(TeehrDataFrameBase):
         self._ev.sql(
             f"DROP TABLE IF EXISTS "
             f"{self.catalog_name}.{self.namespace_name}.{self.table_name}"
+        )
+
+    def delete(
+        self,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ] = None,
+        dry_run: bool = False,
+    ) -> Union[int, ps.DataFrame]:
+        """Delete rows from this table based on filter conditions.
+
+        Delegates to
+        :meth:`Write.delete_from() <teehr.evaluation.write.Write.delete_from>`.
+
+        Parameters
+        ----------
+        filters : Union[str, dict, TableFilter, List[...]], optional
+            Filter conditions specifying which rows to delete.
+            Supports SQL strings, dictionaries, or
+            :class:`~teehr.models.filters.TableFilter` objects.
+            If ``None``, all rows in the table will be deleted.
+        dry_run : bool, optional
+            If ``True``, returns a Spark DataFrame of rows that would be
+            deleted without performing the actual deletion. Default is
+            ``False``.
+
+        Returns
+        -------
+        int or ps.DataFrame
+            If ``dry_run=False``, returns the number of rows deleted (int).
+            If ``dry_run=True``, returns a Spark DataFrame of rows that
+            would be deleted.
+
+        Examples
+        --------
+        Preview rows that would be deleted (dry run):
+
+        >>> sdf = ev.table("primary_timeseries").delete(
+        >>>     filters=["location_id = 'usgs-01234567'"],
+        >>>     dry_run=True,
+        >>> )
+        >>> print(f"Rows to delete: {sdf.count()}")
+
+        Delete rows and get the count:
+
+        >>> count = ev.table("primary_timeseries").delete(
+        >>>     filters=["location_id = 'usgs-01234567'"],
+        >>> )
+        >>> print(f"Deleted {count} rows.")
+
+        Delete all rows from this table:
+
+        >>> count = ev.primary_timeseries.delete()
+        """
+        return self._ev.write.delete_from(
+            table_name=self.table_name,
+            filters=filters,
+            catalog_name=self.catalog_name,
+            namespace_name=self.namespace_name,
+            dry_run=dry_run,
         )
 
     def distinct_values(

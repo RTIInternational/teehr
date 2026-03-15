@@ -238,6 +238,154 @@ def test_delete_from_dict_filter(function_scope_evaluation_template):
 
 
 @pytest.mark.function_scope_evaluation_template
+def test_table_delete_method_dict_filter(function_scope_evaluation_template):
+    """Test the delete() method on a table instance with a dict filter."""
+    ev = function_scope_evaluation_template
+
+    schema = StructType([
+        StructField("name", StringType(), True),
+        StructField("long_name", StringType(), True)
+    ])
+
+    sdf = ev.spark.createDataFrame(
+        data=[
+            ("m/s", "Meters per second"),
+            ("ft/s", "Feet per second"),
+        ],
+        schema=schema
+    )
+    ev.write.to_warehouse(
+        source_data=sdf.toPandas(),
+        table_name="units",
+        write_mode="append",
+    )
+
+    initial_count = ev.units.to_sdf().count()
+
+    # Delete using a dict filter on the table instance
+    deleted_count = ev.units.delete(
+        filters={"column": "name", "operator": "=", "value": "m/s"},
+    )
+
+    assert deleted_count == 1
+
+    ev.units._load_sdf()
+    assert ev.units.to_sdf().count() == initial_count - 1
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_table_delete_method(function_scope_evaluation_template):
+    """Test the delete() method on a table instance."""
+    ev = function_scope_evaluation_template
+
+    schema = StructType([
+        StructField("name", StringType(), True),
+        StructField("long_name", StringType(), True)
+    ])
+
+    sdf = ev.spark.createDataFrame(
+        data=[
+            ("m/s", "Meters per second"),
+            ("ft/s", "Feet per second"),
+        ],
+        schema=schema
+    )
+    ev.write.to_warehouse(
+        source_data=sdf.toPandas(),
+        table_name="units",
+        write_mode="append",
+    )
+
+    initial_count = ev.units.to_sdf().count()
+    assert initial_count >= 2
+
+    # Delete one row via ev.table().delete()
+    deleted_count = ev.table("units").delete(
+        filters=["name = 'm/s'"],
+    )
+
+    assert deleted_count == 1
+
+    ev.units._load_sdf()
+    assert ev.units.to_sdf().count() == initial_count - 1
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_table_delete_method_dry_run(function_scope_evaluation_template):
+    """Test the delete() dry_run on a table instance."""
+    ev = function_scope_evaluation_template
+
+    schema = StructType([
+        StructField("name", StringType(), True),
+        StructField("long_name", StringType(), True)
+    ])
+
+    sdf = ev.spark.createDataFrame(
+        data=[
+            ("m/s", "Meters per second"),
+            ("ft/s", "Feet per second"),
+        ],
+        schema=schema
+    )
+    ev.write.to_warehouse(
+        source_data=sdf.toPandas(),
+        table_name="units",
+        write_mode="append",
+    )
+
+    initial_count = ev.units.to_sdf().count()
+
+    # Dry run via named table property
+    result_sdf = ev.units.delete(
+        filters=["name = 'ft/s'"],
+        dry_run=True,
+    )
+
+    assert isinstance(result_sdf, ps.DataFrame)
+    assert result_sdf.count() == 1
+    assert result_sdf.collect()[0]["name"] == "ft/s"
+
+    # Table should be unchanged
+    ev.units._load_sdf()
+    assert ev.units.to_sdf().count() == initial_count
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_table_delete_method_no_filter(function_scope_evaluation_template):
+    """Test delete() on a table instance with no filter deletes all rows."""
+    ev = function_scope_evaluation_template
+
+    schema = StructType([
+        StructField("name", StringType(), True),
+        StructField("long_name", StringType(), True)
+    ])
+
+    sdf = ev.spark.createDataFrame(
+        data=[
+            ("m/s", "Meters per second"),
+            ("ft/s", "Feet per second"),
+        ],
+        schema=schema
+    )
+    ev.write.to_warehouse(
+        source_data=sdf.toPandas(),
+        table_name="units",
+        write_mode="append",
+    )
+
+    initial_count = ev.units.to_sdf().count()
+    assert initial_count >= 2
+
+    # Delete all rows via ev.units.delete()
+    deleted_count = ev.units.delete()
+
+    assert deleted_count == initial_count
+
+    ev.units._load_sdf()
+    assert ev.units.to_sdf().count() == 0
+
+
+@pytest.mark.function_scope_evaluation_template
 def test_drop_user_table(function_scope_evaluation_template):
     """Test dropping a user-created (non-core) table."""
     ev = function_scope_evaluation_template

@@ -390,23 +390,29 @@ See also: :meth:`Write.to_warehouse() <teehr.evaluation.write.Write.to_warehouse
 Deleting Data
 =============
 
-Use :meth:`ev.write.delete_from() <teehr.evaluation.write.Write.delete_from>` to
-delete rows from a table. Supports the same filter formats as the ``filter()`` method.
+There are two equivalent ways to delete rows from a table.
 
-**Dry run** — preview rows that would be deleted without committing:
+**Via a table instance** (``ev.table().delete()`` or ``ev.primary_timeseries.delete()``):
 
 .. code-block:: python
 
-   # See which rows would be deleted
-   sdf = ev.write.delete_from(
-       table_name="primary_timeseries",
+   # Dry run — preview rows that would be deleted
+   sdf = ev.table("primary_timeseries").delete(
        filters=["location_id = 'usgs-01234567'"],
        dry_run=True,
    )
-   sdf.show()
    print(f"Rows to delete: {sdf.count()}")
 
-**Execute delete** — delete matching rows and return the count:
+   # Execute deletion on a named table property
+   count = ev.primary_timeseries.delete(
+       filters=["location_id = 'usgs-01234567'"],
+   )
+   print(f"Deleted {count} rows.")
+
+   # Delete all rows
+   count = ev.primary_timeseries.delete()
+
+**Via the write interface** (``ev.write.delete_from()``):
 
 .. code-block:: python
 
@@ -416,7 +422,8 @@ delete rows from a table. Supports the same filter formats as the ``filter()`` m
    )
    print(f"Deleted {count} rows.")
 
-**Using dict or TableFilter filters:**
+Both methods support SQL strings, dicts, and
+:class:`~teehr.models.filters.TableFilter` objects as filter arguments:
 
 .. code-block:: python
 
@@ -424,14 +431,12 @@ delete rows from a table. Supports the same filter formats as the ``filter()`` m
    from teehr import Operators as ops
 
    # Dict filter
-   count = ev.write.delete_from(
-       table_name="primary_timeseries",
+   count = ev.primary_timeseries.delete(
        filters={"column": "configuration_name", "operator": "=", "value": "old_run"},
    )
 
    # TableFilter object
-   count = ev.write.delete_from(
-       table_name="primary_timeseries",
+   count = ev.primary_timeseries.delete(
        filters=TableFilter(
            column="configuration_name",
            operator=ops.eq,
@@ -439,14 +444,10 @@ delete rows from a table. Supports the same filter formats as the ``filter()`` m
        ),
    )
 
-**Delete all rows** — omit ``filters`` to delete every row in the table:
+See also:
 
-.. code-block:: python
-
-   count = ev.write.delete_from(table_name="primary_timeseries")
-   print(f"Deleted {count} rows.")
-
-See also: :meth:`Write.delete_from() <teehr.evaluation.write.Write.delete_from>`
+- :meth:`BaseTable.delete() <teehr.evaluation.tables.base_table.BaseTable.delete>`
+- :meth:`Write.delete_from() <teehr.evaluation.write.Write.delete_from>`
 
 
 Dropping Tables
