@@ -1,5 +1,5 @@
 """LocationAttributesView - computed view for pivoted location attributes."""
-from typing import List
+from typing import List, Union
 import logging
 
 from teehr.evaluation.views.base_view import View
@@ -42,6 +42,8 @@ class LocationAttributesView(View):
         self,
         ev,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ):
         """Initialize the LocationAttributesView.
 
@@ -51,8 +53,14 @@ class LocationAttributesView(View):
             The parent Evaluation instance.
         attr_list : List[str], optional
             Specific attributes to include. If None, includes all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
         """
-        super().__init__(ev)
+        super().__init__(ev, catalog_name=catalog_name, namespace_name=namespace_name)
         self._attr_list = attr_list
 
     def _compute(self) -> ps.DataFrame:
@@ -65,7 +73,7 @@ class LocationAttributesView(View):
         """
         logger.info("Computing pivoted attributes view")
 
-        location_attributes_sdf = self._ev.location_attributes.to_sdf()
+        location_attributes_sdf = self._get_table("location_attributes").to_sdf()
 
         if location_attributes_sdf.isEmpty():
             logger.warning("No location attributes found.")

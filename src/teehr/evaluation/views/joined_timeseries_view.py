@@ -54,6 +54,8 @@ class JoinedTimeseriesView(View):
         ] = None,
         add_attrs: bool = False,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ):
         """Initialize the JoinView.
 
@@ -69,8 +71,14 @@ class JoinedTimeseriesView(View):
             Whether to add location attributes to the result. Default False.
         attr_list : List[str], optional
             Specific attributes to add. If None and add_attrs=True, adds all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
         """
-        super().__init__(ev)
+        super().__init__(ev, catalog_name=catalog_name, namespace_name=namespace_name)
         self._primary_filters = primary_filters
         self._secondary_filters = secondary_filters
         self._add_attrs = add_attrs
@@ -116,16 +124,29 @@ class JoinedTimeseriesView(View):
             The joined DataFrame.
         """
         # Get filtered primary timeseries
-        pt = self._ev.primary_timeseries
+        pt = self._get_table("primary_timeseries")
         if self._primary_filters is not None:
             pt = pt.filter(self._primary_filters)
         pt.to_sdf().createOrReplaceTempView("filtered_primary_timeseries")
 
         # Get filtered secondary timeseries
-        st = self._ev.secondary_timeseries
+        st = self._get_table("secondary_timeseries")
         if self._secondary_filters is not None:
             st = st.filter(self._secondary_filters)
         st.to_sdf().createOrReplaceTempView("filtered_secondary_timeseries")
+
+        # If a specific catalog/namespace is requested, create temp views for
+        # the referenced tables so the SQL resolves them from the correct source
+        _extra_views = []
+        if self._catalog_name is not None or self._namespace_name is not None:
+            self._get_table("variables").to_sdf().createOrReplaceTempView(
+                "variables"
+            )
+            _extra_views.append("variables")
+            self._get_table("location_crosswalks").to_sdf().createOrReplaceTempView(
+                "location_crosswalks"
+            )
+            _extra_views.append("location_crosswalks")
 
         # Execute the join query
         joined_df = self._ev.sql("""
@@ -196,6 +217,8 @@ class JoinedTimeseriesView(View):
         # Clean up temp views
         self._ev.spark.catalog.dropTempView("filtered_primary_timeseries")
         self._ev.spark.catalog.dropTempView("filtered_secondary_timeseries")
+        for view_name in _extra_views:
+            self._ev.spark.catalog.dropTempView(view_name)
 
         return joined_df
 
@@ -218,7 +241,11 @@ class JoinedTimeseriesView(View):
             The DataFrame with attributes added.
         """
         # Use LocationAttributesView to get pivoted attributes
-        attrs_df = self._ev.location_attributes_view(attr_list=self._attr_list).to_sdf()
+        attrs_df = self._ev.location_attributes_view(
+            attr_list=self._attr_list,
+            catalog_name=self._catalog_name,
+            namespace_name=self._namespace_name,
+        ).to_sdf()
 
         if attrs_df.isEmpty():
             logger.warning(
