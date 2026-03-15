@@ -1,6 +1,7 @@
 """Base class for computed views."""
 from abc import abstractmethod
 import logging
+from typing import Union
 
 from teehr.evaluation.dataframe_base import TeehrDataFrameBase
 import pyspark.sql as ps
@@ -20,7 +21,12 @@ class View(TeehrDataFrameBase):
     compute their data on-the-fly when accessed.
     """
 
-    def __init__(self, ev):
+    def __init__(
+        self,
+        ev,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
+    ):
         """Initialize the View.
 
         Parameters
@@ -28,9 +34,36 @@ class View(TeehrDataFrameBase):
         ev : EvaluationBase
             The parent Evaluation instance providing access to Spark session,
             catalogs, and related operations.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
         """
         super().__init__(ev)
         self._computed = False
+        self._catalog_name = catalog_name
+        self._namespace_name = namespace_name
+
+    def _get_table(self, table_name: str):
+        """Get a table using the stored catalog/namespace if provided.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to access.
+
+        Returns
+        -------
+        BaseTable
+            The table instance from the specified or active catalog/namespace.
+        """
+        return self._ev.table(
+            table_name,
+            catalog_name=self._catalog_name,
+            namespace_name=self._namespace_name,
+        )
 
     @abstractmethod
     def _compute(self) -> ps.DataFrame:

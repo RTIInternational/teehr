@@ -6,6 +6,7 @@ import logging
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import (
     df_to_gdf,
+    join_attributes,
     join_geometry,
     order_df,
     group_df,
@@ -91,6 +92,79 @@ class TeehrDataFrameBase(ABC):
         gdf = join_geometry(sdf, self._ev.locations.to_sdf())
         self._sdf = gdf
         self._has_geometry = True
+        return self
+
+    def add_attributes(
+        self,
+        attr_list: List[str] = None,
+        location_id_col: str = None,
+    ):
+        """Add location attributes to the DataFrame.
+
+        Joins pivoted location attributes to the DataFrame. The join column
+        is auto-detected from common location ID field names ('location_id',
+        'primary_location_id') unless specified.
+
+        This is especially useful when called *after* a ``query()`` with
+        GROUP BY and aggregation metrics, so that attributes do not need
+        to be included in the ``group_by`` clause in order to pass through
+        to the result.
+
+        Parameters
+        ----------
+        attr_list : List[str], optional
+            Specific attributes to add. If None, all attributes are added.
+        location_id_col : str, optional
+            The column name in the DataFrame to join on. If None, checks
+            for 'location_id' then 'primary_location_id'.
+
+        Returns
+        -------
+        self
+            Returns self for method chaining.
+
+        Examples
+        --------
+        Add all attributes:
+
+        >>> df = accessor.add_attributes().to_pandas()
+
+        Add specific attributes:
+
+        >>> df = accessor.add_attributes(
+        ...     attr_list=["drainage_area", "ecoregion"]
+        ... ).to_pandas()
+
+        Specify join column explicitly:
+
+        >>> df = accessor.add_attributes(
+        ...     location_id_col="primary_location_id"
+        ... ).to_pandas()
+
+        Add attributes after metric aggregation — avoids including them
+        in ``group_by``:
+
+        >>> from teehr.metrics import KGE
+        >>> df = (
+        ...     ev.joined_timeseries_view()
+        ...     .query(
+        ...         group_by=["primary_location_id"],
+        ...         include_metrics=[KGE()]
+        ...     )
+        ...     .add_attributes(attr_list=["drainage_area", "ecoregion"])
+        ...     .to_pandas()
+        ... )
+        """
+        attrs_sdf = self._ev.location_attributes_view(attr_list=attr_list).to_sdf()
+
+        if attrs_sdf.isEmpty():
+            logger.warning(
+                "No location attributes found. Skipping adding attributes."
+            )
+            return self
+
+        sdf = self.to_sdf()
+        self._sdf = join_attributes(sdf, attrs_sdf, location_id_col)
         return self
 
     def _apply_filters(

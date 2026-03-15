@@ -257,6 +257,8 @@ class BaseEvaluation(EvaluationBaseModel):
         ] = None,
         add_attrs: bool = False,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ) -> JoinedTimeseriesView:
         """Create a computed view that joins primary and secondary timeseries.
 
@@ -274,6 +276,12 @@ class BaseEvaluation(EvaluationBaseModel):
             Whether to add location attributes. Default False.
         attr_list : List[str], optional
             Specific attributes to add (if add_attrs=True).
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
 
         Returns
         -------
@@ -305,6 +313,16 @@ class BaseEvaluation(EvaluationBaseModel):
         Materialize joined data:
 
         >>> ev.joined_timeseries_view(add_attrs=True).write("joined_timeseries")
+
+        Read from a remote catalog and namespace:
+
+        >>> ev.joined_timeseries_view(
+        ...     catalog_name="some_catalog",
+        ...     namespace_name="some_namespace"
+        ... ).query(
+        ...     include_metrics=[KGE()],
+        ...     group_by=["primary_location_id"]
+        ... ).write("location_kge")
         """
         return JoinedTimeseriesView(
             ev=self,
@@ -312,11 +330,15 @@ class BaseEvaluation(EvaluationBaseModel):
             secondary_filters=secondary_filters,
             add_attrs=add_attrs,
             attr_list=attr_list,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
         )
 
     def location_attributes_view(
         self,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ) -> LocationAttributesView:
         """Create a computed view of pivoted location attributes.
 
@@ -328,6 +350,12 @@ class BaseEvaluation(EvaluationBaseModel):
         ----------
         attr_list : List[str], optional
             Specific attributes to include. If None, includes all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
 
         Returns
         -------
@@ -359,12 +387,16 @@ class BaseEvaluation(EvaluationBaseModel):
         return LocationAttributesView(
             ev=self,
             attr_list=attr_list,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
         )
 
     def primary_timeseries_view(
         self,
         add_attrs: bool = False,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ) -> PrimaryTimeseriesView:
         """Create a computed view of primary timeseries with optional attrs.
 
@@ -374,6 +406,12 @@ class BaseEvaluation(EvaluationBaseModel):
             Whether to add location attributes. Default False.
         attr_list : List[str], optional
             Specific attributes to add. If None and add_attrs=True, adds all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
 
         Returns
         -------
@@ -403,12 +441,16 @@ class BaseEvaluation(EvaluationBaseModel):
             ev=self,
             add_attrs=add_attrs,
             attr_list=attr_list,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
         )
 
     def secondary_timeseries_view(
         self,
         add_attrs: bool = False,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ) -> SecondaryTimeseriesView:
         """Create a computed view of secondary timeseries with crosswalk.
 
@@ -421,6 +463,12 @@ class BaseEvaluation(EvaluationBaseModel):
             Whether to add location attributes. Default False.
         attr_list : List[str], optional
             Specific attributes to add. If None and add_attrs=True, adds all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
 
         Returns
         -------
@@ -450,6 +498,8 @@ class BaseEvaluation(EvaluationBaseModel):
             ev=self,
             add_attrs=add_attrs,
             attr_list=attr_list,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
         )
 
     def _set_active_catalog(self, catalog: Literal["local", "remote"]):
