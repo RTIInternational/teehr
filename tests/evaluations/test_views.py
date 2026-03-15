@@ -213,3 +213,45 @@ def test_add_attributes_chained(module_scope_test_warehouse):
     assert "year_2_discharge" in pdf.columns
     assert len(pdf) > 0
 
+def test_views_with_explicit_catalog_and_namespace(module_scope_test_warehouse):
+    """Test that views accept catalog_name and namespace_name parameters.
+
+    When catalog_name and namespace_name point to the current active
+    catalog, the results should match the default (no args) behavior.
+    """
+    ev = module_scope_test_warehouse
+    catalog_name = ev.active_catalog.catalog_name
+    namespace_name = ev.active_catalog.namespace_name
+
+    # location_attributes_view with explicit catalog/namespace
+    pdf_default = ev.location_attributes_view().to_pandas()
+    pdf_explicit = ev.location_attributes_view(
+        catalog_name=catalog_name,
+        namespace_name=namespace_name,
+    ).to_pandas()
+    assert set(pdf_default.columns) == set(pdf_explicit.columns)
+    assert len(pdf_default) == len(pdf_explicit)
+
+    # primary_timeseries_view with explicit catalog/namespace
+    pdf_default = ev.primary_timeseries_view().to_pandas()
+    pdf_explicit = ev.primary_timeseries_view(
+        catalog_name=catalog_name,
+        namespace_name=namespace_name,
+    ).to_pandas()
+    assert len(pdf_default) == len(pdf_explicit)
+
+    # secondary_timeseries_view with explicit catalog/namespace
+    pdf_default = ev.secondary_timeseries_view().to_pandas()
+    pdf_explicit = ev.secondary_timeseries_view(
+        catalog_name=catalog_name,
+        namespace_name=namespace_name,
+    ).to_pandas()
+    assert len(pdf_default) == len(pdf_explicit)
+
+    # joined_timeseries_view with explicit catalog/namespace
+    pdf_default = ev.joined_timeseries_view().to_pandas()
+    pdf_explicit = ev.joined_timeseries_view(
+        catalog_name=catalog_name,
+        namespace_name=namespace_name,
+    ).to_pandas()
+    assert len(pdf_default) == len(pdf_explicit)
