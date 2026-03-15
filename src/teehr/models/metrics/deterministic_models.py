@@ -1,1051 +1,387 @@
-"""Classes representing available performance metrics."""
-from typing import List, Dict, Callable, Union
+"""Classes representing available performance metrics.
+
+This module defines deterministic metrics using a compact class-variable pattern.
+Each metric class inherits common fields from DeterministicBasemodel and only
+specifies metric-specific defaults via class variables.
+"""
+from typing import Dict, List, Union
 from pyspark.sql import types as T
 
 from pydantic import Field
 import teehr.models.metrics.metric_attributes as tma
 from teehr.models.metrics.basemodels import (
-    TransformEnum,
     DeterministicBasemodel,
-    BootstrapBasemodel
+    ThresholdBasemodel,
 )
 from teehr.metrics import deterministic_funcs as metric_funcs
 from teehr.models.str_enum import StrEnum
 
 
+# =============================================================================
+# Standard Deterministic Metrics (primary_value, secondary_value inputs)
+# =============================================================================
+
 class MeanError(DeterministicBasemodel):
-    """Mean Error.
+    """Mean Error: average difference between secondary and primary values."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "mean_error".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.mean_error.`
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="mean_error")
-    func: Callable = Field(metric_funcs.mean_error, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.ME_ATTRS, frozen=True)
+    default_output_field_name = "mean_error"
+    default_func = metric_funcs.mean_error
+    default_attrs = tma.ME_ATTRS
 
 
 class RelativeBias(DeterministicBasemodel):
-    """Relative Bias.
+    """Relative Bias: sum of differences divided by sum of primary values."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "relative_bias".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.relative_bias`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="relative_bias")
-    func: Callable = Field(metric_funcs.relative_bias, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.RBIAS_ATTRS, frozen=True)
+    default_output_field_name = "relative_bias"
+    default_func = metric_funcs.relative_bias
+    default_attrs = tma.RBIAS_ATTRS
 
 
 class MultiplicativeBias(DeterministicBasemodel):
-    """Multiplicative Bias.
+    """Multiplicative Bias: ratio of secondary mean to primary mean."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "multiplicative_bias".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.multiplicative_bias.`
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="multiplicative_bias")
-    func: Callable = Field(metric_funcs.multiplicative_bias, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.MULTBIAS_ATTRS, frozen=True)
+    default_output_field_name = "multiplicative_bias"
+    default_func = metric_funcs.multiplicative_bias
+    default_attrs = tma.MULTBIAS_ATTRS
 
 
 class MeanSquareError(DeterministicBasemodel):
-    """Mean Square Error.
+    """Mean Square Error: average of squared differences."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "mean_squared_error".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.mean_squared_error`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="mean_square_error")
-    func: Callable = Field(metric_funcs.mean_squared_error, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.MSE_ATTRS, frozen=True)
+    default_output_field_name = "mean_square_error"
+    default_func = metric_funcs.mean_squared_error
+    default_attrs = tma.MSE_ATTRS
 
 
 class RootMeanSquareError(DeterministicBasemodel):
-    """Root Mean Squared Error.
+    """Root Mean Square Error: square root of mean squared error."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "root_mean_square_error".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.root_mean_square_error`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="root_mean_square_error")
-    func: Callable = Field(metric_funcs.root_mean_squared_error, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.RMSE_ATTRS, frozen=True)
+    default_output_field_name = "root_mean_square_error"
+    default_func = metric_funcs.root_mean_squared_error
+    default_attrs = tma.RMSE_ATTRS
 
 
 class MeanAbsoluteError(DeterministicBasemodel):
-    """Mean Absolute Error.
+    """Mean Absolute Error: average of absolute differences."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "mean_absolute_error".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.mean_absolute_error`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="mean_absolute_error")
-    func: Callable = Field(metric_funcs.mean_absolute_error, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.MAE_ATTRS, frozen=True)
+    default_output_field_name = "mean_absolute_error"
+    default_func = metric_funcs.mean_absolute_error
+    default_attrs = tma.MAE_ATTRS
 
 
 class MeanAbsoluteRelativeError(DeterministicBasemodel):
-    """Relative Mean Absolute Error.
+    """Mean Absolute Relative Error: sum of absolute differences / sum of primary."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "mean_absolute_relative_error".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.mean_absolute_relative_error`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="mean_absolute_relative_error")
-    func: Callable = Field(metric_funcs.mean_absolute_relative_error,
-                           frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.RMAE_ATTRS, frozen=True)
+    default_output_field_name = "mean_absolute_relative_error"
+    default_func = metric_funcs.mean_absolute_relative_error
+    default_attrs = tma.RMAE_ATTRS
 
 
 class PearsonCorrelation(DeterministicBasemodel):
-    """Pearson Correlation.
+    """Pearson Correlation Coefficient: linear correlation between series."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "pearson_correlation".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.pearson_correlation`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="pearson_correlation")
-    func: Callable = Field(metric_funcs.pearson_correlation, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.PEARSON_ATTRS, frozen=True)
+    default_output_field_name = "pearson_correlation"
+    default_func = metric_funcs.pearson_correlation
+    default_attrs = tma.PEARSON_ATTRS
 
 
 class VariabilityRatio(DeterministicBasemodel):
-    """Variability Ratio.
+    """Variability Ratio: ratio of secondary std dev to primary std dev."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "variability_ratio".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.variability_ratio`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="variability_ratio")
-    func: Callable = Field(metric_funcs.variability_ratio, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.VR_ATTRS, frozen=True)
+    default_output_field_name = "variability_ratio"
+    default_func = metric_funcs.variability_ratio
+    default_attrs = tma.VR_ATTRS
 
 
 class Rsquared(DeterministicBasemodel):
-    """Coefficient of Determination.
+    """Coefficient of Determination: square of Pearson correlation."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "r_squared".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.r_squared`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="r_squared")
-    func: Callable = Field(metric_funcs.r_squared, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.R2_ATTRS, frozen=True)
+    default_output_field_name = "r_squared"
+    default_func = metric_funcs.r_squared
+    default_attrs = tma.R2_ATTRS
 
 
 class NashSutcliffeEfficiency(DeterministicBasemodel):
-    """Nash-Sutcliffe Efficiency.
+    """Nash-Sutcliffe Efficiency: 1 - (MSE / variance of primary)."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "nash_sutcliffe_efficiency".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.nash_sutcliffe_efficiency`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="nash_sutcliffe_efficiency")
-    func: Callable = Field(metric_funcs.nash_sutcliffe_efficiency, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.NSE_ATTRS, frozen=True)
+    default_output_field_name = "nash_sutcliffe_efficiency"
+    default_func = metric_funcs.nash_sutcliffe_efficiency
+    default_attrs = tma.NSE_ATTRS
 
 
 class NormalizedNashSutcliffeEfficiency(DeterministicBasemodel):
-    """Normalized Nash-Sutcliffe Efficiency.
+    """Normalized Nash-Sutcliffe Efficiency: 1 / (2 - NSE)."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default
-        "nash_sutcliffe_efficiency_normalized".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.nash_sutcliffe_efficiency_normalized`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
+    default_output_field_name = "nash_sutcliffe_efficiency_normalized"
+    default_func = metric_funcs.nash_sutcliffe_efficiency_normalized
+    default_attrs = tma.NNSE_ATTRS
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(
-        default="nash_sutcliffe_efficiency_normalized"
-    )
-    func: Callable = Field(metric_funcs.nash_sutcliffe_efficiency_normalized,
-                           frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.NNSE_ATTRS, frozen=True)
 
+class SpearmanCorrelation(DeterministicBasemodel):
+    """Spearman Rank Correlation Coefficient: rank-based correlation."""
+
+    default_output_field_name = "spearman_correlation"
+    default_func = metric_funcs.spearman_correlation
+    default_attrs = tma.SPEARMAN_R_ATTRS
+
+
+class MaxValueDelta(DeterministicBasemodel):
+    """Max Value Delta: difference between maximum values."""
+
+    default_output_field_name = "max_value_delta"
+    default_func = metric_funcs.max_value_delta
+    default_attrs = tma.MAX_VALUE_DELTA_ATTRS
+
+
+class RootMeanStandardDeviationRatio(DeterministicBasemodel):
+    """Root Mean Standard Deviation Ratio (RSR): RMSE / std dev of primary."""
+
+    default_output_field_name = "root_mean_standard_deviation_ratio"
+    default_func = metric_funcs.root_mean_standard_deviation_ratio
+    default_attrs = tma.RSR_ATTRS
+
+
+# =============================================================================
+# Kling-Gupta Efficiency Variants (with scaling factors)
+# =============================================================================
 
 class KlingGuptaEfficiency(DeterministicBasemodel):
-    """Kling-Gupta Efficiency.
+    """Kling-Gupta Efficiency (original formulation).
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "kling_gupta_efficiency".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.kling_gupta_efficiency`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
+    Additional Parameters
+    ---------------------
     sr : float
-        The scaling factor for the correlation component, by default 1.0.
+        Scaling factor for correlation component, by default 1.0.
     sa : float
-        The scaling factor for the variability component, by default 1.0.
+        Scaling factor for variability component, by default 1.0.
     sb : float
-        The scaling factor for the bias component, by default 1.0.
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
+        Scaling factor for bias component, by default 1.0.
     """
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="kling_gupta_efficiency")
-    func: Callable = Field(metric_funcs.kling_gupta_efficiency, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
+    default_output_field_name = "kling_gupta_efficiency"
+    default_func = metric_funcs.kling_gupta_efficiency
+    default_attrs = tma.KGE_ATTRS
+
     sr: float = Field(default=1.0)
     sa: float = Field(default=1.0)
     sb: float = Field(default=1.0)
-    attrs: Dict = Field(default=tma.KGE_ATTRS, frozen=True)
 
 
 class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
     """Kling-Gupta Efficiency - modified 1 (2012).
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "kling_gupta_efficiency_mod1".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`kling_gupta_efficiency_mod1`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
+    Additional Parameters
+    ---------------------
     sr : float
-        The scaling factor for the correlation component, by default 1.0.
+        Scaling factor for correlation component, by default 1.0.
     sa : float
-        The scaling factor for the variability component, by default 1.0.
+        Scaling factor for variability component, by default 1.0.
     sb : float
-        The scaling factor for the bias component, by default 1.0.
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
+        Scaling factor for bias component, by default 1.0.
     """
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="kling_gupta_efficiency_mod1")
-    func: Callable = Field(metric_funcs.kling_gupta_efficiency_mod1,
-                           frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
+    default_output_field_name = "kling_gupta_efficiency_mod1"
+    default_func = metric_funcs.kling_gupta_efficiency_mod1
+    default_attrs = tma.KGE1_ATTRS
+
     sr: float = Field(default=1.0)
     sa: float = Field(default=1.0)
     sb: float = Field(default=1.0)
-    attrs: Dict = Field(default=tma.KGE1_ATTRS, frozen=True)
 
 
 class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
     """Kling-Gupta Efficiency - modified 2 (2021).
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "kling_gupta_efficiency_mod2".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`kling_gupta_efficiency_mod2`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
+    Additional Parameters
+    ---------------------
     sr : float
-        The scaling factor for the correlation component, by default 1.0.
+        Scaling factor for correlation component, by default 1.0.
     sa : float
-        The scaling factor for the variability component, by default 1.0.
+        Scaling factor for variability component, by default 1.0.
     sb : float
-        The scaling factor for the bias component, by default 1.0.
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
+        Scaling factor for bias component, by default 1.0.
     """
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="kling_gupta_efficiency_mod2")
-    func: Callable = Field(metric_funcs.kling_gupta_efficiency_mod2,
-                           frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
+    default_output_field_name = "kling_gupta_efficiency_mod2"
+    default_func = metric_funcs.kling_gupta_efficiency_mod2
+    default_attrs = tma.KGE2_ATTRS
+
     sr: float = Field(default=1.0)
     sa: float = Field(default=1.0)
     sb: float = Field(default=1.0)
-    attrs: Dict = Field(default=tma.KGE2_ATTRS, frozen=True)
 
 
-class SpearmanCorrelation(DeterministicBasemodel):
-    """Spearman Rank Correlation Coefficient.
-
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "spearman_correlation".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.spearman_correlation`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="spearman_correlation")
-    func: Callable = Field(metric_funcs.spearman_correlation, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.SPEARMAN_R_ATTRS, frozen=True)
-
-
-class MaxValueDelta(DeterministicBasemodel):
-    """Max Value Delta.
-
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "max_value_delta".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.max_value_delta`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="max_value_delta")
-    func: Callable = Field(metric_funcs.max_value_delta, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.MAX_VALUE_DELTA_ATTRS, frozen=True)
-
+# =============================================================================
+# Metrics Requiring value_time Field
+# =============================================================================
 
 class MaxValueTimeDelta(DeterministicBasemodel):
-    """Max Value Time Delta.
+    """Max Value Time Delta: time difference between max value occurrences."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "max_value_timedelta".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.max_value_timedelta`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value", "value_time"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="max_value_time_delta")
-    func: Callable = Field(metric_funcs.max_value_timedelta, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value", "value_time"]
-    )
-    attrs: Dict = Field(default=tma.MAX_VALUE_TIMEDELTA_ATTRS, frozen=True)
+    default_output_field_name = "max_value_time_delta"
+    default_func = metric_funcs.max_value_timedelta
+    default_attrs = tma.MAX_VALUE_TIMEDELTA_ATTRS
+    default_input_field_names = ["primary_value", "secondary_value", "value_time"]
 
 
 class AnnualPeakRelativeBias(DeterministicBasemodel):
-    """Annual Peak Relative Bias.
+    """Annual Peak Relative Bias: bias computed on annual peak values."""
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "annual_peak_relative_bias".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.annual_peak_relative_bias`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value", "value_time"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
-
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="annual_peak_flow_bias")
-    func: Callable = Field(metric_funcs.annual_peak_relative_bias, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value", "value_time"]
-    )
-    attrs: Dict = Field(default=tma.ANNUAL_PEAK_RBIAS_ATTRS, frozen=True)
+    default_output_field_name = "annual_peak_flow_bias"
+    default_func = metric_funcs.annual_peak_relative_bias
+    default_attrs = tma.ANNUAL_PEAK_RBIAS_ATTRS
+    default_input_field_names = ["primary_value", "secondary_value", "value_time"]
 
 
-class RootMeanStandardDeviationRatio(DeterministicBasemodel):
-    """Root Mean Standard Deviation Ratio.
+# =============================================================================
+# Threshold-Based Metrics (require threshold_field_name)
+# =============================================================================
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "root_mean_standard_deviation_ratio".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.root_mean_standard_deviation_ratio`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
-    """
+class ConfusionMatrix(ThresholdBasemodel):
+    """Confusion Matrix: TP, TN, FP, FN counts based on threshold exceedance.
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="root_mean_standard_deviation_ratio")  # noqa: E501
-    func: Callable = Field(metric_funcs.root_mean_standard_deviation_ratio,
-                           frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.RSR_ATTRS, frozen=True)
-
-
-class ConfusionMatrix(DeterministicBasemodel):
-    """Confusion Matrix.
-
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    unpack_results : bool
-        Whether to unpack the confusion matrix results into separate fields,
-        by default False.
-    return_type : T.DataType
-        The return type of the metric, by default
-        :class:`pyspark.sql.types.MapType` of `StringType` to `IntegerType`.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
+    Additional Parameters
+    ---------------------
     threshold_field_name : str
-        The field name for the location-specific threshold values.
-        Required for Confusion Matrix, by default None.
-    output_field_name : str
-        The output field name, by default "confusion_matrix".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.confusion_matrix`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
+        Field name containing location-specific threshold values.
     """
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    unpack_results: bool = Field(default=False)
+    default_output_field_name = "confusion_matrix"
+    default_func = metric_funcs.confusion_matrix
+    default_attrs = tma.CM_ATTRS
+
     return_type: T.DataType = Field(
         default=T.MapType(T.StringType(), T.IntegerType()), frozen=True
     )
-    transform: TransformEnum = Field(default=None)
-    threshold_field_name: str = Field(default=None)
-    output_field_name: str = Field(default="confusion_matrix")
-    func: Callable = Field(metric_funcs.confusion_matrix, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.CM_ATTRS, frozen=True)
 
 
-class FalseAlarmRatio(DeterministicBasemodel):
-    """False Alarm Ratio.
+class FalseAlarmRatio(ThresholdBasemodel):
+    """False Alarm Ratio: FP / (TP + FP).
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
+    Additional Parameters
+    ---------------------
     threshold_field_name : str
-        The field name for the location-specific threshold values.
-        Required for False Alarm Ratio, by default None.
-    output_field_name : str
-        The output field name, by default "false_alarm_ratio".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.false_alarm_ratio`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
+        Field name containing location-specific threshold values.
     """
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    threshold_field_name: str = Field(default=None)
-    output_field_name: str = Field(default="false_alarm_ratio")
-    func: Callable = Field(metric_funcs.false_alarm_ratio, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.FAR_ATTRS, frozen=True)
+    default_output_field_name = "false_alarm_ratio"
+    default_func = metric_funcs.false_alarm_ratio
+    default_attrs = tma.FAR_ATTRS
 
 
-class ProbabilityOfDetection(DeterministicBasemodel):
-    """Probability of Detection.
+class ProbabilityOfDetection(ThresholdBasemodel):
+    """Probability of Detection (Hit Rate): TP / (TP + FN).
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
+    Additional Parameters
+    ---------------------
     threshold_field_name : str
-        The field name for the location-specific threshold values.
-        Required for Probability of Detection, by default None.
-    output_field_name : str
-        The output field name, by default "probability_of_detection".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.probability_of_detection`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
+        Field name containing location-specific threshold values.
     """
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    threshold_field_name: str = Field(default=None)
-    output_field_name: str = Field(default="probability_of_detection")
-    func: Callable = Field(metric_funcs.probability_of_detection, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.POD_ATTRS, frozen=True)
+    default_output_field_name = "probability_of_detection"
+    default_func = metric_funcs.probability_of_detection
+    default_attrs = tma.POD_ATTRS
 
 
-class ProbabilityOfFalseDetection(DeterministicBasemodel):
-    """Probability of False Detection.
+class ProbabilityOfFalseDetection(ThresholdBasemodel):
+    """Probability of False Detection: FP / (TN + FP).
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
+    Additional Parameters
+    ---------------------
     threshold_field_name : str
-        The field name for the location-specific threshold values.
-        Required for Probability of False Detection, by default None.
-    output_field_name : str
-        The output field name, by default "probability_of_false_detection".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.probability_of_false_detection`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
+        Field name containing location-specific threshold values.
     """
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    threshold_field_name: str = Field(default=None)
-    output_field_name: str = Field(default="probability_of_false_detection")
-    func: Callable = Field(metric_funcs.probability_of_false_detection,
-                           frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.POFD_ATTRS, frozen=True)
+    default_output_field_name = "probability_of_false_detection"
+    default_func = metric_funcs.probability_of_false_detection
+    default_attrs = tma.POFD_ATTRS
 
 
-class CriticalSuccessIndex(DeterministicBasemodel):
-    """Critical Success Index.
+class CriticalSuccessIndex(ThresholdBasemodel):
+    """Critical Success Index (Threat Score): TP / (TP + FN + FP).
 
-    Parameters
-    ----------
-    bootstrap : BootstrapBasemodel
-        The bootstrap model, by default None.
-    add_epsilon: bool
-        Whether to add epsilon to avoid issues with certain transforms or
-        division by zero, by default False.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
+    Additional Parameters
+    ---------------------
     threshold_field_name : str
-        The field name for the location-specific threshold values.
-        Required for Critical Success Index, by default None.
-    output_field_name : str
-        The output field name, by default "critical_success_index".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`deterministic_funcs.critical_success_index`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    unpack_results : bool
-        Whether to unpack the results into separate fields, by default False.
+        Field name containing location-specific threshold values.
     """
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
-    add_epsilon: bool = Field(default=False)
-    transform: TransformEnum = Field(default=None)
-    threshold_field_name: str = Field(default=None)
-    output_field_name: str = Field(default="critical_success_index")
-    func: Callable = Field(metric_funcs.critical_success_index, frozen=True)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.CSI_ATTRS, frozen=True)
+    default_output_field_name = "critical_success_index"
+    default_func = metric_funcs.critical_success_index
+    default_attrs = tma.CSI_ATTRS
 
+
+# =============================================================================
+# Container Class for Discovery
+# =============================================================================
 
 class DeterministicMetrics:
-    """Define and customize determinisitic metrics.
+    """Define and customize deterministic metrics.
 
     Notes
     -----
     Deterministic metrics compare two timeseries, typically primary
-    ("observed") vs. secondary ("modeled") values. Available metrics include:
+    ("observed") vs. secondary ("modeled") values. Available metrics:
 
-    - AnnualPeakRelativeBias
-    - KlingGuptaEfficiency
-    - KlingGuptaEfficiencyMod1
-    - KlingGuptaEfficiencyMod2
-    - MaxValueDelta
-    - MaxValueTimeDelta
-    - MeanError
-    - MeanAbsoluteError
-    - MeanAbsoluteRelativeError
-    - MeanSquareError
-    - MultiplicativeBias
-    - PearsonCorrelation
-    - NashSutcliffeEfficiency
-    - NormalizedNashSutcliffeEfficiency
-    - RelativeBias
-    - RootMeanSquareError
-    - Rsquared
-    - SpearmanCorrelation
+    **Error Metrics:**
+    - MeanError, MeanSquareError, RootMeanSquareError
+    - MeanAbsoluteError, MeanAbsoluteRelativeError
+
+    **Bias Metrics:**
+    - RelativeBias, MultiplicativeBias, AnnualPeakRelativeBias
+
+    **Correlation Metrics:**
+    - PearsonCorrelation, SpearmanCorrelation, Rsquared
+
+    **Efficiency Metrics:**
+    - NashSutcliffeEfficiency, NormalizedNashSutcliffeEfficiency
+    - KlingGuptaEfficiency, KlingGuptaEfficiencyMod1, KlingGuptaEfficiencyMod2
+
+    **Threshold-Based Metrics:**
+    - ConfusionMatrix, FalseAlarmRatio, ProbabilityOfDetection
+    - ProbabilityOfFalseDetection, CriticalSuccessIndex
+
+    **Other:**
+    - MaxValueDelta, MaxValueTimeDelta
     - RootMeanStandardDeviationRatio
-    - ConfusionMatrix
-    - FalseAlarmRatio
-    - ProbabilityOfDetection
-    - ProbabilityOfFalseDetection
-    - CriticalSuccessIndex
+
+    Example
+    -------
+    >>> from teehr import DeterministicMetrics
+    >>> kge = DeterministicMetrics.KlingGuptaEfficiency(transform="log", add_epsilon=True)
+    >>> rmse = DeterministicMetrics.RootMeanSquareError()
     """
 
+    # Error metrics
+    MeanError = MeanError
+    MeanSquareError = MeanSquareError
+    RootMeanSquareError = RootMeanSquareError
+    MeanAbsoluteError = MeanAbsoluteError
+    MeanAbsoluteRelativeError = MeanAbsoluteRelativeError
+
+    # Bias metrics
+    RelativeBias = RelativeBias
+    MultiplicativeBias = MultiplicativeBias
     AnnualPeakRelativeBias = AnnualPeakRelativeBias
+
+    # Correlation metrics
+    PearsonCorrelation = PearsonCorrelation
+    SpearmanCorrelation = SpearmanCorrelation
+    Rsquared = Rsquared
+
+    # Efficiency metrics
+    NashSutcliffeEfficiency = NashSutcliffeEfficiency
+    NormalizedNashSutcliffeEfficiency = NormalizedNashSutcliffeEfficiency
     KlingGuptaEfficiency = KlingGuptaEfficiency
     KlingGuptaEfficiencyMod1 = KlingGuptaEfficiencyMod1
     KlingGuptaEfficiencyMod2 = KlingGuptaEfficiencyMod2
+
+    # Peak/max value metrics
     MaxValueDelta = MaxValueDelta
     MaxValueTimeDelta = MaxValueTimeDelta
-    MeanError = MeanError
-    MeanAbsoluteError = MeanAbsoluteError
-    MeanAbsoluteRelativeError = MeanAbsoluteRelativeError
-    MeanSquareError = MeanSquareError
-    MultiplicativeBias = MultiplicativeBias
-    PearsonCorrelation = PearsonCorrelation
-    NashSutcliffeEfficiency = NashSutcliffeEfficiency
-    NormalizedNashSutcliffeEfficiency = NormalizedNashSutcliffeEfficiency
-    RelativeBias = RelativeBias
-    RootMeanSquareError = RootMeanSquareError
-    Rsquared = Rsquared
-    SpearmanCorrelation = SpearmanCorrelation
     RootMeanStandardDeviationRatio = RootMeanStandardDeviationRatio
+
+    # Threshold-based metrics
     ConfusionMatrix = ConfusionMatrix
     FalseAlarmRatio = FalseAlarmRatio
     ProbabilityOfDetection = ProbabilityOfDetection
