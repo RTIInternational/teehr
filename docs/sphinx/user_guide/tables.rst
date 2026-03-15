@@ -186,7 +186,8 @@ Common parameters for loading methods:
         location_id_prefix="usgs"  # "12345" becomes "usgs-12345"
 
 ``write_mode`` : str
-    - ``"append"`` - Add new data (default)
+    - ``"insert"`` - Insert all rows directly (no duplicate checking, fastest)
+    - ``"append"`` - Add new data, skip duplicates (default)
     - ``"upsert"`` - Update existing, add new
     - ``"create_or_replace"`` - Replace entire table
 
@@ -352,6 +353,151 @@ Write query results to new tables:
 
    # Access the new table
    metrics_df = ev.table("location_metrics").to_pandas()
+
+You can also write data directly to any warehouse table using
+:meth:`ev.write.to_warehouse() <teehr.evaluation.write.Write.to_warehouse>`:
+
+.. code-block:: python
+
+   import pandas as pd
+
+   df = pd.DataFrame({
+       "name": ["m3/s"],
+       "long_name": ["Cubic meters per second"]
+   })
+
+   # "insert" — fastest: INSERT INTO with no duplicate checking
+   ev.write.to_warehouse(source_data=df, table_name="units", write_mode="insert")
+
+   # "append" — skip rows that match existing uniqueness fields (default)
+   ev.write.to_warehouse(source_data=df, table_name="units", write_mode="append")
+
+   # "upsert" — update matching rows, insert new ones
+   ev.write.to_warehouse(source_data=df, table_name="units", write_mode="upsert")
+
+   # "overwrite" — replace all data, preserving table history
+   ev.write.to_warehouse(source_data=df, table_name="units", write_mode="overwrite")
+
+.. note::
+
+   ``"insert"`` uses a plain ``INSERT INTO`` statement and does **not** check for
+   duplicates. Use it when you know your data is clean and want maximum throughput.
+   Use ``"append"`` (the default) when you want to skip rows that already exist.
+
+See also: :meth:`Write.to_warehouse() <teehr.evaluation.write.Write.to_warehouse>`
+
+
+Deleting Data
+=============
+
+There are two equivalent ways to delete rows from a table.
+
+**Via a table instance** (``ev.table().delete()`` or ``ev.primary_timeseries.delete()``):
+
+.. code-block:: python
+
+   # Dry run — preview rows that would be deleted
+   sdf = ev.table("primary_timeseries").delete(
+       filters=["location_id = 'usgs-01234567'"],
+       dry_run=True,
+   )
+   print(f"Rows to delete: {sdf.count()}")
+
+   # Execute deletion on a named table property
+   count = ev.primary_timeseries.delete(
+       filters=["location_id = 'usgs-01234567'"],
+   )
+   print(f"Deleted {count} rows.")
+
+   # Delete all rows
+   count = ev.primary_timeseries.delete()
+
+**Via the write interface** (``ev.write.delete_from()``):
+
+.. code-block:: python
+
+   count = ev.write.delete_from(
+       table_name="primary_timeseries",
+       filters=["location_id = 'usgs-01234567'"],
+   )
+   print(f"Deleted {count} rows.")
+
+Both methods support SQL strings, dicts, and
+:class:`~teehr.models.filters.TableFilter` objects as filter arguments:
+
+.. code-block:: python
+
+   from teehr.models.filters import TableFilter
+   from teehr import Operators as ops
+
+   # Dict filter
+   count = ev.primary_timeseries.delete(
+       filters={"column": "configuration_name", "operator": "=", "value": "old_run"},
+   )
+
+   # TableFilter object
+   count = ev.primary_timeseries.delete(
+       filters=TableFilter(
+           column="configuration_name",
+           operator=ops.eq,
+           value="old_run"
+       ),
+   )
+
+See also:
+
+- :meth:`BaseTable.delete() <teehr.evaluation.tables.base_table.BaseTable.delete>`
+- :meth:`Write.delete_from() <teehr.evaluation.write.Write.delete_from>`
+
+
+Dropping Tables
+===============
+
+User-created tables (such as materialized views and saved query results) can be
+dropped when they are no longer needed. Core TEEHR tables (like ``primary_timeseries``
+and ``locations``) are protected and cannot be dropped.
+
+Use the :attr:`is_core_table <teehr.evaluation.tables.base_table.BaseTable.is_core_table>`
+property to check whether a table is a core table before attempting to drop it.
+
+**Drop a user-created table via the table instance:**
+
+.. code-block:: python
+
+   # Write a user-created table
+   ev.joined_timeseries_view().query(
+       include_metrics=[dm.KlingGuptaEfficiency()],
+       group_by=["primary_location_id"]
+   ).write("location_metrics")
+
+   # Check whether it's a core table (always False for user-created tables)
+   ev.table("location_metrics").is_core_table  # False
+
+   # Drop the table
+   ev.table("location_metrics").drop()
+
+**Drop a user-created table via the evaluation:**
+
+.. code-block:: python
+
+   # Convenience method on the Evaluation class
+   ev.drop_table("location_metrics")
+
+.. note::
+
+   Attempting to drop a core table raises a ``ValueError``:
+
+   .. code-block:: python
+
+      ev.drop_table("primary_timeseries")  # raises ValueError
+      # ValueError: Cannot drop core table 'primary_timeseries'. Only user-created
+      # tables (e.g., materialized views or saved query results) can be dropped.
+
+See also:
+
+- :meth:`BaseTable.drop() <teehr.evaluation.tables.base_table.BaseTable.drop>`
+- :attr:`BaseTable.is_core_table <teehr.evaluation.tables.base_table.BaseTable.is_core_table>`
+- :meth:`BaseEvaluation.drop_table() <teehr.LocalReadWriteEvaluation.drop_table>`
 
 
 Dropping Tables

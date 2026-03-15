@@ -19,6 +19,7 @@ class TableNamesEnum(StrEnum):
 class TableWriteEnum(StrEnum):
     """Methods to write or update Evaluation tables."""
 
+    insert = "insert"
     append = "append"
     upsert = "upsert"
     overwrite = "overwrite"
