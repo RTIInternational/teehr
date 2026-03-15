@@ -87,14 +87,11 @@ class SecondaryTimeseriesView(View):
             "secondary_ts"
         )
 
-        # If a specific catalog/namespace is requested, create a temp view for
-        # location_crosswalks so the SQL resolves it from the correct source
-        _extra_views = []
-        if self._catalog_name is not None or self._namespace_name is not None:
-            self._get_table("location_crosswalks").to_sdf().createOrReplaceTempView(
-                "location_crosswalks"
-            )
-            _extra_views.append("location_crosswalks")
+        # Create a temp view for location_crosswalks so the SQL resolves it
+        # from the correct catalog/namespace source
+        self._get_table("location_crosswalks").to_sdf().createOrReplaceTempView(
+            "location_crosswalks"
+        )
 
         # Join secondary timeseries with crosswalks to add primary_location_id
         result_df = self._ev.sql("""
@@ -107,8 +104,7 @@ class SecondaryTimeseriesView(View):
         """)
 
         self._ev.spark.catalog.dropTempView("secondary_ts")
-        for view_name in _extra_views:
-            self._ev.spark.catalog.dropTempView(view_name)
+        self._ev.spark.catalog.dropTempView("location_crosswalks")
 
         # Add attributes if requested
         if self._add_attrs:

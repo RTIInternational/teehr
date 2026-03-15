@@ -135,18 +135,12 @@ class JoinedTimeseriesView(View):
             st = st.filter(self._secondary_filters)
         st.to_sdf().createOrReplaceTempView("filtered_secondary_timeseries")
 
-        # If a specific catalog/namespace is requested, create temp views for
-        # the referenced tables so the SQL resolves them from the correct source
-        _extra_views = []
-        if self._catalog_name is not None or self._namespace_name is not None:
-            self._get_table("variables").to_sdf().createOrReplaceTempView(
-                "variables"
-            )
-            _extra_views.append("variables")
-            self._get_table("location_crosswalks").to_sdf().createOrReplaceTempView(
-                "location_crosswalks"
-            )
-            _extra_views.append("location_crosswalks")
+        # Create temp views for all referenced tables so the SQL resolves them
+        # from the correct catalog/namespace source
+        self._get_table("variables").to_sdf().createOrReplaceTempView("variables")
+        self._get_table("location_crosswalks").to_sdf().createOrReplaceTempView(
+            "location_crosswalks"
+        )
 
         # Execute the join query
         joined_df = self._ev.sql("""
@@ -217,8 +211,8 @@ class JoinedTimeseriesView(View):
         # Clean up temp views
         self._ev.spark.catalog.dropTempView("filtered_primary_timeseries")
         self._ev.spark.catalog.dropTempView("filtered_secondary_timeseries")
-        for view_name in _extra_views:
-            self._ev.spark.catalog.dropTempView(view_name)
+        self._ev.spark.catalog.dropTempView("variables")
+        self._ev.spark.catalog.dropTempView("location_crosswalks")
 
         return joined_df
 
