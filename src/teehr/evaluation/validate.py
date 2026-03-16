@@ -122,6 +122,24 @@ class Validate:
             )
 
         validated_df = table_schema.validate(df)
+
+        # PySpark pandera does not raise exceptions on validation failure,
+        # it stores errors in .pandera.errors. Check and raise if errors exist.
+        if isinstance(table_schema, SparkDataFrameSchema):
+            errors = validated_df.pandera.errors
+            if errors:
+                error_msgs = []
+                for error_type, error_dict in errors.items():
+                    for check_type, error_list in error_dict.items():
+                        for err in error_list:
+                            error_msgs.append(
+                                f"{err.get('column', 'unknown')}: "
+                                f"{err.get('error', err.get('check', 'validation failed'))}"
+                            )
+                raise ValueError(
+                    f"Schema validation failed:\n" + "\n".join(error_msgs)
+                )
+
         return validated_df
 
     def sdf_filters(
@@ -295,12 +313,6 @@ class Validate:
             sdf = sdf.dropDuplicates(subset=uniqueness_fields)
 
         validated_df = self.schema(sdf, table_schema)
-
-        if len(validated_df.pandera.errors) > 0:
-            logger.error(f"Validation failed: {validated_df.pandera.errors}")
-            raise ValueError(
-                f"Validation failed: {validated_df.pandera.errors}"
-            )
 
         self._enforce_foreign_keys(
             sdf=validated_df,
