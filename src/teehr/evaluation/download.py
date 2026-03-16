@@ -168,7 +168,7 @@ class Download:
         ids: Union[str, List[str]] = None,
         bbox: List[float] = None,
         include_attributes: bool = False,
-        limit: int = 10000,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -187,8 +187,9 @@ class Download:
         include_attributes : bool, optional
             Whether to include location attributes in the response.
             Default: False
-        limit : int, optional
-            Maximum number of locations to return. Default: 10000
+        page_size : int, optional
+            Number of locations to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "locations" table. Default: False
@@ -216,10 +217,7 @@ class Download:
         ...     load=True
         ... )
         """
-        params = {
-            "limit": limit,
-            **kwargs
-        }
+        params = {**kwargs}
 
         if prefix:
             params["prefix"] = prefix
@@ -227,16 +225,36 @@ class Download:
             params["include_attributes"] = "true"
         if bbox:
             params["bbox"] = ",".join(map(str, bbox))
-        if id:
+        if ids:
             params["id"] = ids
 
-        response = self._make_request(
-            "collections/locations/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
-        )
-        gdf = gpd.read_file(BytesIO(response.content))
+        all_gdfs = []
+        page_params = {**params, 'limit': page_size}
+        current_offset = 0
+
+        while True:
+            page_params['offset'] = current_offset
+            response = self._make_request(
+                "collections/locations/items",
+                self.api_base_url,
+                self.verify_ssl,
+                page_params
+            )
+            gdf = gpd.read_file(BytesIO(response.content))
+
+            all_gdfs.append(gdf)
+            logger.debug(
+                f"Fetched page offset={current_offset} with {len(gdf)} locations"
+            )
+
+            if len(gdf) < page_size:
+                break
+
+            current_offset += page_size
+
+        if not all_gdfs:
+            return gpd.GeoDataFrame()
+        gdf = pd.concat(all_gdfs, ignore_index=True) if len(all_gdfs) > 1 else all_gdfs[0]
 
         logger.info(f"Fetched {len(gdf)} locations from warehouse API")
         if load:
@@ -259,6 +277,7 @@ class Download:
         self,
         name: str = None,
         type: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -271,6 +290,9 @@ class Download:
             Filter by attribute name
         type : str, optional
             Filter by attribute type ("categorical" or "continuous")
+        page_size : int, optional
+            Number of attributes to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "attributes" table. Default: False
@@ -299,13 +321,12 @@ class Download:
         if type:
             params["type"] = type
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/attributes/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} attributes from warehouse API")
         if load:
@@ -321,6 +342,7 @@ class Download:
         self,
         location_id: Union[str, List[str]] = None,
         attribute_name: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -333,6 +355,9 @@ class Download:
             Filter by location ID(s)
         attribute_name : str, optional
             Filter by attribute name
+        page_size : int, optional
+            Number of location attributes to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_attributes" table. Default: False
@@ -364,13 +389,12 @@ class Download:
         if attribute_name:
             params["attribute_name"] = attribute_name
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/location_attributes/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} location attributes from warehouse API")
         if load:
@@ -385,6 +409,7 @@ class Download:
     def units(
         self,
         name: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -395,6 +420,9 @@ class Download:
         ----------
         name : str, optional
             Filter by unit name
+        page_size : int, optional
+            Number of units to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "units" table. Default: False
@@ -421,13 +449,12 @@ class Download:
         if name:
             params["name"] = name
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/units/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} units from warehouse API")
         if load:
@@ -442,6 +469,7 @@ class Download:
     def variables(
         self,
         name: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -452,6 +480,9 @@ class Download:
         ----------
         name : str, optional
             Filter by variable name
+        page_size : int, optional
+            Number of variables to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "variables" table. Default: False
@@ -478,13 +509,12 @@ class Download:
         if name:
             params["name"] = name
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/variables/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} variables from warehouse API")
         if load:
@@ -500,6 +530,7 @@ class Download:
         self,
         name: str = None,
         type: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -512,6 +543,9 @@ class Download:
             Filter by configuration name
         type : str, optional
             Filter by configuration type ("primary" or "secondary")
+        page_size : int, optional
+            Number of configurations to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "configurations" table. Default: False
@@ -540,13 +574,12 @@ class Download:
         if type:
             params["type"] = type
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/configurations/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} configurations from warehouse API")
         if load:
@@ -562,6 +595,7 @@ class Download:
         self,
         primary_location_id: Union[str, List[str]] = None,
         secondary_location_id: Union[str, List[str]] = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -574,6 +608,9 @@ class Download:
             Filter by primary location ID(s)
         secondary_location_id : str or list of str, optional
             Filter by secondary location ID(s)
+        page_size : int, optional
+            Number of location crosswalks to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_crosswalks" table. Default: False
@@ -605,13 +642,12 @@ class Download:
         if secondary_location_id:
             params["secondary_location_id"] = secondary_location_id
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/location_crosswalks/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} location crosswalks from warehouse API")
         if load:
@@ -622,6 +658,54 @@ class Download:
             )
             return
         return df
+
+    def _fetch_paginated_items(
+        self,
+        endpoint: str,
+        params: dict,
+        page_size: int,
+    ) -> list:
+        """Fetch all pages from a JSON items endpoint using limit/offset pagination.
+
+        Parameters
+        ----------
+        endpoint : str
+            API endpoint path (e.g., "collections/attributes/items")
+        params : dict
+            Base query parameters (without limit/offset)
+        page_size : int
+            Number of items to request per page
+
+        Returns
+        -------
+        list
+            All items accumulated across all pages
+        """
+        all_items = []
+        page_params = {**params, 'limit': page_size}
+        current_offset = 0
+
+        while True:
+            page_params['offset'] = current_offset
+            response = self._make_request(
+                endpoint,
+                self.api_base_url,
+                self.verify_ssl,
+                page_params
+            )
+            page_items = response.json()["items"]
+
+            all_items.extend(page_items)
+            logger.debug(
+                f"Fetched page offset={current_offset} with {len(page_items)} items from {endpoint}"
+            )
+
+            if len(page_items) < page_size:
+                break
+
+            current_offset += page_size
+
+        return all_items
 
     def _fetch_paginated_timeseries(
         self,
@@ -646,11 +730,11 @@ class Download:
             All series items accumulated across all pages
         """
         all_items = []
-        offset = 0
         page_params = {**params, 'limit': page_size}
+        current_offset = 0
 
         while True:
-            page_params['offset'] = offset
+            page_params['offset'] = current_offset
             response = self._make_request(
                 endpoint,
                 self.api_base_url,
@@ -664,13 +748,13 @@ class Download:
 
             all_items.extend(page_items)
             logger.debug(
-                f"Fetched page offset={offset} with {len(page_items)} items from {endpoint}"
+                f"Fetched page offset={current_offset} with {len(page_items)} items from {endpoint}"
             )
 
             if len(page_items) < page_size:
                 break
 
-            offset += page_size
+            current_offset += page_size
 
         return all_items
 
