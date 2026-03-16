@@ -168,8 +168,7 @@ class Download:
         ids: Union[str, List[str]] = None,
         bbox: List[float] = None,
         include_attributes: bool = False,
-        limit: int = 10000,
-        offset: int = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -188,11 +187,9 @@ class Download:
         include_attributes : bool, optional
             Whether to include location attributes in the response.
             Default: False
-        limit : int, optional
-            Maximum number of locations to return. Default: 10000
-        offset : int, optional
-            Number of locations to skip before returning results.
-            Use with ``limit`` to implement manual pagination. Default: None
+        page_size : int, optional
+            Number of locations to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "locations" table. Default: False
@@ -219,33 +216,45 @@ class Download:
         ...     prefix="usgs",
         ...     load=True
         ... )
-        >>> # Fetch locations with manual pagination
-        >>> page1 = ev.download.locations(prefix="usgs", limit=100, offset=0)
-        >>> page2 = ev.download.locations(prefix="usgs", limit=100, offset=100)
         """
-        params = {
-            "limit": limit,
-            **kwargs
-        }
+        params = {**kwargs}
 
-        if offset is not None:
-            params["offset"] = offset
         if prefix:
             params["prefix"] = prefix
         if include_attributes:
             params["include_attributes"] = "true"
         if bbox:
             params["bbox"] = ",".join(map(str, bbox))
-        if id:
+        if ids:
             params["id"] = ids
 
-        response = self._make_request(
-            "collections/locations/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
-        )
-        gdf = gpd.read_file(BytesIO(response.content))
+        all_gdfs = []
+        page_params = {**params, 'limit': page_size}
+        current_offset = 0
+
+        while True:
+            page_params['offset'] = current_offset
+            response = self._make_request(
+                "collections/locations/items",
+                self.api_base_url,
+                self.verify_ssl,
+                page_params
+            )
+            gdf = gpd.read_file(BytesIO(response.content))
+
+            all_gdfs.append(gdf)
+            logger.debug(
+                f"Fetched page offset={current_offset} with {len(gdf)} locations"
+            )
+
+            if len(gdf) < page_size:
+                break
+
+            current_offset += page_size
+
+        if not all_gdfs:
+            return gpd.GeoDataFrame()
+        gdf = pd.concat(all_gdfs, ignore_index=True) if len(all_gdfs) > 1 else all_gdfs[0]
 
         logger.info(f"Fetched {len(gdf)} locations from warehouse API")
         if load:
@@ -268,8 +277,7 @@ class Download:
         self,
         name: str = None,
         type: str = None,
-        limit: int = None,
-        offset: int = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -282,11 +290,9 @@ class Download:
             Filter by attribute name
         type : str, optional
             Filter by attribute type ("categorical" or "continuous")
-        limit : int, optional
-            Maximum number of attributes to return. Default: None (return all)
-        offset : int, optional
-            Number of attributes to skip before returning results.
-            Use with ``limit`` to implement manual pagination. Default: None
+        page_size : int, optional
+            Number of attributes to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "attributes" table. Default: False
@@ -307,9 +313,6 @@ class Download:
         >>> attrs = ev.download.attributes(type="categorical")
         >>> # Fetch and load into local evaluation
         >>> attrs = ev.download.attributes(load=True)
-        >>> # Fetch attributes with manual pagination
-        >>> page1 = ev.download.attributes(limit=10, offset=0)
-        >>> page2 = ev.download.attributes(limit=10, offset=10)
         """
         params = {**kwargs}
 
@@ -317,18 +320,13 @@ class Download:
             params["name"] = name
         if type:
             params["type"] = type
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/attributes/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} attributes from warehouse API")
         if load:
@@ -344,8 +342,7 @@ class Download:
         self,
         location_id: Union[str, List[str]] = None,
         attribute_name: str = None,
-        limit: int = None,
-        offset: int = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -358,11 +355,9 @@ class Download:
             Filter by location ID(s)
         attribute_name : str, optional
             Filter by attribute name
-        limit : int, optional
-            Maximum number of location attributes to return. Default: None (return all)
-        offset : int, optional
-            Number of location attributes to skip before returning results.
-            Use with ``limit`` to implement manual pagination. Default: None
+        page_size : int, optional
+            Number of location attributes to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_attributes" table. Default: False
@@ -386,9 +381,6 @@ class Download:
         ... )
         >>> # Fetch and load into local evaluation
         >>> loc_attrs = ev.download.location_attributes(load=True)
-        >>> # Fetch location attributes with manual pagination
-        >>> page1 = ev.download.location_attributes(limit=100, offset=0)
-        >>> page2 = ev.download.location_attributes(limit=100, offset=100)
         """
         params = {**kwargs}
 
@@ -396,18 +388,13 @@ class Download:
             params["location_id"] = location_id
         if attribute_name:
             params["attribute_name"] = attribute_name
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/location_attributes/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} location attributes from warehouse API")
         if load:
@@ -422,8 +409,7 @@ class Download:
     def units(
         self,
         name: str = None,
-        limit: int = None,
-        offset: int = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -434,11 +420,9 @@ class Download:
         ----------
         name : str, optional
             Filter by unit name
-        limit : int, optional
-            Maximum number of units to return. Default: None (return all)
-        offset : int, optional
-            Number of units to skip before returning results.
-            Use with ``limit`` to implement manual pagination. Default: None
+        page_size : int, optional
+            Number of units to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "units" table. Default: False
@@ -459,26 +443,18 @@ class Download:
         >>> units = ev.download.units()
         >>> # Fetch and load into local evaluation
         >>> units = ev.download.units(load=True)
-        >>> # Fetch units with manual pagination
-        >>> page1 = ev.download.units(limit=10, offset=0)
-        >>> page2 = ev.download.units(limit=10, offset=10)
         """
         params = {**kwargs}
 
         if name:
             params["name"] = name
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/units/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} units from warehouse API")
         if load:
@@ -493,8 +469,7 @@ class Download:
     def variables(
         self,
         name: str = None,
-        limit: int = None,
-        offset: int = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -505,11 +480,9 @@ class Download:
         ----------
         name : str, optional
             Filter by variable name
-        limit : int, optional
-            Maximum number of variables to return. Default: None (return all)
-        offset : int, optional
-            Number of variables to skip before returning results.
-            Use with ``limit`` to implement manual pagination. Default: None
+        page_size : int, optional
+            Number of variables to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "variables" table. Default: False
@@ -530,26 +503,18 @@ class Download:
         >>> variables = ev.download.variables()
         >>> # Fetch and load into local evaluation
         >>> variables = ev.download.variables(load=True)
-        >>> # Fetch variables with manual pagination
-        >>> page1 = ev.download.variables(limit=10, offset=0)
-        >>> page2 = ev.download.variables(limit=10, offset=10)
         """
         params = {**kwargs}
 
         if name:
             params["name"] = name
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/variables/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} variables from warehouse API")
         if load:
@@ -565,8 +530,7 @@ class Download:
         self,
         name: str = None,
         type: str = None,
-        limit: int = None,
-        offset: int = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -579,11 +543,9 @@ class Download:
             Filter by configuration name
         type : str, optional
             Filter by configuration type ("primary" or "secondary")
-        limit : int, optional
-            Maximum number of configurations to return. Default: None (return all)
-        offset : int, optional
-            Number of configurations to skip before returning results.
-            Use with ``limit`` to implement manual pagination. Default: None
+        page_size : int, optional
+            Number of configurations to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "configurations" table. Default: False
@@ -604,9 +566,6 @@ class Download:
         >>> configs = ev.download.configurations(type="primary")
         >>> # Fetch and load into local evaluation
         >>> configs = ev.download.configurations(load=True)
-        >>> # Fetch configurations with manual pagination
-        >>> page1 = ev.download.configurations(limit=10, offset=0)
-        >>> page2 = ev.download.configurations(limit=10, offset=10)
         """
         params = {**kwargs}
 
@@ -614,18 +573,13 @@ class Download:
             params["name"] = name
         if type:
             params["type"] = type
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/configurations/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} configurations from warehouse API")
         if load:
@@ -641,8 +595,7 @@ class Download:
         self,
         primary_location_id: Union[str, List[str]] = None,
         secondary_location_id: Union[str, List[str]] = None,
-        limit: int = None,
-        offset: int = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
         **kwargs
@@ -655,11 +608,9 @@ class Download:
             Filter by primary location ID(s)
         secondary_location_id : str or list of str, optional
             Filter by secondary location ID(s)
-        limit : int, optional
-            Maximum number of location crosswalks to return. Default: None (return all)
-        offset : int, optional
-            Number of location crosswalks to skip before returning results.
-            Use with ``limit`` to implement manual pagination. Default: None
+        page_size : int, optional
+            Number of location crosswalks to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_crosswalks" table. Default: False
@@ -683,9 +634,6 @@ class Download:
         ... )
         >>> # Fetch and load into local evaluation
         >>> crosswalks = ev.download.location_crosswalks(load=True)
-        >>> # Fetch location crosswalks with manual pagination
-        >>> page1 = ev.download.location_crosswalks(limit=100, offset=0)
-        >>> page2 = ev.download.location_crosswalks(limit=100, offset=100)
         """
         params = {**kwargs}
 
@@ -693,18 +641,13 @@ class Download:
             params["primary_location_id"] = primary_location_id
         if secondary_location_id:
             params["secondary_location_id"] = secondary_location_id
-        if limit is not None:
-            params["limit"] = limit
-        if offset is not None:
-            params["offset"] = offset
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/location_crosswalks/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} location crosswalks from warehouse API")
         if load:
@@ -716,12 +659,59 @@ class Download:
             return
         return df
 
+    def _fetch_paginated_items(
+        self,
+        endpoint: str,
+        params: dict,
+        page_size: int,
+    ) -> list:
+        """Fetch all pages from a JSON items endpoint using limit/offset pagination.
+
+        Parameters
+        ----------
+        endpoint : str
+            API endpoint path (e.g., "collections/attributes/items")
+        params : dict
+            Base query parameters (without limit/offset)
+        page_size : int
+            Number of items to request per page
+
+        Returns
+        -------
+        list
+            All items accumulated across all pages
+        """
+        all_items = []
+        page_params = {**params, 'limit': page_size}
+        current_offset = 0
+
+        while True:
+            page_params['offset'] = current_offset
+            response = self._make_request(
+                endpoint,
+                self.api_base_url,
+                self.verify_ssl,
+                page_params
+            )
+            page_items = response.json()["items"]
+
+            all_items.extend(page_items)
+            logger.debug(
+                f"Fetched page offset={current_offset} with {len(page_items)} items from {endpoint}"
+            )
+
+            if len(page_items) < page_size:
+                break
+
+            current_offset += page_size
+
+        return all_items
+
     def _fetch_paginated_timeseries(
         self,
         endpoint: str,
         params: dict,
         page_size: int,
-        offset: int = 0,
     ) -> list:
         """Fetch all pages from a timeseries endpoint using limit/offset pagination.
 
@@ -733,8 +723,6 @@ class Download:
             Base query parameters (without limit/offset)
         page_size : int
             Number of series items to request per page
-        offset : int, optional
-            Starting offset for pagination. Default: 0
 
         Returns
         -------
@@ -743,7 +731,7 @@ class Download:
         """
         all_items = []
         page_params = {**params, 'limit': page_size}
-        current_offset = offset
+        current_offset = 0
 
         while True:
             page_params['offset'] = current_offset
@@ -780,7 +768,6 @@ class Download:
         load: bool = False,
         write_mode: str = "append",
         page_size: int = 10000,
-        offset: int = 0,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch primary timeseries from the warehouse API.
@@ -809,9 +796,6 @@ class Download:
         page_size : int, optional
             Number of series items to fetch per API request.
             Decrease if timeout errors are encountered. Default: 10000.
-        offset : int, optional
-            Starting record offset for pagination. Use with ``page_size`` to
-            resume pagination or skip records. Default: 0.
         **kwargs
             Additional query parameters to pass to the API
 
@@ -837,15 +821,6 @@ class Download:
         ...     end_date="1990-10-02",
         ...     load=True
         ... )
-        >>> # Fetch a specific page of results
-        >>> page2 = ev.download.primary_timeseries(
-        ...     primary_location_id=["usgs-01010000"],
-        ...     configuration_name="usgs_observations",
-        ...     start_date="1990-10-01",
-        ...     end_date="1990-10-02",
-        ...     page_size=100,
-        ...     offset=100
-        ... )
         """
         params = {**kwargs}
 
@@ -864,7 +839,6 @@ class Download:
             "collections/primary_timeseries/items",
             params,
             page_size=page_size,
-            offset=offset,
         )
         df = teehr_api_timeseries_to_dataframe(items)
 
@@ -889,7 +863,6 @@ class Download:
         load: bool = False,
         write_mode: str = "append",
         page_size: int = 10000,
-        offset: int = 0,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch secondary timeseries from the warehouse API.
@@ -922,9 +895,6 @@ class Download:
         page_size : int, optional
             Number of series items to fetch per API request.
             Decrease if timeout errors are encountered. Default: 10000.
-        offset : int, optional
-            Starting record offset for pagination. Use with ``page_size`` to
-            resume pagination or skip records. Default: 0.
         **kwargs
             Additional query parameters to pass to the API
 
@@ -955,15 +925,6 @@ class Download:
         ...     end_date="1990-10-02",
         ...     load=True
         ... )
-        >>> # Fetch a specific page of results
-        >>> page2 = ev.download.secondary_timeseries(
-        ...     primary_location_id=["usgs-01010000"],
-        ...     configuration_name="nwm30_retrospective",
-        ...     start_date="1990-10-01",
-        ...     end_date="1990-10-02",
-        ...     page_size=100,
-        ...     offset=100
-        ... )
         """
         if not primary_location_id and not secondary_location_id:
             raise ValueError(
@@ -989,7 +950,6 @@ class Download:
             "collections/secondary_timeseries/items",
             params,
             page_size=page_size,
-            offset=offset,
         )
         df = teehr_api_timeseries_to_dataframe(items)
 
