@@ -595,6 +595,8 @@ class Download:
         self,
         primary_location_id: Union[str, List[str]] = None,
         secondary_location_id: Union[str, List[str]] = None,
+        primary_location_id_prefix: str = None,
+        secondary_location_id_prefix: str = None,
         page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
@@ -608,6 +610,14 @@ class Download:
             Filter by primary location ID(s)
         secondary_location_id : str or list of str, optional
             Filter by secondary location ID(s)
+        primary_location_id_prefix : str, optional
+            The prefix to add to primary location IDs when loading.
+            Used to ensure unique location IDs across configurations.
+            Only applied when ``load=True``. Default: None
+        secondary_location_id_prefix : str, optional
+            The prefix to add to secondary location IDs when loading.
+            Used to ensure unique location IDs across configurations.
+            Only applied when ``load=True``. Default: None
         page_size : int, optional
             Number of location crosswalks to fetch per API request.
             Decrease if timeout errors are encountered. Default: 10000.
@@ -632,6 +642,12 @@ class Download:
         >>> crosswalks = ev.download.location_crosswalks(
         ...     primary_location_id=loc_ids
         ... )
+        >>> # Fetch and load into local evaluation with ID prefixes
+        >>> crosswalks = ev.download.location_crosswalks(
+        ...     load=True,
+        ...     primary_location_id_prefix="usgs",
+        ...     secondary_location_id_prefix="nwm30"
+        ... )
         >>> # Fetch and load into local evaluation
         >>> crosswalks = ev.download.location_crosswalks(load=True)
         """
@@ -654,6 +670,10 @@ class Download:
             self._load.dataframe(
                 df=df,
                 table_name="location_crosswalks",
+                primary_location_id_prefix=primary_location_id_prefix,
+                primary_location_id_field="primary_location_id",
+                secondary_location_id_prefix=secondary_location_id_prefix,
+                secondary_location_id_field="secondary_location_id",
                 write_mode=write_mode
             )
             return
