@@ -611,13 +611,11 @@ class Download:
         secondary_location_id : str or list of str, optional
             Filter by secondary location ID(s)
         primary_location_id_prefix : str, optional
-            The prefix to add to primary location IDs when loading.
-            Used to ensure unique location IDs across configurations.
-            Only applied when ``load=True``. Default: None
+            Filter crosswalks by primary location ID prefix (e.g., "usgs").
+            Passed as a query parameter to the API. Default: None
         secondary_location_id_prefix : str, optional
-            The prefix to add to secondary location IDs when loading.
-            Used to ensure unique location IDs across configurations.
-            Only applied when ``load=True``. Default: None
+            Filter crosswalks by secondary location ID prefix (e.g., "nwm30").
+            Passed as a query parameter to the API. Default: None
         page_size : int, optional
             Number of location crosswalks to fetch per API request.
             Decrease if timeout errors are encountered. Default: 10000.
@@ -642,9 +640,8 @@ class Download:
         >>> crosswalks = ev.download.location_crosswalks(
         ...     primary_location_id=loc_ids
         ... )
-        >>> # Fetch and load into local evaluation with ID prefixes
+        >>> # Fetch crosswalks filtered by ID prefixes
         >>> crosswalks = ev.download.location_crosswalks(
-        ...     load=True,
         ...     primary_location_id_prefix="usgs",
         ...     secondary_location_id_prefix="nwm30"
         ... )
@@ -657,6 +654,10 @@ class Download:
             params["primary_location_id"] = primary_location_id
         if secondary_location_id:
             params["secondary_location_id"] = secondary_location_id
+        if primary_location_id_prefix:
+            params["primary_location_id_prefix"] = primary_location_id_prefix
+        if secondary_location_id_prefix:
+            params["secondary_location_id_prefix"] = secondary_location_id_prefix
 
         items = self._fetch_paginated_items(
             "collections/location_crosswalks/items",
@@ -670,10 +671,6 @@ class Download:
             self._load.dataframe(
                 df=df,
                 table_name="location_crosswalks",
-                primary_location_id_prefix=primary_location_id_prefix,
-                primary_location_id_field="primary_location_id",
-                secondary_location_id_prefix=secondary_location_id_prefix,
-                secondary_location_id_field="secondary_location_id",
                 write_mode=write_mode
             )
             return
