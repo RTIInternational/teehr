@@ -314,7 +314,7 @@ Download Crosswalks
 
    # Download crosswalks for NWM v3.0
    ev.download.location_crosswalks(
-       secondary_prefix="nwm30",
+       secondary_location_id_prefix="nwm30",
        load=True
    )
 
@@ -372,7 +372,7 @@ Example 1: New Evaluation with TEEHR Warehouse Data
    # Get locations and crosswalks
    ev.download.locations(primary_location_id=["usgs-01010000"], load=True)
    ev.download.location_attributes(primary_location_id=["usgs-01010000"], load=True)
-   ev.download.location_crosswalks(secondary_prefix="nwm30", load=True)
+   ev.download.location_crosswalks(secondary_location_id_prefix="nwm30", load=True)
 
    # Get timeseries data
    ev.download.primary_timeseries(
