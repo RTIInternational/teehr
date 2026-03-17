@@ -476,7 +476,7 @@ def test_validate_and_insert_fews_xml_timeseries(function_scope_evaluation_templ
         order_by=["primary_location_id"],
     ).to_geopandas()
 
-    assert metrics_df.shape == (1, 4)
+    assert metrics_df.shape == (1, 5)
     assert metrics_df["primary_location_id"].nunique() == 1
 
 

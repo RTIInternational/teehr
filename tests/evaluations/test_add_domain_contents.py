@@ -153,3 +153,20 @@ def test_invalid_name_domain(function_scope_evaluation_template):
                 )
             ]
         )
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_invalid_type_domain(function_scope_evaluation_template):
+    """Test creating a new study."""
+    ev = function_scope_evaluation_template
+
+    with pytest.raises(ValueError, match="type"):
+        ev.configurations.add(
+            configuration=[
+                Configuration(
+                    name="Configuration 1",
+                    type="invalid_type",
+                    description="Configuration 1",
+                )
+            ]
+        )
