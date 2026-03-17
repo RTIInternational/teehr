@@ -9,13 +9,13 @@ import pyarrow
 # Domains
 # PySpark Pandera Schemas
 
-def desc_no_commas(pyspark_obj) -> bool:
-    """Ensure description column does not contain commas."""
-    return pyspark_obj.filter(pyspark_obj["description"].contains(",")).count() == 0
+# def desc_no_commas(pyspark_obj) -> bool:
+#     """Ensure description column does not contain commas."""
+#     return pyspark_obj.filter(pyspark_obj["description"].contains(",")).count() == 0
 
 
 def ln_no_commas(pyspark_obj) -> bool:
-    """Ensure description column does not contain commas."""
+    """Ensure long_name column does not contain commas."""
     return pyspark_obj.filter(pyspark_obj["long_name"].contains(",")).count() == 0
 
 
@@ -81,7 +81,7 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                 "description": ps.Column(
                     T.StringType(),
                     nullable=False,
-                    checks=ps.Check(desc_no_commas, error="`description` column contains commas")
+                    # checks=ps.Check(desc_no_commas, error="`description` column contains commas")
                 ),
             },
             strict=True,
@@ -220,7 +220,7 @@ def attribute_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                 "description": ps.Column(
                     T.StringType(),
                     nullable=False,
-                    checks=ps.Check(desc_no_commas, error="`description` column contains commas")
+                    # checks=ps.Check(desc_no_commas, error="`description` column contains commas")
                 ),
             },
             strict=True,
