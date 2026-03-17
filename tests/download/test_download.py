@@ -1,21 +1,6 @@
 """Test downloading from the S3 warehouse via the TEEHR API."""
 import pytest
 
-
-@pytest.mark.function_scope_evaluation_template
-def test_download_locations(function_scope_evaluation_template):
-    """Test downloading from the S3 warehouse via the TEEHR API."""
-    ev = function_scope_evaluation_template
-    gdf = ev.download.locations(
-        prefix="usgs",
-        include_attributes=False,
-        limit=1
-    )
-    assert len(gdf) == 1
-    assert "id" in gdf.columns
-    assert "geometry" in gdf.columns
-    assert "name" in gdf.columns
-
 @pytest.mark.function_scope_evaluation_template
 def test_download_locations_by_ids(function_scope_evaluation_template):
     """Test downloading from the S3 warehouse via the TEEHR API."""

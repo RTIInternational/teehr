@@ -175,10 +175,12 @@ class BaseEvaluation(EvaluationBaseModel):
     def metrics(self) -> Metrics:
         """The metrics component class for calculating performance metrics.
 
-        .. deprecated::
+        .. deprecated:: 0.6.0
             The ``metrics`` property is deprecated and will be removed in a
             future version. Use the ``query`` method on the table directly
-            with the ``include_metrics`` argument instead. For example::
+            with the ``include_metrics`` argument instead. For example:
+
+            .. code-block:: python
 
                 ev.table("joined_timeseries").query(
                     include_metrics=[...],
@@ -255,6 +257,8 @@ class BaseEvaluation(EvaluationBaseModel):
         ] = None,
         add_attrs: bool = False,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ) -> JoinedTimeseriesView:
         """Create a computed view that joins primary and secondary timeseries.
 
@@ -272,6 +276,12 @@ class BaseEvaluation(EvaluationBaseModel):
             Whether to add location attributes. Default False.
         attr_list : List[str], optional
             Specific attributes to add (if add_attrs=True).
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
 
         Returns
         -------
@@ -303,6 +313,16 @@ class BaseEvaluation(EvaluationBaseModel):
         Materialize joined data:
 
         >>> ev.joined_timeseries_view(add_attrs=True).write("joined_timeseries")
+
+        Read from a remote catalog and namespace:
+
+        >>> ev.joined_timeseries_view(
+        ...     catalog_name="some_catalog",
+        ...     namespace_name="some_namespace"
+        ... ).query(
+        ...     include_metrics=[KGE()],
+        ...     group_by=["primary_location_id"]
+        ... ).write("location_kge")
         """
         return JoinedTimeseriesView(
             ev=self,
@@ -310,11 +330,15 @@ class BaseEvaluation(EvaluationBaseModel):
             secondary_filters=secondary_filters,
             add_attrs=add_attrs,
             attr_list=attr_list,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
         )
 
     def location_attributes_view(
         self,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ) -> LocationAttributesView:
         """Create a computed view of pivoted location attributes.
 
@@ -326,6 +350,12 @@ class BaseEvaluation(EvaluationBaseModel):
         ----------
         attr_list : List[str], optional
             Specific attributes to include. If None, includes all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
 
         Returns
         -------
@@ -357,12 +387,16 @@ class BaseEvaluation(EvaluationBaseModel):
         return LocationAttributesView(
             ev=self,
             attr_list=attr_list,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
         )
 
     def primary_timeseries_view(
         self,
         add_attrs: bool = False,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ) -> PrimaryTimeseriesView:
         """Create a computed view of primary timeseries with optional attrs.
 
@@ -372,6 +406,12 @@ class BaseEvaluation(EvaluationBaseModel):
             Whether to add location attributes. Default False.
         attr_list : List[str], optional
             Specific attributes to add. If None and add_attrs=True, adds all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
 
         Returns
         -------
@@ -401,12 +441,16 @@ class BaseEvaluation(EvaluationBaseModel):
             ev=self,
             add_attrs=add_attrs,
             attr_list=attr_list,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
         )
 
     def secondary_timeseries_view(
         self,
         add_attrs: bool = False,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ) -> SecondaryTimeseriesView:
         """Create a computed view of secondary timeseries with crosswalk.
 
@@ -419,6 +463,12 @@ class BaseEvaluation(EvaluationBaseModel):
             Whether to add location attributes. Default False.
         attr_list : List[str], optional
             Specific attributes to add. If None and add_attrs=True, adds all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
 
         Returns
         -------
@@ -448,6 +498,8 @@ class BaseEvaluation(EvaluationBaseModel):
             ev=self,
             add_attrs=add_attrs,
             attr_list=attr_list,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
         )
 
     def _set_active_catalog(self, catalog: Literal["local", "remote"]):
@@ -527,6 +579,44 @@ class BaseEvaluation(EvaluationBaseModel):
             logger.info(f"Table: {tbl.name}, Type: {tbl.tableType}")
         return pd.DataFrame(metadata)
 
+    def drop_table(
+        self,
+        table_name: str,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
+    ):
+        """Drop a user-created table from the catalog.
+
+        Only non-core tables (user-created tables, materialized views, saved
+        query results) can be dropped. Attempting to drop a core table
+        (e.g., primary_timeseries, locations, units) will raise a ValueError.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to drop.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Raises
+        ------
+        ValueError
+            If the table is a core TEEHR table.
+
+        Examples
+        --------
+        Write and then drop a user-created table:
+
+        >>> ev.joined_timeseries_view().write("my_results")
+        >>> ev.drop_table("my_results")
+        """
+        tbl = self.table(table_name, namespace_name, catalog_name)
+        tbl.drop()
+
     def list_views(self) -> pd.DataFrame:
         """List the views in the catalog returning a Pandas DataFrame."""
         return self.spark.sql("SHOW VIEWS").toPandas()
@@ -584,8 +674,24 @@ class LocalReadWriteEvaluation(BaseEvaluation):
     This class establishes a local catalog in the specified directory
     and creates the tables according to the TEEHR schema.
 
-    It is intended for use when working locally or when you want to
+    It is intended for use when working locally and when you want to
     manage your own local copy of the data.
+
+    Examples
+    --------
+    Create a new evaluation with a new directory:
+
+    >>> ev = LocalReadWriteEvaluation(dir_path="path/to/evaluation_dir", create_dir=True)
+
+    Create an evaluation using an existing directory:
+
+    >>> ev = LocalReadWriteEvaluation(dir_path="path/to/existing_evaluation_dir")
+
+    Access tables and views:
+
+    >>> ev.primary_timeseries.query(...).to_pandas()
+    >>> ev.joined_timeseries_view(...).query(...).to_pandas()
+
     """
 
     def __init__(
@@ -758,10 +864,10 @@ class Evaluation(LocalReadWriteEvaluation):
     This class establishes a local catalog in the specified directory
     and creates the tables according to the TEEHR schema.
 
-    It is intended for use when working locally or when you want to
+    It is intended for use when working locally and when you want to
     manage your own local copy of the data.
 
-    .. deprecated::
+    .. deprecated:: 0.6.0
         This class is provided for convenience and backwards compatibility.
         It will be deprecated in favor of the more explicit
         :class:`LocalReadWriteEvaluation` class.
@@ -813,7 +919,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
 
     Currently only users in the TEEHR-Hub environment have access to
     the remote catalog, so this class is intended for use within that
-    environment, until remote access is more broadly available.
+    environment until remote access is more broadly available.
     """
 
     def __init__(
@@ -897,7 +1003,7 @@ class RemoteReadWriteEvaluation(RemoteReadOnlyEvaluation):
 
     Currently only users in the TEEHR-Hub environment have access to
     the remote catalog, so this class is intended for use within that
-    environment, until remote access is more broadly available.
+    environment until remote access is more broadly available.
     """
 
     def __init__(

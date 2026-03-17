@@ -8,11 +8,14 @@ logger = logging.getLogger(__name__)
 class Metrics(BaseTable):
     """Component class for calculating metrics.
 
-    .. deprecated::
+    .. deprecated:: 0.6.0
         The ``Metrics`` class (accessed via ``ev.metrics``) is deprecated and
         will be removed in a future version. Use the ``query`` method on the
         table directly with the ``include_metrics`` argument instead.
-        For example::
+
+        For example:
+
+        .. code-block:: python
 
             ev.table("joined_timeseries").query(
                 include_metrics=[...],

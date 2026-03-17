@@ -6,19 +6,19 @@ import requests
 files = [
     {
         "name": "two_locations.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/src/teehr/example_data/hefs_example/two_locations.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/v0.6-dev/src/teehr/example_data/hefs_example/two_locations.parquet"
     },
     {
         "name": "primary_timeseries.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/src/teehr/example_data/hefs_example/primary_timeseries.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/v0.6-dev/src/teehr/example_data/hefs_example/primary_timeseries.parquet"
     },
     {
         "name": "secondary_timeseries.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/src/teehr/example_data/hefs_example/secondary_timeseries.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/v0.6-dev/src/teehr/example_data/hefs_example/secondary_timeseries.parquet"
     },
     {
         "name": "location_crosswalks.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/src/teehr/example_data/hefs_example/location_crosswalks.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/v0.6-dev/src/teehr/example_data/hefs_example/location_crosswalks.parquet"
     }
 ]
 

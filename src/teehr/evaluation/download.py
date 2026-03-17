@@ -1,4 +1,4 @@
-"""Component class for fetching data from external sources."""
+"""Component class for fetching data from from the TEEHR data warehouse."""
 from typing import Union, List, Optional
 from datetime import datetime
 import logging
@@ -51,7 +51,9 @@ def _format_datetime_range(
 
 
 class Download:
-    """Component class for downloading data from the TEEHR warehouse."""
+    """A component class for downloading data from the TEEHR-Cloud data warehouse."""
+
+    DEFAULT_TIMEOUT = 60
 
     def __init__(self, ev) -> None:
         """Initialize the Download class.
@@ -66,12 +68,14 @@ class Download:
         self._load = ev.load
         self.api_base_url = "https://api.teehr.rtiamanzi.org"
         self.verify_ssl = True
+        self.timeout = self.DEFAULT_TIMEOUT
 
     def configure(
         self,
         api_base_url: str = None,
         api_port: int = None,
-        verify_ssl: bool = True
+        verify_ssl: bool = True,
+        timeout: int = DEFAULT_TIMEOUT
     ) -> "Download":
         """Configure the warehouse API connection settings.
 
@@ -86,6 +90,9 @@ class Download:
         verify_ssl : bool, optional
             Whether to verify SSL certificates when making requests.
             Default: True
+        timeout : int, optional
+            Default request timeout in seconds for all download methods.
+            Default: 60
 
         Returns
         -------
@@ -97,7 +104,8 @@ class Download:
         >>> ev.download.configure(
         ...     api_base_url="https://api.teehr.rtiamanzi.org",
         ...     api_port=8443,
-        ...     verify_ssl=True
+        ...     verify_ssl=True,
+        ...     timeout=120
         ... )
         >>> locations = ev.download.locations(prefix="usgs")
         """
@@ -114,16 +122,33 @@ class Download:
                 base_url = f"{base_url}:{api_port}"
         self.api_base_url = base_url
         self.verify_ssl = verify_ssl
+        self.timeout = timeout
 
         logger.info(f"Download API configured: {self.api_base_url}")
         return self
+
+    def _resolve_timeout(self, timeout: int) -> int:
+        """Resolve the effective timeout, falling back to the instance default.
+
+        Parameters
+        ----------
+        timeout : int or None
+            User-provided timeout value, or None to use the instance default.
+
+        Returns
+        -------
+        int
+            Resolved timeout in seconds.
+        """
+        return timeout if timeout is not None else self.timeout
 
     @staticmethod
     def _make_request(
         endpoint: str,
         api_base_url: str,
         verify_ssl: bool = False,
-        params: dict = None
+        params: dict = None,
+        timeout: int = DEFAULT_TIMEOUT
     ) -> requests.Response:
         """Make a request to the warehouse API.
 
@@ -137,6 +162,8 @@ class Download:
             Whether to verify SSL certificates. Default: False
         params : dict, optional
             Query parameters for the request
+        timeout : int, optional
+            Request timeout in seconds. Default: 60
 
         Returns
         -------
@@ -154,7 +181,7 @@ class Download:
 
         logger.debug(f"Making request to {url} with params {params}")
         try:
-            response = requests.get(url, params=params or {}, verify=verify_ssl, timeout=30)
+            response = requests.get(url, params=params or {}, verify=verify_ssl, timeout=timeout)
             response.raise_for_status()
         except requests.exceptions.Timeout:
             logger.error(f"Request to {url} timed out.")
@@ -168,9 +195,10 @@ class Download:
         ids: Union[str, List[str]] = None,
         bbox: List[float] = None,
         include_attributes: bool = False,
-        limit: int = 10000,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
+        timeout: int = None,
         **kwargs
     ) -> Union[gpd.GeoDataFrame, None]:
         """Fetch locations from the warehouse API as a GeoDataFrame.
@@ -187,14 +215,18 @@ class Download:
         include_attributes : bool, optional
             Whether to include location attributes in the response.
             Default: False
-        limit : int, optional
-            Maximum number of locations to return. Default: 10000
+        page_size : int, optional
+            Number of locations to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "locations" table. Default: False
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -216,10 +248,7 @@ class Download:
         ...     load=True
         ... )
         """
-        params = {
-            "limit": limit,
-            **kwargs
-        }
+        params = {**kwargs}
 
         if prefix:
             params["prefix"] = prefix
@@ -227,16 +256,38 @@ class Download:
             params["include_attributes"] = "true"
         if bbox:
             params["bbox"] = ",".join(map(str, bbox))
-        if id:
+        if ids:
             params["id"] = ids
 
-        response = self._make_request(
-            "collections/locations/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
-        )
-        gdf = gpd.read_file(BytesIO(response.content))
+        request_timeout = self._resolve_timeout(timeout)
+        all_gdfs = []
+        page_params = {**params, 'limit': page_size}
+        current_offset = 0
+
+        while True:
+            page_params['offset'] = current_offset
+            response = self._make_request(
+                "collections/locations/items",
+                self.api_base_url,
+                self.verify_ssl,
+                page_params,
+                request_timeout
+            )
+            gdf = gpd.read_file(BytesIO(response.content))
+
+            all_gdfs.append(gdf)
+            logger.debug(
+                f"Fetched page offset={current_offset} with {len(gdf)} locations"
+            )
+
+            if len(gdf) < page_size:
+                break
+
+            current_offset += page_size
+
+        if not all_gdfs:
+            return gpd.GeoDataFrame()
+        gdf = pd.concat(all_gdfs, ignore_index=True) if len(all_gdfs) > 1 else all_gdfs[0]
 
         logger.info(f"Fetched {len(gdf)} locations from warehouse API")
         if load:
@@ -259,8 +310,10 @@ class Download:
         self,
         name: str = None,
         type: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
+        timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch attributes from the warehouse API.
@@ -271,12 +324,18 @@ class Download:
             Filter by attribute name
         type : str, optional
             Filter by attribute type ("categorical" or "continuous")
+        page_size : int, optional
+            Number of attributes to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "attributes" table. Default: False
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -299,13 +358,13 @@ class Download:
         if type:
             params["type"] = type
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/attributes/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
+            timeout=self._resolve_timeout(timeout)
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} attributes from warehouse API")
         if load:
@@ -321,8 +380,10 @@ class Download:
         self,
         location_id: Union[str, List[str]] = None,
         attribute_name: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
+        timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch location attributes from the warehouse API.
@@ -333,12 +394,18 @@ class Download:
             Filter by location ID(s)
         attribute_name : str, optional
             Filter by attribute name
+        page_size : int, optional
+            Number of location attributes to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_attributes" table. Default: False
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -364,13 +431,13 @@ class Download:
         if attribute_name:
             params["attribute_name"] = attribute_name
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/location_attributes/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
+            timeout=self._resolve_timeout(timeout)
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} location attributes from warehouse API")
         if load:
@@ -385,8 +452,10 @@ class Download:
     def units(
         self,
         name: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
+        timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch units from the warehouse API.
@@ -395,12 +464,18 @@ class Download:
         ----------
         name : str, optional
             Filter by unit name
+        page_size : int, optional
+            Number of units to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "units" table. Default: False
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -421,13 +496,13 @@ class Download:
         if name:
             params["name"] = name
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/units/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
+            timeout=self._resolve_timeout(timeout)
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} units from warehouse API")
         if load:
@@ -442,8 +517,10 @@ class Download:
     def variables(
         self,
         name: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
+        timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch variables from the warehouse API.
@@ -452,12 +529,18 @@ class Download:
         ----------
         name : str, optional
             Filter by variable name
+        page_size : int, optional
+            Number of variables to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "variables" table. Default: False
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -478,13 +561,13 @@ class Download:
         if name:
             params["name"] = name
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/variables/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
+            timeout=self._resolve_timeout(timeout)
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} variables from warehouse API")
         if load:
@@ -500,8 +583,10 @@ class Download:
         self,
         name: str = None,
         type: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
+        timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch configurations from the warehouse API.
@@ -512,12 +597,18 @@ class Download:
             Filter by configuration name
         type : str, optional
             Filter by configuration type ("primary" or "secondary")
+        page_size : int, optional
+            Number of configurations to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "configurations" table. Default: False
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -540,13 +631,13 @@ class Download:
         if type:
             params["type"] = type
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/configurations/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
+            timeout=self._resolve_timeout(timeout)
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} configurations from warehouse API")
         if load:
@@ -562,8 +653,12 @@ class Download:
         self,
         primary_location_id: Union[str, List[str]] = None,
         secondary_location_id: Union[str, List[str]] = None,
+        primary_location_id_prefix: str = None,
+        secondary_location_id_prefix: str = None,
+        page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
+        timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch location crosswalks from the warehouse API.
@@ -574,12 +669,24 @@ class Download:
             Filter by primary location ID(s)
         secondary_location_id : str or list of str, optional
             Filter by secondary location ID(s)
+        primary_location_id_prefix : str, optional
+            Filter crosswalks by primary location ID prefix (e.g., "usgs").
+            Passed as a query parameter to the API. Default: None
+        secondary_location_id_prefix : str, optional
+            Filter crosswalks by secondary location ID prefix (e.g., "nwm30").
+            Passed as a query parameter to the API. Default: None
+        page_size : int, optional
+            Number of location crosswalks to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_crosswalks" table. Default: False
         write_mode : str, optional
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -595,6 +702,11 @@ class Download:
         >>> crosswalks = ev.download.location_crosswalks(
         ...     primary_location_id=loc_ids
         ... )
+        >>> # Fetch crosswalks filtered by ID prefixes
+        >>> crosswalks = ev.download.location_crosswalks(
+        ...     primary_location_id_prefix="usgs",
+        ...     secondary_location_id_prefix="nwm30"
+        ... )
         >>> # Fetch and load into local evaluation
         >>> crosswalks = ev.download.location_crosswalks(load=True)
         """
@@ -604,14 +716,18 @@ class Download:
             params["primary_location_id"] = primary_location_id
         if secondary_location_id:
             params["secondary_location_id"] = secondary_location_id
+        if primary_location_id_prefix:
+            params["primary_location_id_prefix"] = primary_location_id_prefix
+        if secondary_location_id_prefix:
+            params["secondary_location_id_prefix"] = secondary_location_id_prefix
 
-        response = self._make_request(
+        items = self._fetch_paginated_items(
             "collections/location_crosswalks/items",
-            self.api_base_url,
-            self.verify_ssl,
-            params
+            params,
+            page_size=page_size,
+            timeout=self._resolve_timeout(timeout)
         )
-        df = pd.DataFrame(response.json()["items"])
+        df = pd.DataFrame(items)
 
         logger.info(f"Fetched {len(df)} location crosswalks from warehouse API")
         if load:
@@ -623,11 +739,64 @@ class Download:
             return
         return df
 
+    def _fetch_paginated_items(
+        self,
+        endpoint: str,
+        params: dict,
+        page_size: int,
+        timeout: int = DEFAULT_TIMEOUT,
+    ) -> list:
+        """Fetch all pages from a JSON items endpoint using limit/offset pagination.
+
+        Parameters
+        ----------
+        endpoint : str
+            API endpoint path (e.g., "collections/attributes/items")
+        params : dict
+            Base query parameters (without limit/offset)
+        page_size : int
+            Number of items to request per page
+        timeout : int, optional
+            Request timeout in seconds. Default: 60
+
+        Returns
+        -------
+        list
+            All items accumulated across all pages
+        """
+        all_items = []
+        page_params = {**params, 'limit': page_size}
+        current_offset = 0
+
+        while True:
+            page_params['offset'] = current_offset
+            response = self._make_request(
+                endpoint,
+                self.api_base_url,
+                self.verify_ssl,
+                page_params,
+                timeout
+            )
+            page_items = response.json()["items"]
+
+            all_items.extend(page_items)
+            logger.debug(
+                f"Fetched page offset={current_offset} with {len(page_items)} items from {endpoint}"
+            )
+
+            if len(page_items) < page_size:
+                break
+
+            current_offset += page_size
+
+        return all_items
+
     def _fetch_paginated_timeseries(
         self,
         endpoint: str,
         params: dict,
         page_size: int,
+        timeout: int = DEFAULT_TIMEOUT,
     ) -> list:
         """Fetch all pages from a timeseries endpoint using limit/offset pagination.
 
@@ -639,6 +808,8 @@ class Download:
             Base query parameters (without limit/offset)
         page_size : int
             Number of series items to request per page
+        timeout : int, optional
+            Request timeout in seconds. Default: 60
 
         Returns
         -------
@@ -646,16 +817,17 @@ class Download:
             All series items accumulated across all pages
         """
         all_items = []
-        offset = 0
         page_params = {**params, 'limit': page_size}
+        current_offset = 0
 
         while True:
-            page_params['offset'] = offset
+            page_params['offset'] = current_offset
             response = self._make_request(
                 endpoint,
                 self.api_base_url,
                 self.verify_ssl,
-                page_params
+                page_params,
+                timeout
             )
             page_data = response.json()
 
@@ -664,13 +836,13 @@ class Download:
 
             all_items.extend(page_items)
             logger.debug(
-                f"Fetched page offset={offset} with {len(page_items)} items from {endpoint}"
+                f"Fetched page offset={current_offset} with {len(page_items)} items from {endpoint}"
             )
 
             if len(page_items) < page_size:
                 break
 
-            offset += page_size
+            current_offset += page_size
 
         return all_items
 
@@ -684,6 +856,7 @@ class Download:
         load: bool = False,
         write_mode: str = "append",
         page_size: int = 10000,
+        timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch primary timeseries from the warehouse API.
@@ -710,7 +883,11 @@ class Download:
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         page_size : int, optional
-            Number of series items to fetch per API request. Default: 500
+            Number of series items to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -754,6 +931,7 @@ class Download:
             "collections/primary_timeseries/items",
             params,
             page_size=page_size,
+            timeout=self._resolve_timeout(timeout),
         )
         df = teehr_api_timeseries_to_dataframe(items)
 
@@ -778,6 +956,7 @@ class Download:
         load: bool = False,
         write_mode: str = "append",
         page_size: int = 10000,
+        timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
         """Fetch secondary timeseries from the warehouse API.
@@ -808,7 +987,11 @@ class Download:
             Write mode when loading. Options: "append", "upsert",
             "create_or_replace". Default: "append"
         page_size : int, optional
-            Number of series items to fetch per API request. Default: 500
+            Number of series items to fetch per API request.
+            Decrease if timeout errors are encountered. Default: 10000.
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
         **kwargs
             Additional query parameters to pass to the API
 
@@ -864,6 +1047,7 @@ class Download:
             "collections/secondary_timeseries/items",
             params,
             page_size=page_size,
+            timeout=self._resolve_timeout(timeout),
         )
         df = teehr_api_timeseries_to_dataframe(items)
 
@@ -887,8 +1071,9 @@ class Download:
         prefix: str = None,
         bbox: List[float] = None,
         page_size: int = 10000,
+        timeout: int = None,
     ) -> None:
-        """Download a subset of evaluation data based on location IDs, date range, and configurations.
+        """Download a subset of evaluation data from the warehouse API.
 
         Parameters
         ----------
@@ -909,7 +1094,10 @@ class Download:
             in the format [minx, miny, maxx, maxy].
         page_size : int, optional
             Number of series items to fetch per API request for timeseries.
-            Default: 10000
+            Decrease if timeout errors are encountered. Default: 10000
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
 
         Returns
         -------
@@ -921,29 +1109,33 @@ class Download:
         >>> ev.download.evaluation_subset(
         ...     prefix="usgs",
         ...     bbox=[-120.0, 35.0, -119.0, 36.0],
-        ...     start_date="2020-01-01",
+        ...     start_date="2005-01-01",
         ...     end_date="2020-01-02",
         ...     primary_configuration_name="usgs_observations",
-        ...     secondary_configuration_name="nwm30_retrospective"
+        ...     secondary_configuration_name="nwm30_retrospective",
+        ...     page_size=5000
         ... )
         """
         if prefix is None and bbox is None and location_ids is None:
             raise ValueError(
                 "At least one of prefix, bbox, or location_ids must be provided to filter locations"
             )
+        request_timeout = self._resolve_timeout(timeout)
         logger.info("Loading the units, variables, and attributes tables")
-        self.units(load=True)
-        self.variables(load=True)
-        self.attributes(load=True)
+        self.units(load=True, timeout=request_timeout)
+        self.variables(load=True, timeout=request_timeout)
+        self.attributes(load=True, timeout=request_timeout)
         logger.info("Loading the primary configuration name")
         self.configurations(
             name=primary_configuration_name,
-            load=True
+            load=True,
+            timeout=request_timeout
         )
         logger.info("Loading the secondary configuration name")
         self.configurations(
             name=secondary_configuration_name,
-            load=True
+            load=True,
+            timeout=request_timeout
         )
         logger.info("Loading the locations table")
         self.locations(
@@ -951,7 +1143,8 @@ class Download:
             ids=location_ids,
             include_attributes=False,
             bbox=bbox,
-            load=True
+            load=True,
+            timeout=request_timeout
         )
         if self._ev.locations.to_sdf().count() == 0:
             logger.warning("No locations found with the specified filters. "
@@ -965,12 +1158,14 @@ class Download:
             start_date=start_date,
             end_date=end_date,
             load=True,
-            page_size=page_size
+            page_size=page_size,
+            timeout=request_timeout
         )
         logger.info("Loading the location crosswalks")
         self.location_crosswalks(
             primary_location_id=location_ids,
-            load=True
+            load=True,
+            timeout=request_timeout
         )
         logger.info("Loading the secondary timeseries data")
         self.secondary_timeseries(
@@ -979,11 +1174,13 @@ class Download:
             start_date=start_date,
             end_date=end_date,
             load=True,
-            page_size=page_size
+            page_size=page_size,
+            timeout=request_timeout
         )
         logger.info("Loading the location attributes")
         self.location_attributes(
             location_id=location_ids,
-            load=True
+            load=True,
+            timeout=request_timeout
         )
         logger.info("Finished loading evaluation subset")

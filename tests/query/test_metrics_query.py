@@ -139,7 +139,8 @@ def test_metrics_filter_and_geometry(module_scope_test_warehouse):
 
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
-    assert metrics_df.columns.size == 6
+    assert metrics_df.columns.size == 7
+    assert "name" in metrics_df.columns
 
 
 @pytest.mark.module_scope_test_warehouse
@@ -382,6 +383,34 @@ def test_adding_calculated_fields(function_scope_test_warehouse):
     assert isinstance(metrics_df_calc, pd.DataFrame)
     assert metrics_df_calc.index.size == 3
     assert "month" in metrics_df_calc.columns
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_generic_sql_calculated_field(function_scope_test_warehouse):
+    """Test adding a GenericSQL calculated field to metrics."""
+    from teehr import RowLevelCalculatedFields as rcf
+
+    ev = function_scope_test_warehouse
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    metrics_df_calc = (
+        ev
+        .table("joined_timeseries")
+        .add_calculated_fields([
+            rcf.GenericSQL(
+                output_field_name="month_sql",
+                sql_statement="month(value_time)"
+            )
+        ])
+        .query(
+            group_by=["primary_location_id", "month_sql"],
+            include_metrics=[kge]
+        )
+        .to_pandas()
+    )
+    assert isinstance(metrics_df_calc, pd.DataFrame)
+    assert "month_sql" in metrics_df_calc.columns
+    assert metrics_df_calc["month_sql"].notna().all()
+    assert metrics_df_calc["month_sql"].between(1, 12).all()
 
 @pytest.mark.function_scope_test_warehouse
 def test_table_based_metrics(function_scope_test_warehouse):

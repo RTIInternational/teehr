@@ -35,6 +35,8 @@ class MeanError(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -70,6 +72,8 @@ class RelativeBias(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -105,6 +109,8 @@ class MultiplicativeBias(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -140,6 +146,8 @@ class MeanSquareError(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -175,6 +183,8 @@ class RootMeanSquareError(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -210,6 +220,8 @@ class MeanAbsoluteError(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -245,6 +257,8 @@ class MeanAbsoluteRelativeError(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -281,6 +295,8 @@ class PearsonCorrelation(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -315,6 +331,8 @@ class VariabilityRatio(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -350,6 +368,8 @@ class Rsquared(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -385,6 +405,8 @@ class NashSutcliffeEfficiency(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -420,6 +442,8 @@ class NormalizedNashSutcliffeEfficiency(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -463,6 +487,8 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
         The scaling factor for the bias component, by default 1.0.
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -506,6 +532,8 @@ class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
         The scaling factor for the bias component, by default 1.0.
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -550,6 +578,8 @@ class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
         The scaling factor for the bias component, by default 1.0.
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -588,6 +618,8 @@ class SpearmanCorrelation(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -622,6 +654,8 @@ class MaxValueDelta(DeterministicBasemodel):
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     add_epsilon: bool = Field(default=False)
@@ -656,6 +690,8 @@ class MaxValueTimeDelta(DeterministicBasemodel):
         ["primary_value", "secondary_value", "value_time"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     add_epsilon: bool = Field(default=False)
@@ -690,6 +726,8 @@ class AnnualPeakRelativeBias(DeterministicBasemodel):
         ["primary_value", "secondary_value", "value_time"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -725,6 +763,8 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
         ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -813,6 +853,8 @@ class FalseAlarmRatio(DeterministicBasemodel):
         ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -852,6 +894,8 @@ class ProbabilityOfDetection(DeterministicBasemodel):
         ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -891,6 +935,8 @@ class ProbabilityOfFalseDetection(DeterministicBasemodel):
         ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
@@ -931,6 +977,8 @@ class CriticalSuccessIndex(DeterministicBasemodel):
         ["primary_value", "secondary_value"].
     attrs : Dict
         The static attributes for the metric.
+    unpack_results : bool
+        Whether to unpack the results into separate fields, by default False.
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
