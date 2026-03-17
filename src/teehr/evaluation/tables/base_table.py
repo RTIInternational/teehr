@@ -172,19 +172,6 @@ class BaseTable(TeehrDataFrameBase):
             validate = self.validate_filter_field_types or False
         super()._apply_filters(filters, validate=validate)
 
-    # def _get_schema(self, type: str = "pyspark"):
-    #     """Get the table schema.
-
-    #     Parameters
-    #     ----------
-    #     type : str, optional
-    #         The type of schema to return. Valid values are "pyspark" and
-    #         "pandas". Default is "pyspark".
-    #     """
-    #     if type == "pandas":
-    #         return self.schema_func(type="pandas")
-    #     return self.schema_func()
-
     def validate(self, drop_duplicates: bool = True):
         """Validate the dataset table against the schema.
 

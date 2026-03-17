@@ -90,3 +90,83 @@ def test_add_domains(function_scope_evaluation_template):
     new_cols = ev.attributes.to_pandas().columns
 
     assert list(cols.sort_values()) == list(new_cols.sort_values())
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_upsert_domain(function_scope_evaluation_template):
+    """Test creating a new study."""
+    ev = function_scope_evaluation_template
+
+    ev.configurations.add(
+        configuration=[
+            Configuration(
+                name="conf1",
+                type="secondary",
+                description="Configuration 1",
+            )
+        ]
+    )
+
+    ev.configurations.add(
+        configuration=[
+            Configuration(
+                name="conf1",
+                type="secondary",
+                description="Configuration 1a",
+            )
+        ]
+    )
+
+    assert ev.configurations.to_sdf().count() == 1
+    assert ev.configurations.to_pandas().description.iloc[0] == "Configuration 1a"
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_invalid_description_domain(function_scope_evaluation_template):
+    """Test creating a new study."""
+    ev = function_scope_evaluation_template
+
+    with pytest.raises(ValueError, match="description"):
+        ev.configurations.add(
+            configuration=[
+                Configuration(
+                    name="conf1",
+                    type="secondary",
+                    description="Configuration, Cannot have commas",
+                )
+            ]
+        )
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_invalid_name_domain(function_scope_evaluation_template):
+    """Test creating a new study."""
+    ev = function_scope_evaluation_template
+
+    with pytest.raises(ValueError, match="name"):
+        ev.configurations.add(
+            configuration=[
+                Configuration(
+                    name="special chars !@#$%^&*() not allowed",
+                    type="secondary",
+                    description="Configuration 1",
+                )
+            ]
+        )
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_invalid_type_domain(function_scope_evaluation_template):
+    """Test creating a new study."""
+    ev = function_scope_evaluation_template
+
+    with pytest.raises(ValueError, match="type"):
+        ev.configurations.add(
+            configuration=[
+                Configuration(
+                    name="Configuration 1",
+                    type="invalid_type",
+                    description="Configuration 1",
+                )
+            ]
+        )
