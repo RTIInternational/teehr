@@ -309,6 +309,34 @@ class CriticalSuccessIndex(ThresholdBasemodel):
     default_attrs = tma.CSI_ATTRS
 
 
+class SuccessRatio(ThresholdBasemodel):
+    """Success Ratio: TP + TN / (TP + FP + FN + TN).
+
+    Additional Parameters
+    ---------------------
+    threshold_field_name : str
+        Field name containing location-specific threshold values.
+    """
+
+    default_output_field_name = "success_ratio"
+    default_func = metric_funcs.success_ratio
+    default_attrs = tma.SR_ATTRS
+
+
+class FrequencyBiasIndex(ThresholdBasemodel):
+    """Frequency Bias Index: (TP + FP) / (TP + FN).
+
+    Additional Parameters
+    ---------------------
+    threshold_field_name : str
+        Field name containing location-specific threshold values.
+    """
+
+    default_output_field_name = "frequency_bias_index"
+    default_func = metric_funcs.frequency_bias_index
+    default_attrs = tma.FBIAS_ATTRS
+
+
 # =============================================================================
 # Container Class for Discovery
 # =============================================================================
@@ -385,3 +413,5 @@ class DeterministicMetrics:
     ProbabilityOfDetection = ProbabilityOfDetection
     ProbabilityOfFalseDetection = ProbabilityOfFalseDetection
     CriticalSuccessIndex = CriticalSuccessIndex
+    SuccessRatio = SuccessRatio
+    FrequencyBiasIndex = FrequencyBiasIndex

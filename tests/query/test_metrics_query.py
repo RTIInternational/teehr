@@ -78,7 +78,7 @@ def test_executing_deterministic_metrics(module_scope_test_warehouse):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 6
+    assert metrics_df.columns.size == 8
 
 
 @pytest.mark.module_scope_test_warehouse
