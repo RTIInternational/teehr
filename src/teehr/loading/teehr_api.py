@@ -44,15 +44,39 @@ def teehr_api_timeseries_to_dataframe(
 
     df = pd.DataFrame(json_data)
 
-    # Rename columns to match TEEHR schema
-    df.rename(
-        columns={
-            'primary_location_id': 'location_id',
-            'secondary_location_id': 'location_id',
-        },
-        inplace=True,
-        errors='ignore'  # ignore if columns don't exist
-    )
+    # Check if "series_type" are all equal, if not, raise error since
+    # we expect only one type of timeseries per API call
+    if "series_type" in df.columns:
+        series_types = df["series_type"].unique()
+        if len(series_types) > 1:
+            raise ValueError(
+                f"Multiple series types found in API response: {series_types}. "
+                f"Expected only one series type per API call."
+            )
+
+    # If "series_type" is "secondary", rename "secondary_location_id" to "location_id"
+    # and drop "primary_location_id" since it's not part of the TEEHR timeseries schema.
+    # If "series_type" is "primary", rename "primary_location_id" to "location_id" and
+    # drop "secondary_location_id"
+    if "series_type" in df.columns:
+        if (df["series_type"] == "secondary").all():
+            df.rename(
+                columns={
+                    'secondary_location_id': 'location_id',
+                },
+                inplace=True,
+                errors='ignore'  # ignore if columns don't exist
+            )
+            df.drop(columns=['primary_location_id'], inplace=True, errors='ignore')
+        elif (df["series_type"] == "primary").all():
+            df.rename(
+                columns={
+                    'primary_location_id': 'location_id',
+                },
+                inplace=True,
+                errors='ignore'  # ignore if columns don't exist
+            )
+            df.drop(columns=['secondary_location_id'], inplace=True, errors='ignore')
 
     # Drop columns that are not part of the TEEHR timeseries schema
     df.drop(columns=['series_type'], inplace=True, errors='ignore')
