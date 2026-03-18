@@ -303,8 +303,8 @@ A typical workflow for generating benchmark forecasts:
     # Step 6: Create joined view and compute skill scores
     from teehr.metrics import DeterministicMetrics
 
-    metrics_df = ev.joined_timeseries_view().query(
-        include_metrics=[
+    metrics_df = ev.joined_timeseries_view().aggregate(
+        metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],

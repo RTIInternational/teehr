@@ -11,6 +11,7 @@ from teehr.models.filters import (
 )
 from teehr.models.filters import TableFilter
 
+
 @pytest.mark.function_scope_two_location_warehouse
 def test_filtering_a_new_table(function_scope_two_location_warehouse):
     """Test filtering a new table with TableFilter."""

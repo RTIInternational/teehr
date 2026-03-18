@@ -167,6 +167,7 @@ def test_metric_chaining(module_scope_test_warehouse):
         metrics_df.columns == ["primary_location_id", "primary_average"]
     )
 
+
 @pytest.mark.function_scope_large_ensemble_warehouse
 def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
     """Test get_metrics method with ensemble metrics."""
@@ -212,6 +213,7 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
     assert np.isnan(
         metrics_df.mean_brier_score_skill_score.values[2]
     )
+
 
 @pytest.mark.module_scope_test_warehouse
 def test_metrics_transforms(module_scope_test_warehouse):
@@ -351,6 +353,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     assert np.isfinite(metrics_df_e_test.r_squared.values).all()
     assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
 
+
 @pytest.mark.function_scope_test_warehouse
 def test_adding_calculated_fields(function_scope_test_warehouse):
     """Test adding calculated fields to metrics."""
@@ -402,6 +405,7 @@ def test_generic_sql_calculated_field(function_scope_test_warehouse):
     assert "month_sql" in metrics_df_calc.columns
     assert metrics_df_calc["month_sql"].notna().all()
     assert metrics_df_calc["month_sql"].between(1, 12).all()
+
 
 @pytest.mark.function_scope_test_warehouse
 def test_table_based_metrics(function_scope_test_warehouse):

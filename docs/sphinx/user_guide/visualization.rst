@@ -142,10 +142,9 @@ Visualize performance metrics spatially:
     # Calculate metrics with geometry
     from teehr.metrics import DeterministicMetrics
 
-    metrics_gdf = ev.joined_timeseries_view().query(
-        include_metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
+    metrics_gdf = ev.joined_timeseries_view().aggregate(
+        metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
         group_by=["primary_location_id"],
-        include_geometry=True
     ).to_geopandas()
 
     # Create colored points based on KGE
@@ -197,8 +196,8 @@ Compare observed and simulated hydrographs with metrics overlay:
     metrics = ev.joined_timeseries_view().filter(
         "primary_location_id = 'usgs-01184000'",
         "configuration_name = 'nwm30_retrospective'"
-    ).query(
-        include_metrics=[
+    ).aggregate(
+        metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],
