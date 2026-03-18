@@ -26,8 +26,8 @@ def test_add_row_udfs_null_reference(function_scope_evaluation_template):
     ]).write("joined_timeseries")
 
     nse = teehr.DeterministicMetrics.NashSutcliffeEfficiency()
-    ev.table("joined_timeseries").query(
-        include_metrics=[nse],
+    ev.table("joined_timeseries").aggregate(
+        metrics=[nse],
         group_by=["primary_location_id"]
     ).write(table_name="metrics", write_mode="create_or_replace")
 
@@ -557,11 +557,11 @@ def test_location_event_detection(function_scope_test_warehouse):
     ev = function_scope_test_warehouse
 
     ped = tcf.AbovePercentileEventDetection()
-    sdf = ev.table("joined_timeseries").add_calculated_fields(ped).query(
+    sdf = ev.table("joined_timeseries").add_calculated_fields(ped).aggregate(
         group_by=["configuration_name",
                   "primary_location_id",
                   "event_above_id"],
-        include_metrics=[
+        metrics=[
             teehr.Signatures.Maximum(
                 input_field_names=["primary_value"],
                 output_field_name="max_primary_value"

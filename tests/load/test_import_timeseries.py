@@ -470,11 +470,10 @@ def test_validate_and_insert_fews_xml_timeseries(function_scope_evaluation_templ
     kge = m.KlingGuptaEfficiency()
     include_metrics = [kge]
 
-    metrics_df = ev.metrics.query(
-        include_metrics=include_metrics,
+    metrics_df = ev.metrics.aggregate(
+        metrics=include_metrics,
         group_by=["primary_location_id", "reference_time"],
-        order_by=["primary_location_id"],
-    ).to_geopandas()
+    ).order_by(["primary_location_id"]).to_geopandas()
 
     assert metrics_df.shape == (1, 5)
     assert metrics_df["primary_location_id"].nunique() == 1
