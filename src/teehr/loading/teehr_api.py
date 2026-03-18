@@ -57,6 +57,14 @@ def teehr_api_timeseries_to_dataframe(
     # Drop columns that are not part of the TEEHR timeseries schema
     df.drop(columns=['series_type'], inplace=True, errors='ignore')
 
+    # Ensure expected columns exist even if missing from the API payload
+    if 'reference_time' not in df.columns:
+        df['reference_time'] = pd.NaT
+    if 'value_time' not in df.columns:
+        df['value_time'] = pd.NaT
+    if 'value' not in df.columns:
+        df['value'] = None
+
     # Replace 'null' string with None in reference_time column
     df['reference_time'] = df['reference_time'].replace('null', pd.NaT)
 
