@@ -46,7 +46,7 @@ the joined timeseries view, location attributes view, calculated fields, and eve
 
 Metrics
 -------
-Calculate performance metrics using the query method. This section covers grouping, filtering,
+Calculate performance metrics using the aggregate method. This section covers grouping, filtering,
 deterministic and probabilistic metrics, signatures, bootstrapping, and transforms.
 
 :doc:`metrics/metrics`

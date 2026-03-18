@@ -44,11 +44,10 @@ def test_bootstrapping_signatures(session_scope_test_warehouse):
         reps=50
     )
     fdc.unpack_results = True
-    sig_metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[fdc],
+    sig_metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=[fdc],
         group_by=["primary_location_id"],
-        order_by=["primary_location_id"],
-    ).to_pandas()
+    ).order_by(["primary_location_id"]).to_pandas()
 
     assert isinstance(sig_metrics_df, pd.DataFrame)
     assert sig_metrics_df.index.size == 3
@@ -79,9 +78,10 @@ def test_unpacking_bootstrap_results(session_scope_test_warehouse):
             value="gage-A"
         )
     ]
-    metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[kge],
+    metrics_df = ev.table("joined_timeseries").filter(
         filters=filters,
+    ).aggregate(
+        metrics=[kge],
         group_by=["primary_location_id"],
     ).to_pandas()
     cols = metrics_df.columns
@@ -141,9 +141,10 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[kge],
+    metrics_df = ev.table("joined_timeseries").filter(
         filters=filters,
+    ).aggregate(
+        metrics=[kge],
         group_by=["primary_location_id"],
     ).to_pandas()
 
@@ -204,9 +205,10 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[kge],
+    metrics_df = ev.table("joined_timeseries").filter(
         filters=filters,
+    ).aggregate(
+        metrics=[kge],
         group_by=["primary_location_id"]
     ).to_pandas()
 
@@ -297,15 +299,17 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[kge, nse],
+    metrics_df = ev.table("joined_timeseries").filter(
         filters=filters,
+    ).aggregate(
+        metrics=[kge, nse],
         group_by=["primary_location_id"]
     ).to_pandas()
 
-    _ = ev.table("joined_timeseries").query(
-        include_metrics=[kge, nse],
+    _ = ev.table("joined_timeseries").filter(
         filters=filters,
+    ).aggregate(
+        metrics=[kge, nse],
         group_by=["primary_location_id"]
     ).to_sdf()
 
@@ -369,9 +373,10 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
         )
     ]
 
-    metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[kge],
+    metrics_df = ev.table("joined_timeseries").filter(
         filters=filters,
+    ).aggregate(
+        metrics=[kge],
         group_by=["primary_location_id"],
     ).to_pandas()
 
@@ -410,9 +415,10 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
             value="gage-A"
         )
     ]
-    metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[fdc],
+    metrics_df = ev.table("joined_timeseries").filter(
         filters=filters,
+    ).aggregate(
+        metrics=[fdc],
         group_by=["primary_location_id"],
     ).to_pandas()
 

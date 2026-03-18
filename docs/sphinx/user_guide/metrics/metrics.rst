@@ -5,13 +5,14 @@ Metrics
 *******
 
 TEEHR provides comprehensive metrics for evaluating hydrologic model performance.
-The :meth:`query() <teehr.evaluation.tables.base_table.BaseTable.query>` method on tables and views computes metrics across grouped data,
+The :meth:`aggregate() <teehr.evaluation.tables.base_table.BaseTable.aggregate>` method on tables and views computes metrics across grouped data,
 with support for bootstrapping, transforms, and multiple metric categories.
 
-Using the Query Method
-======================
+Using the Aggregate Method
+==========================
 
-The :meth:`query() <teehr.evaluation.tables.base_table.BaseTable.query>` method is available on all Table and View objects. It computes
+
+The :meth:`aggregate() <teehr.evaluation.tables.base_table.BaseTable.aggregate>` method is available on all Table and View objects. It computes
 specified metrics grouped by selected fields:
 
 .. code-block:: python
@@ -22,15 +23,15 @@ specified metrics grouped by selected fields:
     ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Basic metrics query
-    metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],
         group_by=["primary_location_id"],
     ).to_pandas()
 
-Query Parameters
+Aggregate Parameters
 ----------------
 
 .. list-table::
@@ -39,16 +40,10 @@ Query Parameters
 
    * - Parameter
      - Description
-   * - ``include_metrics``
+   * - ``metrics``
      - List of metric instances to compute
    * - ``group_by``
-     - Fields to group by (e.g., location, configuration, month)
-   * - ``order_by``
-     - Fields to sort results by
-   * - ``filters``
-     - List of filter conditions to apply before computing metrics
-   * - ``include_geometry``
-     - Whether to include location geometry in results (for GeoDataFrame output)
+     - List of fields to group by before computing metrics
 
 Group By Fields
 ---------------
@@ -60,17 +55,17 @@ The ``group_by`` parameter controls how metrics are aggregated. Common groupings
     import teehr.models.calculated_fields.row_level as rcf
 
     # Group by location only
-    jt.query(include_metrics=[...], group_by=["primary_location_id"])
+    jt.aggregate(metrics=[...], group_by=["primary_location_id"])
 
     # Group by location and configuration
-    jt.query(include_metrics=[...], group_by=["primary_location_id", "configuration_name"])
+    jt.aggregate(metrics=[...], group_by=["primary_location_id", "configuration_name"])
 
     # Group by calculated fields
     jt = ev.joined_timeseries_view().add_calculated_fields([
         rcf.Month(),
         rcf.WaterYear(),
     ])
-    jt.query(include_metrics=[...], group_by=["primary_location_id", "water_year", "month"])
+    jt.aggregate(metrics=[...], group_by=["primary_location_id", "water_year", "month"])
 
 
 Using Metrics
@@ -134,8 +129,8 @@ Compute confidence intervals using bootstrap resampling:
     kge.bootstrap = boot
     kge.unpack_results = True  # Separate columns for quantiles
 
-    metrics_df = jt.query(
-        include_metrics=[kge],
+    metrics_df = jt.aggregate(
+        metrics=[kge],
         group_by=["primary_location_id"],
     ).to_pandas()
 
@@ -160,15 +155,15 @@ Complete Example
         ev.joined_timeseries_view(add_attrs=True)
         .add_calculated_fields([rcf.WaterYear(), rcf.Seasons()])
         .filter("water_year >= 2015")
-        .query(
-            include_metrics=[
+        .aggregate(
+            metrics=[
                 DeterministicMetrics.KlingGuptaEfficiency(),
                 DeterministicMetrics.RelativeBias(),
                 Signatures.Average(),
             ],
             group_by=["primary_location_id", "season"],
-            order_by=["primary_location_id", "season"],
         )
+        .order_by(["primary_location_id", "season"])
         .to_pandas()
     )
 

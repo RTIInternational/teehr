@@ -985,11 +985,10 @@ class RowLevelCalculatedFields:
 
     >>> ev.metrics(table_name="joined_timeseries").add_calculated_fields([
     ...     rcf.Month()
-    ... ]).query(
-    ...     include_metrics=[fdc],
+    ... ]).aggregate(
+    ...     metrics=[fdc],
     ...     group_by=[flds.primary_location_id, "month"],
-    ...     order_by=[flds.primary_location_id, "month"],
-    ... ).to_pandas()
+    ... ).order_by([flds.primary_location_id, "month"]).to_pandas()
     """
 
     Month = Month

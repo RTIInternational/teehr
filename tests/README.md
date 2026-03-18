@@ -226,7 +226,7 @@ def test_my_feature(session_scope_test_warehouse):
     ev = session_scope_test_warehouse
 
     # Your test code
-    result = ev.metrics.query(...).to_pandas()
+    result = ev.metrics.aggregate(...).to_pandas()
 
     assert result.shape[0] > 0
 ```

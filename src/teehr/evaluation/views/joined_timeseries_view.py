@@ -31,8 +31,8 @@ class JoinedTimeseriesView(View):
 
     Chain operations and materialize:
 
-    >>> ev.join_timeseries_view().query(
-    ...     include_metrics=[KGE()],
+    >>> ev.join_timeseries_view().aggregate(
+    ...     metrics=[KGE()],
     ...     group_by=["primary_location_id"]
     ... ).write("location_kge")
 

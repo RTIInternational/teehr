@@ -91,25 +91,6 @@ class DomainTable(BaseTable):
             uniqueness_fields=self.uniqueness_fields
         )
 
-    def query(
-        self,
-        filters: Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-        ] = None,
-        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
-    ):
-        """Run a query with filters and ordering.
-
-        See :meth:`DataFrameBase.query` for full documentation.
-
-        Note
-        ----
-        The ``group_by`` and ``include_metrics`` parameters are not
-        available for domain tables.
-        """
-        super().query(filters=filters, order_by=order_by)
-
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         raise NotImplementedError(

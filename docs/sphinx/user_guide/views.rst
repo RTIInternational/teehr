@@ -134,8 +134,8 @@ For repeated queries, materialize a view to an Iceberg table:
     ev.joined_timeseries_view(add_attrs=True).write("joined_with_attrs")
 
     # Later, query the materialized table directly
-    df = ev.table("joined_with_attrs").query(
-        include_metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
+    df = ev.table("joined_with_attrs").aggregate(
+        metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
         group_by=["primary_location_id"]
     ).to_pandas()
 
@@ -433,14 +433,13 @@ Chain multiple calculated fields together:
     ])
 
     # Now query metrics grouped by these new fields
-    metrics_df = jt.query(
-        include_metrics=[
+    metrics_df = jt.aggregate(
+        metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],
         group_by=["primary_location_id", "water_year", "season", "event_above_id"],
-        order_by=["primary_location_id", "water_year"],
-    ).to_pandas()
+    ).order_by(["primary_location_id", "water_year"]).to_pandas()
 
 Materializing Computed Fields
 -----------------------------
@@ -455,8 +454,8 @@ For repeated use, write calculated fields to a table:
     ]).write("joined_timeseries")
 
     # Query the materialized table
-    metrics_df = ev.table("joined_timeseries").query(
-        include_metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
         group_by=["primary_location_id", "event_above"],
     ).to_pandas()
 
@@ -499,15 +498,14 @@ A typical workflow combining views, calculated fields, and metrics:
     """)
 
     # Query metrics grouped by computed fields
-    metrics_df = jt.query(
-        include_metrics=[
+    metrics_df = jt.aggregate(
+        metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.RelativeBias(),
             DeterministicMetrics.RootMeanSquareError(),
         ],
         group_by=["primary_location_id", "water_year", "ecoregion", "event_above_id"],
-        order_by=["primary_location_id", "water_year"],
-    ).to_pandas()
+    ).order_by(["primary_location_id", "water_year"]).to_pandas()
 
     print(metrics_df.head())
 

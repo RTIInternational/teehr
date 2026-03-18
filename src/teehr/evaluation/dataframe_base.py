@@ -105,7 +105,7 @@ class TeehrDataFrameBase(ABC):
         is auto-detected from common location ID field names ('location_id',
         'primary_location_id') unless specified.
 
-        This is especially useful when called *after* a ``query()`` with
+        This is especially useful when called *after* a ``aggregate()`` with
         GROUP BY and aggregation metrics, so that attributes do not need
         to be included in the ``group_by`` clause in order to pass through
         to the result.
@@ -147,9 +147,9 @@ class TeehrDataFrameBase(ABC):
         >>> from teehr.metrics import KGE
         >>> df = (
         ...     ev.joined_timeseries_view()
-        ...     .query(
+        ...     .aggregate(
         ...         group_by=["primary_location_id"],
-        ...         include_metrics=[KGE()]
+        ...         metrics=[KGE()]
         ...     )
         ...     .add_attributes(attr_list=["drainage_area", "ecoregion"])
         ...     .to_pandas()
@@ -273,30 +273,18 @@ class TeehrDataFrameBase(ABC):
         self._sdf = order_df(self.to_sdf(), fields)
         return self
 
-    def query(
+    def aggregate(
         self,
-        filters: Union[
-            str, dict, TableFilter,
-            List[Union[str, dict, TableFilter]]
-        ] = None,
-        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
-        group_by: Union[str, List[str]] = None,
-        include_metrics: List[MetricsBasemodel] = None
+        group_by: Union[str, List[str]],
+        metrics: List[MetricsBasemodel]
     ):
-        """Run a query with filters, grouping, metrics, and ordering.
-
-        Filters are applied first, then metrics are calculated on the filtered data,
-        and finally the results are ordered.
+        """Aggregate data with grouping and metrics.
 
         Parameters
         ----------
-        filters : Union[str, dict, TableFilter, List[...]], optional
-            Filters to apply before aggregation.
-        order_by : Union[str, StrEnum, List[...]], optional
-            Fields to order the results by.
-        group_by : Union[str, List[str]], optional
+        group_by : Union[str, List[str]]
             Fields to group by for metric calculation.
-        include_metrics : List[MetricsBasemodel], optional
+        metrics : List[MetricsBasemodel]
             Metrics to calculate.
 
         Returns
@@ -306,32 +294,41 @@ class TeehrDataFrameBase(ABC):
 
         Examples
         --------
-        >>> df = accessor.query(
-        >>>     filters=["value_time > '2022-01-01'"],
-        >>>     order_by=["location_id", "value_time"]
+        >>> df = accessor.aggregate(
+        >>>     metrics=[KGE()],
+        >>>     group_by=["primary_location_id"]
         >>> ).to_pandas()
+
+        Chain with filter and order_by:
+
+        >>> from teehr import DeterministicMetrics as dm
+        >>>
+        >>> df = (
+        >>>     accessor
+        >>>     .filter("primary_location_id LIKE 'usgs%'")
+        >>>     .aggregate(
+        >>>         group_by=["primary_location_id", "configuration_name"],
+        >>>         metrics=[dm.KlingGuptaEfficiency(), dm.RelativeBias()]
+        >>>     )
+        >>>     .order_by(["primary_location_id", "configuration_name"])
+        >>>     .to_pandas()
+        >>> )
+
         """
-        logger.info("Performing the query.")
-        if filters is not None:
-            self._apply_filters(filters)
+        logger.info("Performing the aggregation.")
 
-        if include_metrics is not None and group_by is not None:
-            logger.debug(f"Grouping by '{group_by}' and applying metrics.")
-            gp = group_df(self.to_sdf(), group_by)
+        logger.debug(f"Grouping by '{group_by}' and applying metrics.")
+        gp = group_df(self.to_sdf(), group_by)
 
-            sdf = apply_aggregation_metrics(
-                gp=gp,
-                include_metrics=include_metrics,
-            )
-            self._sdf = post_process_metric_results(
-                metrics_sdf=sdf,
-                include_metrics=include_metrics,
-                group_by=group_by
-            )
-
-        if order_by is not None:
-            logger.debug(f"Ordering by: {order_by}.")
-            self._sdf = order_df(self.to_sdf(), order_by)
+        sdf = apply_aggregation_metrics(
+            gp=gp,
+            include_metrics=metrics,
+        )
+        self._sdf = post_process_metric_results(
+            metrics_sdf=sdf,
+            include_metrics=metrics,
+            group_by=group_by
+        )
 
         return self
 
@@ -392,8 +389,8 @@ class TeehrDataFrameBase(ABC):
 
         Examples
         --------
-        >>> accessor.query(
-        ...     include_metrics=[KGE()],
+        >>> accessor.aggregate(
+        ...     metrics=[KGE()],
         ...     group_by=["primary_location_id"]
         ... ).write("location_metrics")
         """

@@ -74,7 +74,7 @@ All tables inherit common methods from the :class:`BaseTable <teehr.evaluation.t
 
 - :meth:`filter() <teehr.evaluation.tables.base_table.BaseTable.filter>` - Apply filters
 - :meth:`order_by() <teehr.evaluation.tables.base_table.BaseTable.order_by>` - Sort results
-- :meth:`query() <teehr.evaluation.tables.base_table.BaseTable.query>` - Combined filter, group, metrics, order
+- :meth:`aggregate() <teehr.evaluation.tables.base_table.BaseTable.aggregate>` - Calculate metrics with grouping
 - :meth:`add_calculated_fields() <teehr.evaluation.tables.base_table.BaseTable.add_calculated_fields>` - Add computed columns
 - :meth:`add_geometry() <teehr.evaluation.tables.base_table.BaseTable.add_geometry>` - Join geometry from locations table
 
@@ -326,8 +326,8 @@ Table methods return ``self`` to enable fluent method chaining:
        ev.joined_timeseries_view()
        .filter("primary_location_id LIKE 'usgs%'")
        .add_calculated_fields([rcf.Month(), rcf.WaterYear()])
-       .query(
-           include_metrics=[
+       .aggregate(
+           metrics=[
                dm.KlingGuptaEfficiency(),
                dm.RelativeBias()
            ],
@@ -346,8 +346,8 @@ Write query results to new tables:
 .. code-block:: python
 
    # Calculate metrics and save to a new table
-   ev.joined_timeseries_view().query(
-       include_metrics=[dm.KlingGuptaEfficiency()],
+   ev.joined_timeseries_view().aggregate(
+       metrics=[dm.KlingGuptaEfficiency()],
        group_by=["primary_location_id", "configuration_name"]
    ).write("location_metrics")
 
@@ -465,8 +465,8 @@ property to check whether a table is a core table before attempting to drop it.
 .. code-block:: python
 
    # Write a user-created table
-   ev.joined_timeseries_view().query(
-       include_metrics=[dm.KlingGuptaEfficiency()],
+   ev.joined_timeseries_view().aggregate(
+       metrics=[dm.KlingGuptaEfficiency()],
        group_by=["primary_location_id"]
    ).write("location_metrics")
 
