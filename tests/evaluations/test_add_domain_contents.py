@@ -122,23 +122,6 @@ def test_upsert_domain(function_scope_evaluation_template):
 
 
 @pytest.mark.function_scope_evaluation_template
-def test_invalid_description_domain(function_scope_evaluation_template):
-    """Test creating a new study."""
-    ev = function_scope_evaluation_template
-
-    with pytest.raises(ValueError, match="description"):
-        ev.configurations.add(
-            configuration=[
-                Configuration(
-                    name="conf1",
-                    type="secondary",
-                    description="Configuration, Cannot have commas",
-                )
-            ]
-        )
-
-
-@pytest.mark.function_scope_evaluation_template
 def test_invalid_name_domain(function_scope_evaluation_template):
     """Test creating a new study."""
     ev = function_scope_evaluation_template

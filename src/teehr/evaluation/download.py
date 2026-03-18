@@ -9,45 +9,9 @@ import geopandas as gpd
 import requests
 
 from teehr.loading.teehr_api import teehr_api_timeseries_to_dataframe
+from teehr.loading.teehr_api import format_datetime_range
 
 logger = logging.getLogger(__name__)
-
-
-def _format_datetime_range(
-    start_date: Union[str, datetime, pd.Timestamp, None] = None,
-    end_date: Union[str, datetime, pd.Timestamp, None] = None
-) -> Optional[str]:
-    """Format start and end dates into ISO 8601 datetime range string.
-
-    Parameters
-    ----------
-    start_date : Union[str, datetime, pd.Timestamp, None], optional
-        Start date/time. If None and end_date is provided, returns "../end_date".
-        If both None, returns None.
-    end_date : Union[str, datetime, pd.Timestamp, None], optional
-        End date/time. If None and start_date is provided, returns "start_date/..".
-
-    Returns
-    -------
-    Optional[str]
-        ISO 8601 datetime range string (e.g., "2020-01-01/2020-12-31")
-        or open-ended range (e.g., "2020-01-01/.." or "../2020-12-31")
-        or None if both dates are None
-    """
-    if start_date is None and end_date is None:
-        return None
-
-    if start_date is None:
-        end_dt = pd.Timestamp(end_date)
-        return f"../{end_dt.isoformat()}"
-
-    start_dt = pd.Timestamp(start_date)
-
-    if end_date is None:
-        return f"{start_dt.isoformat()}/.."
-
-    end_dt = pd.Timestamp(end_date)
-    return f"{start_dt.isoformat()}/{end_dt.isoformat()}"
 
 
 class Download:
@@ -791,61 +755,6 @@ class Download:
 
         return all_items
 
-    def _fetch_paginated_timeseries(
-        self,
-        endpoint: str,
-        params: dict,
-        page_size: int,
-        timeout: int = DEFAULT_TIMEOUT,
-    ) -> list:
-        """Fetch all pages from a timeseries endpoint using limit/offset pagination.
-
-        Parameters
-        ----------
-        endpoint : str
-            API endpoint path (e.g., "collections/primary_timeseries/items")
-        params : dict
-            Base query parameters (without limit/offset)
-        page_size : int
-            Number of series items to request per page
-        timeout : int, optional
-            Request timeout in seconds. Default: 60
-
-        Returns
-        -------
-        list
-            All series items accumulated across all pages
-        """
-        all_items = []
-        page_params = {**params, 'limit': page_size}
-        current_offset = 0
-
-        while True:
-            page_params['offset'] = current_offset
-            response = self._make_request(
-                endpoint,
-                self.api_base_url,
-                self.verify_ssl,
-                page_params,
-                timeout
-            )
-            page_data = response.json()
-
-            # Normalise to list — API may return a single dict or a list
-            page_items = [page_data] if isinstance(page_data, dict) else page_data
-
-            all_items.extend(page_items)
-            logger.debug(
-                f"Fetched page offset={current_offset} with {len(page_items)} items from {endpoint}"
-            )
-
-            if len(page_items) < page_size:
-                break
-
-            current_offset += page_size
-
-        return all_items
-
     def primary_timeseries(
         self,
         primary_location_id: Union[str, List[str]],
@@ -923,11 +832,11 @@ class Download:
         if variable_name:
             params["variable_name"] = variable_name
 
-        datetime_range = _format_datetime_range(start_date, end_date)
+        datetime_range = format_datetime_range(start_date, end_date)
         if datetime_range:
             params["datetime"] = datetime_range
 
-        items = self._fetch_paginated_timeseries(
+        items = self._fetch_paginated_items(
             "collections/primary_timeseries/items",
             params,
             page_size=page_size,
@@ -1039,11 +948,11 @@ class Download:
         if variable_name:
             params["variable_name"] = variable_name
 
-        datetime_range = _format_datetime_range(start_date, end_date)
+        datetime_range = format_datetime_range(start_date, end_date)
         if datetime_range:
             params["datetime"] = datetime_range
 
-        items = self._fetch_paginated_timeseries(
+        items = self._fetch_paginated_items(
             "collections/secondary_timeseries/items",
             params,
             page_size=page_size,
