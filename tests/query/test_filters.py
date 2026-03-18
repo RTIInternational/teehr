@@ -152,8 +152,8 @@ def test_chain_filter_list_model(module_scope_test_warehouse):
 def test_query_single_str(module_scope_test_warehouse):
     """Test query string."""
     ev = module_scope_test_warehouse
-    df = ev.primary_timeseries.query(
-        filters="location_id = 'gage-A'"
+    df = ev.primary_timeseries.filter(
+        "location_id = 'gage-A'"
     ).to_pandas()
     assert len(df) == 26
 
@@ -162,8 +162,8 @@ def test_query_single_str(module_scope_test_warehouse):
 def test_query_single_dict(module_scope_test_warehouse):
     """Test query dict."""
     ev = module_scope_test_warehouse
-    df = ev.primary_timeseries.query(
-        filters={
+    df = ev.primary_timeseries.filter(
+        {
             "column": "location_id",
             "operator": "=",
             "value": "gage-A"
@@ -176,8 +176,8 @@ def test_query_single_dict(module_scope_test_warehouse):
 def test_query_single_model(module_scope_test_warehouse):
     """Test query model."""
     ev = module_scope_test_warehouse
-    df = ev.primary_timeseries.query(
-        filters=TableFilter(
+    df = ev.primary_timeseries.filter(
+        TableFilter(
             column="location_id",
             operator=FilterOperators.eq,
             value="gage-A"
@@ -190,12 +190,10 @@ def test_query_single_model(module_scope_test_warehouse):
 def test_query_list_str(module_scope_test_warehouse):
     """Test query list of strings."""
     ev = module_scope_test_warehouse
-    df = ev.primary_timeseries.query(
-        filters=[
-            "location_id = 'gage-A'",
-            "value_time > '2022-01-01T12:00:00'"
-        ]
-    ).to_pandas()
+    df = ev.primary_timeseries.filter([
+        "location_id = 'gage-A'",
+        "value_time > '2022-01-01T12:00:00'"
+    ]).to_pandas()
     assert len(df) == 13
 
 
@@ -203,20 +201,18 @@ def test_query_list_str(module_scope_test_warehouse):
 def test_query_list_dict(module_scope_test_warehouse):
     """Test query list of dicts."""
     ev = module_scope_test_warehouse
-    df = ev.primary_timeseries.query(
-        filters=[
-            {
-                "column": "location_id",
-                "operator": "=",
-                "value": "gage-A"
-            },
-            {
-                "column": "value_time",
-                "operator": ">",
-                "value": "2022-01-01T12:00:00Z"
-            }
-        ]
-    ).to_pandas()
+    df = ev.primary_timeseries.filter([
+        {
+            "column": "location_id",
+            "operator": "=",
+            "value": "gage-A"
+        },
+        {
+            "column": "value_time",
+            "operator": ">",
+            "value": "2022-01-01T12:00:00Z"
+        }
+    ]).to_pandas()
     assert len(df) == 13
 
 
@@ -224,20 +220,18 @@ def test_query_list_dict(module_scope_test_warehouse):
 def test_query_list_model(module_scope_test_warehouse):
     """Test query list of models."""
     ev = module_scope_test_warehouse
-    df = ev.primary_timeseries.query(
-        filters=[
-            TableFilter(
-                column="location_id",
-                operator=FilterOperators.eq,
-                value="gage-A"
-            ),
-            TableFilter(
-                column="value_time",
-                operator=FilterOperators.gt,
-                value="2022-01-01T12:00:00Z"
-            )
-        ]
-    ).to_pandas()
+    df = ev.primary_timeseries.filter([
+        TableFilter(
+            column="location_id",
+            operator=FilterOperators.eq,
+            value="gage-A"
+        ),
+        TableFilter(
+            column="value_time",
+            operator=FilterOperators.gt,
+            value="2022-01-01T12:00:00Z"
+        )
+    ]).to_pandas()
     assert len(df) == 13
 
 
@@ -250,7 +244,7 @@ def test_filter_by_lead_time(function_scope_test_warehouse):
     ]).write("joined_timeseries")
 
     filter_value = timedelta(days=0, hours=18)
-    df = ev.table("joined_timeseries").query(
+    df = ev.table("joined_timeseries").filter(
             TableFilter(
                 column="forecast_lead_time",
                 operator=FilterOperators.gt,
