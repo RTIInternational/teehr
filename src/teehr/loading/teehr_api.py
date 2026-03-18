@@ -57,13 +57,17 @@ def teehr_api_timeseries_to_dataframe(
     # Drop columns that are not part of the TEEHR timeseries schema
     df.drop(columns=['series_type'], inplace=True, errors='ignore')
 
-    # Ensure expected columns exist even if missing from the API payload
+    # Validate columns required for this function and raise error if missing
+    required_columns = ['value_time', 'value', 'reference_time']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        raise ValueError(
+            f"Required columns missing from API response: {missing_columns}"
+        )
+
+    # reference_time is optional (only present for secondary timeseries, not primary), so add it if missing and fill with NaT
     if 'reference_time' not in df.columns:
         df['reference_time'] = pd.NaT
-    if 'value_time' not in df.columns:
-        df['value_time'] = pd.NaT
-    if 'value' not in df.columns:
-        df['value'] = None
 
     # Replace 'null' string with None in reference_time column
     df['reference_time'] = df['reference_time'].replace('null', pd.NaT)
