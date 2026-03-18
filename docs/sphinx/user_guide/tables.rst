@@ -500,56 +500,6 @@ See also:
 - :meth:`BaseEvaluation.drop_table() <teehr.LocalReadWriteEvaluation.drop_table>`
 
 
-Dropping Tables
-===============
-
-User-created tables (such as materialized views and saved query results) can be
-dropped when they are no longer needed. Core TEEHR tables (like ``primary_timeseries``
-and ``locations``) are protected and cannot be dropped.
-
-Use the :attr:`is_core_table <teehr.evaluation.tables.base_table.BaseTable.is_core_table>`
-property to check whether a table is a core table before attempting to drop it.
-
-**Drop a user-created table via the table instance:**
-
-.. code-block:: python
-
-   # Write a user-created table
-   ev.joined_timeseries_view().aggregate(
-       metrics=[dm.KlingGuptaEfficiency()],
-       group_by=["primary_location_id"]
-   ).write("location_metrics")
-
-   # Check whether it's a core table (always False for user-created tables)
-   ev.table("location_metrics").is_core_table  # False
-
-   # Drop the table
-   ev.table("location_metrics").drop()
-
-**Drop a user-created table via the evaluation:**
-
-.. code-block:: python
-
-   # Convenience method on the Evaluation class
-   ev.drop_table("location_metrics")
-
-.. note::
-
-   Attempting to drop a core table raises a ``ValueError``:
-
-   .. code-block:: python
-
-      ev.drop_table("primary_timeseries")  # raises ValueError
-      # ValueError: Cannot drop core table 'primary_timeseries'. Only user-created
-      # tables (e.g., materialized views or saved query results) can be dropped.
-
-See also:
-
-- :meth:`BaseTable.drop() <teehr.evaluation.tables.base_table.BaseTable.drop>`
-- :attr:`BaseTable.is_core_table <teehr.evaluation.tables.base_table.BaseTable.is_core_table>`
-- :meth:`BaseEvaluation.drop_table() <teehr.LocalReadWriteEvaluation.drop_table>`
-
-
 Inspecting Tables
 =================
 

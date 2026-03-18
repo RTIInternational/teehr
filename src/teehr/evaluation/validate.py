@@ -57,11 +57,14 @@ class Validate:
             self._ev.spark.catalog.dropTempView(fk["domain_table"])
             if not result_sdf.isEmpty():
                 self._ev.spark.catalog.dropTempView("temp_table")
-                raise ValueError(
+                msg = (
                     f"Foreign key constraint violation: "
                     f"A {fk['column']} entry is not found in "
                     f"the {fk['domain_column']} column in {fk['domain_table']}"
+                    # f"\nSample offending records:\n" + result_sdf.show(truncate=False)
                 )
+                logger.info(msg)
+                raise ValueError(msg)
         self._ev.spark.catalog.dropTempView("temp_table")
 
     @staticmethod

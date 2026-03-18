@@ -30,6 +30,9 @@ class Persistence(BenchmarkGeneratorBaseModel, GeneratorABC):
     an input timeseries DataFrame. It assigns the values from the input
     timeseries to the forecast timeseries based on t-0 time, without any
     modifications or aggregations.
+
+    .. note::
+       This class is not yet implemented.
     """
 
     # TODO: Implement

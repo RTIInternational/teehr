@@ -869,3 +869,68 @@ def critical_success_index(model: MetricsBasemodel) -> Callable:
         return result
 
     return critical_success_index_inner
+
+
+def success_ratio(model: MetricsBasemodel) -> Callable:
+    """Create the success_ratio metric function.
+
+    :math:`SR=\\frac{TP+TN}{TP+TN+FP+FN}`
+    """ # noqa
+    logger.debug("Building the success_ratio metric function")
+
+    def success_ratio_inner(p: pd.Series,
+                            s: pd.Series,
+                            threshold_series: pd.Series) -> float:
+        """Success ratio."""
+        p, s, threshold_series = _transform(p,
+                                            s,
+                                            model,
+                                            None,
+                                            threshold_series)
+
+        threshold = _validate_threshold_field(threshold_series)
+
+        tp = np.sum((p >= threshold) & (s >= threshold))
+        tn = np.sum((p < threshold) & (s < threshold))
+        fp = np.sum((p < threshold) & (s >= threshold))
+        fn = np.sum((p >= threshold) & (s < threshold))
+        if (tp + tn + fp + fn) == 0:
+            result = np.nan
+        else:
+            result = (tp + tn) / (tp + tn + fp + fn)
+
+        return result
+
+    return success_ratio_inner
+
+
+def frequency_bias_index(model: MetricsBasemodel) -> Callable:
+    """Create the frequency_bias_index metric function.
+
+    :math:`FBIAS=\\frac{TP+FP}{TP+FN}`
+    """ # noqa
+    logger.debug("Building the frequency_bias_index metric function")
+
+    def frequency_bias_index_inner(p: pd.Series,
+                                   s: pd.Series,
+                                   threshold_series: pd.Series) -> float:
+        """Frequency bias index."""
+        p, s, threshold_series = _transform(p,
+                                            s,
+                                            model,
+                                            None,
+                                            threshold_series)
+
+        threshold = _validate_threshold_field(threshold_series)
+
+        tp = np.sum((p >= threshold) & (s >= threshold))
+        fp = np.sum((p < threshold) & (s >= threshold))
+        fn = np.sum((p >= threshold) & (s < threshold))
+        if (tp + fn) == 0:
+            result = np.nan
+        else:
+            result = (tp + fp) / (tp + fn)
+
+        return result
+
+    return frequency_bias_index_inner

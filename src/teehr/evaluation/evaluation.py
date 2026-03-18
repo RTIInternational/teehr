@@ -1,5 +1,6 @@
 """Evaluation module."""
 import tempfile
+from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import Union, Literal, List
 from pathlib import Path
@@ -59,10 +60,11 @@ import teehr
 logger = logging.getLogger(__name__)
 
 
-class BaseEvaluation(EvaluationBaseModel):
-    """The Evaluation class.
+class BaseEvaluation(EvaluationBaseModel, ABC):
+    """Abstract base class for TEEHR Evaluations.
 
-    This is the main class for the TEEHR evaluation.
+    This is the main class for the TEEHR evaluation. Subclasses must implement
+    the `catalog` property to provide their specific catalog type.
     """
 
     def __init__(
@@ -501,29 +503,44 @@ class BaseEvaluation(EvaluationBaseModel):
             namespace_name=namespace_name,
         )
 
-    def _set_active_catalog(self, catalog: Literal["local", "remote"]):
-        """Set the active catalog to either local or remote.
+    @property
+    @abstractmethod
+    def catalog(self):
+        """The catalog for this evaluation.
 
-        Parameters
-        ----------
-        catalog : Literal["local", "remote"]
-            The catalog to set as active.
+        Subclasses must implement this property to return their specific
+        catalog type (LocalCatalog or RemoteCatalog).
+
+        Returns
+        -------
+        LocalCatalog or RemoteCatalog
+            The catalog configuration for this evaluation.
         """
-        if catalog == "local":
-            self.active_catalog = self.local_catalog
-            self.spark.catalog.setCurrentCatalog(
-                self.local_catalog.catalog_name
-            )
-            self.cache_dir = self.local_catalog.cache_dir
-            logger.info("Active catalog set to local.")
-        elif catalog == "remote":
-            self.active_catalog = self.remote_catalog
-            self.spark.catalog.setCurrentCatalog(
-                self.remote_catalog.catalog_name
-            )
-            logger.info("Active catalog set to remote.")
-        else:
-            raise ValueError("Catalog must be either 'local' or 'remote'.")
+        pass
+
+    @property
+    def active_catalog(self):
+        """Alias for catalog property (backwards compatibility).
+
+        .. deprecated::
+            Use ``catalog`` property instead. This alias will be removed
+            in a future version.
+
+        Returns
+        -------
+        LocalCatalog or RemoteCatalog
+            The catalog configuration for this evaluation.
+        """
+        return self.catalog
+
+    def _activate_catalog(self):
+        """Activate this evaluation's catalog in Spark.
+
+        Sets the Spark session's current catalog to this evaluation's catalog.
+        Called automatically during initialization.
+        """
+        self.spark.catalog.setCurrentCatalog(self.catalog.catalog_name)
+        logger.info(f"Active catalog set to {self.catalog.catalog_name}.")
 
     def enable_logging(self):
         """Enable logging."""
@@ -752,19 +769,21 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             f"jdbc:sqlite:{warehouse_dir.as_posix()}/{LOCAL_CATALOG_DB_NAME}"
         )
         # Get the catalog metadata that was set during Spark configuration
-        self.local_catalog = LocalCatalog(
+        self._catalog = LocalCatalog(
             warehouse_dir=warehouse_dir,
             catalog_name=local_catalog_name,
             namespace_name=self.spark.conf.get("local_namespace_name"),
             catalog_type=self.spark.conf.get("local_catalog_type"),
         )
+        self.cache_dir = self._catalog.cache_dir
+
         if create_dir is False and check_evaluation_version is True:
             self.check_evaluation_version(warehouse_dir=warehouse_dir)
 
         # Need to create the warehouse dir if it does not exist,
         # along with the cache dir.
         if warehouse_dir.is_dir() is False:
-            self.local_catalog.cache_dir.mkdir(parents=True, exist_ok=True)
+            self._catalog.cache_dir.mkdir(parents=True, exist_ok=True)
 
             version_file = Path(warehouse_dir) / "version"
             with open(version_file, "w") as f:
@@ -773,11 +792,36 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             apply_migrations.evolve_catalog_schema(
                 spark=self.spark,
                 migrations_dir_path=Path(__file__).parents[1] / "migrations",
-                target_catalog_name=self.local_catalog.catalog_name,
-                target_namespace_name=self.local_catalog.namespace_name
+                target_catalog_name=self._catalog.catalog_name,
+                target_namespace_name=self._catalog.namespace_name
             )
 
-        self._set_active_catalog("local")  # Creates the JDBC .db file
+        self._activate_catalog()  # Creates the JDBC .db file
+
+    @property
+    def catalog(self):
+        """The local catalog for this evaluation.
+
+        Returns
+        -------
+        LocalCatalog
+            The local catalog configuration.
+        """
+        return self._catalog
+
+    @property
+    def local_catalog(self):
+        """Alias for catalog property (backwards compatibility).
+
+        .. deprecated::
+            Use ``catalog`` property instead.
+
+        Returns
+        -------
+        LocalCatalog
+            The local catalog configuration.
+        """
+        return self._catalog
 
     def clean_cache(self):
         """Clean temporary files.
@@ -785,10 +829,10 @@ class LocalReadWriteEvaluation(BaseEvaluation):
         Includes removing temporary files.
         """
         logger.info(
-            f"Removing temporary files from {self.active_catalog.cache_dir}"
+            f"Removing temporary files from {self.catalog.cache_dir}"
         )
-        remove_dir_if_exists(self.active_catalog.cache_dir)
-        self.active_catalog.cache_dir.mkdir()
+        remove_dir_if_exists(self.catalog.cache_dir)
+        self.catalog.cache_dir.mkdir()
 
     def check_evaluation_version(
         self,
@@ -810,7 +854,7 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             If the version format in the file is invalid.
         """
         if warehouse_dir is None:
-            warehouse_dir = self.local_catalog.warehouse_dir
+            warehouse_dir = self._catalog.warehouse_dir
         else:
             warehouse_dir = Path(warehouse_dir)
 
@@ -955,11 +999,12 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
             spark=spark,
             dir_path=temp_path
         )
+
+        # Set up cache directory for temporary files
         local_catalog_name = self.spark.conf.get("local_catalog_name")
         cache_dir = temp_path / local_catalog_name / CACHE_DIR
         cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir = cache_dir
-        self.remote_catalog = None
 
         # Check the configuration for remote catalog access
         if REMOTE_CATALOG_REST_URI == "" or REMOTE_WAREHOUSE_S3_PATH == "":
@@ -969,15 +1014,40 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
                 "When working locally, you can access data in the TEEHR-Cloud data warehouse "
                 "by using the standard Evaluation class and the ev.download methods."
             )
-        # Set the active catalog to remote
-        self.remote_catalog = RemoteCatalog(
+        # Set up the remote catalog
+        self._catalog = RemoteCatalog(
             warehouse_dir=self.spark.conf.get("remote_warehouse_dir"),
             catalog_name=self.spark.conf.get("remote_catalog_name"),
             namespace_name=self.spark.conf.get("remote_namespace_name"),
             catalog_type=self.spark.conf.get("remote_catalog_type"),
             catalog_uri=self.spark.conf.get("remote_catalog_uri"),
         )
-        self._set_active_catalog("remote")
+        self._activate_catalog()
+
+    @property
+    def catalog(self):
+        """The remote catalog for this evaluation.
+
+        Returns
+        -------
+        RemoteCatalog
+            The remote catalog configuration.
+        """
+        return self._catalog
+
+    @property
+    def remote_catalog(self):
+        """Alias for catalog property (backwards compatibility).
+
+        .. deprecated::
+            Use ``catalog`` property instead.
+
+        Returns
+        -------
+        RemoteCatalog
+            The remote catalog configuration.
+        """
+        return self._catalog
 
     def __del__(self):
         """Clean up the temporary directory when the object is deleted."""
