@@ -10,18 +10,17 @@ class Metrics(BaseTable):
 
     .. deprecated:: 0.6.0
         The ``Metrics`` class (accessed via ``ev.metrics``) is deprecated and
-        will be removed in a future version. Use the ``query`` method on the
-        table directly with the ``include_metrics`` argument instead.
+        will be removed in a future version. Use the ``aggregate`` method on the
+        table directly with the ``metrics`` argument instead.
 
         For example:
 
         .. code-block:: python
 
-            ev.table("joined_timeseries").query(
-                include_metrics=[...],
+            ev.table("joined_timeseries").aggregate(
+                metrics=[...],
                 group_by=[...],
-                order_by=[...],
-            )
+            ).order_by([...])
 
     Notes
     -----

@@ -81,7 +81,7 @@ class Fetch:
 
     def _get_secondary_location_ids(self, prefix: str) -> List[str]:
         """Get the secondary location IDs corresponding to primary IDs."""
-        lcw_df = self._ev.location_crosswalks.query(
+        lcw_df = self._ev.location_crosswalks.filter(
             filters={
                 "column": "secondary_location_id",
                 "operator": "like",
@@ -246,7 +246,7 @@ class Fetch:
         >>> )
         """  # noqa
         logger.info("Getting primary location IDs.")
-        locations_df = self._ev.locations.query(
+        locations_df = self._ev.locations.filter(
             filters={
                 "column": "id",
                 "operator": "like",
@@ -630,7 +630,7 @@ class Fetch:
         if location_id_prefix is None:
             locations_gdf = self._ev.locations.to_geopandas()
         else:
-            locations_gdf = self._ev.locations.query(
+            locations_gdf = self._ev.locations.filter(
                 filters={
                     "column": "id",
                     "operator": "like",
@@ -1213,7 +1213,7 @@ class Fetch:
         if location_id_prefix is None:
             locations_gdf = self._ev.locations.to_geopandas()
         else:
-            locations_gdf = self._ev.locations.query(
+            locations_gdf = self._ev.locations.filter(
                 filters={
                     "column": "id",
                     "operator": "like",

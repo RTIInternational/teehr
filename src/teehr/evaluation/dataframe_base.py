@@ -147,9 +147,9 @@ class TeehrDataFrameBase(ABC):
         >>> from teehr.metrics import KGE
         >>> df = (
         ...     ev.joined_timeseries_view()
-        ...     .query(
+        ...     .aggregate(
         ...         group_by=["primary_location_id"],
-        ...         include_metrics=[KGE()]
+        ...         metrics=[KGE()]
         ...     )
         ...     .add_attributes(attr_list=["drainage_area", "ecoregion"])
         ...     .to_pandas()
@@ -389,8 +389,8 @@ class TeehrDataFrameBase(ABC):
 
         Examples
         --------
-        >>> accessor.query(
-        ...     include_metrics=[KGE()],
+        >>> accessor.aggregate(
+        ...     metrics=[KGE()],
         ...     group_by=["primary_location_id"]
         ... ).write("location_metrics")
         """

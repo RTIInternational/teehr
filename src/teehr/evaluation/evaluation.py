@@ -124,7 +124,7 @@ class BaseEvaluation(EvaluationBaseModel):
         Examples
         --------
         >>> # Access a known table
-        >>> ev.table("primary_timeseries").query(...)
+        >>> ev.table("primary_timeseries").aggregate(...)
 
         >>> # Access a custom/user-defined table
         >>> ev.table("my_custom_table").to_pandas()
@@ -177,26 +177,25 @@ class BaseEvaluation(EvaluationBaseModel):
 
         .. deprecated:: 0.6.0
             The ``metrics`` property is deprecated and will be removed in a
-            future version. Use the ``query`` method on the table directly
-            with the ``include_metrics`` argument instead. For example:
+            future version. Use the ``aggregate`` method on the table directly
+            with the ``metrics`` argument instead. For example:
 
             .. code-block:: python
 
-                ev.table("joined_timeseries").query(
-                    include_metrics=[...],
+                ev.table("joined_timeseries").aggregate(
+                    metrics=[...],
                     group_by=[...],
                     order_by=[...],
                 )
         """
         warnings.warn(
             "The 'metrics' property is deprecated and will be removed in a "
-            "future version. Use the 'query' method on the table directly "
-            "with the 'include_metrics' argument instead. For example:\n\n"
-            "    ev.table(\"joined_timeseries\").query(\n"
-            "        include_metrics=[...],\n"
+            "future version. Use the 'aggregate' method on the table directly "
+            "with the 'metrics' argument instead. For example:\n\n"
+            "    ev.table(\"joined_timeseries\").aggregate(\n"
+            "        metrics=[...],\n"
             "        group_by=[...],\n"
-            "        order_by=[...],\n"
-            "    )",
+            "    ).order_by([...])\n\n",
             FutureWarning,
             stacklevel=2,
         )
@@ -305,7 +304,7 @@ class BaseEvaluation(EvaluationBaseModel):
 
         Compute metrics and materialize:
 
-        >>> ev.joined_timeseries_view().query(
+        >>> ev.joined_timeseries_view().aggregate(
         ...     include_metrics=[KGE()],
         ...     group_by=["primary_location_id"]
         ... ).write("location_kge")
@@ -319,8 +318,8 @@ class BaseEvaluation(EvaluationBaseModel):
         >>> ev.joined_timeseries_view(
         ...     catalog_name="some_catalog",
         ...     namespace_name="some_namespace"
-        ... ).query(
-        ...     include_metrics=[KGE()],
+        ... ).aggregate(
+        ...     metrics=[KGE()],
         ...     group_by=["primary_location_id"]
         ... ).write("location_kge")
         """
@@ -689,8 +688,8 @@ class LocalReadWriteEvaluation(BaseEvaluation):
 
     Access tables and views:
 
-    >>> ev.primary_timeseries.query(...).to_pandas()
-    >>> ev.joined_timeseries_view(...).query(...).to_pandas()
+    >>> ev.primary_timeseries.aggregate(...).to_pandas()
+    >>> ev.joined_timeseries_view(...).aggregate(...).to_pandas()
 
     """
 
