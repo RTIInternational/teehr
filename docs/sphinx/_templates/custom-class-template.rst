@@ -2,6 +2,8 @@
 
 .. currentmodule:: {{ module }}
 
+{%- set callable_class_attrs = ['schema_func', 'extraction_func'] %}
+
 .. autoclass:: {{ objname }}
    :members:
    :special-members: __call__, __add__, __mul__
@@ -13,7 +15,7 @@
    .. autosummary::
       :nosignatures:
    {% for item in methods %}
-      {%- if not item.startswith('_') %}
+      {%- if not item.startswith('_') and item not in callable_class_attrs %}
       ~{{ name }}.{{ item }}
       {%- endif -%}
    {%- endfor %}
@@ -26,6 +28,9 @@
 
    .. autosummary::
    {% for item in attributes %}
+      ~{{ name }}.{{ item }}
+   {%- endfor %}
+   {% for item in methods if item in callable_class_attrs %}
       ~{{ name }}.{{ item }}
    {%- endfor %}
    {% endif %}

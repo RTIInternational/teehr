@@ -1,5 +1,5 @@
 """SecondaryTimeseriesView - secondary timeseries with crosswalk and attrs."""
-from typing import List
+from typing import List, Union
 import logging
 
 from teehr.evaluation.views.base_view import View
@@ -44,6 +44,8 @@ class SecondaryTimeseriesView(View):
         ev,
         add_attrs: bool = False,
         attr_list: List[str] = None,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
     ):
         """Initialize the SecondaryTimeseriesView.
 
@@ -55,8 +57,14 @@ class SecondaryTimeseriesView(View):
             Whether to add location attributes. Default False.
         attr_list : List[str], optional
             Specific attributes to add. If None and add_attrs=True, adds all.
+        catalog_name : Union[str, None], optional
+            The catalog containing the source tables. If None, uses the
+            active catalog.
+        namespace_name : Union[str, None], optional
+            The namespace containing the source tables. If None, uses the
+            active catalog's namespace.
         """
-        super().__init__(ev)
+        super().__init__(ev, catalog_name=catalog_name, namespace_name=namespace_name)
         self._add_attrs = add_attrs
         self._attr_list = attr_list
 
@@ -75,8 +83,14 @@ class SecondaryTimeseriesView(View):
         logger.info("Computing secondary timeseries view")
 
         # Get secondary timeseries
-        self._ev.secondary_timeseries.to_sdf().createOrReplaceTempView(
+        self._get_table("secondary_timeseries").to_sdf().createOrReplaceTempView(
             "secondary_ts"
+        )
+
+        # Create a temp view for location_crosswalks so the SQL resolves it
+        # from the correct catalog/namespace source
+        self._get_table("location_crosswalks").to_sdf().createOrReplaceTempView(
+            "location_crosswalks"
         )
 
         # Join secondary timeseries with crosswalks to add primary_location_id
@@ -90,6 +104,7 @@ class SecondaryTimeseriesView(View):
         """)
 
         self._ev.spark.catalog.dropTempView("secondary_ts")
+        self._ev.spark.catalog.dropTempView("location_crosswalks")
 
         # Add attributes if requested
         if self._add_attrs:
@@ -117,7 +132,11 @@ class SecondaryTimeseriesView(View):
             The DataFrame with attributes added.
         """
         # Use LocationAttributesView to get pivoted attributes
-        attrs_df = self._ev.location_attributes_view(attr_list=self._attr_list).to_sdf()
+        attrs_df = self._ev.location_attributes_view(
+            attr_list=self._attr_list,
+            catalog_name=self._catalog_name,
+            namespace_name=self._namespace_name,
+        ).to_sdf()
 
         if attrs_df.isEmpty():
             logger.warning(

@@ -10,9 +10,6 @@ def setup_nwm_example(tmpdir):
     # Create an Evaluation object and create the directory
     ev = teehr.LocalReadWriteEvaluation(dir_path=tmpdir, create_dir=True)
 
-    # Clone the template
-    ev.clone_template()
-
     # Fetch the test data
     location_data_path = Path(tmpdir, "usgs_at_radford_location.parquet")
     fetch_nwm_streamflow_data.fetch_file("usgs_at_radford_location.parquet", location_data_path)

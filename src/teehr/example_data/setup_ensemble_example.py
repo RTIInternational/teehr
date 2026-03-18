@@ -10,9 +10,6 @@ def setup_hefs_example(tmpdir):
     # Create an Evaluation object and create the directory
     ev = teehr.LocalReadWriteEvaluation(dir_path=tmpdir, create_dir=True)
 
-    # Clone the template
-    ev.clone_template()
-
     # Fetch the test data
     location_data_path = Path(tmpdir, "two_locations.parquet")
     ensemble_example_data.fetch_file("two_locations.parquet", location_data_path)

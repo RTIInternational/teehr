@@ -2,8 +2,8 @@
 Evaluation Dataset
 ==================
 
-Evaluation Class
-----------------
+Evaluation Classes
+------------------
 
 .. currentmodule:: teehr
 
@@ -13,6 +13,9 @@ Evaluation Class
    :nosignatures:
 
    Evaluation
+   LocalReadWriteEvaluation
+   RemoteReadOnlyEvaluation
+   RemoteReadWriteEvaluation
 
 .. _ev-tables-label:
 
@@ -27,7 +30,7 @@ Tables
    :nosignatures:
 
    base_table.BaseTable
-   generic_table.Table
+   domain_table.DomainTable
    unit_table.UnitTable
    variable_table.VariableTable
    attribute_table.AttributeTable
@@ -35,6 +38,24 @@ Tables
    location_table.LocationTable
    location_attribute_table.LocationAttributeTable
    location_crosswalk_table.LocationCrosswalkTable
+   timeseries_table.TimeseriesTable
    primary_timeseries_table.PrimaryTimeseriesTable
    secondary_timeseries_table.SecondaryTimeseriesTable
-   joined_timeseries_table.JoinedTimeseriesTable
+
+.. _ev-views-label:
+
+Views
+-----
+
+.. currentmodule:: teehr.evaluation.views
+
+.. autosummary::
+   :template: custom-class-template.rst
+   :toctree: generated
+   :nosignatures:
+
+   base_view.View
+   joined_timeseries_view.JoinedTimeseriesView
+   location_attributes_view.LocationAttributesView
+   primary_timeseries_view.PrimaryTimeseriesView
+   secondary_timeseries_view.SecondaryTimeseriesView

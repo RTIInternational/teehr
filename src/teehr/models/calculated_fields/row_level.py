@@ -5,6 +5,7 @@ from pydantic import Field
 import pandas as pd
 from datetime import timedelta
 import pyspark.sql.types as T
+import pyspark.sql.functions as F
 from pyspark.sql.functions import pandas_udf
 import pyspark.sql as ps
 from teehr.models.calculated_fields.base import CalculatedFieldABC
@@ -898,6 +899,46 @@ class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
 
+class GenericSQL(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds a column computed from a SQL expression.
+
+    Properties
+    ----------
+    - output_field_name:
+        The name of the column to add.
+    - sql_statement:
+        A SQL expression string that will be evaluated using Spark's
+        ``expr()`` function.  The expression may reference any column
+        that exists in the current DataFrame.
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        from teehr import RowLevelCalculatedFields as rcf
+
+        ev.joined_timeseries.add_calculated_fields([
+            rcf.GenericSQL(
+                output_field_name="log_primary_value",
+                sql_statement="log(primary_value)"
+            )
+        ]).write()
+
+    """
+
+    output_field_name: str = Field(...)
+    sql_statement: str = Field(...)
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
+        sdf = sdf.withColumn(
+            self.output_field_name,
+            F.expr(self.sql_statement)
+        )
+        return sdf
+
+
 class RowLevelCalculatedFields:
     """Row level Calculated Fields.
 
@@ -923,6 +964,7 @@ class RowLevelCalculatedFields:
     - ThresholdValueExceeded
     - DayOfYear
     - HourOfYear
+    - GenericSQL
 
     Examples
     --------
@@ -961,3 +1003,4 @@ class RowLevelCalculatedFields:
     ThresholdValueNotExceeded = ThresholdValueNotExceeded
     DayOfYear = DayOfYear
     HourOfYear = HourOfYear
+    GenericSQL = GenericSQL

@@ -334,6 +334,12 @@ def _set_spark_cluster_configuration(
     conf.set("spark.executor.decommission.signal", "SIGTERM")
     conf.set("spark.storage.decommission.enabled", "true")
 
+    # Set pod name prefix for executors in TEEHR-HUB for easy identification in cluster.
+    # Truncated to 46 chars since K8s pod names have a 63-char limit and Spark appends suffixes.
+    jupyterhub_user = os.environ.get("JUPYTERHUB_USER", None)
+    if jupyterhub_user is not None:
+        conf.set("spark.kubernetes.executor.podNamePrefix", jupyterhub_user[:46])
+
     if os.path.exists(pod_template_path):
         conf.set("spark.kubernetes.executor.podTemplateFile", pod_template_path)
     else:

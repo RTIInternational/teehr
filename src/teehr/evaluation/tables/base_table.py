@@ -2,16 +2,19 @@
 from typing import List, Dict, Union, Callable
 import logging
 
-from teehr.evaluation.dataframe_base import DataFrameBase
+import pyspark.sql as ps
+
+from teehr.evaluation.dataframe_base import TeehrDataFrameBase
 from teehr.models.evaluation_base import EvaluationBaseModel
 from teehr.models.filters import TableFilter
+from teehr.models.table_enums import TableNamesEnum
 from pyspark.sql.functions import split, col
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTable(DataFrameBase):
+class BaseTable(TeehrDataFrameBase):
     """Base class inherited by all table classes.
 
     Tables represent persisted iceberg data that is read from storage.
@@ -169,19 +172,6 @@ class BaseTable(DataFrameBase):
             validate = self.validate_filter_field_types or False
         super()._apply_filters(filters, validate=validate)
 
-    # def _get_schema(self, type: str = "pyspark"):
-    #     """Get the table schema.
-
-    #     Parameters
-    #     ----------
-    #     type : str, optional
-    #         The type of schema to return. Valid values are "pyspark" and
-    #         "pandas". Default is "pyspark".
-    #     """
-    #     if type == "pandas":
-    #         return self.schema_func(type="pandas")
-    #     return self.schema_func()
-
     def validate(self, drop_duplicates: bool = True):
         """Validate the dataset table against the schema.
 
@@ -205,6 +195,117 @@ class BaseTable(DataFrameBase):
             drop_duplicates=drop_duplicates,
             foreign_keys=self.foreign_keys,
             uniqueness_fields=self.uniqueness_fields,
+        )
+
+    @property
+    def is_core_table(self) -> bool:
+        """Return True if this table is a core (built-in) TEEHR table.
+
+        Core tables (e.g., primary_timeseries, locations, units) are part of
+        the standard TEEHR schema and cannot be dropped. User-created tables
+        (e.g., materialized views or saved query results) are not core tables
+        and can be dropped.
+
+        Returns
+        -------
+        bool
+            True if the table is a core TEEHR table, False otherwise.
+        """
+        return self.table_name in [e.value for e in TableNamesEnum]
+
+    def drop(self):
+        """Drop this table from the catalog.
+
+        Only non-core tables (user-created tables, materialized views, saved
+        query results) can be dropped. Attempting to drop a core table
+        (e.g., primary_timeseries, locations, units) will raise a ValueError.
+
+        Raises
+        ------
+        ValueError
+            If the table is a core TEEHR table.
+
+        Examples
+        --------
+        Write and then drop a user-created table:
+
+        >>> ev.joined_timeseries_view().write("my_results")
+        >>> ev.table("my_results").drop()
+        """
+        if self.is_core_table:
+            raise ValueError(
+                f"Cannot drop core table '{self.table_name}'. "
+                "Only user-created tables (e.g., materialized views or "
+                "saved query results) can be dropped."
+            )
+        logger.info(
+            f"Dropping table: {self.catalog_name}."
+            f"{self.namespace_name}.{self.table_name}"
+        )
+        self._ev.sql(
+            f"DROP TABLE IF EXISTS "
+            f"{self.catalog_name}.{self.namespace_name}.{self.table_name}"
+        )
+
+    def delete(
+        self,
+        filters: Union[
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
+        ] = None,
+        dry_run: bool = False,
+    ) -> Union[int, ps.DataFrame]:
+        """Delete rows from this table based on filter conditions.
+
+        Delegates to
+        :meth:`Write.delete_from() <teehr.evaluation.write.Write.delete_from>`.
+
+        Parameters
+        ----------
+        filters : Union[str, dict, TableFilter, List[...]], optional
+            Filter conditions specifying which rows to delete.
+            Supports SQL strings, dictionaries, or
+            :class:`~teehr.models.filters.TableFilter` objects.
+            If ``None``, all rows in the table will be deleted.
+        dry_run : bool, optional
+            If ``True``, returns a Spark DataFrame of rows that would be
+            deleted without performing the actual deletion. Default is
+            ``False``.
+
+        Returns
+        -------
+        int or ps.DataFrame
+            If ``dry_run=False``, returns the number of rows deleted (int).
+            If ``dry_run=True``, returns a Spark DataFrame of rows that
+            would be deleted.
+
+        Examples
+        --------
+        Preview rows that would be deleted (dry run):
+
+        >>> sdf = ev.table("primary_timeseries").delete(
+        >>>     filters=["location_id = 'usgs-01234567'"],
+        >>>     dry_run=True,
+        >>> )
+        >>> print(f"Rows to delete: {sdf.count()}")
+
+        Delete rows and get the count:
+
+        >>> count = ev.table("primary_timeseries").delete(
+        >>>     filters=["location_id = 'usgs-01234567'"],
+        >>> )
+        >>> print(f"Deleted {count} rows.")
+
+        Delete all rows from this table:
+
+        >>> count = ev.primary_timeseries.delete()
+        """
+        return self._ev.write.delete_from(
+            table_name=self.table_name,
+            filters=filters,
+            catalog_name=self.catalog_name,
+            namespace_name=self.namespace_name,
+            dry_run=dry_run,
         )
 
     def distinct_values(

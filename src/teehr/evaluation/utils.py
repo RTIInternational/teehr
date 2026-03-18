@@ -6,8 +6,6 @@ from typing import List, Union
 from pathlib import Path
 import shutil
 
-from teehr.utils.s3path import S3Path
-
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +17,7 @@ SPACE_PREFIX = "    "
 
 
 def copy_migrations_dir(
-    target_dir: Union[str, Path, S3Path]
+    target_dir: Union[str, Path]
 ):
     """Copy the migrations directory from source to target."""
     shutil.copytree(
