@@ -32,28 +32,10 @@ class Gumboot(BootstrapBasemodel):
 
     Parameters
     ----------
-    reps : int
-        The number of bootstrap replications. Default value is 1000.
-    seed : Union[int, None]
-        The seed for the random number generator. Setting a seed value can be
-        used to provide reproducible results. Default value is None.
-    quantiles : Union[List[float], None]
-        The quantiles to calculate from the bootstrap metric results. The
-        default value is None.
     boot_year_file : Union[str, Path, None]
         The file path to the boot year csv file. The default value is None.
     water_year_month : int
         The month specifying the start of the water year. Default value is 10.
-    name : str
-        The name of the bootstrap method. Currently only used in
-        logging. Default value is "Gumboot".
-    include_value_time : bool, fixed
-        Whether to include the value_time series in the bootstrapping
-        function. Default value is True.
-    func : Callable, fixed
-        The wrapper to generate the bootstrapping function. Default value is
-        bootstrap_funcs.create_gumboot_func.
-
     """
 
     boot_year_file: Union[str, Path, None] = None
@@ -68,25 +50,11 @@ class CircularBlock(BootstrapBasemodel):
 
     Parameters
     ----------
-    seed : Union[int, None]
-        The seed for the random number generator. Default value is None.
     random_state : RandomState, optional
         The random state for the random number generator.
-    reps : int
-        The number of bootstrap replications.
     block_size : int
         The block size for the CircularBlockBootstrap.
-    quantiles : List[float]
-        The quantiles to calculate from the bootstrap results. Default
-        value is None.
-    name : str
-        The name of the bootstrap method. Currently only used in
-        logging. Default value is "CircularBlock".
-    include_value_time : bool, fixed
-        Whether to include the value_time series in the bootstrapping
-        function. Default value is True.
-    func : Callable, fixed
-        The wrapper to generate the bootstrapping function.
+        Default value is 365.
     """
 
     random_state: Union[RandomState, None] = None
@@ -104,25 +72,11 @@ class Stationary(BootstrapBasemodel):
 
     Parameters
     ----------
-    seed : Union[int, None]
-        The seed for the random number generator. Default value is 42.
     random_state : RandomState, optional
         The random state for the random number generator.
-    reps : int
-        The number of bootstrap replications.
     block_size : int
         The block size for the StationaryBootstrap.
-    quantiles : List[float]
-        The quantiles to calculate from the bootstrap results. Default
-        value is None.
-    name : str
-        The name of the bootstrap method. Currently only used in
-        logging. Default value is "Stationary".
-    include_value_time : bool, fixed
-        Whether to include the value_time series in the bootstrapping
-        function. Default value is True.
-    func : Callable, fixed
-        The wrapper to generate the bootstrapping function.
+        Default value is 365.
     """
 
     random_state: Union[RandomState, None] = None
