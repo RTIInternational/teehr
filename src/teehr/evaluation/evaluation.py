@@ -186,8 +186,7 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
 
                 ev.table("joined_timeseries").aggregate(
                     metrics=[...],
-                    group_by=[...],
-                    order_by=[...],
+                    group_by=[...]
                 )
         """
         warnings.warn(
@@ -307,7 +306,7 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         Compute metrics and materialize:
 
         >>> ev.joined_timeseries_view().aggregate(
-        ...     include_metrics=[KGE()],
+        ...     metrics=[KGE()],
         ...     group_by=["primary_location_id"]
         ... ).write("location_kge")
 

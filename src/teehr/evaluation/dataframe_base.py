@@ -105,7 +105,7 @@ class TeehrDataFrameBase(ABC):
         is auto-detected from common location ID field names ('location_id',
         'primary_location_id') unless specified.
 
-        This is especially useful when called *after* a ``query()`` with
+        This is especially useful when called *after* a ``aggregate()`` with
         GROUP BY and aggregation metrics, so that attributes do not need
         to be included in the ``group_by`` clause in order to pass through
         to the result.
