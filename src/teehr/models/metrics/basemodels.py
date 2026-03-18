@@ -26,7 +26,30 @@ class MetricsBasemodel(PydanticBaseModel):
 
 
 class ProbabilisticBasemodel(MetricsBasemodel):
-    """Probabilistic Basemodel configuration."""
+    """Probabilistic Basemodel configuration.
+
+    This base class provides common fields for all probabilistic metrics.
+    Subclasses should define metric-specific fields and defaults.
+
+    Parameters
+    ----------
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    backend : str
+        The backend to use, by default "numba". Can be ("numba" or "numpy").
+    summary_func : Callable
+        The function to apply to the results, by default None.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value", "member"].
+    """
+
+    transform: Any = Field(default=None)  # TransformEnum, set below after enum defined
+    backend: str = Field(default="numba")
+    summary_func: Union[Callable, None] = Field(default=None)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value", "member"]
+    )
 
     @model_validator(mode="before")
     def update_return_type(cls, values):
@@ -39,12 +62,37 @@ class ProbabilisticBasemodel(MetricsBasemodel):
 
 
 class BootstrapBasemodel(PydanticBaseModel):
-    """Bootstrap Basemodel configuration."""
+    """Bootstrap Basemodel configuration.
+
+    This base class provides common fields for all bootstrap methods.
+    Subclasses should define metric-specific fields and defaults.
+
+    Parameters
+    ----------
+    reps : int
+        The number of bootstrap replications, by default 1000.
+    seed : Union[int, None]
+        The seed for the random number generator, by default None.
+    quantiles : Union[List[float], None]
+        The quantiles to calculate from the bootstrap results,
+        by default None.
+    name : str
+        The name of the bootstrap method, by default None.
+    include_value_time : bool
+        Whether to include the value_time series in the bootstrapping
+        function, by default False.
+    func : Callable
+        The wrapper to generate the bootstrapping function,
+        by default None.
+    """
 
     return_type: Union[str, T.ArrayType, T.MapType] = Field(default=None)
     reps: int = 1000
     seed: Union[int, None] = None
     quantiles: Union[List[float], None] = None
+    name: str = Field(default=None)
+    include_value_time: bool = Field(default=False)
+    func: Callable = Field(default=None)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,

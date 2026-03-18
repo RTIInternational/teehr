@@ -408,7 +408,7 @@ Probabilistic metrics compare a value against a distribution of predicted values
      - Continuous Ranked Probability Score
      - :math:`CRPS`
      - :math:`\int_{-\infty}^{\infty} (F(x) - \mathbf{1}_{x \geq y})^2 dx`
-     - :class:`Continuous Ranked Probability Score <teehr.ProbabilisticMetrics.ContinuousRankedProbabilityScore>`
+     - :class:`Continuous Ranked Probability Score <teehr.ProbabilisticMetrics.CRPS>`
    * - :material-regular:`check;1.5em;sd-text-success`
      - Brier Score
      - :math:`BS`
@@ -418,9 +418,9 @@ Probabilistic metrics compare a value against a distribution of predicted values
      - Brier Skill Score
      - :math:`BSS`
      - :math:`1-\frac{BS}{BS_{ref}}`
-     - `N/A`
+     - :class:`Brier Score <teehr.ProbabilisticMetrics.BrierScore>`
    * - :material-regular:`check;1.5em;sd-text-success`
      - Continuous Ranked Probability Skill Score
      - :math:`CRPSS`
      - :math:`1-\frac{CRPS}{CRPS_{ref}}`
-     - `N/A`
+     - :class:`Continuous Ranked Probability Score <teehr.ProbabilisticMetrics.CRPS>`

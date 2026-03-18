@@ -4,7 +4,6 @@ This module defines deterministic metrics using a compact class-variable pattern
 Each metric class inherits common fields from DeterministicBasemodel and only
 specifies metric-specific defaults via class variables.
 """
-from typing import Dict, List, Union
 from pyspark.sql import types as T
 
 from pydantic import Field
@@ -14,7 +13,6 @@ from teehr.models.metrics.basemodels import (
     ThresholdBasemodel,
 )
 from teehr.metrics import deterministic_funcs as metric_funcs
-from teehr.models.str_enum import StrEnum
 
 
 # =============================================================================
