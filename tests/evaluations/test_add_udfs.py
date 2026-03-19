@@ -7,7 +7,6 @@ from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import pyspark.sql.types as T
 import pyspark.sql.functions as F
-import pyspark.sql.functions as F
 import numpy as np
 import baseflow
 import pandas as pd
@@ -43,22 +42,17 @@ def test_add_row_udfs(session_scope_test_warehouse):
 
     sdf = rcf.Month().apply_to(sdf)
     _ = sdf.toPandas()
-    _ = sdf.toPandas()
 
     sdf = rcf.Year().apply_to(sdf)
-    _ = sdf.toPandas()
     _ = sdf.toPandas()
 
     sdf = rcf.WaterYear().apply_to(sdf)
     _ = sdf.toPandas()
-    _ = sdf.toPandas()
 
     sdf = rcf.NormalizedFlow().apply_to(sdf)
     _ = sdf.toPandas()
-    _ = sdf.toPandas()
 
     sdf = rcf.Seasons().apply_to(sdf)
-    _ = sdf.toPandas()
     _ = sdf.toPandas()
 
     sdf = rcf.ForecastLeadTime().apply_to(sdf)
@@ -66,23 +60,7 @@ def test_add_row_udfs(session_scope_test_warehouse):
 
     sdf = rcf.ForecastLeadTimeBins().apply_to(sdf)
     _ = sdf.toPandas()
-    _ = sdf.toPandas()
 
-    sdf = rcf.ForecastLeadTimeBins().apply_to(sdf)
-    _ = sdf.toPandas()
-
-    sdf = rcf.ThresholdValueExceeded(
-            threshold_field_name="year_2_discharge"
-        ).apply_to(sdf)
-    df1 = sdf.toPandas()
-
-    sdf = rcf.ThresholdValueNotExceeded(
-            threshold_field_name="year_2_discharge"
-        ).apply_to(sdf)
-    df2 = sdf.toPandas()
-    assert all(
-        df1['threshold_value_exceeded'] == ~df2['threshold_value_not_exceeded']
-    )
     sdf = rcf.ThresholdValueExceeded(
             threshold_field_name="year_2_discharge"
         ).apply_to(sdf)
@@ -97,7 +75,6 @@ def test_add_row_udfs(session_scope_test_warehouse):
     )
 
     sdf = rcf.DayOfYear().apply_to(sdf)
-    _ = sdf.toPandas()
     _ = sdf.toPandas()
 
     cols = sdf.columns
@@ -145,7 +122,6 @@ def test_add_row_udfs(session_scope_test_warehouse):
     assert sdf.schema["threshold_value_exceeded"].dataType == T.BooleanType()
     check_vals = check_sdf.select(
         "threshold_value_exceeded").distinct().collect()
-    assert check_vals[0]["threshold_value_exceeded"] is False
     assert check_vals[0]["threshold_value_exceeded"] is False
 
     assert "day_of_year" in cols
@@ -486,10 +462,7 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
 
     # test percentile event detection (default)
     ped = tcf.AbovePercentileEventDetection()
-    # test percentile event detection (default)
-    ped = tcf.AbovePercentileEventDetection()
     sdf = ped.apply_to(sdf)
-    event_count = sdf.select('event_above_id').distinct().count()
     event_count = sdf.select('event_above_id').distinct().count()
     assert event_count == 219
 
@@ -542,23 +515,6 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     assert np.isclose(max_ep, 1.0, atol=0.001)
     assert "exceedance_probability" in columns
 
-    # test exceedance probability
-    sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
-    ).to_sdf()
-    ep = tcf.ExceedanceProbability()
-    sdf = ep.apply_to(sdf)
-    columns = sdf.columns
-    min_ep = sdf.select(
-        F.min("exceedance_probability")
-        ).collect()[0][0]
-    max_ep = sdf.select(
-        F.max("exceedance_probability")
-        ).collect()[0][0]
-    assert np.isclose(min_ep, 0.0, atol=0.001)
-    assert np.isclose(max_ep, 1.0, atol=0.001)
-    assert "exceedance_probability" in columns
-
 @pytest.mark.function_scope_evaluation_template
 def test_add_udfs_write(function_scope_evaluation_template):
     """Test adding UDFs and write DataFrame back to table."""
@@ -574,8 +530,6 @@ def test_add_udfs_write(function_scope_evaluation_template):
 
     new_sdf = ev.table("joined_timeseries").to_sdf()
     cols = new_sdf.columns
-    assert "event_above" in cols
-    assert "event_above_id" in cols
     assert "event_above" in cols
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
@@ -607,7 +561,6 @@ def test_location_event_detection(function_scope_test_warehouse):
 
     assert "configuration_name" in sdf.columns
     assert "primary_location_id" in sdf.columns
-    assert "event_above_id" in sdf.columns
     assert "event_above_id" in sdf.columns
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns

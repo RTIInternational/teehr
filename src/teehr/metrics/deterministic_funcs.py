@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 
 EPSILON = 1e-6  # Small constant to avoid division by zero
 
-EPSILON = 1e-6  # Small constant to avoid division by zero
-
 
 def _transform(
         p: pd.Series,
@@ -664,12 +662,6 @@ def root_mean_standard_deviation_ratio(model: MetricsBasemodel) -> Callable:
         p, s = _transform(p, s, model)
         rmse = _root_mean_squared_error(p, s)
         obs_std_dev = np.std(p)
-        if model.add_epsilon:
-            result = rmse / (obs_std_dev + EPSILON)
-        else:
-            result = rmse / obs_std_dev
-
-        return result
         if model.add_epsilon:
             result = rmse / (obs_std_dev + EPSILON)
         else:
