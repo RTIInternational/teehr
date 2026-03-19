@@ -110,6 +110,7 @@ def test_generate_timeseries_normals(function_scope_evaluation_template):
     ].value.values[0] == mean_prim_srs.loc[60]
 
 
+@pytest.mark.function_scope_evaluation_template
 @pytest.mark.skip(reason="This one causes subsequent tests in test_import_timeseries.py to fail, not sure why yet.")
 def test_generate_reference_forecast(function_scope_evaluation_template):
     """Test the reference forecast calculation."""

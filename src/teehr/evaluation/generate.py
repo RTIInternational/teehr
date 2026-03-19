@@ -310,12 +310,12 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
             table_name=reference_table_name
         ).filter(
             filters=reference_table_filters
-        )
+        ).to_sdf()
         template_dataframe = self._ev.table(
             table_name=template_table_name
         ).filter(
             filters=template_table_filters
-        )
+        ).to_sdf()
 
         if reference_table_name == "primary_timeseries":
             partition_by = self._ev.primary_timeseries.uniqueness_fields
