@@ -3,6 +3,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from scipy.stats import rankdata
+from scipy.stats import rankdata
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.models.metrics.basemodels import TransformEnum
@@ -13,11 +14,15 @@ logger = logging.getLogger(__name__)
 
 EPSILON = 1e-6  # Small constant to avoid division by zero
 
+EPSILON = 1e-6  # Small constant to avoid division by zero
+
 
 def _transform(
         p: pd.Series,
         s: pd.Series,
         model: MetricsBasemodel,
+        t: Optional[pd.Series] = None,
+        threshold_series: Optional[pd.Series] = None
         t: Optional[pd.Series] = None,
         threshold_series: Optional[pd.Series] = None
 ) -> tuple:
@@ -34,9 +39,19 @@ def _transform(
                     s = s + EPSILON
                     if threshold_series is not None:
                         threshold_series = threshold_series + EPSILON
+                if model.add_epsilon:
+                    logger.debug(
+                        "Applying epsilon before log transform"
+                    )
+                    p = p + EPSILON
+                    s = s + EPSILON
+                    if threshold_series is not None:
+                        threshold_series = threshold_series + EPSILON
                 logger.debug("Applying log transform")
                 p = np.log(p)
                 s = np.log(s)
+                if threshold_series is not None:
+                    threshold_series = np.log(threshold_series)
                 if threshold_series is not None:
                     threshold_series = np.log(threshold_series)
             case TransformEnum.sqrt:
@@ -45,10 +60,14 @@ def _transform(
                 s = np.sqrt(s)
                 if threshold_series is not None:
                     threshold_series = np.sqrt(threshold_series)
+                if threshold_series is not None:
+                    threshold_series = np.sqrt(threshold_series)
             case TransformEnum.square:
                 logger.debug("Applying square transform")
                 p = np.square(p)
                 s = np.square(s)
+                if threshold_series is not None:
+                    threshold_series = np.square(threshold_series)
                 if threshold_series is not None:
                     threshold_series = np.square(threshold_series)
             case TransformEnum.cube:
@@ -57,13 +76,25 @@ def _transform(
                 s = np.power(s, 3)
                 if threshold_series is not None:
                     threshold_series = np.power(threshold_series, 3)
+                if threshold_series is not None:
+                    threshold_series = np.power(threshold_series, 3)
             case TransformEnum.exp:
                 logger.debug("Applying exponential transform")
                 p = np.exp(p)
                 s = np.exp(s)
                 if threshold_series is not None:
                     threshold_series = np.exp(threshold_series)
+                if threshold_series is not None:
+                    threshold_series = np.exp(threshold_series)
             case TransformEnum.inv:
+                if model.add_epsilon:
+                    logger.debug(
+                        "Applying epsilon before inverse transform"
+                    )
+                    p = p + EPSILON
+                    s = s + EPSILON
+                    if threshold_series is not None:
+                        threshold_series = threshold_series + EPSILON
                 if model.add_epsilon:
                     logger.debug(
                         "Applying epsilon before inverse transform"
@@ -77,10 +108,14 @@ def _transform(
                 s = 1.0 / s
                 if threshold_series is not None:
                     threshold_series = 1.0 / threshold_series
+                if threshold_series is not None:
+                    threshold_series = 1.0 / threshold_series
             case TransformEnum.abs:
                 logger.debug("Applying absolute value transform")
                 p = np.abs(p)
                 s = np.abs(s)
+                if threshold_series is not None:
+                    threshold_series = np.abs(threshold_series)
                 if threshold_series is not None:
                     threshold_series = np.abs(threshold_series)
             case _:
@@ -90,6 +125,16 @@ def _transform(
     else:
         logger.debug("No transform specified, using original values")
 
+    # Remove invalid values and align series if transform applied
+    if model.transform is not None:
+        logger.debug("Removing invalid values and aligning series")
+        if (t is not None) and (threshold_series is not None):
+            valid_mask = np.isfinite(p) & np.isfinite(s)
+            p = p[valid_mask]
+            s = s[valid_mask]
+            t = t[valid_mask]
+            threshold_series = threshold_series[valid_mask]
+        elif t is not None:
     # Remove invalid values and align series if transform applied
     if model.transform is not None:
         logger.debug("Removing invalid values and aligning series")
@@ -662,6 +707,12 @@ def root_mean_standard_deviation_ratio(model: MetricsBasemodel) -> Callable:
         p, s = _transform(p, s, model)
         rmse = _root_mean_squared_error(p, s)
         obs_std_dev = np.std(p)
+        if model.add_epsilon:
+            result = rmse / (obs_std_dev + EPSILON)
+        else:
+            result = rmse / obs_std_dev
+
+        return result
         if model.add_epsilon:
             result = rmse / (obs_std_dev + EPSILON)
         else:

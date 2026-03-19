@@ -8,6 +8,7 @@ authors = [
     "Katie van Werkhoven <kvanwerkhoven@rti.org>",
     "Sam Lamont <slamont@rti.org>",
     "Sam Landsteiner <slandsteiner@rti.org>",
+    "Sam Landsteiner <slandsteiner@rti.org>",
 ]
 license = "GNU v3"
 readme = "README.md"

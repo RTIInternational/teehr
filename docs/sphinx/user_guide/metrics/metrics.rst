@@ -176,11 +176,16 @@ Available Metrics
 =================
 
 The metrics currently built into TEEHR are listed in the tables below.
+The metrics currently built into TEEHR are listed in the tables below.
 Please note that some are still in development and planned for inclusion in future versions.
 
 Signatures
 ==========
 
+Signatures
+==========
+
+Signatures operate on a single field to characterize timeseries properties.
 Signatures operate on a single field to characterize timeseries properties.
 
 .. list-table::
@@ -343,20 +348,24 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - :math:`Peak\ Time\ Error`
      - :math:`\frac{\sum(peak\ time_{sec}-peak\ time_{prim})}{count}`
      - `N/A`
+     - `N/A`
    * - `Coming Soon`
      - Baseflow Index Error
      - :math:`BFI\ Error`
      - :math:`\frac{\frac{\mu(baseflow_{sec})}{\mu(sec)}-\frac{\mu(baseflow_{prim})}{\mu(prim)}}{\frac{\mu(baseflow_{prim})}{\mu(prim)}}`
+     - `N/A`
      - `N/A`
    * - `Coming Soon`
      - Rising Limb Density Error
      - :math:`RLD\ Error`
      - :math:`\frac{count(rising\ limb\ events_{sec})}{count(rising\ limb\ timesteps_{sec})}-\frac{count(rising\ limb\ events_{prim})}{count(rising\ limb\ timesteps_{prim})}`
      - `N/A`
+     - `N/A`
    * - `Coming Soon`
      - Mean Square Error Skill Score (generalized reference)
      - :math:`MSESS`
      - :math:`1-\frac{\sum(prim-sec)^2}{\sum(prim-reference)^2}`
+     - `N/A`
      - `N/A`
    * - `Coming Soon`
      - Runoff Ratio Error

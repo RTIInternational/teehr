@@ -80,3 +80,4 @@ class ProbabilisticMetrics:
 
     CRPS = CRPS
     BrierScore = BrierScore
+    BrierScore = BrierScore
