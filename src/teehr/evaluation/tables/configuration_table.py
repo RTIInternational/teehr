@@ -1,32 +1,42 @@
 """Configuration table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
-from teehr.models.filters import ConfigurationFilter
-from teehr.models.table_enums import ConfigurationFields
 from teehr.models.pydantic_table_models import Configuration
-import teehr.models.pandera_dataframe_schemas as schemas
+from teehr.models.pandera_dataframe_schemas import configuration_schema
 from typing import List, Union
-from teehr.utils.utils import to_path_or_s3path
 
 
 class ConfigurationTable(DomainTable):
     """Access methods to configurations table."""
 
-    def __init__(self, ev):
-        """Initialize class."""
-        super().__init__(ev)
-        self.name = "configurations"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.filter_model = ConfigurationFilter
-        self.schema_func = schemas.configuration_schema
-        self.unique_column_set = ["name"]
+    # Table metadata
+    table_name = "configurations"
+    uniqueness_fields = ["name"]
+    schema_func = staticmethod(configuration_schema)
 
-    def field_enum(self) -> ConfigurationFields:
-        """Get the configuration fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return ConfigurationFields(
-            "ConfigurationFields",
-            {field: field for field in fields}
-        )
+    def __init__(
+        self,
+        ev,
+        table_name: str = "configurations",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBaseModel
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        table_name : str, optional
+            The name of the table to operate on. Defaults to 'configurations'.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+        """
+        super().__init__(ev, table_name, namespace_name, catalog_name)
 
     def add(
         self,

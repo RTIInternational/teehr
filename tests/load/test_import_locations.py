@@ -1,40 +1,43 @@
 """Test the import locations functionality."""
-from teehr.loading.locations import convert_locations
+from teehr.loading.locations import convert_single_locations
 from pathlib import Path
-from teehr import Evaluation
-import tempfile
+import pytest
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 GEOJSON_NP_GAGES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "geo", "gages_no_prefix.geojson"
 )
 
 
-def test_convert_locations_geojson(tmpdir):
+def test_convert_locations_geojson():
     """Test the convert_locations function on geojson."""
-    output_filepath = Path(tmpdir, "gages.parquet")
-
-    convert_locations(
-        in_path=GEOJSON_GAGES_FILEPATH,
-        out_dirpath=tmpdir,
+    df = convert_single_locations(
+        in_filepath=GEOJSON_GAGES_FILEPATH,
+        field_mapping={"id": "id"}
     )
-    assert output_filepath.is_file()
+    assert df.index.size == 3
 
 
-def test_validate_and_insert_locations(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_locations(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.clone_template()
+    ev = function_scope_evaluation_template
+
+    # test constant_field_values overwriting default field
+    cfvs = {'name': 'test'}
+
     # Load and replace the location ID prefix
     ev.locations.load_spatial(
         in_path=GEOJSON_GAGES_FILEPATH,
+        constant_field_values=cfvs,
         location_id_prefix="test"
     )
     # Append additional location
     ev.locations.load_spatial(
-        in_path="tests/data/two_locations/two_locations.parquet",
+        in_path=Path(TEST_STUDY_DATA_DIR, "geo", "two_locations.parquet"),
+        constant_field_values=cfvs,
     )
     # Now update existing 'test' locations with new names
     # and add a few more (upsert).
@@ -42,6 +45,7 @@ def test_validate_and_insert_locations(tmpdir):
         in_path=Path(TEST_STUDY_DATA_DIR, "geo", "extended_v03_gages.geojson"),
         location_id_prefix="test",
         write_mode="upsert",
+        constant_field_values=cfvs,
     )
     assert sorted(ev.locations.to_pandas()["id"].tolist()) == [
         "test-A",
@@ -54,12 +58,15 @@ def test_validate_and_insert_locations(tmpdir):
         "usgs-14316700"
     ]
     assert ev.locations.to_sdf().count() == 8
+    assert ev.locations.to_sdf().select("name").distinct().count() == 1
 
 
-def test_validate_and_insert_locations_adding_prefix(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_locations_adding_prefix(
+    function_scope_evaluation_template
+):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     # Add a new location ID prefix
     ev.locations.load_spatial(
@@ -80,27 +87,3 @@ def test_validate_and_insert_locations_adding_prefix(tmpdir):
     assert ev.locations.to_sdf().count() == 3
     assert id_val[0] == "test"
     assert id_val[1] == "A"
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_convert_locations_geojson(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_locations(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_locations_adding_prefix(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )

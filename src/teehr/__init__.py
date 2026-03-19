@@ -1,13 +1,16 @@
 """Initialize the TEEHR package."""
 import warnings
 
-__version__ = "0.5.3"
+__version__ = "0.6.0"
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", UserWarning)
     import pandera.pyspark as ps  # noqa: F401
 
 from teehr.evaluation.evaluation import Evaluation  # noqa
+from teehr.evaluation.evaluation import RemoteReadOnlyEvaluation  # noqa
+from teehr.evaluation.evaluation import RemoteReadWriteEvaluation  # noqa
+from teehr.evaluation.evaluation import LocalReadWriteEvaluation  # noqa
 from teehr.models.metrics.deterministic_models import DeterministicMetrics  # noqa
 from teehr.models.metrics.probabilistic_models import ProbabilisticMetrics  # noqa
 from teehr.models.metrics.signature_models import Signatures  # noqa
@@ -18,17 +21,6 @@ from teehr.models.pydantic_table_models import (  # noqa
     Attribute,
     Unit,
     Variable
-)
-from teehr.models.filters import (  # noqa
-    UnitFilter,
-    ConfigurationFilter,
-    VariableFilter,
-    AttributeFilter,
-    LocationFilter,
-    LocationAttributeFilter,
-    LocationCrosswalkFilter,
-    TimeseriesFilter,
-    JoinedTimeseriesFilter
 )
 
 from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields # noqa

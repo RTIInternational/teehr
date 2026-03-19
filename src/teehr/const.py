@@ -1,11 +1,24 @@
-"""This module contains constants
- used throughout the package."""
+"""This module contains constants used throughout the package."""
 import os
+
+# Iceberg warehouse
+REMOTE_CATALOG_REST_URI = os.environ.get("REMOTE_CATALOG_REST_URI", "")
+REMOTE_WAREHOUSE_S3_PATH = os.environ.get("REMOTE_WAREHOUSE_S3_PATH", "")
+LOCAL_CATALOG_NAME = "local"
+LOCAL_CATALOG_TYPE = "jdbc"
+LOCAL_NAMESPACE_NAME = "teehr"
+REMOTE_CATALOG_NAME = "iceberg"
+REMOTE_CATALOG_TYPE = os.environ.get("REMOTE_CATALOG_TYPE", "rest")
+REMOTE_NAMESPACE_NAME = "teehr"
+AWS_REGION = "us-east-2"
+LOCAL_CATALOG_DB_NAME = "local_catalog.db"
+
 
 # Primary evaluation directories
 DATASET_DIR = "dataset"
 CACHE_DIR = "cache"
 SCRIPTS_DIR = "scripts"
+# These are no longer needed?
 LOCATIONS_DIR = "locations"
 PRIMARY_TIMESERIES_DIR = "primary_timeseries"
 LOCATION_CROSSWALKS_DIR = "location_crosswalks"
@@ -26,3 +39,8 @@ LOADING_CACHE_DIR = "loading"
 S3_EVALUATIONS_PATH = "s3://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/evaluations.yaml"
 
 MAX_CPUS = max(os.cpu_count() - 1, 1)
+
+# Spark cluster configuration
+POD_TEMPLATE_PATH = "/opt/teehr/executor-pod-template.yaml"
+SERVICE_ACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+CA_CERTIFICATE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"

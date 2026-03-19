@@ -13,9 +13,6 @@ from teehr.fetching.nwm.nwm_points import nwm_to_parquet
 from teehr.fetching.nwm.nwm_grids import nwm_grids_to_parquet
 from teehr.fetching.nwm.retrospective_points import nwm_retro_to_parquet
 from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
-from teehr.loading.timeseries import (
-    validate_and_insert_timeseries,
-)
 from teehr.fetching.utils import (
     format_nwm_variable_name,
     format_nwm_configuration_metadata
@@ -33,7 +30,6 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
-from teehr.models.table_enums import TableWriteEnum
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
     USGS_VARIABLE_MAPPER,
@@ -51,9 +47,17 @@ class Fetch:
     """Component class for fetching data from external sources."""
 
     def __init__(self, ev) -> None:
-        """Initialize the Fetch class."""
+        """Initialize the Fetch class.
+
+        Parameters
+        ----------
+        ev : Evaluation
+            The parent Evaluation instance providing access to tables,
+            Spark session, and cache directories.
+        """
         # Now we have access to the Evaluation object.
-        self.ev = ev
+        self._ev = ev
+        self._load = ev.load
         self.usgs_cache_dir = Path(
             ev.cache_dir,
             const.FETCHING_CACHE_DIR,
@@ -77,7 +81,7 @@ class Fetch:
 
     def _get_secondary_location_ids(self, prefix: str) -> List[str]:
         """Get the secondary location IDs corresponding to primary IDs."""
-        lcw_df = self.ev.location_crosswalks.query(
+        lcw_df = self._ev.location_crosswalks.filter(
             filters={
                 "column": "secondary_location_id",
                 "operator": "like",
@@ -110,7 +114,7 @@ class Fetch:
         True: Configuration name exists in the table.
         False: Configuration name does not exist in the table.
         """
-        sdf = self.ev.configurations.filter(
+        sdf = self._ev.configurations.filter(
             {
                 "column": "name",
                 "operator": "=",
@@ -130,7 +134,8 @@ class Fetch:
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        write_mode: TableWriteEnum = "append",
+        table_name: str = None,
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
@@ -170,7 +175,11 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        write_mode : TableWriteEnum, optional (default: "append")
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precedence over timeseries_type, which is deprecated.
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
             that does not already exist.
@@ -178,6 +187,7 @@ class Fetch:
             does not exist will be appended.
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
+
 
         .. note::
 
@@ -188,9 +198,9 @@ class Fetch:
            Each dictionary should contain the site number and a description
            of the sub-location. The description is used to filter the
            data to the specific sub-location. For example:
-           [{"site_no": "02449838", "description": "Main Gage"}]
+           ``[{"site_no": "02449838", "description": "Main Gage"}]``
            Note that the dictionary must contain the keywords
-           'site_no' and 'description'.
+           ``'site_no'`` and ``'description'``.
 
 
         .. note::
@@ -207,7 +217,7 @@ class Fetch:
         validated and loaded into the TEEHR dataset.
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         Fetch the data for locations in the locations table.
 
@@ -236,14 +246,14 @@ class Fetch:
         >>> )
         """  # noqa
         logger.info("Getting primary location IDs.")
-        locations_df = self.ev.locations.query(
+        locations_df = self._ev.locations.filter(
             filters={
                 "column": "id",
                 "operator": "like",
-                "value": f"usgs-%"
+                "value": "usgs-%"
             }
         ).to_pandas()
-        sites = locations_df["id"].str.removeprefix(f"usgs-").to_list()
+        sites = locations_df["id"].str.removeprefix("usgs-").to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
@@ -254,6 +264,7 @@ class Fetch:
             sites=sites,
             start_date=start_date,
             end_date=end_date,
+            service=service,
             output_parquet_dir=Path(
                 self.usgs_cache_dir,
                 USGS_CONFIGURATION_NAME,
@@ -270,7 +281,7 @@ class Fetch:
         if (
             not self._configuration_name_exists(USGS_CONFIGURATION_NAME)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=USGS_CONFIGURATION_NAME,
                     type="primary",
@@ -278,14 +289,22 @@ class Fetch:
                 )
             )
 
-        validate_and_insert_timeseries(
-            ev=self.ev,
-            in_path=Path(
-                self.usgs_cache_dir
-            ),
-            timeseries_type=timeseries_type,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
+            in_path=Path(self.usgs_cache_dir),
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            table_name=table_name
         )
 
     def nwm_retrospective_points(
@@ -298,7 +317,8 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         timeseries_type: TimeseriesTypeEnum = "secondary",
-        write_mode: TableWriteEnum = "append",
+        table_name: str = None,
+        write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
@@ -345,7 +365,11 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        write_mode : TableWriteEnum, optional (default: "append")
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precendence over timeseries_type, which is deprecated.
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
             that does not already exist.
@@ -369,7 +393,7 @@ class Fetch:
         loaded into the TEEHR dataset.
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         >>> ev.fetch.nwm_retrospective_points(
         >>>     nwm_version="nwm30",
@@ -432,22 +456,29 @@ class Fetch:
         if (
             not self._configuration_name_exists(ev_configuration_name)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
                     type=timeseries_type,
                     description=f"{nwm_version} retrospective"
                 )
             )
-
-        validate_and_insert_timeseries(
-            ev=self.ev,
-            in_path=Path(
-                self.nwm_cache_dir
-            ),
-            timeseries_type=timeseries_type,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
+            in_path=Path(self.nwm_cache_dir),
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            table_name=table_name
         )
 
     def nwm_retrospective_grids(
@@ -462,7 +493,8 @@ class Fetch:
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         location_id_prefix: Optional[str] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        write_mode: TableWriteEnum = "append",
+        table_name: str = None,
+        write_mode: str = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
     ):
@@ -523,6 +555,13 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precedence over timeseries_type, which is deprecated.
+        write_mode : str, optional (default: "append")
+            The write mode for the table. Options are "append", "upsert",
+            or "create_or_replace".
         zonal_weights_filepath : Optional[Union[Path, str]]
             The path to the zonal weights file. If None and calculate_zonal_weights
             is False, the weights file must exist in the cache for the configuration.
@@ -540,7 +579,7 @@ class Fetch:
         <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         >>> ev.fetch.nwm_retrospective_grids(
         >>>     nwm_version="nwm30",
@@ -589,9 +628,9 @@ class Fetch:
         # defining the zone_polygons argument.
         logger.info("Getting primary location IDs.")
         if location_id_prefix is None:
-            locations_gdf = self.ev.locations.to_geopandas()
+            locations_gdf = self._ev.locations.to_geopandas()
         else:
-            locations_gdf = self.ev.locations.query(
+            locations_gdf = self._ev.locations.filter(
                 filters={
                     "column": "id",
                     "operator": "like",
@@ -630,22 +669,29 @@ class Fetch:
         if (
             not self._configuration_name_exists(ev_configuration_name)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
                     type=timeseries_type,
                     description=f"{nwm_version} retrospective"
                 )
             )
-
-        validate_and_insert_timeseries(
-            ev=self.ev,
-            in_path=Path(
-                self.nwm_cache_dir
-            ),
-            timeseries_type=timeseries_type,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
+            in_path=Path(self.nwm_cache_dir),
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            table_name=table_name
         )
 
     def nwm_operational_points(
@@ -666,9 +712,10 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "secondary",
+        table_name: str = None,
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         drop_duplicates: bool = True,
         drop_overlapping_assimilation_values: Optional[bool] = True
     ):
@@ -756,6 +803,10 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary".
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precedence over timeseries_type, which is deprecated.
         starting_z_hour : Optional[int]
             The starting z_hour to include in the output. If None, z_hours
             for the first day are determined by ``start_date``. Default is None.
@@ -765,7 +816,7 @@ class Fetch:
             for the last day are determined by ``end_date`` if provided, otherwise
             all z_hours are included in the final day. Default is None.
             Must be between 0 and 23.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
             that does not already exist.
@@ -803,7 +854,7 @@ class Fetch:
         load into the TEEHR dataset.
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         >>> ev.fetch.nwm_operational_points(
         >>>     nwm_configuration="short_range",
@@ -896,22 +947,29 @@ class Fetch:
                 ev_config["name"]
             )
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_config["name"],
                     type=timeseries_type,
                     description=ev_config["description"]
                 )
             )
-
-        validate_and_insert_timeseries(
-            ev=self.ev,
-            in_path=Path(
-                self.nwm_cache_dir
-            ),
-            timeseries_type=timeseries_type,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
+            in_path=Path(self.nwm_cache_dir),
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            table_name=table_name
         )
 
     def nwm_operational_grids(
@@ -932,9 +990,10 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "secondary",
+        table_name: str = None,
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: str = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
         drop_overlapping_assimilation_values: bool = True,
@@ -1026,6 +1085,10 @@ class Fetch:
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary", unless the configuration is a analysis containing
             assimilation, in which case the default is "primary".
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precedence over timeseries_type, which is deprecated.
         starting_z_hour : Optional[int]
             The starting z_hour to include in the output. If None, z_hours
             for the first day are determined by ``start_date``. Default is None.
@@ -1035,7 +1098,7 @@ class Fetch:
             for the last day are determined by ``end_date`` if provided, otherwise
             all z_hours are included in the final day. Default is None.
             Must be between 0 and 23.
-        write_mode : TableWriteEnum, optional (default: "append")
+        write_mode : str, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
             that does not already exist.
@@ -1082,7 +1145,7 @@ class Fetch:
         <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
 
         >>> import teehr
-        >>> ev = teehr.Evaluation()
+        >>> ev = teehr.LocalReadWriteEvaluation()
 
         >>> ev.fetch.nwm_operational_grids(
         >>>     nwm_configuration="forcing_short_range",
@@ -1148,9 +1211,9 @@ class Fetch:
         # defining the zone_polygons argument.
         logger.info("Getting primary location IDs.")
         if location_id_prefix is None:
-            locations_gdf = self.ev.locations.to_geopandas()
+            locations_gdf = self._ev.locations.to_geopandas()
         else:
-            locations_gdf = self.ev.locations.query(
+            locations_gdf = self._ev.locations.filter(
                 filters={
                     "column": "id",
                     "operator": "like",
@@ -1201,18 +1264,27 @@ class Fetch:
                 ev_config["name"]
             )
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_config["name"],
                     type=timeseries_type,
                     description=ev_config["description"]
                 )
             )
-
-        validate_and_insert_timeseries(
-            ev=self.ev,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
             in_path=Path(self.nwm_cache_dir),
-            timeseries_type=timeseries_type,
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            table_name=table_name
         )

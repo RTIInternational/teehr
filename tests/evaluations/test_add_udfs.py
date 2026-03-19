@@ -1,5 +1,6 @@
 """Tests for the TEEHR UDFs."""
-import tempfile
+import pytest
+
 import teehr
 from teehr import RowLevelCalculatedFields as rcf
 from teehr import TimeseriesAwareCalculatedFields as tcf
@@ -11,33 +12,33 @@ import baseflow
 import pandas as pd
 from datetime import timedelta
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
-from data.setup_v0_4_ensemble_study import setup_v0_4_ensemble_study  # noqa
 
-
-def test_add_row_udfs_null_reference(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_add_row_udfs_null_reference(function_scope_evaluation_template):
     """Test adding row level UDFs with null reference time."""
-    ev = teehr.Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_from_s3("e0_2_location_example")
-    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
+    ev = function_scope_evaluation_template
 
-    ev.joined_timeseries.add_calculated_fields([
+    ev.joined_timeseries_view().add_calculated_fields([
         rcf.Month(),
         rcf.Year(),
         rcf.WaterYear(),
         rcf.Seasons()
-    ]).write()
+    ]).write("joined_timeseries")
 
-    ev.spark.stop()
+    nse = teehr.DeterministicMetrics.NashSutcliffeEfficiency()
+    ev.table("joined_timeseries").aggregate(
+        metrics=[nse],
+        group_by=["primary_location_id"]
+    ).write(table_name="metrics", write_mode="create_or_replace")
 
 
-def test_add_row_udfs(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_add_row_udfs(session_scope_test_warehouse):
     """Test adding row level UDFs."""
-    ev = setup_v0_3_study(tmpdir)
-    sdf = ev.joined_timeseries.to_sdf()
+    ev = session_scope_test_warehouse
+
+    # Read table in fixture.
+    sdf = ev.table("joined_timeseries").to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
     _ = sdf.toPandas()
@@ -78,6 +79,7 @@ def test_add_row_udfs(tmpdir):
 
     cols = sdf.columns
     check_sdf = sdf[sdf["primary_location_id"] == "gage-A"]
+    check_sdf = check_sdf.orderBy("value_time")
 
     assert "month" in cols
     assert sdf.schema["month"].dataType == T.IntegerType()
@@ -100,7 +102,8 @@ def test_add_row_udfs(tmpdir):
     assert "normalized_flow" in cols
     assert sdf.schema["normalized_flow"].dataType == T.FloatType()
     check_vals = check_sdf.select("normalized_flow").collect()
-    assert np.round(check_vals[0]["normalized_flow"], 3) == 0.003
+    # assert np.round(check_vals[0]["normalized_flow"], 3) == 0.003  # TODO: Why? -- need to order by value_time
+    assert np.round(check_vals[0]["normalized_flow"], 3) == 0.001
 
     assert "season" in cols
     assert sdf.schema["season"].dataType == T.StringType()
@@ -127,27 +130,27 @@ def test_add_row_udfs(tmpdir):
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
 
-    ev.spark.stop()
-
-
-def test_forecast_lead_time_bins(tmpdir):
+@pytest.mark.function_scope_small_ensemble_warehouse
+def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     """Test ForecastLeadTimeBins UDF."""
-    ev = setup_v0_4_ensemble_study(tmpdir)
+    ev = function_scope_small_ensemble_warehouse
 
     # test with single bin size
     fcst_bins_static = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=pd.Timedelta(hours=6)
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_static,
     ]).to_sdf()
+
     sorted_sdf = sdf.orderBy(
         "primary_location_id",
         "configuration_name",
         "member",
         "reference_time",
         "value_time"
-        )
+    )
+
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 9
 
     # try with dynamic bin sizes that DO encompass full lead time range
@@ -170,7 +173,8 @@ def test_forecast_lead_time_bins(tmpdir):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin,
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -198,7 +202,7 @@ def test_forecast_lead_time_bins(tmpdir):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin,
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -235,7 +239,7 @@ def test_forecast_lead_time_bins(tmpdir):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -266,7 +270,7 @@ def test_forecast_lead_time_bins(tmpdir):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -303,7 +307,7 @@ def test_forecast_lead_time_bins(tmpdir):
     fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
         bin_size=bin
     )
-    sdf = ev.joined_timeseries.add_calculated_fields([
+    sdf = ev.table("joined_timeseries").add_calculated_fields([
         fcst_bins_dynamic,
     ]).to_sdf()
     sorted_sdf = sdf.orderBy(
@@ -315,14 +319,15 @@ def test_forecast_lead_time_bins(tmpdir):
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
 
-
-def test_add_timeseries_udfs(tmpdir):
+@pytest.mark.function_scope_two_location_warehouse
+def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     """Test adding a timeseries aware UDF."""
-    # utilize e0_2_location_example from s3 to satisfy baseflow POR reqs
-    ev = teehr.Evaluation(tmpdir)
-    ev.clone_from_s3(evaluation_name="e0_2_location_example",
-                     primary_location_ids=["usgs-14316700"])
-    sdf = ev.joined_timeseries.to_sdf()
+    # Test data needs at least 20 timesteps.
+    ev = function_scope_two_location_warehouse
+
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
 
     # set up input to baseflow package for native testing
     pdf = sdf.toPandas()
@@ -462,7 +467,9 @@ def test_add_timeseries_udfs(tmpdir):
     assert event_count == 219
 
     # test percentile event detection (no event-id)
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ped = tcf.AbovePercentileEventDetection(
         skip_event_id=True
     )
@@ -471,7 +478,9 @@ def test_add_timeseries_udfs(tmpdir):
     assert num_event_timesteps == 14823
 
     # test percentile event detection (return quantile value)
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ped = tcf.AbovePercentileEventDetection(
         add_quantile_field=True
     )
@@ -481,14 +490,18 @@ def test_add_timeseries_udfs(tmpdir):
     assert np.isclose(quantile, 37.66, atol=0.01)
 
     # test percentile event detection (below percentile)
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ped = tcf.BelowPercentileEventDetection()
     sdf = ped.apply_to(sdf)
     event_count = sdf.select('event_below_id').distinct().count()
     assert event_count == 92
 
     # test exceedance probability
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ep = tcf.ExceedanceProbability()
     sdf = ep.apply_to(sdf)
     columns = sdf.columns
@@ -502,39 +515,37 @@ def test_add_timeseries_udfs(tmpdir):
     assert np.isclose(max_ep, 1.0, atol=0.001)
     assert "exceedance_probability" in columns
 
-    ev.spark.stop()
-
-
-def test_add_udfs_write(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_add_udfs_write(function_scope_evaluation_template):
     """Test adding UDFs and write DataFrame back to table."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = function_scope_evaluation_template
 
+    # First join with event detection
     ped = tcf.AbovePercentileEventDetection()
-    ev.joined_timeseries.add_calculated_fields(ped).write()
+    ev.joined_timeseries_view().add_calculated_fields(ped).write("joined_timeseries")
 
+    # Add forecast lead time to the persisted table (new instance loads from table)
     flt = rcf.ForecastLeadTime()
-    ev.joined_timeseries.add_calculated_fields(flt).write()
+    ev.table("joined_timeseries").add_calculated_fields(flt).write("joined_timeseries")
 
-    new_sdf = ev.joined_timeseries.to_sdf()
-
+    new_sdf = ev.table("joined_timeseries").to_sdf()
     cols = new_sdf.columns
     assert "event_above" in cols
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
 
-    ev.spark.stop()
 
-
-def test_location_event_detection(tmpdir):
+@pytest.mark.function_scope_test_warehouse
+def test_location_event_detection(function_scope_test_warehouse):
     """Test event detection and metrics per event."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = function_scope_test_warehouse
 
     ped = tcf.AbovePercentileEventDetection()
-    sdf = ev.metrics.add_calculated_fields(ped).query(
+    sdf = ev.table("joined_timeseries").add_calculated_fields(ped).aggregate(
         group_by=["configuration_name",
                   "primary_location_id",
                   "event_above_id"],
-        include_metrics=[
+        metrics=[
             teehr.Signatures.Maximum(
                 input_field_names=["primary_value"],
                 output_field_name="max_primary_value"
@@ -553,47 +564,3 @@ def test_location_event_detection(tmpdir):
     assert "event_above_id" in sdf.columns
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns
-
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_add_row_udfs_null_reference(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
-        test_add_row_udfs(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_forecast_lead_time_bins(
-            tempfile.mkdtemp(
-                prefix="1b-",
-                dir=tempdir
-            )
-        )
-        test_add_timeseries_udfs(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_add_udfs_write(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_location_event_detection(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )

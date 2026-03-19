@@ -34,13 +34,13 @@ def test_nwm20_retro_one_file(tmpdir):
     assert df["location_id"].unique()[0] == "nwm20-7086109"
     assert df["configuration_name"].unique()[0] == "nwm20_retrospective"
     assert df.columns.to_list() == [
+        "reference_time",
         "value_time",
-        "location_id",
         "value",
-        "unit_name",
         "variable_name",
         "configuration_name",
-        "reference_time",
+        "unit_name",
+        "location_id",
         "member"
     ]
 
@@ -67,13 +67,13 @@ def test_nwm20_retro_week(tmpdir):
     assert df["value_time"].min() == pd.Timestamp("2000-01-10 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-16 23:00:00")
     assert df.columns.to_list() == [
+        "reference_time",
         "value_time",
-        "location_id",
         "value",
-        "unit_name",
         "variable_name",
         "configuration_name",
-        "reference_time",
+        "unit_name",
+        "location_id",
         "member"
     ]
 
@@ -100,13 +100,13 @@ def test_nwm20_retro_month(tmpdir):
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-31 23:00:00")
     assert df.columns.to_list() == [
+        "reference_time",
         "value_time",
-        "location_id",
         "value",
-        "unit_name",
         "variable_name",
         "configuration_name",
-        "reference_time",
+        "unit_name",
+        "location_id",
         "member"
     ]
 
@@ -133,13 +133,13 @@ def test_nwm20_retro_year(tmpdir):
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-12-31 23:00:00")
     assert df.columns.to_list() == [
+        "reference_time",
         "value_time",
-        "location_id",
         "value",
-        "unit_name",
         "variable_name",
         "configuration_name",
-        "reference_time",
+        "unit_name",
+        "location_id",
         "member"
     ]
 
@@ -167,13 +167,13 @@ def test_nwm21_retro_one_file(tmpdir):
     assert df["location_id"].unique()[0] == "nwm21-7086109"
     assert df["configuration_name"].unique()[0] == "nwm21_retrospective"
     assert df.columns.to_list() == [
+        "reference_time",
         "value_time",
-        "location_id",
         "value",
-        "unit_name",
         "variable_name",
         "configuration_name",
-        "reference_time",
+        "unit_name",
+        "location_id",
         "member"
     ]
 
@@ -203,13 +203,13 @@ def test_nwm30_one_file(tmpdir):
     assert df["location_id"].unique()[0] == "nwm30-7086109"
     assert df["configuration_name"].unique()[0] == "nwm30_retrospective"
     assert df.columns.to_list() == [
+        "reference_time",
         "value_time",
-        "location_id",
         "value",
-        "unit_name",
         "variable_name",
         "configuration_name",
-        "reference_time",
+        "unit_name",
+        "location_id",
         "member"
     ]
     assert math.isclose(df.value.max(), 0.1799999, rel_tol=1e-4)

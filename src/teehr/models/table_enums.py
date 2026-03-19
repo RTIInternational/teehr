@@ -14,66 +14,13 @@ class TableNamesEnum(StrEnum):
     attributes = "attributes"
     location_attributes = "location_attributes"
     location_crosswalks = "location_crosswalks"
-    joined_timeseries = "joined_timeseries"
 
 
 class TableWriteEnum(StrEnum):
     """Methods to write or update Evaluation tables."""
 
+    insert = "insert"
     append = "append"
     upsert = "upsert"
     overwrite = "overwrite"
-
-
-class ConfigurationFields(StrEnum):
-    """Empty class for ConfigurationFieldEnum."""
-
-    pass
-
-
-class UnitFields(StrEnum):
-    """Empty class for UnitFieldEnum."""
-
-    pass
-
-
-class VariableFields(StrEnum):
-    """Empty class for VariableFieldEnum."""
-
-    pass
-
-
-class AttributeFields(StrEnum):
-    """Empty class for AttributeFieldEnum."""
-
-    pass
-
-
-class LocationFields(StrEnum):
-    """Empty class for LocationFieldEnum."""
-
-    pass
-
-
-class LocationAttributeFields(StrEnum):
-    """Empty class for LocationAttributeFieldEnum."""
-
-    pass
-
-
-class LocationCrosswalkFields(StrEnum):
-    """Empty class for LocationCrosswalkFieldEnum."""
-
-    pass
-
-
-class TimeseriesFields(StrEnum):
-    """Empty class for TimeseriesFieldEnum."""
-
-    pass
-
-
-class JoinedTimeseriesFields(StrEnum):
-    """Empty class for JoinedTimeseriesFieldEnum."""
-
-    pass
+    create_or_replace = "create_or_replace"

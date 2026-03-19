@@ -1,1 +1,0 @@
-"""Template code for TEEHR evaluations."""

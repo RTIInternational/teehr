@@ -2,14 +2,189 @@
 import geopandas as gpd
 import pandas as pd
 from typing import List, Union
-from teehr.models.str_enum import StrEnum
 import pyspark.sql as ps
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
+from pydantic import BaseModel as PydanticBaseModel
+
+import teehr
+from teehr.models.str_enum import StrEnum
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def post_process_metric_results(
+    metrics_sdf: ps.DataFrame,
+    include_metrics: List[PydanticBaseModel],
+    group_by: Union[
+        str,
+        List[str]
+    ]
+) -> ps.DataFrame:
+    """Post-process the results of the metrics query.
+
+    Parameters
+    ----------
+    metrics_sdf : ps.DataFrame
+        DataFrame containing calculated metrics.
+    include_metrics : List[PydanticBaseModel]
+        List of metric models used in the query.
+    group_by : Union[str, JoinedTimeseriesFields, List[...]]
+        Fields used for grouping in the metrics calculation.
+
+    Returns
+    -------
+    ps.DataFrame
+        Processed DataFrame with skill scores and unpacked results as specified
+        by the metric models.
+
+    Notes
+    -----
+    This method includes functionality to update the dataframe returned
+    by the query method depending on metric model attributes.
+
+    If the metric model specifies a reference configuration, it will
+    calculate the skill score of metric values for each configuration
+    relative to the reference configuration. The skill score is calculated
+    as `1 - (metric_value / reference_metric_value)`.
+
+    Additionally, if the metric model specifies unpacking of results,
+    metric results returned as a dictionary will be unpacked into separate
+    columns in the DataFrame.
+    """
+    for model in include_metrics:
+        if model.reference_configuration is not None:
+            """
+            self.df = self._calculate_metric_skill_score(
+                model.output_field_name,
+                model.reference_configuration,
+                group_by
+            )
+            """
+            # 1) get the original cols ahead of skill score join
+            original_cols = metrics_sdf.columns
+            # 2) calculate skill score sdf
+            sdf = calculate_metric_skill_score(
+                metrics_sdf,
+                model.output_field_name,
+                model.reference_configuration,
+                group_by
+            )
+            # 3) remove original metric column from skill score sdf
+            sdf = sdf.drop(model.output_field_name)
+            # 3) get join columns
+            join_cols = parse_fields_to_list(group_by)
+            # 4) join returned table back to self.df, trim
+            metrics_sdf = metrics_sdf.join(
+                sdf,
+                on=join_cols,
+                how="left"
+            ).select(
+                *original_cols,
+                F.col(f"{model.output_field_name}_skill_score")
+            )
+
+        if model.unpack_results:
+            metrics_sdf = model.unpack_function(
+                metrics_sdf,
+                model.output_field_name
+            )
+
+    return metrics_sdf
+
+
+def calculate_metric_skill_score(
+    metrics_sdf: ps.DataFrame,
+    metric_field: str,
+    reference_configuration: str,
+    group_by: Union[
+        str,
+        List[str]
+    ]
+) -> ps.DataFrame:
+    """Calculate skill score based on a reference configuration.
+
+    Parameters
+    ----------
+    metrics_sdf : ps.DataFrame
+        DataFrame containing calculated metrics.
+    metric_field : str
+        The name of the metric field to calculate skill scores for.
+    reference_configuration : str
+        The name of the reference configuration.
+    group_by : Union[str, List[str]]
+        Fields used for grouping in the metrics calculation.
+
+    Calculate the skill score of metric values for each configuration
+    relative to the reference configuration. The skill score is calculated
+    as `1 - (metric_value / reference_metric_value)`.
+    """
+    logger.debug("Calculating skill score.")
+    group_by_strings = parse_fields_to_list(group_by)
+    # TODO: Raise error if configuration_name is not in group_by?
+    group_by_strings.remove("configuration_name")
+
+    pivot_sdf = (
+        metrics_sdf
+        .groupBy(group_by_strings).
+        pivot("configuration_name").
+        agg(F.first(metric_field))
+    )
+    # Get all configuration names except the reference configuration
+    configurations = metrics_sdf.select("configuration_name").distinct().collect()
+    configurations = [row.configuration_name for row in configurations]
+    configurations.remove(reference_configuration)
+
+    skill_score_col = f"{metric_field}_skill_score"
+    sdf = metrics_sdf.withColumn(skill_score_col, F.lit(None))
+
+    for config in configurations:
+        # Pivot and calculate the skill score.
+        temp_col = f"{config}_{metric_field}_skill"
+        pivot_sdf = pivot_sdf.withColumn(
+            temp_col,
+            1 - F.try_divide(F.col(config), F.col(reference_configuration))
+        ).withColumn(
+            "configuration_name",
+            F.lit(config)
+        )
+        # warn user if try_divide results in nulls (division by zero)
+        null_count = pivot_sdf.filter(F.col(temp_col).isNull()).count()
+        if null_count > 0:
+            logger.warning(
+                f"Division by zero encountered when calculating skill "
+                f"score for configuration '{config}' relative to "
+                f"reference configuration '{reference_configuration}'. "
+                f"{null_count} null values were produced."
+            )
+        # Join skill score values from the pivot table.
+        join_cols = group_by_strings + ["configuration_name"]
+        sdf = sdf.join(
+            pivot_sdf,
+            on=join_cols,
+            how="left"
+        ).select(
+            *join_cols,
+            F.col(f"{metric_field}"),
+            F.col(temp_col),
+            F.col(skill_score_col)
+        )
+        # Now update the column based on the configuration name.
+        sdf = sdf.withColumn(
+            skill_score_col,
+            F.when(
+                sdf["configuration_name"] == f"{config}",
+                sdf[temp_col]
+            ).otherwise(sdf[skill_score_col])
+        ).select(
+            *join_cols,
+            F.col(f"{metric_field}"),
+            F.col(skill_score_col)
+        )
+
+    return sdf
 
 
 def unpack_sdf_dict_columns(sdf: DataFrame, column_name: str) -> DataFrame:
@@ -53,8 +228,8 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
 
 
 def validate_fields_exist(
-        valid_fields: List[str],
-        requested_fields: List[str]
+    valid_fields: List[str],
+    requested_fields: List[str]
 ):
     """Validate that the requested_fields are in the valid_fields list."""
     logger.debug("Validating requested fields.")
@@ -66,7 +241,7 @@ def validate_fields_exist(
 
 
 def parse_fields_to_list(
-        requested_fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
+    requested_fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
 ) -> List[str]:
     """Convert the requested fields to a list of strings."""
     logger.debug("Parsing requested fields to a list of strings.")
@@ -97,21 +272,90 @@ def group_df(df, group_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
     return df.groupBy(*group_by_strings)
 
 
+def join_attributes(
+    target_df: ps.DataFrame,
+    attrs_df: ps.DataFrame,
+    target_location_id: str = None,
+) -> ps.DataFrame:
+    """Join pivoted location attributes to a target DataFrame.
+
+    Parameters
+    ----------
+    target_df : ps.DataFrame
+        The target DataFrame to join attributes to.
+    attrs_df : ps.DataFrame
+        The pivoted attributes DataFrame (from location_attributes_view).
+    target_location_id : str, optional
+        The column name in target_df to join on. If None, checks for
+        'location_id' then 'primary_location_id' in target_df columns.
+
+    Returns
+    -------
+    ps.DataFrame
+        The target DataFrame with attributes added.
+    """
+    logger.debug("Joining location attributes.")
+
+    target_df_columns = target_df.columns
+    if target_location_id is None:
+        if "location_id" in target_df_columns:
+            target_location_id = "location_id"
+        elif "primary_location_id" in target_df_columns:
+            target_location_id = "primary_location_id"
+        else:
+            error_msg = (
+                "No 'location_id' or 'primary_location_id' column "
+                "found in target DataFrame."
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+    # Get attr columns excluding location_id (the join key from attrs_df)
+    attr_cols = [c for c in attrs_df.columns if c != "location_id"]
+
+    # Rename attrs' location_id to match target join column if needed,
+    # and select only relevant columns to prevent column ambiguity
+    if target_location_id != "location_id":
+        attrs_df = attrs_df.withColumnRenamed("location_id", target_location_id)
+
+    attrs_df = attrs_df.select([target_location_id] + attr_cols)
+
+    joined_df = target_df.join(attrs_df, on=target_location_id)
+    return joined_df
+
+
 def join_geometry(
     target_df: ps.DataFrame,
     location_df: ps.DataFrame,
-    target_location_id: str = "location_id",
-):
+    target_location_id: str = None,
+) -> ps.DataFrame:
     """Join geometry."""
     logger.debug("Joining locations geometry.")
 
-    joined_df = target_df.join(
-        location_df.withColumnRenamed(
-            "id",
-            target_location_id
-        ).select(
-            target_location_id,
-            "geometry"
-        ), on=target_location_id
+    target_df_columns = target_df.columns
+    if target_location_id is None:
+        if "location_id" in target_df_columns:
+            target_location_id = "location_id"
+        elif "primary_location_id" in target_df_columns:
+            target_location_id = "primary_location_id"
+        else:
+            error_msg = """
+                No 'location_id' or 'primary_location_id' column
+                found in target DataFrame.
+            """
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+    location_df = location_df.withColumnRenamed(
+        "id",
+        target_location_id
+    ).select(
+        target_location_id,
+        "name",
+        "geometry"
     )
-    return df_to_gdf(joined_df.toPandas())
+
+    joined_df = target_df.join(
+        location_df, on=target_location_id
+    )
+    return joined_df

@@ -1,15 +1,14 @@
 """Test fetching and loading data into the dataset."""
 from pathlib import Path
 from datetime import datetime
-import tempfile
 
-from teehr import Evaluation
+from teehr import LocalReadWriteEvaluation
 import pandas as pd
 import numpy as np
 import pytest
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEO_GAGES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR,
     "geo",
@@ -30,11 +29,10 @@ ZONAL_LOCATIONS = Path(
 )
 
 
-def test_fetch_and_load_nwm_retro_points(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_fetch_and_load_nwm_retro_points(function_scope_evaluation_template):
     """Test the NWM retro point fetch and load."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.enable_logging()
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEO_GAGES_FILEPATH)
 
@@ -90,12 +88,13 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
     assert sts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
     assert sts_df.value_time.max() == pd.Timestamp("2022-02-25 23:00:00")
 
+    # ev.spark.stop()
 
-def test_fetch_and_load_nwm_retro_grids(tmpdir):
+
+@pytest.mark.function_scope_evaluation_template
+def test_fetch_and_load_nwm_retro_grids(function_scope_evaluation_template):
     """Test the NWM retro grid fetch and load."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.enable_logging()
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
@@ -123,12 +122,13 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 10:00:00")
 
+    # ev.spark.stop()
 
-def test_fetch_and_load_nwm_operational_points(tmpdir):
+
+@pytest.mark.function_scope_evaluation_template
+def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_template):
     """Test the NWM operational point fetch and load."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.enable_logging()
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEO_GAGES_FILEPATH)
 
@@ -179,13 +179,13 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
     assert updated_df.value_time.max() == pd.Timestamp("2024-02-23 06:00:00")
     assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
 
+    # ev.spark.stop()
+
 
 @pytest.mark.skip(reason="This takes forever!")
 def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.enable_logging()
-    ev.clone_template()
+    ev = LocalReadWriteEvaluation(dir_path=tmpdir, create_dir=True)
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
@@ -220,48 +220,3 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
     assert np.isclose(ts_df.value.sum(), np.float32(0.0))
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 02:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 22:00:00")
-    file_list = list(
-        Path(
-            tmpdir,
-            "dataset",
-            "primary_timeseries",
-            "configuration_name=nwm30_forcing_analysis_assim",
-            "variable_name=rainfall_hourly_rate"
-            ).rglob("*.parquet")
-    )
-    assert len(file_list) == 1
-
-
-if __name__ == "__main__":
-
-    from dask.distributed import Client
-    client = Client()
-
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_fetch_and_load_nwm_retro_points(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_fetch_and_load_nwm_retro_grids(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_fetch_and_load_nwm_operational_points(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        # Warning: This one is slow.
-        test_fetch_and_load_nwm_operational_grids(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )

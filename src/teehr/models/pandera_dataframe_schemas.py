@@ -1,19 +1,16 @@
+"""Pandera DataFrame Schemas for TEEHR Tables."""
 import pandera.pyspark as ps
 import pandera.pandas as pa
 import pyspark.sql.types as T
 import pandas as pd
-from typing import List, Union
+import pyarrow
+
 
 # Domains
 # PySpark Pandera Schemas
 
-def desc_no_commas(pyspark_obj) -> bool:
-    """Ensure description column does not contain commas."""
-    return pyspark_obj.filter(pyspark_obj["description"].contains(",")).count() == 0
-
-
 def ln_no_commas(pyspark_obj) -> bool:
-    """Ensure description column does not contain commas."""
+    """Ensure long_name column does not contain commas."""
     return pyspark_obj.filter(pyspark_obj["long_name"].contains(",")).count() == 0
 
 
@@ -26,7 +23,9 @@ def valid_unit_name(pyspark_obj) -> bool:
     """Ensure name column matches ^[a-zA-Z0-9_^/]+$."""
     return pyspark_obj.filter(pyspark_obj["name"].rlike(r"^[a-zA-Z0-9_^/]+$")).count() == pyspark_obj.count()
 
+
 def format_datetime64(s: pd.Series) -> pd.Series:
+    """Format a pandas Series to datetime64[ms] in UTC."""
     # Convert to UTC.
     # if s.dt.tz is not None:
     #     s = s.dt.tz_convert("UTC")
@@ -34,7 +33,9 @@ def format_datetime64(s: pd.Series) -> pd.Series:
     s = s.dt.tz_localize(None)
     return s.astype("datetime64[ms]")
 
+
 def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
+    """Return the schema for configuration data."""
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
@@ -74,14 +75,19 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                 ),
                 "description": ps.Column(
                     T.StringType(),
-                    nullable=False,
-                    checks=ps.Check(desc_no_commas, error="`description` column contains commas")
+                    nullable=False
                 ),
             },
             strict=True,
             unique=["name"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("name", pyarrow.string()),
+            ("type", pyarrow.string()),
+            ("description", pyarrow.string()),
+        ])
 
 def unit_schema(type: str = "pyspark") -> ps.DataFrameSchema:
     if type == "pandas":
@@ -119,6 +125,11 @@ def unit_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             unique=["name"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("name", pyarrow.string()),
+            ("long_name", pyarrow.string()),
+        ])
 
 def variable_schema(type: str = "pyspark") -> ps.DataFrameSchema:
     if type == "pandas":
@@ -157,6 +168,11 @@ def variable_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             unique=["name"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("name", pyarrow.string()),
+            ("long_name", pyarrow.string()),
+        ])
 
 def attribute_schema(type: str = "pyspark") -> ps.DataFrameSchema:
     if type == "pandas":
@@ -197,14 +213,19 @@ def attribute_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                 ),
                 "description": ps.Column(
                     T.StringType(),
-                    nullable=False,
-                    checks=ps.Check(desc_no_commas, error="`description` column contains commas")
+                    nullable=False
                 ),
             },
             strict=True,
             unique=["name"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("name", pyarrow.string()),
+            ("type", pyarrow.string()),
+            ("description", pyarrow.string()),
+        ])
 
 # Locations
 # PySpark Pandera Models
@@ -229,6 +250,12 @@ def locations_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             unique=["id"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("id", pyarrow.string()),
+            ("name", pyarrow.string()),
+            ("geometry", pyarrow.binary()),
+        ])
 
 def location_attributes_schema(
         type: str = "pyspark",
@@ -270,6 +297,12 @@ def location_attributes_schema(
             strict=True,
             coerce=True,
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("location_id", pyarrow.string()),
+            ("attribute_name", pyarrow.string()),
+            ("value", pyarrow.string()),
+        ])
 
 def location_crosswalks_schema(
         type: str = "pyspark",
@@ -303,6 +336,11 @@ def location_crosswalks_schema(
             strict=True,
             coerce=True,
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("primary_location_id", pyarrow.string()),
+            ("secondary_location_id", pyarrow.string()),
+        ])
 
 
 def weights_file_schema() -> pa.DataFrameSchema:
@@ -334,11 +372,14 @@ def weights_file_schema() -> pa.DataFrameSchema:
 # Timeseries
 pandas_value_type = pa.Float32()
 pyspark_value_type = T.FloatType()
+pyarrow_value_type = pyarrow.float32()
+
 
 # PySpark Pandera Models
 def primary_timeseries_schema(
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
+    """Return the schema for primary timeseries data."""
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
@@ -415,10 +456,22 @@ def primary_timeseries_schema(
             strict=True,
             coerce=True,
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("reference_time", pyarrow.timestamp("ms")),
+            ("value_time", pyarrow.timestamp("ms")),
+            ("value", pyarrow_value_type),
+            ("variable_name", pyarrow.string()),
+            ("configuration_name", pyarrow.string()),
+            ("unit_name", pyarrow.string()),
+            ("location_id", pyarrow.string()),
+        ])
+
 
 def secondary_timeseries_schema(
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
+    """Return the schema for secondary timeseries data."""
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
@@ -502,102 +555,127 @@ def secondary_timeseries_schema(
             strict=True,
             coerce=True,
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("reference_time", pyarrow.timestamp("ms")),
+            ("value_time", pyarrow.timestamp("ms")),
+            ("value", pyarrow_value_type),
+            ("variable_name", pyarrow.string()),
+            ("configuration_name", pyarrow.string()),
+            ("unit_name", pyarrow.string()),
+            ("location_id", pyarrow.string()),
+            ("member", pyarrow.string()),
+        ])
 
-def joined_timeseries_schema(
-    type: str = "pyspark",
-) -> ps.DataFrameSchema:
-    if type == "pandas":
-        return pa.DataFrameSchema(
-            columns={
-                "reference_time": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True
-                ),
-                "value_time": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=False
-                ),
-                "primary_value": pa.Column(
-                    pandas_value_type,
-                    nullable=False,
-                ),
-                "secondary_value": pa.Column(
-                    pandas_value_type,
-                    nullable=False,
-                ),
-                "variable_name": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "configuration_name": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "unit_name": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "primary_location_id": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "secondary_location_id": pa.Column(
-                    pa.String,
-                    nullable=False
-                ),
-                "member": pa.Column(
-                    pa.String,
-                    nullable=True
-                )
-            }
-        )
-    if type == "pyspark":
-        return ps.DataFrameSchema(
-            columns={
-                "reference_time": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True
-                ),
-                "value_time": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=False
-                ),
-                "primary_value": ps.Column(
-                    pyspark_value_type,
-                    nullable=False,
-                    coerce=True,
-                ),
-                "secondary_value": ps.Column(
-                    pyspark_value_type,
-                    nullable=False,
-                    coerce=True,
-                ),
-                "variable_name": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "configuration_name": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "unit_name": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "primary_location_id": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "secondary_location_id": ps.Column(
-                    T.StringType(),
-                    nullable=False
-                ),
-                "member": ps.Column(
-                    T.StringType(),
-                    nullable=True
-                )
-            },
-            coerce=True,
-        )
+
+# def joined_timeseries_schema(
+#     type: str = "pyspark",
+# ) -> ps.DataFrameSchema:
+#     """Return the schema for joined timeseries data."""
+#     if type == "pandas":
+#         return pa.DataFrameSchema(
+#             columns={
+#                 "reference_time": pa.Column(
+#                     pa.DateTime,
+#                     parsers=pa.Parser(format_datetime64),
+#                     nullable=True
+#                 ),
+#                 "value_time": pa.Column(
+#                     pa.DateTime,
+#                     parsers=pa.Parser(format_datetime64),
+#                     nullable=False
+#                 ),
+#                 "primary_value": pa.Column(
+#                     pandas_value_type,
+#                     nullable=False,
+#                 ),
+#                 "secondary_value": pa.Column(
+#                     pandas_value_type,
+#                     nullable=False,
+#                 ),
+#                 "variable_name": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "configuration_name": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "unit_name": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "primary_location_id": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "secondary_location_id": pa.Column(
+#                     pa.String,
+#                     nullable=False
+#                 ),
+#                 "member": pa.Column(
+#                     pa.String,
+#                     nullable=True
+#                 )
+#             }
+#         )
+#     if type == "pyspark":
+#         return ps.DataFrameSchema(
+#             columns={
+#                 "reference_time": ps.Column(
+#                     T.TimestampNTZType(),
+#                     nullable=True
+#                 ),
+#                 "value_time": ps.Column(
+#                     T.TimestampNTZType(),
+#                     nullable=False
+#                 ),
+#                 "primary_value": ps.Column(
+#                     pyspark_value_type,
+#                     nullable=False,
+#                     coerce=True,
+#                 ),
+#                 "secondary_value": ps.Column(
+#                     pyspark_value_type,
+#                     nullable=False,
+#                     coerce=True,
+#                 ),
+#                 "variable_name": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "configuration_name": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "unit_name": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "primary_location_id": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "secondary_location_id": ps.Column(
+#                     T.StringType(),
+#                     nullable=False
+#                 ),
+#                 "member": ps.Column(
+#                     T.StringType(),
+#                     nullable=True
+#                 )
+#             },
+#             coerce=True,
+#         )
+#     if type == "arrow":  # is this needed for joined?
+#         return pyarrow.schema([
+#             ("reference_time", pyarrow.timestamp("ms")),
+#             ("value_time", pyarrow.timestamp("ms")),
+#             ("primary_value", pyarrow_value_type),
+#             ("secondary_value", pyarrow_value_type),
+#             ("variable_name", pyarrow.string()),
+#             ("configuration_name", pyarrow.string()),
+#             ("unit_name", pyarrow.string()),
+#             ("primary_location_id", pyarrow.string()),
+#             ("secondary_location_id", pyarrow.string()),
+#         ])

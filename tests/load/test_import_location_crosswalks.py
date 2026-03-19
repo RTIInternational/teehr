@@ -1,33 +1,32 @@
 """Test the import_location_crosswalks function."""
-from teehr.loading.location_crosswalks import convert_location_crosswalks
+from teehr.loading.location_crosswalks import (
+    convert_single_location_crosswalks
+)
 from pathlib import Path
-from teehr import Evaluation
-import tempfile
+import pytest
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
 CROSSWALK_FILEPATH_NC = Path(
-    "tests", "data", "test_study", "geo", "nwm_v3_route_link_subset.nc"
+    TEST_STUDY_DATA_DIR, "geo", "nwm_v3_route_link_subset.nc"
 )
 
 
-def test_convert_location_crosswalk(tmpdir):
+def test_convert_location_crosswalk():
     """Test the import_locations function on geojson."""
-    output_filepath = Path(tmpdir, "crosswalk.parquet")
-
-    convert_location_crosswalks(
-        in_path=CROSSWALK_FILEPATH,
-        out_dirpath=tmpdir,
+    df = convert_single_location_crosswalks(
+        in_filepath=CROSSWALK_FILEPATH,
+        field_mapping={"primary_location_id": "primary_location_id"}
     )
-    assert output_filepath.is_file()
+    assert df.index.size == 3
 
 
-def test_validate_and_insert_crosswalks(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_crosswalks(function_scope_evaluation_template):
     """Test the validate crosswalks function."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(
         in_path=GEOJSON_GAGES_FILEPATH,
@@ -55,42 +54,15 @@ def test_validate_and_insert_crosswalks(tmpdir):
     assert True
 
 
-def test_convert_location_crosswalk_netcdf(tmpdir):
+def test_convert_location_crosswalk_netcdf():
     """Test the import_locations function on netcdf."""
-    output_filepath = Path(tmpdir, "nwm_v3_route_link_subset.parquet")
-
     field_mapping = {
         "link": "secondary_location_id",
         "gages": "primary_location_id"
     }
 
-    convert_location_crosswalks(
-        in_path=CROSSWALK_FILEPATH_NC,
-        out_dirpath=tmpdir,
+    df = convert_single_location_crosswalks(
+        in_filepath=CROSSWALK_FILEPATH_NC,
         field_mapping=field_mapping,
     )
-    assert output_filepath.is_file()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_convert_location_crosswalk(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_crosswalks(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_convert_location_crosswalk_netcdf(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
+    assert df.index.size == 100

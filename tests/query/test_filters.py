@@ -4,41 +4,54 @@ This module tests the filter functions on primary_timeseries. It
 should apply to all tables.
 """
 from datetime import timedelta
-import tempfile
 import pytest
 from teehr import RowLevelCalculatedFields as rcf
 from teehr.models.filters import (
-    TimeseriesFilter,
-    JoinedTimeseriesFilter,
     FilterOperators,
-    TableFilter,
-    TableNamesEnum
 )
-import pyspark.sql as ps
-
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
+from teehr.models.filters import TableFilter
 
 
-def test_chain_filter_single_str(tmpdir):
+@pytest.mark.function_scope_two_location_warehouse
+def test_filtering_a_new_table(function_scope_two_location_warehouse):
+    """Test filtering a new table with TableFilter."""
+    ev = function_scope_two_location_warehouse
+    ev.write.to_warehouse(
+        table_name="new_attributes",
+        source_data=ev.attributes.to_sdf(),
+        write_mode="create_or_replace"
+    )
+    attr_filter = TableFilter(
+        column="name",
+        operator=FilterOperators.eq,
+        value="frac_urban"
+    )
+    df1 = ev.table(table_name="new_attributes").filter("name = 'frac_urban'").to_pandas()
+    df2 = ev.table(table_name="new_attributes").filter(attr_filter).to_pandas()
+    assert len(df1) == 1
+    assert len(df2) == 1
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_str(module_scope_test_warehouse):
     """Test filter string."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter("location_id = 'gage-A'").to_pandas()
     assert len(df) == 26
 
 
-def test_chain_filter_single_str2(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_str2(module_scope_test_warehouse):
     """Test filter string with invalid id."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = module_scope_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter("id = 'gage-A'").to_pandas()
 
 
-def test_chain_filter_single_dict(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_dict(module_scope_test_warehouse):
     """Test filter dict."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter({
         "column": "location_id",
         "operator": "=",
@@ -47,9 +60,10 @@ def test_chain_filter_single_dict(tmpdir):
     assert len(df) == 26
 
 
-def test_chain_filter_single_dict2(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_dict2(module_scope_test_warehouse):
     """Test filter dict with invalid id."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = module_scope_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter({
             "column": "id",
@@ -58,13 +72,13 @@ def test_chain_filter_single_dict2(tmpdir):
         }).to_pandas()
 
 
-def test_chain_filter_single_model(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_model(module_scope_test_warehouse):
     """Test filter model."""
-    ev = setup_v0_3_study(tmpdir)
-    flds = ev.primary_timeseries.field_enum()
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter(
-        TimeseriesFilter(
-            column=flds.location_id,
+        TableFilter(
+            column="location_id",
             operator=FilterOperators.eq,
             value="gage-A"
         )
@@ -72,23 +86,24 @@ def test_chain_filter_single_model(tmpdir):
     assert len(df) == 26
 
 
-def test_chain_filter_single_model2(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_model2(module_scope_test_warehouse):
     """Test filter model."""
-    ev = setup_v0_3_study(tmpdir)
-    flds = ev.primary_timeseries.field_enum()
+    ev = module_scope_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter(
-            TimeseriesFilter(
-                column=flds.id,
+            TableFilter(
+                column="id",
                 operator=FilterOperators.eq,
                 value="gage-A"
             )
         ).to_pandas()
 
 
-def test_chain_filter_list_str(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_list_str(module_scope_test_warehouse):
     """Test filter list of strings."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter([
         "location_id = 'gage-A'",
         "value_time > '2022-01-01T12:00:00'"
@@ -96,9 +111,10 @@ def test_chain_filter_list_str(tmpdir):
     assert len(df) == 13
 
 
-def test_chain_filter_list_dict(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_list_dict(module_scope_test_warehouse):
     """Test filter list of dicts."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter([
         {
             "column": "location_id",
@@ -114,18 +130,18 @@ def test_chain_filter_list_dict(tmpdir):
     assert len(df) == 13
 
 
-def test_chain_filter_list_model(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_list_model(module_scope_test_warehouse):
     """Test filter list of models."""
-    ev = setup_v0_3_study(tmpdir)
-    flds = ev.primary_timeseries.field_enum()
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter([
-        TimeseriesFilter(
-            column=flds.location_id,
+        TableFilter(
+            column="location_id",
             operator=FilterOperators.eq,
             value="gage-A"
         ),
-        TimeseriesFilter(
-            column=flds.value_time,
+        TableFilter(
+            column="value_time",
             operator=FilterOperators.gt,
             value="2022-01-01T12:00:00Z"
         )
@@ -133,20 +149,22 @@ def test_chain_filter_list_model(tmpdir):
     assert len(df) == 13
 
 
-def test_query_single_str(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_query_single_str(module_scope_test_warehouse):
     """Test query string."""
-    ev = setup_v0_3_study(tmpdir)
-    df = ev.primary_timeseries.query(
-        filters="location_id = 'gage-A'"
+    ev = module_scope_test_warehouse
+    df = ev.primary_timeseries.filter(
+        "location_id = 'gage-A'"
     ).to_pandas()
     assert len(df) == 26
 
 
-def test_query_single_dict(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_query_single_dict(module_scope_test_warehouse):
     """Test query dict."""
-    ev = setup_v0_3_study(tmpdir)
-    df = ev.primary_timeseries.query(
-        filters={
+    ev = module_scope_test_warehouse
+    df = ev.primary_timeseries.filter(
+        {
             "column": "location_id",
             "operator": "=",
             "value": "gage-A"
@@ -155,13 +173,13 @@ def test_query_single_dict(tmpdir):
     assert len(df) == 26
 
 
-def test_query_single_model(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_query_single_model(module_scope_test_warehouse):
     """Test query model."""
-    ev = setup_v0_3_study(tmpdir)
-    flds = ev.primary_timeseries.field_enum()
-    df = ev.primary_timeseries.query(
-        filters=TimeseriesFilter(
-            column=flds.location_id,
+    ev = module_scope_test_warehouse
+    df = ev.primary_timeseries.filter(
+        TableFilter(
+            column="location_id",
             operator=FilterOperators.eq,
             value="gage-A"
         )
@@ -169,76 +187,74 @@ def test_query_single_model(tmpdir):
     assert len(df) == 26
 
 
-def test_query_list_str(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_query_list_str(module_scope_test_warehouse):
     """Test query list of strings."""
-    ev = setup_v0_3_study(tmpdir)
-    df = ev.primary_timeseries.query(
-        filters=[
-            "location_id = 'gage-A'",
-            "value_time > '2022-01-01T12:00:00'"
-        ]
-    ).to_pandas()
+    ev = module_scope_test_warehouse
+    df = ev.primary_timeseries.filter([
+        "location_id = 'gage-A'",
+        "value_time > '2022-01-01T12:00:00'"
+    ]).to_pandas()
     assert len(df) == 13
 
 
-def test_query_list_dict(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_query_list_dict(module_scope_test_warehouse):
     """Test query list of dicts."""
-    ev = setup_v0_3_study(tmpdir)
-    df = ev.primary_timeseries.query(
-        filters=[
-            {
-                "column": "location_id",
-                "operator": "=",
-                "value": "gage-A"
-            },
-            {
-                "column": "value_time",
-                "operator": ">",
-                "value": "2022-01-01T12:00:00Z"
-            }
-        ]
-    ).to_pandas()
+    ev = module_scope_test_warehouse
+    df = ev.primary_timeseries.filter([
+        {
+            "column": "location_id",
+            "operator": "=",
+            "value": "gage-A"
+        },
+        {
+            "column": "value_time",
+            "operator": ">",
+            "value": "2022-01-01T12:00:00Z"
+        }
+    ]).to_pandas()
     assert len(df) == 13
 
 
-def test_query_list_model(tmpdir):
+@pytest.mark.module_scope_test_warehouse
+def test_query_list_model(module_scope_test_warehouse):
     """Test query list of models."""
-    ev = setup_v0_3_study(tmpdir)
-    flds = ev.primary_timeseries.field_enum()
-    df = ev.primary_timeseries.query(
-        filters=[
-            TimeseriesFilter(
-                column=flds.location_id,
-                operator=FilterOperators.eq,
-                value="gage-A"
-            ),
-            TimeseriesFilter(
-                column=flds.value_time,
-                operator=FilterOperators.gt,
-                value="2022-01-01T12:00:00Z"
-            )
-        ]
-    ).to_pandas()
+    ev = module_scope_test_warehouse
+    df = ev.primary_timeseries.filter([
+        TableFilter(
+            column="location_id",
+            operator=FilterOperators.eq,
+            value="gage-A"
+        ),
+        TableFilter(
+            column="value_time",
+            operator=FilterOperators.gt,
+            value="2022-01-01T12:00:00Z"
+        )
+    ]).to_pandas()
     assert len(df) == 13
 
 
-def test_filter_by_lead_time(tmpdir):
+@pytest.mark.function_scope_test_warehouse
+def test_filter_by_lead_time(function_scope_test_warehouse):
     """Test filter by lead time."""
-    ev = setup_v0_3_study(tmpdir)
-    ev.joined_timeseries.add_calculated_fields([
+    ev = function_scope_test_warehouse
+    ev.joined_timeseries_view().add_calculated_fields([
         rcf.ForecastLeadTime(),
-    ]).write()
+    ]).write("joined_timeseries")
+
     filter_value = timedelta(days=0, hours=18)
-    flds = ev.joined_timeseries.field_enum()
-    df = ev.joined_timeseries.query(
-            JoinedTimeseriesFilter(
-                column=flds.forecast_lead_time,
+    df = ev.table("joined_timeseries").filter(
+            TableFilter(
+                column="forecast_lead_time",
                 operator=FilterOperators.gt,
                 value=filter_value
             )
     ).to_pandas()
     assert len(df) == 45
-    df = ev.joined_timeseries.filter(
+
+    df = ev.table("joined_timeseries").filter(
         filters=[
             {
                 "column": "forecast_lead_time",
@@ -249,144 +265,17 @@ def test_filter_by_lead_time(tmpdir):
     ).to_pandas()
     assert len(df) == 45
 
-    df = ev.joined_timeseries.filter(
+    df = ev.table("joined_timeseries").filter(
         "forecast_lead_time > interval 18 hours"
     ).to_pandas()
     assert len(df) == 45
 
-    df = ev.joined_timeseries.filter(
+    df = ev.table("joined_timeseries").filter(
         "forecast_lead_time < interval 1 day"
     ).to_pandas()
     assert len(df) == 216
 
-    df = ev.joined_timeseries.filter(
+    df = ev.table("joined_timeseries").filter(
         "forecast_lead_time < interval 3600 seconds"
     ).to_pandas()
     assert len(df) == 9
-
-
-def test_table_filter(tmpdir):
-    """Test table filter model."""
-    ev = setup_v0_3_study(tmpdir)
-
-    df = ev.primary_timeseries.to_pandas()
-    tbl_filter = TableFilter(
-        table_name="primary_timeseries",
-        filters=[
-            "configuration_name = 'usgs_observations'"
-        ]
-    )
-    sdf = ev.filter(table_filter=tbl_filter)
-    assert sdf.count() == len(df)
-
-    for tbl_name in TableNamesEnum:
-        sdf = ev.filter(table_name=tbl_name)
-        assert isinstance(sdf, ps.DataFrame)
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_chain_filter_single_str(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_str2(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_dict(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_dict2(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_model(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_model2(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_str(
-            tempfile.mkdtemp(
-                prefix="7-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_dict(
-            tempfile.mkdtemp(
-                prefix="8-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_model(
-            tempfile.mkdtemp(
-                prefix="9-",
-                dir=tempdir
-            )
-        )
-        test_query_single_str(
-            tempfile.mkdtemp(
-                prefix="10-",
-                dir=tempdir
-            )
-        )
-        test_query_single_dict(
-            tempfile.mkdtemp(
-                prefix="11-",
-                dir=tempdir
-            )
-        )
-        test_query_single_model(
-            tempfile.mkdtemp(
-                prefix="12-",
-                dir=tempdir
-            )
-        )
-        test_query_list_str(
-            tempfile.mkdtemp(
-                prefix="13-",
-                dir=tempdir
-            )
-        )
-        test_query_list_dict(
-            tempfile.mkdtemp(
-                prefix="14-",
-                dir=tempdir
-            )
-        )
-        test_query_list_model(
-            tempfile.mkdtemp(
-                prefix="15-",
-                dir=tempdir
-            )
-        )
-        test_filter_by_lead_time(
-            tempfile.mkdtemp(
-                prefix="16-",
-                dir=tempdir
-            )
-        )
-        test_table_filter(
-            tempfile.mkdtemp(
-                prefix="17-",
-                dir=tempdir
-            )
-        )

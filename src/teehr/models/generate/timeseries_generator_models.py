@@ -30,6 +30,9 @@ class Persistence(BenchmarkGeneratorBaseModel, GeneratorABC):
     an input timeseries DataFrame. It assigns the values from the input
     timeseries to the forecast timeseries based on t-0 time, without any
     modifications or aggregations.
+
+    .. note::
+       This class is not yet implemented.
     """
 
     # TODO: Implement
@@ -72,7 +75,26 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
         partition_by: List[str],
         output_configuration_name: str
     ) -> ps.DataFrame:
-        """Generate synthetic reference forecast timeseries."""
+        """Generate synthetic reference forecast timeseries.
+
+        Parameters
+        ----------
+        ev : Evaluation
+            The Evaluation object containing the evaluation context.
+        reference_sdf : ps.DataFrame
+            The DataFrame containing the reference timeseries data.
+        template_sdf : ps.DataFrame
+            The DataFrame containing the template forecast timeseries data.
+        partition_by : List[str]
+            The list of columns to partition by when aggregating the time step.
+        output_configuration_name : str
+            The configuration name to assign to the output timeseries.
+
+        Returns
+        -------
+        ps.DataFrame
+            The DataFrame containing the generated reference forecast timeseries.
+        """
         # Aggregate the reference timeseries to the
         # using a rolling average if aggregate_reference_timeseries is True.
         # TODO: Should this define a new variable_name?
@@ -84,8 +106,6 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
                 time_window=self.aggregation_time_window
             )
         # Join the reference sdf  to the template secondary forecast
-        xwalk_sdf = ev.location_crosswalks.to_sdf()
-        xwalk_sdf.createOrReplaceTempView("location_crosswalks")
         reference_sdf.createOrReplaceTempView("reference_timeseries")
         template_sdf.createOrReplaceTempView("template_timeseries")
         logger.debug(
@@ -109,16 +129,12 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
                 and tf.unit_name = rf.unit_name
                 and tf.value_time = rf.value_time
         """  # noqa
-        results_sdf = ev.spark.sql(query)
-        ev.spark.catalog.dropTempView("location_crosswalks")
+        results_sdf = ev.sql(query)
         ev.spark.catalog.dropTempView("reference_timeseries")
         ev.spark.catalog.dropTempView("template_timeseries")
 
         logger.debug("Filling NaNs with forward fill and backward fill.")
         results_sdf = ffill_and_bfill_nans(results_sdf)
-
-        #  # TODO: Is this needed?
-        # results_sdf = results_sdf.dropna(subset=["value"])
 
         return results_sdf
 
@@ -163,8 +179,25 @@ class Normals(SignatureGeneratorBaseModel, GeneratorABC):
         output_dataframe: ps.DataFrame,
         fillna: bool,
         dropna: bool
-    ):
-        """Generate synthetic normals timeseries."""
+    ) -> ps.DataFrame:
+        """Generate synthetic normals timeseries.
+
+        Parameters
+        ----------
+        input_dataframe : ps.DataFrame
+            The input DataFrame containing the timeseries data.
+        output_dataframe : ps.DataFrame
+            The output DataFrame to join the normals data to.
+        fillna : bool
+            Whether to fill NaN values using forward and backward fill.
+        dropna : bool
+            Whether to drop rows with NaN values.
+
+        Returns
+        -------
+        ps.DataFrame
+            The DataFrame containing the generated normals timeseries.
+        """
         time_period = get_time_period_rlc(self.temporal_resolution)
 
         if self.summary_statistic == NormalsStatisticEnum.mean:

@@ -1,20 +1,22 @@
-"""Test the import_timeseries function in the Evaluation class."""
+"""Test the import_timeseries function in the LocalReadWriteEvaluation class."""
 from pathlib import Path
-from teehr import Evaluation
+
+import pytest
 from teehr import DeterministicMetrics as m
 from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,
     Variable
 )
-import tempfile
 import xarray as xr
 import pandas as pd
 import numpy as np
 import geopandas as gpd
 
+import time
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
+
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 PRIMARY_TIMESERIES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "timeseries", "test_short_obs.parquet"
@@ -26,26 +28,24 @@ CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
 SECONDARY_TIMESERIES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "timeseries", "test_short_fcast.parquet"
 )
-TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 SUMMA_TIMESERIES_FILEPATH_NC = Path(
-    TEST_STUDY_DATA_DIR_v0_4, "timeseries", "summa.example.nc"
+    TEST_STUDY_DATA_DIR, "timeseries", "summa.example.nc"
 )
 SUMMA_LOCATIONS = Path(
-    TEST_STUDY_DATA_DIR_v0_4, "geo", "summa_locations.parquet"
+    TEST_STUDY_DATA_DIR, "geo", "summa_locations.parquet"
 )
 MIZU_TIMESERIES_FILEPATH_NC = Path(
-    TEST_STUDY_DATA_DIR_v0_4, "timeseries", "mizuroute.example.nc"
+    TEST_STUDY_DATA_DIR, "timeseries", "mizuroute.example.nc"
 )
 MIZU_LOCATIONS = Path(
-    TEST_STUDY_DATA_DIR_v0_4, "geo", "mizu_locations.parquet"
+    TEST_STUDY_DATA_DIR, "geo", "mizu_locations.parquet"
 )
 
 
-def test_dropping_duplicates(tmpdir):
-    """Test the dropping duplicates function."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.enable_logging()
-    ev.clone_template()
+@pytest.mark.function_scope_evaluation_template
+def test_load_spark_dataframe(function_scope_evaluation_template):
+    """Test the load_dataframe function."""
+    ev = function_scope_evaluation_template
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
     ev.configurations.add(
         Configuration(
@@ -66,6 +66,61 @@ def test_dropping_duplicates(tmpdir):
             long_name="Streamflow"
         )
     )
+    # Create a pyspark dataframe to load.
+    data = {
+        "reference_time": ["2024-02-15T08:00:00Z"],
+        "value_time": ["2024-02-15T08:00:00Z"],
+        "configuration_name": ["test_obs"],
+        "unit_name": ["cfd"],
+        "variable_name": ["streamflow"],
+        "value": [1.9],
+        "location_id": ["gage-A"]
+    }
+    rows = [dict(zip(data, t)) for t in zip(*data.values())]
+    df = ev.spark.createDataFrame(rows)
+    ev.primary_timeseries.load_dataframe(
+        df=df
+    )
+    # Verify that the data was loaded correctly
+    loaded_df = ev.primary_timeseries.to_pandas()
+    assert loaded_df.index.size == 1
+    loaded_row = loaded_df.iloc[0]
+    assert loaded_row["configuration_name"] == "test_obs"
+    assert loaded_row["unit_name"] == "cfd"
+    assert loaded_row["variable_name"] == "streamflow"
+    assert loaded_row["location_id"] == "gage-A"
+    assert loaded_row["value"] == 1.9
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_dropping_duplicates(function_scope_evaluation_template):
+    """Test the dropping duplicates function."""
+    ev = function_scope_evaluation_template
+
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+
+    t0 = time.time()
+    ev.configurations.add(
+        Configuration(
+            name="test_obs",
+            type="primary",
+            description="Test Observations Data"
+        )
+    )
+    ev.units.add(
+        Unit(
+            name="cfd",
+            long_name="Cubic Feet per Day"
+        )
+    )
+    ev.variables.add(
+        Variable(
+            name="streamflow",
+            long_name="Streamflow"
+        )
+    )
+    print("Domain variables added in %.2f seconds." % (time.time() - t0))
+
     # Load the timeseries data
     ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_DUPS_FILEPATH,
@@ -79,6 +134,8 @@ def test_dropping_duplicates(tmpdir):
             "location_id": "location_id"
         }
     )
+
+    # sdf = ev.primary_timeseries.to_sdf()
     df = ev.primary_timeseries.to_pandas()
     dups_df = pd.read_parquet(PRIMARY_TIMESERIES_DUPS_FILEPATH)
 
@@ -93,17 +150,17 @@ def test_dropping_duplicates(tmpdir):
             "variable_name"
         ]
     ).index.size == 78
+    # assert sdf.count() == 78
     assert df.index.size == 78
     assert df.drop_duplicates(
-        subset=ev.primary_timeseries.unique_column_set
+        subset=ev.primary_timeseries.uniqueness_fields
     ).index.size == 78
 
 
-def test_validate_and_insert_timeseries(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.enable_logging()
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
@@ -184,13 +241,10 @@ def test_validate_and_insert_timeseries(tmpdir):
     assert prim_df.index.size == 114
 
 
-def test_validate_and_insert_timeseries_set_const(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_timeseries_set_const(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
-
-    ev.enable_logging()
-
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
@@ -252,13 +306,10 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
     assert True
 
 
-def test_validate_and_insert_summa_nc_timeseries(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_summa_nc_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
-
-    ev.enable_logging()
-
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=SUMMA_LOCATIONS)
 
@@ -308,13 +359,10 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
     assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
-def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_mizu_nc_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
-
-    ev.enable_logging()
-
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=MIZU_LOCATIONS)
 
@@ -364,32 +412,31 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
     assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
-def test_validate_and_insert_fews_xml_timeseries(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_fews_xml_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
     usgs_location = Path(
-        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+        TEST_STUDY_DATA_DIR, "geo", "USGS_PlatteRiver_location.parquet"
     )
     secondary_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
+        TEST_STUDY_DATA_DIR,
         "timeseries",
         "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
     )
     primary_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
+        TEST_STUDY_DATA_DIR,
         "timeseries",
         "usgs_hefs_06711565.parquet"
     )
 
-    ev = Evaluation(dir_path=tmpdir)
-    ev.enable_logging()
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(
         in_path=usgs_location
     )
     ev.location_crosswalks.load_csv(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+            TEST_STUDY_DATA_DIR, "geo", "hefs_usgs_crosswalk.csv"
         )
     )
     ev.configurations.add(
@@ -417,33 +464,34 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    ev.joined_timeseries.create(execute_scripts=False)
+    ev.joined_timeseries_view().write("joined_timeseries")
 
     # Now, metrics.
     kge = m.KlingGuptaEfficiency()
     include_metrics = [kge]
 
-    # Define some filters?
-
-    metrics_df = ev.metrics.query(
-        include_metrics=include_metrics,
+    metrics_df = ev.metrics.aggregate(
+        metrics=include_metrics,
         group_by=["primary_location_id", "reference_time"],
-        order_by=["primary_location_id"],
-    ).to_geopandas()
+    ).order_by(["primary_location_id"]).to_geopandas()
 
-    assert metrics_df.shape == (1, 4)
+    assert metrics_df.shape == (1, 5)
     assert metrics_df["primary_location_id"].nunique() == 1
 
 
-def test_validate_and_insert_in_memory_timeseries(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_in_memory_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
-    ev.enable_logging()
-    ev.clone_template()
+    t0 = time.time()
+    ev = function_scope_evaluation_template
+    print("LocalReadWriteEvaluation template loaded in %.2f seconds." % (time.time() - t0))
 
+    t0 = time.time()
     gdf = gpd.read_file(GEOJSON_GAGES_FILEPATH)
     ev.locations.load_dataframe(df=gdf)
+    print("Locations loaded in %.2f seconds." % (time.time() - t0))
 
+    t0 = time.time()
     ev.configurations.add(
         [
             Configuration(
@@ -470,7 +518,9 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
             long_name="Streamflow"
         )
     )
+    print("Domain variables added in %.2f seconds." % (time.time() - t0))  # ~ 40 secs!
 
+    t0 = time.time()
     df = pd.read_parquet(PRIMARY_TIMESERIES_FILEPATH)
     ev.primary_timeseries.load_dataframe(
         df=df,
@@ -490,10 +540,14 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
         }
     )
     assert len(df) == len(ev.primary_timeseries.to_pandas())
+    print("Primary timeseries loaded in %.2f seconds." % (time.time() - t0))
 
+    t0 = time.time()
     df = pd.read_csv(CROSSWALK_FILEPATH)
     ev.location_crosswalks.load_dataframe(df=df)
+    print("Location crosswalks loaded in %.2f seconds." % (time.time() - t0))
 
+    t0 = time.time()
     df = pd.read_parquet(SECONDARY_TIMESERIES_FILEPATH)
     ev.secondary_timeseries.load_dataframe(
         df=df,
@@ -512,54 +566,5 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
             "configuration_name": "nwm30_retrospective"
         }
     )
+    print("Secondary timeseries loaded in %.2f seconds." % (time.time() - t0))
     assert len(df) == len(ev.secondary_timeseries.to_pandas())
-
-    pass
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_dropping_duplicates(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_timeseries(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_timeseries_set_const(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_summa_nc_timeseries(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_mizu_nc_timeseries(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_fews_xml_timeseries(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_in_memory_timeseries(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )

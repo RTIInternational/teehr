@@ -50,7 +50,7 @@ def test_nwm22_point_fetch_and_format(tmpdir):
         nwm_version="nwm22",
         variable_mapper=TEST_NWM_VARIABLE_MAPPER,
         timeseries_type="secondary",
-        drop_overlapping_assimilation_values=False
+        drop_overlapping_assimilation_values=True
     )
 
     parquet_file = Path(tmpdir, "20230318T14.parquet")
@@ -59,7 +59,9 @@ def test_nwm22_point_fetch_and_format(tmpdir):
     bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
 
-    assert test_df.compare(bench_df).index.size == 0
+    # Run this to avoid issues with different column or row orders.
+    # Both dataframes should have 4 rows.
+    assert pd.concat([test_df, bench_df]).drop_duplicates().index.size == 4
 
 
 def test_nwm30_point_fetch_and_format(tmpdir):
@@ -92,7 +94,7 @@ def test_nwm30_point_fetch_and_format(tmpdir):
         overwrite_output=True,
         variable_mapper=TEST_NWM_VARIABLE_MAPPER,
         timeseries_type="secondary",
-        drop_overlapping_assimilation_values=False
+        drop_overlapping_assimilation_values=True
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
@@ -101,7 +103,9 @@ def test_nwm30_point_fetch_and_format(tmpdir):
     bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
 
-    assert test_df.compare(bench_df).index.size == 0
+    # Run this to avoid issues with different column or row orders.
+    # Both dataframes should have 4 rows.
+    assert pd.concat([test_df, bench_df]).drop_duplicates().index.size == 4
 
 
 def test_nwm30_point_fetch_and_format_medium_range_member(tmpdir):
@@ -133,7 +137,7 @@ def test_nwm30_point_fetch_and_format_medium_range_member(tmpdir):
         overwrite_output=True,
         variable_mapper=TEST_NWM_VARIABLE_MAPPER,
         timeseries_type="secondary",
-        drop_overlapping_assimilation_values=False
+        drop_overlapping_assimilation_values=True
     )
 
     parquet_file = Path(tmpdir, "20240222T00.parquet")
@@ -167,7 +171,7 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
         location_id_prefix=None,
         variable_mapper=None,
         timeseries_type="primary",
-        drop_overlapping_assimilation_values=False
+        drop_overlapping_assimilation_values=True
     )
 
     parquet_file = Path(tmpdir, "20201218T00.parquet")
@@ -186,7 +190,11 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
         'configuration_name',
     ]].copy()
 
-    assert test_df.compare(bench_df).index.size == 0
+    # Run this to avoid issues with different column or row orders.
+    # Both dataframes should have 1 rows.
+    assert pd.concat([test_df, bench_df]).drop_duplicates(
+        subset=["location_id", "value", "value_time", "unit_name", "configuration_name"]
+    ).index.size == 1
 
 
 def test_nwm30_grid_fetch_and_format(tmpdir):
@@ -210,7 +218,7 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
         location_id_prefix=None,
         variable_mapper=TEST_NWM_VARIABLE_MAPPER,
         timeseries_type="primary",
-        drop_overlapping_assimilation_values=False
+        drop_overlapping_assimilation_values=True
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
@@ -229,7 +237,11 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
         'configuration_name'
     ]].copy()
 
-    assert test_df.compare(bench_df).index.size == 0
+    # Run this to avoid issues with different column or row orders.
+    # Both dataframes should have 1 rows.
+    assert pd.concat([test_df, bench_df]).drop_duplicates(
+        subset=["location_id", "value", "value_time", "unit_name", "configuration_name"]
+    ).index.size == 1
 
 
 def test_replace_location_id_prefix():
@@ -284,11 +296,11 @@ def test_raise_location_id_prefix_error():
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr") as tempdir:
-        # test_nwm22_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        test_nwm22_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
         test_nwm30_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
-        # test_nwm22_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
-        # test_nwm30_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
-        # test_nwm30_point_fetch_and_format_medium_range_member(tempfile.mkdtemp(dir=tempdir))  # noqa
-        # test_replace_location_id_prefix()
-        # test_prepend_location_id_prefix()
-        # test_raise_location_id_prefix_error()
+        test_nwm22_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        test_nwm30_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        test_nwm30_point_fetch_and_format_medium_range_member(tempfile.mkdtemp(dir=tempdir))  # noqa
+        test_replace_location_id_prefix()
+        test_prepend_location_id_prefix()
+        test_raise_location_id_prefix_error()

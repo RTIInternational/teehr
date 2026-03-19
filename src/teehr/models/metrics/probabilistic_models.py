@@ -1,5 +1,5 @@
 """Classes for probabilistic metric calculation methods."""
-from typing import Callable, List, Union, Dict
+from typing import Callable, Dict
 
 from pydantic import Field
 
@@ -7,8 +7,6 @@ from teehr.models.metrics.basemodels import ProbabilisticBasemodel
 from teehr.metrics import probabilistic_funcs
 import teehr.models.metrics.metric_attributes as tma
 from teehr.models.metrics.basemodels import CRPSEstimators
-from teehr.models.str_enum import StrEnum
-from teehr.models.metrics.basemodels import TransformEnum
 
 
 class CRPS(ProbabilisticBasemodel):
@@ -18,31 +16,21 @@ class CRPS(ProbabilisticBasemodel):
     ----------
     estimator : str
         CRPS estimator, can be ("pwm", "nrg", or "fair"). Default is "pwm".
-    backend : str
-        The backend to use, by default "numba". Can be ("numba" or "numpy").
-    summary_func : Callable
-        The function to apply to the results, by default np.mean.
     output_field_name : str
         The output field name, by default "mean_crps_ensemble".
     func : Callable
         The function to apply to the data, by default
         :func:`probabilistic_funcs.ensemble_crps`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value", "member"].
     attrs : Dict
         The static attributes for the metric.
+    reference_configuration : str
+        The reference configuration for skill score calculation, by default None.
+        If specified skill score will be included in the results.
     """
 
     estimator: CRPSEstimators = Field(default="pwm")
-    transform: TransformEnum = Field(default=None)
-    backend: str = Field(default="numba")
     output_field_name: str = Field(default="mean_crps_ensemble")
     func: Callable = Field(probabilistic_funcs.ensemble_crps, frozen=True)
-    summary_func: Union[Callable, None] = Field(default=None)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value", "member"]
-    )
     attrs: Dict = Field(default=tma.CRPS_ENSEMBLE_ATTRS, frozen=True)
 
 
@@ -53,31 +41,21 @@ class BrierScore(ProbabilisticBasemodel):
     ----------
     threshold : float
         The threshold to use for binary event definition.
-    backend : str
-        The backend to use, by default "numba". Can be ("numba" or "numpy").
-    summary_func : Callable
-        The function to apply to the results, by default np.mean.
     output_field_name : str
         The output field name, by default "mean_brier_score".
     func : Callable
         The function to apply to the data, by default
         :func:`probabilistic_funcs.ensemble_brier_score`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value", "member"].
     attrs : Dict
         The static attributes for the metric.
+    reference_configuration : str
+        The reference configuration for skill score calculation, by default None.
+        If specified skill score will be included in the results.
     """
 
     threshold: float = Field(default=0.75)
-    transform: TransformEnum = Field(default=None)
-    backend: str = Field(default="numba")
     output_field_name: str = Field(default="mean_brier_score")
     func: Callable = Field(probabilistic_funcs.ensemble_brier_score, frozen=True)
-    summary_func: Union[Callable, None] = Field(default=None)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value", "member"]
-    )
     attrs: Dict = Field(default=tma.BS_ENSEMBLE_ATTRS, frozen=True)
 
 
@@ -91,7 +69,15 @@ class ProbabilisticMetrics:
     include:
 
     - CRPS (Continuous Ranked Probability Score)
+    - Brier Score
+
+    Skill score metrics (CRPSS and BSS) are enabled by setting the ``reference_configuration``
+    attribute to a valid reference forecast, such as "climatology" or "persistence".
+
+    See :class:`teehr.evaluation.generate.GeneratedTimeseries` for more information
+    on generating reference forecasts.
     """
 
     CRPS = CRPS
+    BrierScore = BrierScore
     BrierScore = BrierScore

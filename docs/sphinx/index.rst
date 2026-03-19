@@ -96,6 +96,7 @@ TEEHR (pronounced "tier") is a Python tool set for loading, storing, processing 
 
    getting_started/index
    user_guide/index
+   example_notebooks/index
    development/index
    changelog/index
    api/index

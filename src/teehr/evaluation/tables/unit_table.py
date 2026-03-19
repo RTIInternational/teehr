@@ -1,13 +1,9 @@
 """Unit table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
-from teehr.models.filters import UnitFilter
-from teehr.models.table_enums import UnitFields
 from teehr.models.pydantic_table_models import Unit
-import teehr.models.pandera_dataframe_schemas as schemas
+from teehr.models.pandera_dataframe_schemas import unit_schema
 from typing import List, Union
 import logging
-from teehr.utils.utils import to_path_or_s3path
-
 
 logger = logging.getLogger(__name__)
 
@@ -15,22 +11,35 @@ logger = logging.getLogger(__name__)
 class UnitTable(DomainTable):
     """Access methods to units table."""
 
-    def __init__(self, ev):
-        """Initialize class."""
-        super().__init__(ev)
-        self.name = "units"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.filter_model = UnitFilter
-        self.schema_func = schemas.unit_schema
-        self.unique_column_set = ["name"]
+    # Table metadata
+    table_name = "units"
+    uniqueness_fields = ["name"]
+    schema_func = staticmethod(unit_schema)
 
-    def field_enum(self) -> UnitFields:
-        """Get the unit fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return UnitFields(
-            "UnitFields",
-            {field: field for field in fields}
-        )
+    def __init__(
+        self,
+        ev,
+        table_name: str = "units",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBaseModel
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        table_name : str, optional
+            The name of the table to operate on. Defaults to 'units'.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+        """
+        super().__init__(ev, table_name, namespace_name, catalog_name)
 
     def add(
         self,

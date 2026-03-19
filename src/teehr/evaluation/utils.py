@@ -1,8 +1,10 @@
 """Utility functions for the evaluation class."""
+# flake8: noqa
 import logging
 import fnmatch
-from typing import List
+from typing import List, Union
 from pathlib import Path
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +14,18 @@ ELBOW = "└──"
 TEE = "├──"
 PIPE_PREFIX = "│   "
 SPACE_PREFIX = "    "
+
+
+def copy_migrations_dir(
+    target_dir: Union[str, Path]
+):
+    """Copy the migrations directory from source to target."""
+    shutil.copytree(
+        src=Path(__file__).parent.parent / "migrations",
+        dst=Path(target_dir, "migrations"),
+        dirs_exist_ok=True
+    )
+    pass
 
 
 def print_tree(

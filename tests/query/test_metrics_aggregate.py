@@ -1,0 +1,454 @@
+"""Test evaluation class."""
+from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
+from teehr import Operators as ops
+import pandas as pd
+import geopandas as gpd
+from pathlib import Path
+import numpy as np
+import pytest
+import warnings
+
+from teehr.models.filters import TableFilter
+from teehr import TimeseriesAwareCalculatedFields as tcf
+
+BOOT_YEAR_FILE = Path(
+    "tests",
+    "data",
+    "test_study",
+    "bootstrap",
+    "boot_year_file_R.csv"
+)
+R_BENCHMARK_RESULTS = Path(
+    "tests",
+    "data",
+    "test_study",
+    "bootstrap",
+    "r_benchmark_results.csv"
+)
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_executing_deterministic_metrics(module_scope_test_warehouse):
+    """Test get_metrics method."""
+    # Define the evaluation object.
+    ev = module_scope_test_warehouse
+
+    # Test all the non-conditional metrics.
+    include_nonconditional_metrics = [
+        func() for func in DeterministicMetrics.__dict__.values()
+        if callable(func) and not func().attrs.get('requires_threshold_field', False)  # noqa
+    ]
+
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=include_nonconditional_metrics,
+        group_by=["primary_location_id"],
+    ).order_by("primary_location_id").to_pandas()
+
+    metrics_df2 = ev.table("joined_timeseries").aggregate(
+        metrics=include_nonconditional_metrics,
+        group_by=["primary_location_id"],
+    ).order_by("primary_location_id").to_pandas()
+
+    assert metrics_df.equals(metrics_df2)
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert metrics_df.columns.size == 20
+
+    # Test all the conditional metrics.
+    include_conditional_metrics = [
+        func(threshold_field_name="quantile_value")
+        for func in DeterministicMetrics.__dict__.values()
+        if callable(func) and func().attrs.get('requires_threshold_field', True)  # noqa
+    ]
+
+    metrics_df = ev.table("joined_timeseries").add_calculated_fields([
+        tcf.AbovePercentileEventDetection(
+            skip_event_id=True,
+            add_quantile_field=True,
+        )
+    ]).aggregate(
+        metrics=include_conditional_metrics,
+        group_by=["primary_location_id"],
+    ).order_by("primary_location_id").to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert metrics_df.columns.size == 8
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_executing_signatures(module_scope_test_warehouse):
+    """Test get_metrics method."""
+    # Define the evaluation object.
+    ev = module_scope_test_warehouse
+
+    # Test all the metrics.
+    include_all_metrics = [
+        func() for func in Signatures.__dict__.values() if callable(func)
+    ]
+
+    # Get the currently available fields to use in the query.
+
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=include_all_metrics,
+        group_by=["primary_location_id"],
+    ).order_by("primary_location_id").to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert metrics_df.columns.size == 9
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_metrics_filter_and_geometry(module_scope_test_warehouse):
+    """Test get_metrics method with filter and geometry."""
+    # Define the evaluation object.
+    ev = module_scope_test_warehouse
+
+    # Define some metrics.
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    primary_avg = Signatures.Average()
+    mvtd = DeterministicMetrics.MaxValueTimeDelta()
+    pmvt = Signatures.MaxValueTime()
+
+    include_metrics = [pmvt, mvtd, primary_avg, kge]
+
+    # Get the currently available fields to use in the query.
+
+    # Define some filters.
+    filters = [
+        TableFilter(
+            column="primary_location_id",
+            operator=ops.eq,
+            value="gage-A"
+        )
+    ]
+
+    metrics_df = ev.table("joined_timeseries").filter(
+        filters=filters,
+    ).aggregate(
+        metrics=include_metrics,
+        group_by=["primary_location_id"],
+    ).order_by("primary_location_id").to_geopandas()
+
+    assert isinstance(metrics_df, gpd.GeoDataFrame)
+    assert metrics_df.index.size == 1
+    assert metrics_df.columns.size == 7
+    assert "name" in metrics_df.columns
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_metric_chaining(module_scope_test_warehouse):
+    """Test get_metrics method with chaining."""
+    # Define the evaluation object.
+    ev = module_scope_test_warehouse
+
+    # Test chaining.
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "month"],
+        metrics=[
+            DeterministicMetrics.KlingGuptaEfficiency(),
+            DeterministicMetrics.NashSutcliffeEfficiency(),
+            DeterministicMetrics.RelativeBias()
+        ]
+    ).order_by(["primary_location_id", "month"]).aggregate(
+        group_by=["primary_location_id"],
+        metrics=[
+            Signatures.Average(
+                input_field_names="relative_bias",
+                output_field_name="primary_average"
+            )
+        ]
+    ).order_by("primary_location_id").to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert all(
+        metrics_df.columns == ["primary_location_id", "primary_average"]
+    )
+
+
+@pytest.mark.function_scope_large_ensemble_warehouse
+def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
+    """Test get_metrics method with ensemble metrics."""
+    ev = function_scope_large_ensemble_warehouse
+
+    # Now, metrics.
+    crps = ProbabilisticMetrics.CRPS()
+    crps.summary_func = np.mean
+    crps.estimator = "pwm"
+    crps.backend = "numba"
+    crps.reference_configuration = "benchmark_forecast_daily_normals"
+
+    bs = ProbabilisticMetrics.BrierScore()
+    bs.threshold = 0.75
+    bs.summary_func = np.mean
+    bs.backend = "numba"
+    bs.reference_configuration = "benchmark_forecast_daily_normals"
+
+    # assemble metrics df
+    include_metrics = [crps, bs]
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=include_metrics,
+        group_by=[
+            "primary_location_id",
+            "configuration_name"
+        ],
+    ).order_by(["primary_location_id", "configuration_name"]).to_pandas()
+
+    # check CRPS values
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 21.861153)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 22.64521)
+    assert np.isclose(
+        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.214589
+    )
+    assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[2])
+
+    # check Brier Score values
+    assert np.isclose(metrics_df.mean_brier_score.values[0], 0.187054)
+    assert np.isclose(metrics_df.mean_brier_score.values[1], 0.1934589)
+    assert np.isclose(
+        metrics_df.mean_brier_score_skill_score.values[0], 0.275162
+    )
+    assert np.isnan(
+        metrics_df.mean_brier_score_skill_score.values[2]
+    )
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_metrics_transforms(module_scope_test_warehouse):
+    """Test applying metric transforms (non-bootstrap)."""
+    # Define the evaluation object.
+    test_eval = module_scope_test_warehouse
+
+    # define metric requiring p,s
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge_t = DeterministicMetrics.KlingGuptaEfficiency()
+    kge_t.transform = 'log'
+
+    # add epsilon to avoid log(0)
+    kge_t_e = DeterministicMetrics.KlingGuptaEfficiency()
+    kge_t_e.transform = 'log'
+    kge_t_e.add_epsilon = True
+
+    # define metric requiring p,s,t
+    mvtd = DeterministicMetrics.MaxValueTimeDelta()
+    mvtd_t = DeterministicMetrics.MaxValueTimeDelta()
+    mvtd_t.transform = 'log'
+
+    # get metrics_df
+    metrics_df_tansformed_e = test_eval.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "configuration_name"],
+        metrics=[
+            kge_t_e,
+            mvtd_t
+        ]
+    ).to_pandas()
+    metrics_df_transformed = test_eval.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "configuration_name"],
+        metrics=[
+            kge_t,
+            mvtd_t
+        ]
+    ).to_pandas()
+    metrics_df = test_eval.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "configuration_name"],
+        metrics=[
+            kge,
+            mvtd
+        ]
+    ).to_pandas()
+
+    # get results for comparison
+    result_kge = metrics_df.kling_gupta_efficiency.values[0]
+    result_kge_t = metrics_df_transformed.kling_gupta_efficiency.values[0]
+    result_kge_t_e = metrics_df_tansformed_e.kling_gupta_efficiency.values[0]
+    result_mvtd = metrics_df.max_value_time_delta.values[0]
+    result_mvtd_t = metrics_df_transformed.max_value_time_delta.values[0]
+
+    # metrics_df_transformed is created, transforms are applied
+    assert isinstance(metrics_df_tansformed_e, pd.DataFrame)
+    assert isinstance(metrics_df_transformed, pd.DataFrame)
+    assert result_kge_t != result_kge_t_e
+    assert result_kge != result_kge_t
+    assert result_mvtd == result_mvtd_t
+
+    # test epsilon on R2 and Pearson
+    r2 = DeterministicMetrics.Rsquared()
+    r2_e = DeterministicMetrics.Rsquared()
+    r2_e.add_epsilon = True
+    pearson = DeterministicMetrics.PearsonCorrelation()
+    pearson_e = DeterministicMetrics.PearsonCorrelation()
+    pearson_e.add_epsilon = True
+
+    # ensure we can obtain a divide by zero error
+    sdf = test_eval.table("joined_timeseries").to_sdf()
+    from pyspark.sql.functions import lit
+    sdf = sdf.withColumn("primary_value", lit(100.0))
+    test_eval.write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace",
+    )
+
+    # get metrics df control and assert divide by zero occurs
+    metrics_df_e_control = test_eval.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "configuration_name"],
+        metrics=[
+            r2,
+            pearson
+        ]
+    ).to_pandas()
+    assert np.isnan(metrics_df_e_control.r_squared.values).all()
+    assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
+
+    # get metrics df test and ensure no divide by zero occurs
+    metrics_df_e_test = test_eval.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "configuration_name"],
+        metrics=[
+            r2_e,
+            pearson_e
+        ]
+    ).to_pandas()
+    assert np.isfinite(metrics_df_e_test.r_squared.values).all()
+    assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
+
+    # test epsilon on R2 and Pearson
+    r2 = DeterministicMetrics.Rsquared()
+    r2_e = DeterministicMetrics.Rsquared()
+    r2_e.add_epsilon = True
+    pearson = DeterministicMetrics.PearsonCorrelation()
+    pearson_e = DeterministicMetrics.PearsonCorrelation()
+    pearson_e.add_epsilon = True
+
+    # ensure we can obtain a divide by zero error
+    sdf = test_eval.table("joined_timeseries").to_sdf()
+    from pyspark.sql.functions import lit
+    sdf = sdf.withColumn("primary_value", lit(100.0))
+    test_eval.write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace",
+    )
+
+    # get metrics df control and assert divide by zero occurs
+    metrics_df_e_control = test_eval.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "configuration_name"],
+        metrics=[
+            r2,
+            pearson
+        ]
+    ).to_pandas()
+    assert np.isnan(metrics_df_e_control.r_squared.values).all()
+    assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
+
+    # get metrics df test and ensure no divide by zero occurs
+    metrics_df_e_test = test_eval.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "configuration_name"],
+        metrics=[
+            r2_e,
+            pearson_e
+        ]
+    ).to_pandas()
+    assert np.isfinite(metrics_df_e_test.r_squared.values).all()
+    assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_adding_calculated_fields(function_scope_test_warehouse):
+    """Test adding calculated fields to metrics."""
+    from teehr import RowLevelCalculatedFields as rcf
+
+    # Define the evaluation object.
+    ev = function_scope_test_warehouse
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    metrics_df_calc = (
+        ev
+        .table("joined_timeseries")
+        .add_calculated_fields([
+            rcf.Month()
+        ])
+        .aggregate(
+            group_by=["primary_location_id", "month"],
+            metrics=[kge]
+        )
+        .to_pandas()
+    )
+    assert isinstance(metrics_df_calc, pd.DataFrame)
+    assert metrics_df_calc.index.size == 3
+    assert "month" in metrics_df_calc.columns
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_generic_sql_calculated_field(function_scope_test_warehouse):
+    """Test adding a GenericSQL calculated field to metrics."""
+    from teehr import RowLevelCalculatedFields as rcf
+
+    ev = function_scope_test_warehouse
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    metrics_df_calc = (
+        ev
+        .table("joined_timeseries")
+        .add_calculated_fields([
+            rcf.GenericSQL(
+                output_field_name="month_sql",
+                sql_statement="month(value_time)"
+            )
+        ])
+        .aggregate(
+            group_by=["primary_location_id", "month_sql"],
+            metrics=[kge]
+        )
+        .to_pandas()
+    )
+    assert isinstance(metrics_df_calc, pd.DataFrame)
+    assert "month_sql" in metrics_df_calc.columns
+    assert metrics_df_calc["month_sql"].notna().all()
+    assert metrics_df_calc["month_sql"].between(1, 12).all()
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_table_based_metrics(function_scope_test_warehouse):
+    """Test table-based metrics."""
+    ev = function_scope_test_warehouse
+
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+
+    metrics_df = ev.table("joined_timeseries").filter(
+        "season = 'winter'"
+    ).aggregate(
+        metrics=[kge],
+        group_by=["primary_location_id"],
+    ).order_by("primary_location_id").to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert "primary_location_id" in metrics_df.columns
+
+    primary_avg = Signatures.Average()
+    primary_avg.input_field_names = ["value"]
+
+    sigs_df = ev.table("primary_timeseries").aggregate(
+        metrics=[primary_avg],
+        group_by=["location_id"],
+    ).order_by("location_id").to_pandas()
+
+    assert isinstance(sigs_df, pd.DataFrame)
+    assert sigs_df.index.size == 3
+    assert "location_id" in sigs_df.columns
+
+    sigs_df2 = ev.table("primary_timeseries").aggregate(
+        metrics=[primary_avg],
+        group_by=["location_id"],
+    ).order_by("location_id").to_pandas()
+
+    assert sigs_df.sort_index().equals(sigs_df2.sort_index())
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_metrics_property_deprecation_warning(module_scope_test_warehouse):
+    """Test that accessing ev.metrics emits a FutureWarning."""
+    ev = module_scope_test_warehouse
+
+    with pytest.warns(FutureWarning, match="metrics.*deprecated"):
+        ev.metrics

@@ -1,5 +1,6 @@
 {{ fullname.split('.')[-1] | escape | underline}}
 
+
 .. automodule:: {{ fullname }}
 
    {% block attributes %}

@@ -19,6 +19,7 @@ import geopandas as gpd
 import pyarrow as pa
 import pandera
 
+from teehr.evaluation.write import Write as writer
 from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
@@ -368,8 +369,10 @@ def write_timeseries_parquet_file(
 
     if timeseries_type == TimeseriesTypeEnum.primary:
         schema = schemas.primary_timeseries_schema(type="pandas")
+        write_schema = schemas.primary_timeseries_schema(type="arrow")
     elif timeseries_type == TimeseriesTypeEnum.secondary:
         schema = schemas.secondary_timeseries_schema(type="pandas")
+        write_schema = schemas.secondary_timeseries_schema(type="arrow")
 
     try:
         validated_df = schema.validate(df, lazy=True)
@@ -382,10 +385,18 @@ def write_timeseries_parquet_file(
         return
 
     if not filepath.is_file():
-        validated_df.to_parquet(filepath)
+        writer.to_cache(
+            source_data=validated_df,
+            cache_filepath=filepath,
+            write_schema=write_schema
+        )
     elif filepath.is_file() and overwrite_output:
         logger.info(f"Overwriting {filepath.name}")
-        validated_df.to_parquet(filepath)
+        writer.to_cache(
+            source_data=validated_df,
+            cache_filepath=filepath,
+            write_schema=write_schema
+        )
     elif filepath.is_file() and not overwrite_output:
         logger.info(
             f"{filepath.name} already exists and overwrite_output=False;"
