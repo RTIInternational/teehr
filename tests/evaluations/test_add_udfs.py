@@ -580,6 +580,7 @@ def test_add_udfs_write(function_scope_evaluation_template):
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
 
+
 @pytest.mark.function_scope_test_warehouse
 def test_location_event_detection(function_scope_test_warehouse):
     """Test event detection and metrics per event."""
@@ -595,7 +596,6 @@ def test_location_event_detection(function_scope_test_warehouse):
                 input_field_names=["primary_value"],
                 output_field_name="max_primary_value"
             ),
-            teehr.Signatures.Maximum(
             teehr.Signatures.Maximum(
                 input_field_names=["secondary_value"],
                 output_field_name="max_secondary_value"
