@@ -8,7 +8,7 @@ Release Notes
 This release introduces major architectural changes and new features. Several breaking changes
 require updates to existing code; see the **Breaking Changes** section below.
 
-A core change in this release is the integration of ``Apache Iceberg <https://iceberg.apache.org/>``_
+A core change in this release is the integration of `Apache Iceberg <https://iceberg.apache.org/>`_
 as the underlying table format for TEEHR evaluations. Iceberg brings a rich set of capabilities
 to TEEHR, including ACID transactions, time travel, schema evolution, hidden
 partitioning, a full suite of write methods (append, upsert, insert, delete, etc.), and more.
@@ -19,15 +19,15 @@ real-time NWM simulations and forecasts ready for evaluation.
 
 Breaking Changes
 ^^^^^^^^^^^^^^^^
-- **``query()`` method renamed to ``aggregate()``**: The ``query()`` method on metrics and
+- **query() method renamed to aggregate()**: The ``query()`` method on metrics and
   joined timeseries has been renamed to ``aggregate()`` to better reflect its purpose.
   All user code and notebooks referencing ``.query()`` must be updated to ``.aggregate()``.
 - **Pandas DataFrame accessor removed**: The ``@pd.api.extensions.register_dataframe_accessor``
   TEEHR accessor has been removed. Visualization and utility methods previously accessed via
   the accessor must now be called directly on the evaluation or table objects.
-- **``SignatureMetrics`` renamed to ``Signatures``**: Importing ``SignatureMetrics`` will
+- **SignatureMetrics renamed to Signatures**: Importing ``SignatureMetrics`` will
   no longer work; use ``Signatures`` instead.
-- **``clone_from_s3()``, ``clone_template()``, and ``list_s3_evaluations()`` removed**:
+- **clone_from_s3(), clone_template(), and list_s3_evaluations() removed**:
   These methods have been removed from the ``Evaluation`` class. Data from the TEEHR-Cloud
   data warehouse should now be accessed via the ``ev.download.*`` methods.
 
@@ -46,7 +46,7 @@ Added
 - **Automatic pagination for all download methods**: Download methods now automatically
   handle pagination under the hood. A ``page_size`` argument is available for tuning.
   A configurable timeout (default 60 s) has been added to all download methods.
-- **``RemoteReadOnlyEvaluation`` and ``RemoteReadWriteEvaluation`` classes**: New evaluation
+- **RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes**: New evaluation
   classes for connecting to a remote TEEHR deployment without requiring a local evaluation
   directory.
 - **INSERT INTO and DELETE FROM write methods**: ``Write`` class now supports
@@ -61,20 +61,20 @@ Added
   and query intermediate or derived datasets within the same Iceberg warehouse.
 - **Drop table method for user-created tables**: Tables now have a ``drop()`` / ``drop_table()``
   method so users can remove custom tables programmatically.
-- **``add_attributes()`` on DataFrame results**: A generic ``add_attributes()`` method has
+- **add_attributes() on DataFrame results**: A generic ``add_attributes()`` method has
   been added to ``TeehrDataFrameBase``, allowing attribute columns to be joined onto any
   query result DataFrame.
-- **``GenericSQL`` row-level calculated field**: Users can now supply arbitrary SQL
+- **GenericSQL row-level calculated field**: Users can now supply arbitrary SQL
   expressions as row-level calculated fields via the ``GenericSQL`` class.
-- **``name`` field in geometry joins**: The ``name`` field is now included when joining
+- **name field in geometry joins**: The ``name`` field is now included when joining
   geometry to timeseries tables.
-- **``primary_location_id_prefix`` and ``secondary_location_id_prefix`` for crosswalk downloads**:
+- **primary_location_id_prefix and secondary_location_id_prefix for crosswalk downloads**:
   These new parameters allow location ID prefix filtering when downloading location crosswalk data.
 - **ID list filtering for location downloads**: ``download.locations()`` now accepts a list of
   location IDs for targeted data retrieval.
 - **Ability to generate and write partial joined timeseries**: Filters can be applied during
   the ``create_joined_timeseries()`` step so only a subset of the joined data is written.
-- **Load functions added to ``BaseTable``**: ``load_dataframe()``, ``load_csv()``,
+- **Load functions added to BaseTable**: ``load_dataframe()``, ``load_csv()``,
   ``load_parquet()``, and ``load_spatial()`` are now available on the base table class,
   enabling consistent data ingestion across all table types.
 - **AWS profile support**: ``create_spark_session()`` now accepts an AWS profile name and
@@ -106,7 +106,7 @@ Changed
   signature metric modules; bootstrap and probabilistic models cleaned up.
 - **Sort order applied to schema migrations**: Migrations are now applied in deterministic
   sort order, preventing out-of-order migration application.
-- **Unused ``S3Path`` class removed**.
+- **Unused S3Path class removed**.
 - **netcdf4 and PySpark pinned** to compatible versions for stability.
 - **Conversion workflow updated** for migrating v0.4/v0.5 evaluations to v0.6 format.
 
