@@ -6,31 +6,31 @@ import requests
 files = [
     {
         "name": "gages.geojson",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/719-fix-example-notebook-data-path/tests/data/test_warehouse_data/geo/gages.geojson"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/test_warehouse_data/geo/gages.geojson"
     },
     {
         "name": "test_short_obs.csv",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/719-fix-example-notebook-data-path/tests/data/test_warehouse_data/timeseries/test_short_obs.csv"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/test_warehouse_data/timeseries/test_short_obs.csv"
     },
     {
         "name": "test_short_fcast.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/719-fix-example-notebook-data-path/tests/data/test_warehouse_data/timeseries/test_short_fcast.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/test_warehouse_data/timeseries/test_short_fcast.parquet"
     },
     {
         "name": "crosswalk.csv",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/719-fix-example-notebook-data-path/tests/data/test_warehouse_data/geo/crosswalk.csv"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/test_warehouse_data/geo/crosswalk.csv"
     },
     {
         "name": "test_attr_2yr_discharge.csv",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/719-fix-example-notebook-data-path/tests/data/test_warehouse_data/geo/test_attr_2yr_discharge.csv"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/test_warehouse_data/geo/test_attr_2yr_discharge.csv"
     },
     {
         "name": "test_attr_drainage_area_km2.csv",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/719-fix-example-notebook-data-path/tests/data/test_warehouse_data/geo/test_attr_drainage_area_km2.csv"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/test_warehouse_data/geo/test_attr_drainage_area_km2.csv"
     },
     {
         "name": "test_attr_ecoregion.csv",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/719-fix-example-notebook-data-path/tests/data/test_warehouse_data/geo/test_attr_ecoregion.csv"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/test_warehouse_data/geo/test_attr_ecoregion.csv"
     }
 ]
 
