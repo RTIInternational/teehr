@@ -1,6 +1,95 @@
 Release Notes
 =============
 
+0.6.0 - 2026-03-19
+-------------------
+
+This release introduces major architectural changes and new features. Several breaking changes
+require updates to existing code; see the **Breaking Changes** section below.
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
+- **Evaluation class refactored**: The ``Evaluation`` class hierarchy has been redesigned.
+  ``clone_from_s3()`` and direct SQL methods have been moved. A new ``BaseEvaluation`` class
+  is the foundation for ``Evaluation`` (local read-write), ``RemoteReadOnlyEvaluation``
+  (remote read-only), and ``RemoteReadWriteEvaluation`` (remote read-write).
+- **``query()`` method renamed to ``aggregate()``**: The ``query()`` method on metrics and
+  joined timeseries has been renamed to ``aggregate()`` to better reflect its purpose.
+  All user code and notebooks referencing ``.query()`` must be updated to ``.aggregate()``.
+- **Pandas DataFrame accessor removed**: The ``@pd.api.extensions.register_dataframe_accessor``
+  TEEHR accessor has been removed. Visualization and utility methods previously accessed via
+  the accessor must now be called directly on the evaluation or table objects.
+- **``SignatureMetrics`` renamed to ``Signatures``**: Importing ``SignatureMetrics`` will
+  no longer work; use ``Signatures`` instead.
+
+Added
+^^^^^
+- **TEEHR API support**: New download methods backed by a TEEHR API, with support for
+  fetching locations, timeseries, and other data via ``ev.download.*`` methods.
+- **Automatic pagination for all download methods**: Download methods now automatically
+  handle pagination under the hood. A ``page_size`` argument is available for tuning.
+  A configurable timeout (default 60 s) has been added to all download methods.
+- **``RemoteReadOnlyEvaluation`` and ``RemoteReadWriteEvaluation`` classes**: New evaluation
+  classes for connecting to a remote TEEHR deployment without requiring a local evaluation
+  directory.
+- **INSERT INTO and DELETE FROM write methods**: ``Write`` class now supports
+  ``insert_into()`` and ``delete_from()`` operations, and tables expose a ``delete()``
+  method for row-level deletes.
+- **Drop table method for user-created tables**: Tables now have a ``drop()`` / ``drop_table()``
+  method so users can remove custom tables programmatically.
+- **``add_attributes()`` on DataFrame results**: A generic ``add_attributes()`` method has
+  been added to ``TeehrDataFrameBase``, allowing attribute columns to be joined onto any
+  query result DataFrame.
+- **``GenericSQL`` row-level calculated field**: Users can now supply arbitrary SQL
+  expressions as row-level calculated fields via the ``GenericSQL`` class.
+- **``catalog_name`` and ``namespace_name`` parameters on view methods**: Table view methods
+  now accept ``catalog_name`` and ``namespace_name`` so results from multiple catalogs or
+  namespaces can be targeted explicitly.
+- **``name`` field in geometry joins**: The ``name`` field is now included when joining
+  geometry to timeseries tables.
+- **``primary_location_id_prefix`` and ``secondary_location_id_prefix`` for crosswalk downloads**:
+  These new parameters allow location ID prefix filtering when downloading location crosswalk data.
+- **ID list filtering for location downloads**: ``download.locations()`` now accepts a list of
+  location IDs for targeted data retrieval.
+- **Ability to generate and write partial joined timeseries**: Filters can be applied during
+  the ``create_joined_timeseries()`` step so only a subset of the joined data is written.
+- **Load functions added to ``BaseTable``**: ``load_dataframe()``, ``load_csv()``,
+  ``load_parquet()``, and ``load_spatial()`` are now available on the base table class,
+  enabling consistent data ingestion across all table types.
+- **AWS profile support**: ``create_spark_session()`` now accepts an AWS profile name and
+  resolves credentials using the standard AWS credential priority chain.
+- **Spark decommissioning support**: The Spark session helper now gracefully decommissions
+  executor nodes when a session is closed.
+- **Additional deterministic and probabilistic metrics**: New categorical metrics including
+  ``SuccessRatio``, ``FrequencyBiasIndex``, ``ProbabilityOfDetection``,
+  ``FalseAlarmRatio``, ``CriticalSuccessIndex``, and related metrics have been added.
+- **Brier Score and Brier Skill Score**: Probabilistic metrics for ensemble evaluation.
+- **ForecastLeadTimeBins** row-level calculated field for grouping forecasts by lead time.
+- **Improved Sphinx API documentation**: API docs have been reorganized and expanded.
+- **Updated Getting Started documentation**: The getting-started guide has been refreshed.
+
+Changed
+^^^^^^^
+- **Evaluation initialization revisited**: Initialization logic has been cleaned up; the
+  template-based initialization approach has been replaced with a simpler, more explicit
+  flow.
+- **Spark session configuration updated**: Improved handling of AWS credentials, Iceberg
+  catalog configuration, spot-instance executor support, and Jupyter pod prefix support.
+- **Data validation fixed when adding domain data**: Validation now correctly catches
+  invalid values when adding domain data to an evaluation.
+- **Table filter bug fixed**: Applying filters to table queries now works correctly.
+- **Foreign key enforcement bug fixed**: Fixes an edge case in ``load_dataframe()`` where
+  foreign key checks were not enforced properly.
+- **Pearson/R-squared updated to use epsilon for near-zero denominators**.
+- **Metrics refactored**: Reduces duplicate code across deterministic, probabilistic, and
+  signature metric modules; bootstrap and probabilistic models cleaned up.
+- **Sort order applied to schema migrations**: Migrations are now applied in deterministic
+  sort order, preventing out-of-order migration application.
+- **Unused ``S3Path`` class removed**.
+- **netcdf4 and PySpark pinned** to compatible versions for stability.
+- **Conversion workflow updated** for migrating v0.4/v0.5 evaluations to v0.6 format.
+
+
 0.5.3 - 2026-01-07
 -----------------------
 
