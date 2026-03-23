@@ -48,6 +48,7 @@ NWM_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
         "streamflow": "streamflow_hourly_inst",
         "RAINRATE": "rainfall_hourly_rate",
+        "T2D": "temperature_hourly_mean"
     },
     UNIT_NAME: {
         "m3 s-1": "m^3/s",
