@@ -788,12 +788,12 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             with open(version_file, "w") as f:
                 f.write(teehr.__version__)
 
-            apply_migrations.evolve_catalog_schema(
-                spark=self.spark,
-                migrations_dir_path=Path(__file__).parents[1] / "migrations",
-                target_catalog_name=self._catalog.catalog_name,
-                target_namespace_name=self._catalog.namespace_name
-            )
+        apply_migrations.evolve_catalog_schema(
+            spark=self.spark,
+            migrations_dir_path=Path(__file__).parents[1] / "migrations",
+            target_catalog_name=self._catalog.catalog_name,
+            target_namespace_name=self._catalog.namespace_name
+        )
 
         self._activate_catalog()  # Creates the JDBC .db file
 
