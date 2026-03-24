@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 def _catalog_uri_is_configured(spark, catalog_name):
-    """
-    Checks if a local catalog URI is configured in the Spark session.
+    """Check if a local catalog URI is configured in the Spark session.
+
     Returns True if configured, False otherwise.
     """
     conf_key = f"spark.sql.catalog.{catalog_name}.uri"
@@ -177,7 +177,6 @@ def update_metadata_paths(
         .option("query", "SELECT * FROM iceberg_tables") \
         .load()
 
-
     # Replace "Guard" with "Gd" in the "position" column
     updated_sdf = iceberg_sdf.withColumn(
         "metadata_location",
@@ -198,27 +197,25 @@ def update_metadata_paths(
         .mode("overwrite") \
         .save()
 
-    # Test reading the evaluation tables
-    ev = teehr.LocalReadWriteEvaluation(
-        dir_path,
-        create_dir=False,
-        spark=spark,
-        check_evaluation_version=False
-    )
-
     # Remove .crc files -- these interfere with register_table
     crc_files = glob.glob(f"{new_metadata_prefix}/**/.*.crc", recursive=True)
     [Path(filepath).unlink() for filepath in crc_files]
 
     # Execute the register_table procedure
     for row in updated_tables_df.itertuples():
-        table_name = row.table_name
-        metadata_file = row.metadata_location
-        ev.sql(f"""
+        spark.sql(f"""
         CALL local.system.register_table(
-            table => 'teehr.{table_name}',
-            metadata_file => '{metadata_file}'
+            table => '{row.table_namespace}.{row.table_name}',
+            metadata_file => '{row.metadata_location}'
         )
         """).show()
+
+    # Initialize the Evaluation, which applies any new migrations.
+    ev = teehr.LocalReadWriteEvaluation(
+        dir_path,
+        create_dir=False,
+        spark=spark,
+        check_evaluation_version=False
+    )
 
     return ev
