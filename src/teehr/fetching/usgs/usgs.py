@@ -22,7 +22,8 @@ import numpy as np
 from typing import List, Union, Optional, Dict
 from pathlib import Path
 from datetime import datetime, timedelta
-import dataretrieval.nwis as nwis
+# import dataretrieval.nwis as nwis  # deprecated
+from dataretrieval import waterdata
 from teehr.models.fetching.utils import USGSChunkByEnum, USGSServiceEnum
 from pydantic import validate_call, ConfigDict
 from teehr.fetching.utils import (
@@ -214,43 +215,51 @@ def _fetch_usgs_streamflow(
     """Fetch USGS gage data and format to TEEHR format."""
     logger.debug("Fetching USGS streamflow data from NWIS.")
 
-    if service == "iv":
-        datetime_str_format = HOURLY_DATETIME_STR_FMT
-    elif service == "dv":
-        datetime_str_format = DAILY_DATETIME_STR_FMT
-    else:
-        err_msg = f"Service '{service}' is not supported. Valid options are 'iv' and 'dv'."
-        logger.error(err_msg)
-        raise ValueError(err_msg)
-
-    start_dt_str = start_date.strftime(datetime_str_format)
-
-    end_dt_str = (
+    start_dt_iso = start_date.isoformat()
+    end_dt_iso = (
         end_date
         - timedelta(minutes=1)
-    ).strftime(datetime_str_format)
+    ).isoformat()
 
     # Parse out list of sites.
-    parsed_sites = _parse_site_id_list(sites)
+    # parsed_sites = _parse_site_id_list(sites)
+
+    # Add "USGS-" prefix to site numbers to match the format of the location_id field in the NWIS data.
+    sites = ["USGS-" + site for site in sites]
 
     # Retrieve data --> dataretrieval
-    usgs_df = nwis.get_record(
-        sites=parsed_sites,
-        service=service,
-        start=start_dt_str,
-        end=end_dt_str,
-        multi_index=False
-    )
+    if service == "iv":
+        usgs_df, metadata = waterdata.get_continuous(
+            monitoring_location_id=sites,
+            parameter_code="00060",
+            time=f"{start_dt_iso}Z/{end_dt_iso}Z",
+        )
+    elif service == "dv":
+        usgs_df, metadata = waterdata.get_daily(
+            monitoring_location_id=sites,
+            parameter_code='00060',
+            time=f"{start_dt_iso}Z/{end_dt_iso}Z"
+        )
+
+    pass
+
+    # usgs_df = nwis.get_record(
+    #     sites=parsed_sites,
+    #     service=service,
+    #     start=start_dt_str,
+    #     end=end_dt_str,
+    #     multi_index=False
+    # )
 
     variable_name = variable_mapper[VARIABLE_NAME][service]
     unit_name = variable_mapper[UNIT_NAME]["Imperial"]
 
-    # If any dictionaries were passed in, assign the values from
-    # the description field to the 00060 column.
-    usgs_df = _assign_discharge_by_description(
-        nwis_df=usgs_df,
-        sites=sites
-    )
+    # # If any dictionaries were passed in, assign the values from
+    # # the description field to the 00060 column.
+    # usgs_df = _assign_discharge_by_description(
+    #     nwis_df=usgs_df,
+    #     sites=sites
+    # )
 
     usgs_df = _format_df_column_names(
         df=usgs_df,
