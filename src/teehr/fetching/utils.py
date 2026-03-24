@@ -183,11 +183,7 @@ def format_nwm_configuration_metadata(
         ev_config_name = nwm_version + "_" + nwm_config_name
     # Get the config description.
     if nwm_config_name in NWM_CONFIGURATION_DESCRIPTIONS:
-        if ev_member is not None:
-            ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name] \
-                + f" {ev_member}"
-        else:
-            ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name]
+        ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name]
     else:
         ev_config_desc = "NWM operational forecasts"  # default description
     return {
