@@ -258,6 +258,7 @@ def nwm_retro_grids_to_parquet(
     calculate_zonal_weights: bool = False,
     zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
     unique_zone_id: Optional[str] = None,
+    convert_k_to_c: bool = True,
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -308,6 +309,10 @@ def nwm_retro_grids_to_parquet(
         Path to the polygons file or a GeoDataFrame.
     unique_zone_id : Optional[str]
         Name of the field in the zone polygon file containing unique IDs.
+    convert_k_to_c : bool, optional (default: True)
+        If True, convert temperature values from Kelvin to Celsius by
+        subtracting 273.15. The unit_name field will be set to "C".
+        Note: this argument is only valid when variable_name is "T2D".
 
     Notes
     -----
@@ -421,6 +426,10 @@ def nwm_retro_grids_to_parquet(
                                         "configuration were found in GCS!")
             chunk_df = pd.concat(output)
 
+            if convert_k_to_c and variable_name.value == "T2D":
+                chunk_df["value"] = chunk_df["value"] - 273.15
+                chunk_df.loc[:, UNIT_NAME] = "C"
+
             start = df.datetime.min().strftime("%Y%m%d")
             end = df.datetime.max().strftime("%Y%m%d")
             if start == end:
@@ -507,6 +516,10 @@ def nwm_retro_grids_to_parquet(
                 location_id_prefix=location_id_prefix,
                 variable_mapper=variable_mapper
             )
+
+            if convert_k_to_c and variable_name.value == "T2D":
+                chunk_df["value"] = chunk_df["value"] - 273.15
+                chunk_df.loc[:, UNIT_NAME] = "C"
 
             fname = format_grouped_filename(da_i)
             output_filename = Path(
