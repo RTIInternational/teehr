@@ -57,16 +57,3 @@ CREATE TABLE IF NOT EXISTS location_attributes(
     attribute_name STRING,
     value STRING
 ) USING iceberg;
-
--- Should these be if not exists?
-INSERT INTO units VALUES
-    ("m^3/s", "Cubic Meters Per Second"),
-    ("ft^3/s", "Cubic Feet Per Second"),
-    ("km^2", "Square Kilometers"),
-    ("mm/s", "Millimeters Per Second");
-
-INSERT INTO variables VALUES
-    ("streamflow", "Hourly Instantaneous Streamflow"),
-    ("streamflow_hourly_inst", "Hourly Instantaneous Streamflow"),
-    ("streamflow_daily_mean", "Daily Mean Streamflow"),
-    ("rainfall_hourly_rate", "Hourly Rainfall Rate");

@@ -57,7 +57,7 @@ class Fetch:
         """
         # Now we have access to the Evaluation object.
         self._ev = ev
-        self._load = ev.load
+        self._load = ev._load
         self.usgs_cache_dir = Path(
             ev.cache_dir,
             const.FETCHING_CACHE_DIR,

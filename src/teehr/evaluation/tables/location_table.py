@@ -51,7 +51,7 @@ class LocationTable(BaseTable):
             active catalog name.
         """
         super().__init__(ev, table_name, namespace_name, catalog_name)
-        self._load = ev.load
+        self._load = ev._load
         self._has_geometry = True
 
     def add_geometry(self):

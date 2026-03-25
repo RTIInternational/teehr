@@ -25,7 +25,7 @@ def test_table_writes(function_scope_evaluation_template):
     df = sdf.toPandas()
 
     # Can pass a spark dataframe, pandas dataframe, or named view (str)
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=df,
         table_name="units",
         write_mode="append",
@@ -51,7 +51,7 @@ def test_insert_write_mode(function_scope_evaluation_template):
     df = sdf.toPandas()
 
     # First insert
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=df,
         table_name="units",
         write_mode="insert",
@@ -60,7 +60,7 @@ def test_insert_write_mode(function_scope_evaluation_template):
     count_after_first = ev.units.to_sdf().count()
 
     # Second insert of the same data - should create a duplicate
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=df,
         table_name="units",
         write_mode="insert",
@@ -90,7 +90,7 @@ def test_delete_from_with_filter(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf.toPandas(),
         table_name="units",
         write_mode="append",
@@ -100,7 +100,7 @@ def test_delete_from_with_filter(function_scope_evaluation_template):
     assert initial_count >= 2
 
     # Delete one unit using a SQL string filter
-    deleted_count = ev.write.delete_from(
+    deleted_count = ev._write.delete_from(
         table_name="units",
         filters=["name = 'm/s'"],
     )
@@ -136,7 +136,7 @@ def test_delete_from_dry_run(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf.toPandas(),
         table_name="units",
         write_mode="append",
@@ -145,7 +145,7 @@ def test_delete_from_dry_run(function_scope_evaluation_template):
     initial_count = ev.units.to_sdf().count()
 
     # Dry run - should return a DataFrame without deleting
-    result_sdf = ev.write.delete_from(
+    result_sdf = ev._write.delete_from(
         table_name="units",
         filters=["name = 'm/s'"],
         dry_run=True,
@@ -181,7 +181,7 @@ def test_delete_from_no_filter(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf.toPandas(),
         table_name="units",
         write_mode="append",
@@ -191,7 +191,7 @@ def test_delete_from_no_filter(function_scope_evaluation_template):
     assert initial_count >= 2
 
     # Delete all rows
-    deleted_count = ev.write.delete_from(table_name="units")
+    deleted_count = ev._write.delete_from(table_name="units")
 
     assert deleted_count == initial_count
 
@@ -217,7 +217,7 @@ def test_delete_from_dict_filter(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf.toPandas(),
         table_name="units",
         write_mode="append",
@@ -226,7 +226,7 @@ def test_delete_from_dict_filter(function_scope_evaluation_template):
     initial_count = ev.units.to_sdf().count()
 
     # Delete using a dict filter
-    deleted_count = ev.write.delete_from(
+    deleted_count = ev._write.delete_from(
         table_name="units",
         filters={"column": "name", "operator": "=", "value": "ft/s"},
     )
@@ -254,7 +254,7 @@ def test_table_delete_method_dict_filter(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf.toPandas(),
         table_name="units",
         write_mode="append",
@@ -290,7 +290,7 @@ def test_table_delete_method(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf.toPandas(),
         table_name="units",
         write_mode="append",
@@ -327,7 +327,7 @@ def test_table_delete_method_dry_run(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf.toPandas(),
         table_name="units",
         write_mode="append",
@@ -367,7 +367,7 @@ def test_table_delete_method_no_filter(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf.toPandas(),
         table_name="units",
         write_mode="append",
@@ -402,7 +402,7 @@ def test_drop_user_table(function_scope_evaluation_template):
     )
 
     # Write a user-created table
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf,
         table_name="my_user_table",
         write_mode="create_or_replace",
@@ -434,7 +434,7 @@ def test_drop_table_via_evaluation(function_scope_evaluation_template):
         schema=schema
     )
 
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf,
         table_name="my_drop_test_table",
         write_mode="create_or_replace",

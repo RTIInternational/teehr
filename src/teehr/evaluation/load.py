@@ -32,10 +32,10 @@ class Load:
         """
         if ev is not None:
             self._ev = ev
-            self._read = ev.read
-            self._extract = ev.extract
-            self._validate = ev.validate
-            self._write = ev.write
+            self._read = ev._read
+            self._extract = ev._extract
+            self._validate = ev._validate
+            self._write = ev._write
 
     def dataframe(
         self,
@@ -164,19 +164,15 @@ class Load:
                 column_name=secondary_location_id_field,
                 prefix=secondary_location_id_prefix,
             )
-        if foreign_keys is not None:
-            validated_df = self._validate.schema_and_data(
-                sdf=df,
-                table_schema=schema_func(),
-                drop_duplicates=drop_duplicates,
-                foreign_keys=foreign_keys,
-                uniqueness_fields=uniqueness_fields
-            )
-        else:
-            validated_df = self._validate.schema(
-                df=df,
-                table_schema=schema_func(),
-            )
+
+        validated_df = self._validate.dataframe(
+            sdf=df,
+            table_schema=schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=foreign_keys,
+            uniqueness_fields=uniqueness_fields
+        )
+
         self._write.to_warehouse(
             source_data=validated_df,
             table_name=table_name,
@@ -340,19 +336,14 @@ class Load:
                 )
             self._ev.attributes.add(attr_list)
 
-        if foreign_keys is not None:
-            validated_df = self._validate.schema_and_data(
-                sdf=sdf,
-                table_schema=schema_func(),
-                drop_duplicates=drop_duplicates,
-                foreign_keys=foreign_keys,
-                uniqueness_fields=uniqueness_fields
-            )
-        else:
-            validated_df = self._validate.schema(
-                df=sdf,
-                table_schema=schema_func(),
-            )
+        validated_df = self._validate.dataframe(
+            sdf=sdf,
+            table_schema=schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=foreign_keys,
+            uniqueness_fields=uniqueness_fields
+        )
+
         self._write.to_warehouse(
             source_data=validated_df,
             table_name=table_name,
@@ -436,22 +427,15 @@ class Load:
                 )
             self._ev.attributes.add(attr_list)
 
-        if (
-            foreign_keys is not None and
-            uniqueness_fields is not None
-        ):
-            validated_df = self._validate.schema_and_data(
-                sdf=sdf,
-                table_schema=schema_func(),
-                drop_duplicates=drop_duplicates,
-                foreign_keys=foreign_keys,
-                uniqueness_fields=uniqueness_fields
-            )
-        else:
-            validated_df = self._validate.schema(
-                df=sdf,
-                table_schema=schema_func(),
-            )
+
+        validated_df = self._validate.dataframe(
+            sdf=sdf,
+            table_schema=schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=foreign_keys,
+            uniqueness_fields=uniqueness_fields
+        )
+
         self._write.to_warehouse(
             source_data=validated_df,
             table_name=table_name,

@@ -93,7 +93,7 @@ the underlying function directly with a dictionary:
    )
 
    # Then load the resulting Parquet files into TEEHR
-   ev.load.primary_timeseries.from_parquet("./cache/usgs/*.parquet")
+   ev._load.primary_timeseries.from_parquet("./cache/usgs/*.parquet")
 
 
 NWM Retrospective Data (Points)

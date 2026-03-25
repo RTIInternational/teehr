@@ -266,7 +266,7 @@ You can also load from Pandas/GeoPandas DataFrames:
        "configuration_name": ["usgs_observations"]
    })
 
-   ev.load.dataframe(df=df, table_name="primary_timeseries")
+   ev._load.dataframe(df=df, table_name="primary_timeseries")
 
 
 Filtering Data
@@ -355,7 +355,7 @@ Write query results to new tables:
    metrics_df = ev.table("location_metrics").to_pandas()
 
 You can also write data directly to any warehouse table using
-:meth:`ev.write.to_warehouse() <teehr.evaluation.write.Write.to_warehouse>`:
+:meth:`ev._write.to_warehouse() <teehr.evaluation.write.Write.to_warehouse>`:
 
 .. code-block:: python
 
@@ -367,16 +367,16 @@ You can also write data directly to any warehouse table using
    })
 
    # "insert" — fastest: INSERT INTO with no duplicate checking
-   ev.write.to_warehouse(source_data=df, table_name="units", write_mode="insert")
+   ev._write.to_warehouse(source_data=df, table_name="units", write_mode="insert")
 
    # "append" — skip rows that match existing uniqueness fields (default)
-   ev.write.to_warehouse(source_data=df, table_name="units", write_mode="append")
+   ev._write.to_warehouse(source_data=df, table_name="units", write_mode="append")
 
    # "upsert" — update matching rows, insert new ones
-   ev.write.to_warehouse(source_data=df, table_name="units", write_mode="upsert")
+   ev._write.to_warehouse(source_data=df, table_name="units", write_mode="upsert")
 
    # "overwrite" — replace all data, preserving table history
-   ev.write.to_warehouse(source_data=df, table_name="units", write_mode="overwrite")
+   ev._write.to_warehouse(source_data=df, table_name="units", write_mode="overwrite")
 
 .. note::
 
@@ -412,11 +412,11 @@ There are two equivalent ways to delete rows from a table.
    # Delete all rows
    count = ev.primary_timeseries.delete()
 
-**Via the write interface** (``ev.write.delete_from()``):
+**Via the write interface** (``ev._write.delete_from()``):
 
 .. code-block:: python
 
-   count = ev.write.delete_from(
+   count = ev._write.delete_from(
        table_name="primary_timeseries",
        filters=["location_id = 'usgs-01234567'"],
    )

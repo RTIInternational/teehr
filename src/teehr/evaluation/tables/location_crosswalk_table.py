@@ -61,7 +61,7 @@ class LocationCrosswalkTable(BaseTable):
             active catalog name.
         """
         super().__init__(ev, table_name, namespace_name, catalog_name)
-        self._load = ev.load
+        self._load = ev._load
 
     def load_parquet(
         self,

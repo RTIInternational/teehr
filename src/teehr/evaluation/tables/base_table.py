@@ -3,6 +3,7 @@ from typing import List, Dict, Union, Callable
 import logging
 
 import pyspark.sql as ps
+import pandas as pd
 
 from teehr.evaluation.dataframe_base import TeehrDataFrameBase
 from teehr.models.evaluation_base import EvaluationBaseModel
@@ -65,7 +66,7 @@ class BaseTable(TeehrDataFrameBase):
             active catalog name.
         """
         super().__init__(ev)
-        self._read = ev.read
+        self._read = ev._read
 
         # Instance-level attributes for namespace/catalog
         self.namespace_name = None
@@ -189,7 +190,7 @@ class BaseTable(TeehrDataFrameBase):
         >>>     table_name="primary_timeseries"
         >>> ).validate(drop_duplicates=True)
         """
-        self._ev.validate.schema_and_data(
+        self._ev._validate.dataframe(
             sdf=self.to_sdf(),
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
@@ -300,7 +301,7 @@ class BaseTable(TeehrDataFrameBase):
 
         >>> count = ev.primary_timeseries.delete()
         """
-        return self._ev.write.delete_from(
+        return self._ev._write.delete_from(
             table_name=self.table_name,
             filters=filters,
             catalog_name=self.catalog_name,
@@ -360,3 +361,60 @@ class BaseTable(TeehrDataFrameBase):
         else:
             unique_values_df = sdf.select(column).distinct()
             return [row[column] for row in unique_values_df.collect()]
+
+    def load_dataframe(
+        self,
+        df: Union[pd.DataFrame, ps.DataFrame],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        write_mode: str = "append",
+        drop_duplicates: bool = True,
+    ):
+        """Import data from an in-memory dataframe.
+
+        Parameters
+        ----------
+        df : Union[pd.DataFrame, ps.DataFrame]
+            DataFrame to load into the table.
+        namespace_name : str, optional
+            The namespace name to write to, by default None, which means the
+            namespace_name of the active catalog is used.
+        catalog_name : str, optional
+            The catalog name to write to, by default None, which means the
+            catalog_name of the active catalog is used.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
+        write_mode : str, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "create_or_replace".
+            If "append", the table will be appended without checking
+            existing data.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "create_or_replace", a new table will be created or an existing
+            table will be replaced.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        """ # noqa
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.dataframe(
+            df=df,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates
+        )
+        self._load_sdf()

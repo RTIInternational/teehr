@@ -51,7 +51,7 @@ class GeneratedTimeSeriesBasemodel:
                 f"Invalid destination table: {destination_table}"
                 " Must be one of: primary_timeseries, secondary_timeseries"
             )
-        validated_df = self._ev.validate.schema_and_data(
+        validated_df = self._ev._validate.dataframe(
             sdf=self.sdf,
             table_schema=tbl.schema_func(),
             drop_duplicates=drop_duplicates,
@@ -59,7 +59,7 @@ class GeneratedTimeSeriesBasemodel:
             uniqueness_fields=tbl.uniqueness_fields,
             add_missing_columns=True
         )
-        self._ev.write.to_warehouse(
+        self._ev._write.to_warehouse(
             source_data=validated_df,
             table_name=tbl.table_name,
             write_mode=write_mode,

@@ -311,8 +311,8 @@ are common operations you can perform with an Evaluation instance:
    # Access I/O components
    ev.fetch      # Fetch from external sources (USGS, NWM)
    ev.download   # Download from TEEHR warehouse
-   ev.load       # Load local files
-   ev.write      # Write query results
+   ev._load       # Load local files
+   ev._write      # Write query results
 
    # Run SQL queries directly
    df = ev.sql("SELECT * FROM primary_timeseries LIMIT 10")

@@ -42,7 +42,7 @@ class TeehrDataFrameBase(ABC):
             catalogs, and related operations.
         """
         self._ev = ev
-        self._write = ev.write
+        self._write = ev._write
         self._sdf: ps.DataFrame = None
         self._has_geometry = None
 
@@ -189,7 +189,7 @@ class TeehrDataFrameBase(ABC):
 
         # Use to_sdf() to ensure computation (for Views)
         sdf = self.to_sdf()
-        validated_filters = self._ev.validate.sdf_filters(
+        validated_filters = self._ev._validate.sdf_filters(
             sdf=sdf,
             filters=filters,
             validate=validate
@@ -374,6 +374,38 @@ class TeehrDataFrameBase(ABC):
     ):
         """Write the DataFrame to an iceberg table.
 
+        .. deprecated::
+            Use :meth:`write_to` instead. This method will be removed in a
+            future release.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to write to.
+        write_mode : str, optional
+            The write mode. Options: "create", "append", "overwrite",
+            "create_or_replace". Default is "create_or_replace".
+
+        Returns
+        -------
+        self
+            Returns self for method chaining.
+        """
+        import warnings
+        warnings.warn(
+            "write() is deprecated, use write_to() instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.write_to(table_name=table_name, write_mode=write_mode)
+
+    def write_to(
+        self,
+        table_name: str,
+        write_mode: str = "create_or_replace"
+    ):
+        """Write the DataFrame to an iceberg table.
+
         Parameters
         ----------
         table_name : str
@@ -395,6 +427,14 @@ class TeehrDataFrameBase(ABC):
         ... ).write("location_metrics")
         """
         logger.info(f"Writing to table: {table_name}.")
+
+        # Throw error if table is a core table to prevent accidental overwrites
+        is_core_table = self.ev.table(table_name).is_core_table
+        if is_core_table:
+            raise ValueError(
+                f"Cannot write to core table: {table_name} with this method. "
+                f"Use the load_dataframe() method on the table instead."
+            )
         self._write.to_warehouse(
             source_data=self.to_sdf(),
             table_name=table_name,

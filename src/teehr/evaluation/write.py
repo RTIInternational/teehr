@@ -11,10 +11,11 @@ from teehr.const import REMOTE_CATALOG_NAME
 from teehr.models.filters import TableFilter
 
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
+AUDIT_COLUMNS = ["created_at", "updated_at"]
 
 
 class Write:
-    """Class to handle writing evaluation results to storage."""
+    """Class to handle writing to the warehouse."""
 
     def __init__(self, ev=None):
         """Initialize the Writer with an Evaluation instance.
@@ -47,6 +48,56 @@ class Write:
             FROM {view_name}
         """).createOrReplaceTempView(view_name)
 
+    def _add_timestamps_to_view(
+        self,
+        source_view: str,
+        add_created_at: bool = True,
+        add_updated_at: bool = True
+    ) -> str:
+        """Add timestamp columns to view if they don't exist.
+
+        Parameters
+        ----------
+        source_view : str
+            The name of the source view.
+        add_created_at : bool, optional
+            Whether to add created_at column, by default True.
+        add_updated_at : bool, optional
+            Whether to add updated_at column, by default True.
+
+        Returns
+        -------
+        str
+            The name of the view with timestamps added.
+        """
+        source_columns = self._ev.spark.table(source_view).columns
+        timestamp_view = f"{source_view}_with_timestamps"
+
+        select_parts = ["*"]
+        exclude_parts = []
+
+        if add_created_at:
+            if "created_at" in source_columns:
+                exclude_parts.append("created_at")
+            select_parts.append("current_timestamp() AS created_at")
+
+        if add_updated_at:
+            if "updated_at" in source_columns:
+                exclude_parts.append("updated_at")
+            select_parts.append("current_timestamp() AS updated_at")
+
+        select_sql = ", ".join(select_parts)
+        if exclude_parts:
+            exclude_sql = "EXCEPT(" + ", ".join(exclude_parts) + ")"
+            select_sql = select_sql.replace("*", f"* {exclude_sql}")
+
+        self._ev.sql(f"""
+            SELECT {select_sql}
+            FROM {source_view}
+        """).createOrReplaceTempView(timestamp_view)
+
+        return timestamp_view
+
     def _create_or_replace(
         self,
         source_view: str,
@@ -58,12 +109,15 @@ class Write:
 
         Creates the table if it doesn't exist. Loses table history/snapshots.
         Can change schema if source data has different columns.
+        Sets both created_at and updated_at to current timestamp.
         """
+        timestamp_view = self._add_timestamps_to_view(source_view)
         sql_query = f"""
             CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
-            AS SELECT * FROM {source_view}
+            AS SELECT * FROM {timestamp_view}
         """  # noqa: E501
         self._ev.sql(sql_query)
+        self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
     def _upsert(
         self,
@@ -73,31 +127,42 @@ class Write:
         catalog_name: str,
         namespace_name: str
     ):
-        """Upsert the DataFrame to the specified target in the catalog."""
-        # TODO: Does this do what we want it to do? Should there be a
-        # SELECT first?
-        # Or should it be WHEN MATCHED THEN UPDATE *?
+        """Upsert the DataFrame to the specified target in the catalog.
+
+        For new rows: sets both created_at and updated_at to current timestamp.
+        For existing rows: updates updated_at only, preserves created_at.
+        """
         # Use the <=> operator for null-safe equality comparison
         # so that two null values are considered equal.
         on_sql = " AND ".join(
             [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
         )
+
+        # Add timestamps to source view for new inserts
+        timestamp_view = self._add_timestamps_to_view(source_view)
+
         source_fields = self._ev.spark.table(source_view).columns
+        # Exclude audit columns and uniqueness fields from update fields
+        non_audit_source_fields = [
+            f for f in source_fields if f not in AUDIT_COLUMNS
+        ]
         update_fields = list(
-            set(source_fields)
-            .symmetric_difference(set(uniqueness_fields))
+            set(non_audit_source_fields) - set(uniqueness_fields)
         )
-        update_set_sql = ", ".join(
-            [f"t.{fld} = s.{fld}" for fld in update_fields]
-        )
+        # Build update SET clause: update regular fields and updated_at only
+        update_set_parts = [f"t.{fld} = s.{fld}" for fld in update_fields]
+        update_set_parts.append("t.updated_at = current_timestamp()")
+        update_set_sql = ", ".join(update_set_parts)
+
         sql_query = f"""
             MERGE INTO {catalog_name}.{namespace_name}.{table_name} t
-            USING {source_view} s
+            USING {timestamp_view} s
             ON {on_sql}
             WHEN MATCHED THEN UPDATE SET {update_set_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
         self._ev.sql(sql_query)
+        self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
     def _append(
         self,
@@ -107,19 +172,28 @@ class Write:
         catalog_name: str,
         namespace_name: str
     ):
-        """Append the DataFrame to the specified target in the catalog."""
+        """Append the DataFrame to the specified target in the catalog.
+
+        Only inserts new rows (skips existing). Sets both created_at and
+        updated_at to current timestamp for new rows.
+        """
         # Use the <=> operator for null-safe equality comparison
         # so that two null values are considered equal.
         on_sql = " AND ".join(
             [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
         )
+
+        # Add timestamps to source view for new inserts
+        timestamp_view = self._add_timestamps_to_view(source_view)
+
         sql_query = f"""
             MERGE INTO {catalog_name}.{namespace_name}.{table_name} t
-            USING {source_view} s
+            USING {timestamp_view} s
             ON {on_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
         self._ev.sql(sql_query)
+        self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
     def _insert(
         self,
@@ -133,12 +207,15 @@ class Write:
         This is faster than ``_append`` because it uses a simple
         ``INSERT INTO`` statement instead of ``MERGE INTO``.
         Duplicate rows will be inserted if they exist in the source data.
+        Sets both created_at and updated_at to current timestamp.
         """
+        timestamp_view = self._add_timestamps_to_view(source_view)
         sql_query = f"""
             INSERT INTO {catalog_name}.{namespace_name}.{table_name}
-            SELECT * FROM {source_view}
+            SELECT * FROM {timestamp_view}
         """  # noqa: E501
         self._ev.sql(sql_query)
+        self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
     def _overwrite(
         self,
@@ -151,12 +228,15 @@ class Write:
 
         Table must already exist. Preserves table history - creates new
         snapshot so you can time-travel back to previous data.
+        Sets both created_at and updated_at to current timestamp.
         """
+        timestamp_view = self._add_timestamps_to_view(source_view)
         sql_query = f"""
             INSERT OVERWRITE TABLE {catalog_name}.{namespace_name}.{table_name}
-            SELECT * FROM {source_view}
+            SELECT * FROM {timestamp_view}
         """  # noqa: E501
         self._ev.sql(sql_query)
+        self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
     def to_warehouse(
         self,
@@ -168,6 +248,8 @@ class Write:
         namespace_name: str = None
     ):
         """Write the DataFrame to the specified target in the catalog.
+
+        Skips validation!
 
         Parameters
         ----------
@@ -202,7 +284,7 @@ class Write:
             namespace_name of the active catalog is used.
         """
         if (
-            self._ev.read_only_remote is True and
+            self._ev._read_only_remote is True and
             self._ev.active_catalog.catalog_name == REMOTE_CATALOG_NAME
         ):
             raise ValueError(
@@ -333,7 +415,7 @@ class Write:
         --------
         Preview rows that would be deleted (dry run):
 
-        >>> sdf = ev.write.delete_from(
+        >>> sdf = ev._write.delete_from(
         >>>     table_name="primary_timeseries",
         >>>     filters=["location_id = 'usgs-01234567'"],
         >>>     dry_run=True,
@@ -343,7 +425,7 @@ class Write:
 
         Delete rows and get the count:
 
-        >>> count = ev.write.delete_from(
+        >>> count = ev._write.delete_from(
         >>>     table_name="primary_timeseries",
         >>>     filters=["location_id = 'usgs-01234567'"],
         >>> )
@@ -353,7 +435,7 @@ class Write:
 
         >>> from teehr.models.filters import TableFilter
         >>> from teehr import Operators as ops
-        >>> count = ev.write.delete_from(
+        >>> count = ev._write.delete_from(
         >>>     table_name="primary_timeseries",
         >>>     filters=TableFilter(
         >>>         column="location_id",
@@ -363,7 +445,7 @@ class Write:
         >>> )
         """
         if (
-            self._ev.read_only_remote is True and
+            self._ev._read_only_remote is True and
             self._ev.active_catalog.catalog_name == REMOTE_CATALOG_NAME
         ):
             raise ValueError(
@@ -381,7 +463,7 @@ class Write:
         where_clause = None
         if filters is not None:
             sdf = self._ev.spark.table(full_table_name)
-            validated_filters = self._ev.validate.sdf_filters(
+            validated_filters = self._ev._validate.sdf_filters(
                 sdf=sdf,
                 filters=filters,
                 validate=False
