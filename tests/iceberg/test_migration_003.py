@@ -1,0 +1,157 @@
+import pytest
+import teehr
+from pathlib import Path
+from teehr.utilities import apply_migrations
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_domains_upsert_new(function_scope_test_warehouse):
+    """Test creating a new study."""
+    ev = function_scope_test_warehouse
+
+    migrations_dir = Path(teehr.__file__).parent / "migrations"
+
+    apply_migrations.evolve_catalog_schema(
+        spark=ev.spark,
+        migrations_dir_path=migrations_dir,
+        target_catalog_name=ev._catalog.catalog_name,
+        target_namespace_name=ev._catalog.namespace_name
+    )
+
+    # Units
+    ev.units.add([teehr.Unit(name="t/s", long_name="Unit 1")])
+
+    # Check that new unit is added and can be read back with created_at and updated_at columns
+    sdf = ev.units.filter("long_name = 'Unit 1'").to_sdf()
+
+    # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
+    assert sorted(sdf.columns) == sorted(["name", "long_name", "created_at", "updated_at"])
+    assert sdf.filter("created_at IS NOT NULL").count() == 1
+    assert sdf.filter("updated_at IS NOT NULL").count() == 1
+
+    # Configurations
+    ev.configurations.add([teehr.Configuration(name="conf_1", type="primary", description="Configuration 1")])
+
+    # Check that new configuration is added and can be read back with created_at and updated_at columns
+    sdf = ev.configurations.filter("name = 'conf_1'").to_sdf()
+
+    # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
+    assert sorted(sdf.columns) == sorted(["name", "type", "description", "created_at", "updated_at"])
+    assert sdf.filter("created_at IS NOT NULL").count() == 1
+    assert sdf.filter("updated_at IS NOT NULL").count() == 1
+
+    # Variables
+    ev.variables.add([teehr.Variable(name="var_1", long_name="Variable 1")])
+
+    sdf = ev.variables.filter("long_name = 'Variable 1'").to_sdf()
+
+    # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
+    assert sorted(sdf.columns) == sorted(["name", "long_name", "created_at", "updated_at"])
+    assert sdf.filter("created_at IS NOT NULL").count() == 1
+    assert sdf.filter("updated_at IS NOT NULL").count() == 1
+
+    # Attributes
+    ev.attributes.add([teehr.Attribute(name="attr_1", type="categorical", description="Attribute 1")])
+
+    # Check that new attribute is added and can be read back with created_at and updated_at columns
+    sdf = ev.attributes.filter("name = 'attr_1'").to_sdf()
+
+    # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
+    assert sorted(sdf.columns) == sorted(["name", "type", "description", "created_at", "updated_at"])
+    assert sdf.filter("created_at IS NOT NULL").count() == 1
+    assert sdf.filter("updated_at IS NOT NULL").count() == 1
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_domains_upsert_existing(function_scope_test_warehouse):
+    """Test creating a new study."""
+    ev = function_scope_test_warehouse
+
+    migrations_dir = Path(teehr.__file__).parent / "migrations"
+
+    apply_migrations.evolve_catalog_schema(
+        spark=ev.spark,
+        migrations_dir_path=migrations_dir,
+        target_catalog_name=ev._catalog.catalog_name,
+        target_namespace_name=ev._catalog.namespace_name
+    )
+
+    # Units
+    df = ev.units.filter("name = 'm^3/s'").to_sdf().select("name", "long_name").toPandas()
+    ev._write.to_warehouse(df, "units", "upsert")
+
+    sdf = ev.units.filter("name = 'm^3/s'").to_sdf()
+    assert sorted(sdf.columns) == sorted(["name", "long_name", "created_at", "updated_at"])
+    assert sdf.filter("created_at IS NOT NULL").count() == 0
+    assert sdf.filter("updated_at IS NOT NULL").count() == 1
+
+    # Configurations
+    df = ev.configurations.filter("name = 'usgs_observations'").to_sdf().select("name", "type", "description").toPandas()
+    ev._write.to_warehouse(df, "configurations", "upsert")
+
+    sdf = ev.configurations.filter("name = 'usgs_observations'").to_sdf()
+    assert sorted(sdf.columns) == sorted(["name", "type", "description", "created_at", "updated_at"])
+    assert sdf.filter("created_at IS NOT NULL").count() == 0
+    assert sdf.filter("updated_at IS NOT NULL").count() == 1
+
+    # Variables
+    df = ev.variables.filter("name = 'streamflow_hourly_inst'").to_sdf().select("name", "long_name").toPandas()
+    ev._write.to_warehouse(df, "variables", "upsert")
+
+    sdf = ev.variables.filter("name = 'streamflow_hourly_inst'").to_sdf()
+    assert sorted(sdf.columns) == sorted(["name", "long_name", "created_at", "updated_at"])
+    assert sdf.filter("created_at IS NOT NULL").count() == 0
+    assert sdf.filter("updated_at IS NOT NULL").count() == 1
+
+    # Attributes
+    df = ev.attributes.filter("name = 'drainage_area'").to_sdf().select("name", "type", "description").toPandas()
+    ev._write.to_warehouse(df, "attributes", "upsert")
+
+    sdf = ev.attributes.filter("name = 'drainage_area'").to_sdf()
+    assert sorted(sdf.columns) == sorted(["name", "type", "description", "created_at", "updated_at"])
+    assert sdf.filter("created_at IS NOT NULL").count() == 0
+    assert sdf.filter("updated_at IS NOT NULL").count() == 1
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_locations_migration_003(function_scope_test_warehouse):
+    """Test creating a new study."""
+    ev = function_scope_test_warehouse
+
+    migrations_dir = Path(teehr.__file__).parent / "migrations"
+
+    apply_migrations.evolve_catalog_schema(
+        spark=ev.spark,
+        migrations_dir_path=migrations_dir,
+        target_catalog_name=ev._catalog.catalog_name,
+        target_namespace_name=ev._catalog.namespace_name
+    )
+
+    # Check that properties column exists in locations table
+    sdf = ev.locations.to_sdf()
+    assert "properties" in sdf.columns
+
+    # Check that properties column exists in location_crosswalks table
+    sdf = ev.location_crosswalks.to_sdf()
+    assert "properties" in sdf.columns
+
+    # Check that properties column exists in location_attributes table
+    sdf = ev.location_attributes.to_sdf()
+    assert "properties" in sdf.columns
+
+    # insert a new location with properties and check that it can be read back
+    # start with a dataframe with the new properties column
+    from shapely.geometry import Point
+    df = ev.spark.createDataFrame([{
+        "id": "loc_1",
+        "name": "Location 1",
+        "geometry": Point(0, 0).wkb,
+        "properties": {"key1": "value1", "key2": "value2"}
+    }])
+    ev.locations.load_dataframe(df, write_mode="append")
+
+    sdf = ev.locations.to_sdf()
+    assert "properties" in sdf.columns
+    result = sdf.filter("id = 'loc_1'").select("properties").toPandas().iloc[0]["properties"]
+    assert result == {"key1": "value1", "key2": "value2"}
+
