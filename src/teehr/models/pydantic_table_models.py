@@ -1,4 +1,6 @@
 """Pydantic models for domain table entries."""
+import datetime
+
 from pydantic import BaseModel
 
 
@@ -7,18 +9,7 @@ class TableBaseModel(BaseModel):
 
     Adds a class method to get the field names.
     """
-
-    @classmethod
-    def get_field_names(cls, by_alias=False) -> list[str]:
-        """Get the field names of the model."""
-        field_names = []
-        for k, v in cls.model_fields.items():
-            if by_alias and v.alias:
-                field_names.append(v.alias)
-            else:
-                field_names.append(k)
-
-        return field_names
+    pass
 
 
 class Configuration(TableBaseModel):
@@ -44,7 +35,7 @@ class Variable(TableBaseModel):
 
 
 class Attribute(TableBaseModel):
-    """Variable model."""
+    """Attribute model."""
 
     name: str
     type: str
