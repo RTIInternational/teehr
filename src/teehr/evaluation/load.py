@@ -32,10 +32,10 @@ class Load:
         """
         if ev is not None:
             self._ev = ev
-            self._read = ev.read
-            self._extract = ev.extract
-            self._validate = ev.validate
-            self._write = ev.write
+            self._read = ev._read
+            self._extract = ev._extract
+            self._validate = ev._validate
+            self._write = ev._write
 
     def dataframe(
         self,
@@ -84,24 +84,23 @@ class Load:
         secondary_location_id_field : str, optional
             The name of the secondary location ID field in the dataframe.
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         """
         tbl = self._ev.table(table_name=table_name)
 
+        is_core_table = tbl.is_core_table
         schema_func = tbl.schema_func
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
-        schema = schema_func().to_structtype()
-        flds = [fld.name for fld in schema]
 
         if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
             isinstance(df, pd.DataFrame) and df.empty
@@ -111,42 +110,68 @@ class Load:
                 "No data will be loaded into the table."
             )
             return
-        field_mapping = self._extract._merge_field_mapping(
-            table_fields=flds,
-            field_mapping=field_mapping,
-            constant_field_values=constant_field_values
-        )
-        # Convert the input DataFrame to Spark DataFrame
-        if isinstance(df, gpd.GeoDataFrame):
-            # This is a bit of a workaround due to spark failing when converting
-            # a pd.DataFrame with all null columns. We can pass in a schema, but
-            # first we validate with pandera to ensure all columns are present.
-            # Here we pass in flds to get the correct column order.
-            if field_mapping is not None:
-                df = df.rename(columns=field_mapping)
-            df = schema_func("pandas").validate(df)
-            df = df.to_wkb()
-            df = self._ev.spark.createDataFrame(
-                df[flds], schema=schema
-            )
-        elif isinstance(df, pd.DataFrame):
-            # This is a bit of a workaround due to spark failing when converting
-            # a pd.DataFrame with all null columns. We can pass in a schema, but
-            # first we validate with pandera to ensure all columns are present.
-            # Here we pass in flds to get the correct column order.
-            if field_mapping is not None:
-                df = df.rename(columns=field_mapping)
-            df = schema_func("pandas").validate(df)
-            df = self._ev.spark.createDataFrame(
-                df[flds], schema=schema
-            )
-        elif isinstance(df, ps.DataFrame):
-            if field_mapping is not None:
-                df = df.withColumnsRenamed(field_mapping)
-        elif not isinstance(df, ps.DataFrame):
-            raise TypeError(
-                "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
-            )
+
+        # Remove NaN columns if the dataframe is pandas or geopandas since Spark cannot convert them.
+        # We can add them back later during validation if they are in the schema.
+        if isinstance(df, pd.DataFrame | gpd.GeoDataFrame):
+            if isinstance(df, gpd.GeoDataFrame):
+                df = df.to_wkb()
+            df = df.dropna(axis=1, how="all")
+            df = self._ev.spark.createDataFrame(df)
+
+        # Rename fields in the input dataframe if field_mapping is provided.
+        if field_mapping is not None:
+            if is_core_table:
+                schema = schema_func().to_structtype()
+                field_mapping = self._extract._merge_field_mapping(
+                    table_fields=[fld.name for fld in schema],
+                    field_mapping=field_mapping,
+                    constant_field_values=constant_field_values
+                )
+            df = df.withColumnsRenamed(field_mapping)
+
+
+
+
+        # if isinstance(df, pd.DataFrame | gpd.GeoDataFrame):
+        #     if field_mapping is not None:
+        #         df = df.rename(columns=field_mapping)
+        # elif isinstance(df, ps.DataFrame):
+        #     if field_mapping is not None:
+        #         df = df.withColumnsRenamed(field_mapping)
+        # else:
+        #     raise TypeError(
+        #         "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
+        #     )
+        # # If it is a core table validate and convert to Spark DataFrame,
+        # # otherwise just convert to Spark DataFrame
+        # # Convert the input DataFrame to Spark DataFrame
+        # # This is a bit of a workaround due to spark failing when converting
+        # # a pd.DataFrame with all null columns. We can pass in a schema, but
+        # # first we validate with pandera to ensure all columns are present.
+        # if is_core_table:
+        #     schema = schema_func().to_structtype()
+        #     df = self._ev._validate.dataframe(
+        #         df=df,
+        #         table_schema=schema_func("pandas"),
+        #         add_missing_columns=True,
+        #         strict=True
+        #      )
+        #     if isinstance(df, gpd.GeoDataFrame):
+        #         df = df.to_wkb()
+        #     df = self._ev.spark.createDataFrame(df, schema=schema)
+        # else:
+        #      if isinstance(df, gpd.GeoDataFrame):
+        #         df = df.to_wkb()
+        #         df = self._ev.spark.createDataFrame(df)
+        #      elif isinstance(df, pd.DataFrame):
+        #         df = self._ev.spark.createDataFrame(df)
+        #      elif isinstance(df, ps.DataFrame):
+        #         pass
+        #      else:
+        #         raise TypeError(
+        #             "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
+        #         )
 
         if constant_field_values:
             for field, value in constant_field_values.items():
@@ -164,21 +189,18 @@ class Load:
                 column_name=secondary_location_id_field,
                 prefix=secondary_location_id_prefix,
             )
-        if foreign_keys is not None:
-            validated_df = self._validate.schema_and_data(
-                sdf=df,
+
+        if is_core_table:
+            df = self._validate.dataframe(
+                df=df,
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
                 foreign_keys=foreign_keys,
                 uniqueness_fields=uniqueness_fields
             )
-        else:
-            validated_df = self._validate.schema(
-                df=df,
-                table_schema=schema_func(),
-            )
+
         self._write.to_warehouse(
-            source_data=validated_df,
+            source_data=df,
             table_name=table_name,
             namespace_name=namespace_name,
             catalog_name=catalog_name,
@@ -245,14 +267,14 @@ class Load:
         secondary_location_id_field : str, optional
             The name of the secondary location ID field in the dataframe.
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         update_attrs_table : bool, optional (default: True)
@@ -340,19 +362,14 @@ class Load:
                 )
             self._ev.attributes.add(attr_list)
 
-        if foreign_keys is not None:
-            validated_df = self._validate.schema_and_data(
-                sdf=sdf,
-                table_schema=schema_func(),
-                drop_duplicates=drop_duplicates,
-                foreign_keys=foreign_keys,
-                uniqueness_fields=uniqueness_fields
-            )
-        else:
-            validated_df = self._validate.schema(
-                df=sdf,
-                table_schema=schema_func(),
-            )
+        validated_df = self._validate.dataframe(
+            df=sdf,
+            table_schema=schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=foreign_keys,
+            uniqueness_fields=uniqueness_fields
+        )
+
         self._write.to_warehouse(
             source_data=validated_df,
             table_name=table_name,
@@ -387,14 +404,14 @@ class Load:
             The catalog name to load the data into. The default is None,
             which uses the active catalog of the Evaluation.
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         update_attrs_table : bool, optional (default: True)
@@ -436,22 +453,14 @@ class Load:
                 )
             self._ev.attributes.add(attr_list)
 
-        if (
-            foreign_keys is not None and
-            uniqueness_fields is not None
-        ):
-            validated_df = self._validate.schema_and_data(
-                sdf=sdf,
-                table_schema=schema_func(),
-                drop_duplicates=drop_duplicates,
-                foreign_keys=foreign_keys,
-                uniqueness_fields=uniqueness_fields
-            )
-        else:
-            validated_df = self._validate.schema(
-                df=sdf,
-                table_schema=schema_func(),
-            )
+        validated_df = self._validate.dataframe(
+            df=sdf,
+            table_schema=schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=foreign_keys,
+            uniqueness_fields=uniqueness_fields
+        )
+
         self._write.to_warehouse(
             source_data=validated_df,
             table_name=table_name,

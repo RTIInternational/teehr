@@ -219,7 +219,7 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
 def test_metrics_transforms(module_scope_test_warehouse):
     """Test applying metric transforms (non-bootstrap)."""
     # Define the evaluation object.
-    test_eval = module_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # define metric requiring p,s
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -237,21 +237,21 @@ def test_metrics_transforms(module_scope_test_warehouse):
     mvtd_t.transform = 'log'
 
     # get metrics_df
-    metrics_df_tansformed_e = test_eval.table("joined_timeseries").aggregate(
+    metrics_df_tansformed_e = ev.table("joined_timeseries").aggregate(
         group_by=["primary_location_id", "configuration_name"],
         metrics=[
             kge_t_e,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df_transformed = test_eval.table("joined_timeseries").aggregate(
+    metrics_df_transformed = ev.table("joined_timeseries").aggregate(
         group_by=["primary_location_id", "configuration_name"],
         metrics=[
             kge_t,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df = test_eval.table("joined_timeseries").aggregate(
+    metrics_df = ev.table("joined_timeseries").aggregate(
         group_by=["primary_location_id", "configuration_name"],
         metrics=[
             kge,
@@ -282,17 +282,17 @@ def test_metrics_transforms(module_scope_test_warehouse):
     pearson_e.add_epsilon = True
 
     # ensure we can obtain a divide by zero error
-    sdf = test_eval.table("joined_timeseries").to_sdf()
+    sdf = ev.table("joined_timeseries").to_sdf()
     from pyspark.sql.functions import lit
     sdf = sdf.withColumn("primary_value", lit(100.0))
-    test_eval.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf,
         table_name="joined_timeseries",
         write_mode="create_or_replace",
     )
 
     # get metrics df control and assert divide by zero occurs
-    metrics_df_e_control = test_eval.table("joined_timeseries").aggregate(
+    metrics_df_e_control = ev.table("joined_timeseries").aggregate(
         group_by=["primary_location_id", "configuration_name"],
         metrics=[
             r2,
@@ -303,7 +303,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
 
     # get metrics df test and ensure no divide by zero occurs
-    metrics_df_e_test = test_eval.table("joined_timeseries").aggregate(
+    metrics_df_e_test = ev.table("joined_timeseries").aggregate(
         group_by=["primary_location_id", "configuration_name"],
         metrics=[
             r2_e,
@@ -322,17 +322,17 @@ def test_metrics_transforms(module_scope_test_warehouse):
     pearson_e.add_epsilon = True
 
     # ensure we can obtain a divide by zero error
-    sdf = test_eval.table("joined_timeseries").to_sdf()
+    sdf = ev.table("joined_timeseries").to_sdf()
     from pyspark.sql.functions import lit
     sdf = sdf.withColumn("primary_value", lit(100.0))
-    test_eval.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf,
         table_name="joined_timeseries",
         write_mode="create_or_replace",
     )
 
     # get metrics df control and assert divide by zero occurs
-    metrics_df_e_control = test_eval.table("joined_timeseries").aggregate(
+    metrics_df_e_control = ev.table("joined_timeseries").aggregate(
         group_by=["primary_location_id", "configuration_name"],
         metrics=[
             r2,
@@ -343,7 +343,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
     assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
 
     # get metrics df test and ensure no divide by zero occurs
-    metrics_df_e_test = test_eval.table("joined_timeseries").aggregate(
+    metrics_df_e_test = ev.table("joined_timeseries").aggregate(
         group_by=["primary_location_id", "configuration_name"],
         metrics=[
             r2_e,

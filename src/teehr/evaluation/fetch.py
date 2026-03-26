@@ -57,7 +57,7 @@ class Fetch:
         """
         # Now we have access to the Evaluation object.
         self._ev = ev
-        self._load = ev.load
+        self._load = ev._load
         self.usgs_cache_dir = Path(
             ev.cache_dir,
             const.FETCHING_CACHE_DIR,
@@ -560,8 +560,14 @@ class Fetch:
             "primary_timeseries" or "secondary_timeseries". This is redundant to,
             and takes precedence over timeseries_type, which is deprecated.
         write_mode : str, optional (default: "append")
-            The write mode for the table. Options are "append", "upsert",
-            or "create_or_replace".
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         zonal_weights_filepath : Optional[Union[Path, str]]
             The path to the zonal weights file. If None and calculate_zonal_weights
             is False, the weights file must exist in the cache for the configuration.

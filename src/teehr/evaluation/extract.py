@@ -28,7 +28,7 @@ class Extract:
         ev : Evaluation
             The parent Evaluation instance.
         """
-        self.ev = ev
+        self._ev = ev
 
     @staticmethod
     def _merge_field_mapping(
@@ -160,12 +160,15 @@ class Extract:
                     for field, value in constant_field_values.items():
                         df[field] = value
                 # Validate data types and required fields
-                validated_df = self.ev.validate.schema(
+                validated_df = self._ev._validate.dataframe(
                     df=df,
-                    table_schema=table_schema
+                    table_schema=table_schema,
+                    strict=False,
+                    add_missing_columns=True,
+                    drop_duplicates=False,
                 )
                 # Write to cache as parquet
-                self.ev.write.to_cache(
+                self._ev._write.to_cache(
                     source_data=validated_df,
                     cache_filepath=out_filepath,
                     write_schema=write_schema
@@ -195,12 +198,15 @@ class Extract:
                         for field, value in constant_field_values.items():
                             df[field] = value
                     # Validate data types and required fields
-                    validated_df = self.ev.validate.schema(
+                    validated_df = self._ev._validate.dataframe(
                         df=df,
-                        table_schema=table_schema
+                        table_schema=table_schema,
+                        strict=False,
+                        add_missing_columns=True,
+                        drop_duplicates=False,
                     )
                     # Write to cache as parquet
-                    self.ev.write.to_cache(
+                    self._ev._write.to_cache(
                         source_data=validated_df,
                         cache_filepath=out_filepath,
                         write_schema=write_schema
@@ -220,12 +226,15 @@ class Extract:
                 for field, value in constant_field_values.items():
                     df[field] = value
             # Validate data types and required fields
-            validated_df = self.ev.validate.schema(
+            validated_df = self._ev._validate.dataframe(
                 df=df,
-                table_schema=table_schema
+                table_schema=table_schema,
+                strict=True,
+                add_missing_columns=True,
+                drop_duplicates=False,
             )
             # Write to cache as parquet
-            self.ev.write.to_cache(
+            self._ev._write.to_cache(
                 source_data=validated_df,
                 cache_filepath=out_filepath,
                 write_schema=write_schema

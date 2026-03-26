@@ -3,10 +3,11 @@ import logging
 from typing import List, Dict, Union
 
 import pyspark.sql as ps
+import pandas as pd
+import geopandas as gpd
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
 from pandera.pandas import DataFrameSchema as PandasDataFrameSchema
 from pyspark.sql.functions import lit
-import pandas as pd
 
 from teehr.models.filters import TableFilter
 from teehr.querying.filter_format import (
@@ -33,43 +34,9 @@ class Validate:
         if ev is not None:
             self._ev = ev
 
-    def _enforce_foreign_keys(
-        self,
-        sdf: ps.DataFrame,
-        foreign_keys: List[Dict[str, str]]
-    ):
-        """Enforce foreign keys relationships on the timeseries tables."""
-        if foreign_keys is None:
-            raise ValueError("foreign_keys cannot be None.")
-
-        if len(foreign_keys) > 0:
-            logger.info(
-                "Enforcing foreign key constraints."
-            )
-        sdf.createOrReplaceTempView("temp_table")
-        for fk in foreign_keys:
-            sql = f"""
-                SELECT t.* from temp_table t
-                LEFT ANTI JOIN {fk['domain_table']} d
-                ON t.{fk['column']} = d.{fk['domain_column']}
-            """
-            result_sdf = self._ev.sql(sql)
-            self._ev.spark.catalog.dropTempView(fk["domain_table"])
-            if not result_sdf.isEmpty():
-                self._ev.spark.catalog.dropTempView("temp_table")
-                msg = (
-                    f"Foreign key constraint violation: "
-                    f"A {fk['column']} entry is not found in "
-                    f"the {fk['domain_column']} column in {fk['domain_table']}"
-                    # f"\nSample offending records:\n" + result_sdf.show(truncate=False)
-                )
-                logger.info(msg)
-                raise ValueError(msg)
-        self._ev.spark.catalog.dropTempView("temp_table")
-
     @staticmethod
-    def schema(
-        df: ps.DataFrame | pd.DataFrame,
+    def _pandera_validation(
+        df: ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame,
         table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
     ) -> ps.DataFrame | pd.DataFrame:
         """Validate the DataFrame against the provided schema.
@@ -79,29 +46,29 @@ class Validate:
 
         Parameters
         ----------
-        df : ps.DataFrame | pd.DataFrame
-            The Spark or Pandas DataFrame to validate.
+        df : ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The Spark, Pandas, or GeoPandas DataFrame to validate.
         table_schema : SparkDataFrameSchema | PandasDataFrameSchema
             The schema to validate against.
 
         Returns
         -------
-        ps.DataFrame | pd.DataFrame
-            The validated Spark or Pandas DataFrame.
+        ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The validated Spark, Pandas, or GeoPandas DataFrame.
 
         Examples
         --------
         Validate a PySpark DataFrame against the primary timeseries schema:
 
         >>> from teehr.models.pandera_dataframe_schemas import primary_timeseries_schema
-        >>> validated_sdf = ev.validate.schema(
+        >>> validated_sdf = ev._validate._pandera_validation(
         ...     df=raw_sdf,
         ...     table_schema=primary_timeseries_schema()
         ... )
 
         For Pandas DataFrames:
 
-        >>> validated_pdf = ev.validate.schema(
+        >>> validated_pdf = ev._validate._pandera_validation(
         ...     df=raw_pdf,
         ...     table_schema=primary_timeseries_schema(type="pandas")
         ... )
@@ -114,9 +81,9 @@ class Validate:
                     " table_schema is a Spark DataFrameSchema."
                 )
         elif isinstance(table_schema, PandasDataFrameSchema):
-            if not isinstance(df, pd.DataFrame):
+            if not isinstance(df, pd.DataFrame | gpd.GeoDataFrame):
                 raise ValueError(
-                    "df must be a Pandas DataFrame if"
+                    "df must be a Pandas or GeoPandas DataFrame if"
                     " table_schema is a Pandas DataFrameSchema."
                 )
         else:
@@ -242,16 +209,183 @@ class Validate:
         sdf = tbl.to_sdf()
         return self.sdf_filters(sdf, filters, validate)
 
-    def schema_and_data(
+    def _enforce_foreign_keys(
         self,
         sdf: ps.DataFrame,
-        table_schema: SparkDataFrameSchema,
-        foreign_keys: List[Dict[str, str]],
+        foreign_keys: List[Dict[str, str]]
+    ):
+        """Enforce foreign key relationships.
+
+        Parameters
+        ----------
+        sdf : ps.DataFrame
+            The Spark DataFrame to enforce foreign key relationships on.
+        foreign_keys : List[Dict[str, str]]
+            A list of dictionaries specifying the foreign key relationships to enforce.
+            Each dictionary should have the following keys:
+                - column: The name of the column in sdf that is the foreign key.
+                - domain_table: The name of the domain table to check against.
+                - domain_column: The name of the column in the domain table that is the primary key.
+
+        Raises
+        ------
+        ValueError
+            If any foreign key constraint is violated, a ValueError is raised with details about the violation.
+        """
+        if not isinstance(sdf, ps.DataFrame):
+            raise ValueError("sdf must be a Spark DataFrame.")
+
+        if not isinstance(foreign_keys, List):
+            raise ValueError("foreign_keys must be a list of dictionaries.")
+
+        if foreign_keys is None:
+            raise ValueError("foreign_keys cannot be None.")
+
+        if len(foreign_keys) > 0:
+            logger.info(
+                "Enforcing foreign key constraints."
+            )
+        sdf.createOrReplaceTempView("temp_table")
+        for fk in foreign_keys:
+            sql = f"""
+                SELECT t.* from temp_table t
+                LEFT ANTI JOIN {fk['domain_table']} d
+                ON t.{fk['column']} = d.{fk['domain_column']}
+            """
+            result_sdf = self._ev.sql(sql)
+            self._ev.spark.catalog.dropTempView(fk["domain_table"])
+            if not result_sdf.isEmpty():
+                self._ev.spark.catalog.dropTempView("temp_table")
+                msg = (
+                    f"Foreign key constraint violation: "
+                    f"A {fk['column']} entry is not found in "
+                    f"the {fk['domain_column']} column in {fk['domain_table']}"
+                    # f"\nSample offending records:\n" + result_sdf.show(truncate=False)
+                )
+                logger.info(msg)
+                raise ValueError(msg)
+        self._ev.spark.catalog.dropTempView("temp_table")
+
+    def _add_missing_fields(
+        self,
+        df: pd.DataFrame | ps.DataFrame | gpd.GeoDataFrame,
+        table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
+    ) -> pd.DataFrame | ps.DataFrame | gpd.GeoDataFrame:
+        """Add missing nullable fields from the schema to the DataFrame.
+
+        Only adds columns that are nullable in the schema. Raises an error
+        if a required (non-nullable) column is missing.
+
+        Parameters
+        ----------
+        df : pd.DataFrame | ps.DataFrame | gpd.GeoDataFrame
+            The Pandas, Spark, or GeoPandas DataFrame to add missing fields to.
+        table_schema : SparkDataFrameSchema | PandasDataFrameSchema
+            The schema containing column definitions with nullability info.
+
+        Returns
+        -------
+        pd.DataFrame | ps.DataFrame | gpd.GeoDataFrame
+            The DataFrame with missing nullable fields added.
+
+        Raises
+        ------
+        ValueError
+            If a required (non-nullable) column is missing from the DataFrame.
+        """
+        schema_cols = table_schema.columns
+        missing_required = []
+
+        for col_name, col_schema in schema_cols.items():
+            if col_name not in df.columns:
+                # Check if column is nullable
+                is_nullable = getattr(col_schema, 'nullable', True)
+                if is_nullable:
+                    if isinstance(df, ps.DataFrame):
+                        df = df.withColumn(col_name, lit(None))
+                    else:
+                        df[col_name] = None
+                else:
+                    missing_required.append(col_name)
+
+        if missing_required:
+            raise ValueError(
+                f"Required (non-nullable) column(s) {missing_required} "
+                "are missing from the DataFrame."
+            )
+
+        return df
+
+    def _remove_extra_fields(
+        self,
+        df: ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame,
+        columns: List[str]
+    ) -> ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame:
+        """Enforce strict schema by selecting only the columns in the schema.
+
+        Parameters
+        ----------
+        df : ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The Pandas, Spark, or GeoPandas DataFrame to enforce strict schema on.
+        columns : List[str]
+            The list of columns to select from the DataFrame.
+
+        Returns
+        -------
+        ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The DataFrame with only the columns in the schema.
+        """
+        missing_cols = [col for col in columns if col not in df.columns]
+        if len(missing_cols) > 0:
+            raise ValueError(
+                f"The field(s) {missing_cols} are missing from the DataFrame, "
+                "and are required by the schema."
+            )
+
+        if isinstance(df, ps.DataFrame):
+            return df.select(*columns)
+
+        return df[columns]
+
+    def _drop_duplicates(
+        self,
+        df: ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame,
+        uniqueness_fields: List[str]
+    ) -> ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame:
+        """Drop duplicate rows based on the uniqueness fields.
+
+        Parameters
+        ----------
+        df : ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The Pandas, Spark, or GeoPandas DataFrame to drop duplicates from.
+        uniqueness_fields : List[str]
+            The fields that uniquely identify a record.
+
+        Returns
+        -------
+        ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The DataFrame with duplicate rows dropped.
+        """
+        if uniqueness_fields is None:
+            raise ValueError(
+                "uniqueness_fields must be provided"
+                " if drop_duplicates is True."
+            )
+        if isinstance(df, ps.DataFrame):
+            return df.drop_duplicates(subset=uniqueness_fields)
+
+        return df.drop_duplicates(subset=uniqueness_fields)
+
+    def dataframe(
+        self,
+        df: ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame,
+        table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
         strict: bool = True,
-        add_missing_columns: bool = False,
+        add_missing_columns: bool = True,
         drop_duplicates: bool = True,
         uniqueness_fields: List[str] = None,
-    ) -> ps.DataFrame:
+        foreign_keys: List[Dict[str, str]] = None,
+    ) -> ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame:
         """Validate the DataFrame against the table schema.
 
         This checks data types, fields, and nullability using
@@ -261,18 +395,18 @@ class Validate:
 
         Parameters
         ----------
-        sdf : ps.DataFrame
-            The Spark DataFrame to enforce the schema on.
-        table_schema : SparkDataFrameSchema
+        df : ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The Spark, Pandas, or GeoPandas DataFrame to enforce the schema on.
+        table_schema : SparkDataFrameSchema | PandasDataFrameSchema
             The schema to enforce.
-        foreign_keys : List[Dict[str, str]]
+        foreign_keys : List[Dict[str, str]], optional
             The foreign key relationships to enforce.
         strict : bool, optional
             Whether to strictly enforce the schema by including only the
             columns in the schema. The default is True.
         add_missing_columns : bool, optional
             Whether to add missing columns from the schema with null values.
-            The default is False.
+            The default is True.
         drop_duplicates : bool, optional
             Whether to drop duplicate rows based on the uniqueness_fields.
             The default is True.
@@ -282,44 +416,29 @@ class Validate:
 
         Returns
         -------
-        ps.DataFrame
-            The Spark DataFrame with the enforced schema.
+        ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
+            The Spark, Pandas, or GeoPandas DataFrame with the enforced schema.
         """
         logger.info("Enforcing warehouse schema.")
 
         schema_cols = table_schema.columns.keys()
 
-        # Add missing columns
+        # Add missing nullable columns (raises if required columns are missing)
         if add_missing_columns:
-            for col_name in schema_cols:
-                if col_name not in sdf.columns:
-                    sdf = sdf.withColumn(col_name, lit(None))
+            df = self._add_missing_fields(df, table_schema)
 
         if strict:
-            # First check to make sure schema col keys are in the dataframe
-            # if not raise an error. If they are, select only those columns
-            # to enforce the schema.
-            missing_cols = [col for col in schema_cols if col not in sdf.columns]
-            if len(missing_cols) > 0:
-                raise ValueError(
-                    f"The field(s) {missing_cols} are missing from the DataFrame, "
-                    "and are required by the schema."
-                )
-            sdf = sdf.select(*schema_cols)
+            df = self._remove_extra_fields(df, schema_cols)
 
         if drop_duplicates:
-            if uniqueness_fields is None:
-                raise ValueError(
-                    "uniqueness_fields must be provided"
-                    " if drop_duplicates is True."
-                )
-            sdf = sdf.dropDuplicates(subset=uniqueness_fields)
+            df = self._drop_duplicates(df, uniqueness_fields)
 
-        validated_df = self.schema(sdf, table_schema)
+        df = self._pandera_validation(df, table_schema)
 
-        self._enforce_foreign_keys(
-            sdf=validated_df,
-            foreign_keys=foreign_keys
-        )
+        if foreign_keys is not None:
+            self._enforce_foreign_keys(
+                sdf=df,
+                foreign_keys=foreign_keys
+            )
 
-        return validated_df
+        return df

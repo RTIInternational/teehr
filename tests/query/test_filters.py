@@ -16,7 +16,7 @@ from teehr.models.filters import TableFilter
 def test_filtering_a_new_table(function_scope_two_location_warehouse):
     """Test filtering a new table with TableFilter."""
     ev = function_scope_two_location_warehouse
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         table_name="new_attributes",
         source_data=ev.attributes.to_sdf(),
         write_mode="create_or_replace"

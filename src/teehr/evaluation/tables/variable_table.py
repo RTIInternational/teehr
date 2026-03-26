@@ -59,6 +59,6 @@ class VariableTable(DomainTable):
         >>>     name="streamflow_hourly_inst",
         >>>     long_name="Instantaneous streamflow"
         >>> )
-        >>> ev.load.add_variable(variable)
+        >>> ev.variables.add(variable)
         """
         self._add(variable)

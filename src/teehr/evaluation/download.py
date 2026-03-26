@@ -29,7 +29,7 @@ class Download:
             Spark session, and cache directories.
         """
         self._ev = ev
-        self._load = ev.load
+        self._load = ev._load
         self.api_base_url = "https://api.teehr.rtiamanzi.org"
         self.verify_ssl = True
         self.timeout = self.DEFAULT_TIMEOUT

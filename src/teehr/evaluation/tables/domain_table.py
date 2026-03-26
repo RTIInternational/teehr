@@ -1,11 +1,15 @@
 """Domain table class."""
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.models.pydantic_table_models import TableBaseModel
-from teehr.models.filters import TableFilter
-from teehr.models.str_enum import StrEnum
+from teehr.loading.utils import single_file_to_dataframe
 import pandas as pd
 from typing import List, Union
+from pathlib import Path
 import logging
+from teehr.loading.utils import (
+    validate_input_is_csv,
+    validate_input_is_parquet
+)
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +26,7 @@ class DomainTable(BaseTable):
     strict_validation = True
     validate_filter_field_types = True
     foreign_keys = None
-    extraction_func = None
+    extraction_func = staticmethod(single_file_to_dataframe)
 
     def __init__(
         self,
@@ -48,6 +52,7 @@ class DomainTable(BaseTable):
             active catalog name.
         """
         super().__init__(ev, table_name, namespace_name, catalog_name)
+        self._load = ev._load
 
     def _add(
         self,
@@ -78,11 +83,15 @@ class DomainTable(BaseTable):
             pd.DataFrame([o.model_dump() for o in obj])
         )
 
-        validated_df = self._ev.validate.schema(
-            df=sdf.cache(),
+        validated_df = self._ev._validate.dataframe(
+            df=sdf,
             table_schema=self.schema_func(),
+            strict=self.strict_validation,
+            add_missing_columns=True,
+            drop_duplicates=False,
         )
-        self._ev.write.to_warehouse(
+
+        self._ev._write.to_warehouse(
             source_data=validated_df,
             table_name=self.table_name,
             catalog_name=self.catalog_name,
@@ -104,3 +113,159 @@ class DomainTable(BaseTable):
             "The add_geometry() method is not implemented for Domain Tables"
             " because they do not contain location information."
         )
+
+    def load_parquet(
+        self,
+        in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = None,
+        pattern: str = "**/*.parquet",
+        field_mapping: dict = None,
+        write_mode: str = "append",
+        drop_duplicates: bool = True,
+        **kwargs
+    ):
+        """Import location attributes from parquet file format.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            The input file or directory path.
+            Parquet file format.
+        namespace_name : str, optional
+            The namespace name to write to, by default None, which means the
+            namespace_name of the active catalog is used.
+        catalog_name : str, optional
+            The catalog name to write to, by default None, which means the
+            catalog_name of the active catalog is used.
+        extraction_function : callable, optional
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
+        pattern : str, optional
+            The glob pattern to use when searching for files in a directory.
+            Default is '**/*.parquet' to search for all parquet files recursively.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        write_mode : str, optional (default: "append")
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        **kwargs
+            Additional keyword arguments are passed to pd.read_csv()
+            or pd.read_parquet().
+
+        Notes
+        -----
+        The TEEHR Location Crosswalk table schema includes fields:
+
+        - primary_location_id
+        - secondary_location_id
+        """
+        validate_input_is_parquet(in_path)
+        extraction_function = extraction_function or self.extraction_func
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.file(
+            in_path=in_path,
+            pattern=pattern,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
+            field_mapping=field_mapping,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
+            **kwargs
+        )
+        self._load_sdf()
+
+    def load_csv(
+        self,
+        in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = None,
+        pattern: str = "**/*.csv",
+        field_mapping: dict = None,
+        write_mode: str = "append",
+        drop_duplicates: bool = True,
+        **kwargs
+    ):
+        """Import location attributes from CSV file format.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            The input file or directory path.
+            CSV file format.
+        namespace_name : str, optional
+            The namespace name to write to, by default None, which means the
+            namespace_name of the active catalog is used.
+        catalog_name : str, optional
+            The catalog name to write to, by default None, which means the
+            catalog_name of the active catalog is used.
+        extraction_function : callable, optional
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
+        pattern : str, optional
+            The glob pattern to use when searching for files in a directory.
+            Default is '**/*.csv' to search for all CSV files recursively.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        write_mode : str, optional (default: "append")
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        **kwargs
+            Additional keyword arguments are passed to pd.read_csv()
+            or pd.read_parquet().
+
+        Notes
+        -----
+        The TEEHR Location Crosswalk table schema includes fields:
+
+        - primary_location_id
+        - secondary_location_id
+        """ # noqa
+        validate_input_is_csv(in_path)
+        extraction_function = extraction_function or self.extraction_func
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.file(
+            in_path=in_path,
+            pattern=pattern,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
+            field_mapping=field_mapping,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
+            **kwargs
+        )
+        self._load_sdf()

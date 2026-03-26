@@ -239,7 +239,7 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
         "flows_1030500.parquet"
     )
     sdf = ev.spark.read.parquet(joined_timeseries_filepath.as_posix())
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf,
         table_name="joined_timeseries",
         write_mode="create_or_replace"
@@ -249,7 +249,7 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
     sdf = ev.spark.read.parquet(
         Path(test_study_data_dir, "geo", "gages.parquet").as_posix()
     )
-    ev.write.to_warehouse(
+    ev._write.to_warehouse(
         source_data=sdf,
         table_name="locations",
         write_mode="create_or_replace"
