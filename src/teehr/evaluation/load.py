@@ -97,11 +97,10 @@ class Load:
         """
         tbl = self._ev.table(table_name=table_name)
 
+        is_core_table = tbl.is_core_table
         schema_func = tbl.schema_func
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
-        schema = schema_func().to_structtype()
-        flds = [fld.name for fld in schema]
 
         if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
             isinstance(df, pd.DataFrame) and df.empty
@@ -111,48 +110,68 @@ class Load:
                 "No data will be loaded into the table."
             )
             return
-        field_mapping = self._extract._merge_field_mapping(
-            table_fields=flds,
-            field_mapping=field_mapping,
-            constant_field_values=constant_field_values
-        )
-        # Convert the input DataFrame to Spark DataFrame
-        if isinstance(df, gpd.GeoDataFrame):
-            # This is a bit of a workaround due to spark failing when converting
-            # a pd.DataFrame with all null columns. We can pass in a schema, but
-            # first we validate with pandera to ensure all columns are present.
-            # Here we pass in flds to get the correct column order.
-            if field_mapping is not None:
-                df = df.rename(columns=field_mapping)
-            df = self._ev._validate.dataframe(
-                df=df,
-                table_schema=schema_func("pandas"),
-                add_missing_columns=True,
-                strict=True
-            )
-            df = df.to_wkb()
-            df = self._ev.spark.createDataFrame(df, schema=schema)
-        elif isinstance(df, pd.DataFrame):
-            # This is a bit of a workaround due to spark failing when converting
-            # a pd.DataFrame with all null columns. We can pass in a schema, but
-            # first we validate with pandera to ensure all columns are present.
-            # Here we pass in flds to get the correct column order.
-            if field_mapping is not None:
-                df = df.rename(columns=field_mapping)
-            df = self._ev._validate.dataframe(
-                df=df,
-                table_schema=schema_func("pandas"),
-                add_missing_columns=True,
-                strict=True
-            )
-            df = self._ev.spark.createDataFrame(df, schema=schema)
-        elif isinstance(df, ps.DataFrame):
-            if field_mapping is not None:
-                df = df.withColumnsRenamed(field_mapping)
-        elif not isinstance(df, ps.DataFrame):
-            raise TypeError(
-                "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
-            )
+
+        # Remove NaN columns if the dataframe is pandas or geopandas since Spark cannot convert them.
+        # We can add them back later during validation if they are in the schema.
+        if isinstance(df, pd.DataFrame | gpd.GeoDataFrame):
+            if isinstance(df, gpd.GeoDataFrame):
+                df = df.to_wkb()
+            df = df.dropna(axis=1, how="all")
+            df = self._ev.spark.createDataFrame(df)
+
+        # Rename fields in the input dataframe if field_mapping is provided.
+        if field_mapping is not None:
+            if is_core_table:
+                schema = schema_func().to_structtype()
+                field_mapping = self._extract._merge_field_mapping(
+                    table_fields=[fld.name for fld in schema],
+                    field_mapping=field_mapping,
+                    constant_field_values=constant_field_values
+                )
+            df = df.withColumnsRenamed(field_mapping)
+
+
+
+
+        # if isinstance(df, pd.DataFrame | gpd.GeoDataFrame):
+        #     if field_mapping is not None:
+        #         df = df.rename(columns=field_mapping)
+        # elif isinstance(df, ps.DataFrame):
+        #     if field_mapping is not None:
+        #         df = df.withColumnsRenamed(field_mapping)
+        # else:
+        #     raise TypeError(
+        #         "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
+        #     )
+        # # If it is a core table validate and convert to Spark DataFrame,
+        # # otherwise just convert to Spark DataFrame
+        # # Convert the input DataFrame to Spark DataFrame
+        # # This is a bit of a workaround due to spark failing when converting
+        # # a pd.DataFrame with all null columns. We can pass in a schema, but
+        # # first we validate with pandera to ensure all columns are present.
+        # if is_core_table:
+        #     schema = schema_func().to_structtype()
+        #     df = self._ev._validate.dataframe(
+        #         df=df,
+        #         table_schema=schema_func("pandas"),
+        #         add_missing_columns=True,
+        #         strict=True
+        #      )
+        #     if isinstance(df, gpd.GeoDataFrame):
+        #         df = df.to_wkb()
+        #     df = self._ev.spark.createDataFrame(df, schema=schema)
+        # else:
+        #      if isinstance(df, gpd.GeoDataFrame):
+        #         df = df.to_wkb()
+        #         df = self._ev.spark.createDataFrame(df)
+        #      elif isinstance(df, pd.DataFrame):
+        #         df = self._ev.spark.createDataFrame(df)
+        #      elif isinstance(df, ps.DataFrame):
+        #         pass
+        #      else:
+        #         raise TypeError(
+        #             "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
+        #         )
 
         if constant_field_values:
             for field, value in constant_field_values.items():
@@ -171,16 +190,17 @@ class Load:
                 prefix=secondary_location_id_prefix,
             )
 
-        validated_df = self._validate.dataframe(
-            df=df,
-            table_schema=schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=foreign_keys,
-            uniqueness_fields=uniqueness_fields
-        )
+        if is_core_table:
+            df = self._validate.dataframe(
+                df=df,
+                table_schema=schema_func(),
+                drop_duplicates=drop_duplicates,
+                foreign_keys=foreign_keys,
+                uniqueness_fields=uniqueness_fields
+            )
 
         self._write.to_warehouse(
-            source_data=validated_df,
+            source_data=df,
             table_name=table_name,
             namespace_name=namespace_name,
             catalog_name=catalog_name,

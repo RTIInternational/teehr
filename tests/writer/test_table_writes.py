@@ -278,10 +278,7 @@ def test_table_delete_method(function_scope_evaluation_template):
     """Test the delete() method on a table instance."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
+    schema = ev.units.schema_func().to_structtype()
 
     sdf = ev.spark.createDataFrame(
         data=[
@@ -290,9 +287,8 @@ def test_table_delete_method(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev._write.to_warehouse(
-        source_data=sdf.toPandas(),
-        table_name="units",
+    ev.units.load_dataframe(
+        df=sdf.toPandas(),
         write_mode="append",
     )
 
@@ -315,10 +311,7 @@ def test_table_delete_method_dry_run(function_scope_evaluation_template):
     """Test the delete() dry_run on a table instance."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
+    schema = ev.units.schema_func().to_structtype()
 
     sdf = ev.spark.createDataFrame(
         data=[
@@ -327,9 +320,8 @@ def test_table_delete_method_dry_run(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev._write.to_warehouse(
-        source_data=sdf.toPandas(),
-        table_name="units",
+    ev.units.load_dataframe(
+        df=sdf.toPandas(),
         write_mode="append",
     )
 
@@ -355,10 +347,7 @@ def test_table_delete_method_no_filter(function_scope_evaluation_template):
     """Test delete() on a table instance with no filter deletes all rows."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
+    schema = ev.units.schema_func().to_structtype()
 
     sdf = ev.spark.createDataFrame(
         data=[
@@ -367,9 +356,8 @@ def test_table_delete_method_no_filter(function_scope_evaluation_template):
         ],
         schema=schema
     )
-    ev._write.to_warehouse(
-        source_data=sdf.toPandas(),
-        table_name="units",
+    ev.units.load_dataframe(
+        df=sdf.toPandas(),
         write_mode="append",
     )
 
@@ -402,9 +390,8 @@ def test_drop_user_table(function_scope_evaluation_template):
     )
 
     # Write a user-created table
-    ev._write.to_warehouse(
-        source_data=sdf,
-        table_name="my_user_table",
+    ev.table("my_user_table").load_dataframe(
+        df=sdf,
         write_mode="create_or_replace",
     )
 
@@ -434,9 +421,8 @@ def test_drop_table_via_evaluation(function_scope_evaluation_template):
         schema=schema
     )
 
-    ev._write.to_warehouse(
-        source_data=sdf,
-        table_name="my_drop_test_table",
+    ev.table("my_drop_test_table").load_dataframe(
+        df=sdf,
         write_mode="create_or_replace",
     )
 
@@ -484,3 +470,35 @@ def test_is_core_table_property(function_scope_evaluation_template):
     # User-created table names should return False
     assert ev.table("my_custom_results").is_core_table is False
     assert ev.table("joined_timeseries_materialized").is_core_table is False
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_load_arbitrary_dataframe_to_new_table(function_scope_evaluation_template):
+    """Test loading an arbitrary dataframe to a new table via ev.table().load_dataframe()."""
+    ev = function_scope_evaluation_template
+
+    import pandas as pd
+
+    # Create an arbitrary dataframe with custom columns
+    df = pd.DataFrame({
+        "id": [1, 2, 3],
+        "name": ["alpha", "beta", "gamma"],
+        "value": [10.5, 20.0, 30.5],
+        "category": ["A", "B", "A"]
+    })
+
+    # Load to a new arbitrary table (not a core table)
+    ev.table("my_arbitrary_results").load_dataframe(
+        df=df,
+        write_mode="create_or_replace"
+    )
+
+    # Verify the table was created and data was written
+    result_df = ev.table("my_arbitrary_results").to_pandas()
+
+    assert len(result_df) == 3
+    assert set(result_df.columns) == {"id", "name", "value", "category"}
+    assert list(result_df["name"]) == ["alpha", "beta", "gamma"]
+
+    # Verify it's not a core table
+    assert ev.table("my_arbitrary_results").is_core_table is False

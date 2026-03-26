@@ -67,6 +67,7 @@ class BaseTable(TeehrDataFrameBase):
         """
         super().__init__(ev)
         self._read = ev._read
+        self._load = ev._load
 
         # Instance-level attributes for namespace/catalog
         self.namespace_name = None

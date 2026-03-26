@@ -164,7 +164,7 @@ class Extract:
                     df=df,
                     table_schema=table_schema,
                     strict=False,
-                    add_missing_columns=False,
+                    add_missing_columns=True,
                     drop_duplicates=False,
                 )
                 # Write to cache as parquet
@@ -202,7 +202,7 @@ class Extract:
                         df=df,
                         table_schema=table_schema,
                         strict=False,
-                        add_missing_columns=False,
+                        add_missing_columns=True,
                         drop_duplicates=False,
                     )
                     # Write to cache as parquet
@@ -229,8 +229,8 @@ class Extract:
             validated_df = self._ev._validate.dataframe(
                 df=df,
                 table_schema=table_schema,
-                strict=False,
-                add_missing_columns=False,
+                strict=True,
+                add_missing_columns=True,
                 drop_duplicates=False,
             )
             # Write to cache as parquet
