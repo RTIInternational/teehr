@@ -166,7 +166,7 @@ class Load:
             )
 
         validated_df = self._validate.dataframe(
-            sdf=df,
+            df=df,
             table_schema=schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=foreign_keys,
@@ -337,7 +337,7 @@ class Load:
             self._ev.attributes.add(attr_list)
 
         validated_df = self._validate.dataframe(
-            sdf=sdf,
+            df=sdf,
             table_schema=schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=foreign_keys,
@@ -427,9 +427,8 @@ class Load:
                 )
             self._ev.attributes.add(attr_list)
 
-
         validated_df = self._validate.dataframe(
-            sdf=sdf,
+            df=sdf,
             table_schema=schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=foreign_keys,

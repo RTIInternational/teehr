@@ -191,7 +191,7 @@ class BaseTable(TeehrDataFrameBase):
         >>> ).validate(drop_duplicates=True)
         """
         self._ev._validate.dataframe(
-            sdf=self.to_sdf(),
+            df=self.to_sdf(),
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=self.foreign_keys,

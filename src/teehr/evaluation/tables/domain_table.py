@@ -82,7 +82,7 @@ class DomainTable(BaseTable):
             pd.DataFrame([o.model_dump() for o in obj])
         )
 
-        validated_df = self.ev._validate.dataframe(
+        validated_df = self._ev._validate.dataframe(
             df=sdf,
             table_schema=self.schema_func(),
             strict=self.strict_validation,

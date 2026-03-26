@@ -429,7 +429,7 @@ class TeehrDataFrameBase(ABC):
         logger.info(f"Writing to table: {table_name}.")
 
         # Throw error if table is a core table to prevent accidental overwrites
-        is_core_table = self.ev.table(table_name).is_core_table
+        is_core_table = self._ev.table(table_name).is_core_table
         if is_core_table:
             raise ValueError(
                 f"Cannot write to core table: {table_name} with this method. "

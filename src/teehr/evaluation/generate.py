@@ -52,7 +52,7 @@ class GeneratedTimeSeriesBasemodel:
                 " Must be one of: primary_timeseries, secondary_timeseries"
             )
         validated_df = self._ev._validate.dataframe(
-            sdf=self.sdf,
+            df=self.sdf,
             table_schema=tbl.schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=tbl.foreign_keys,
