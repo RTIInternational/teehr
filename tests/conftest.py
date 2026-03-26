@@ -12,6 +12,17 @@ from teehr.utilities.import_evaluation import update_metadata_paths
 from tests.evaluation_test_class import TestEvaluation
 
 
+def _cleanup_spark(ev):
+    """Drop all temporary views and clear the Spark cache."""
+    temp_views = ev.spark.sql("SHOW VIEWS").filter("isTemporary = true").collect()
+    for view in temp_views:
+        try:
+            ev.spark.catalog.dropTempView(view.viewName)
+        except Exception:
+            pass  # View may already be dropped
+    ev.spark.catalog.clearCache()
+
+
 @pytest.fixture(scope="session")
 def spark_shared_session():
     """Session-level Spark session shared across all tests.
@@ -28,60 +39,64 @@ def spark_shared_session():
 def function_scope_two_location_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
     tar_file = test_data_dir / "two_location_test_warehouse.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "two_location_test_warehouse",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="function")
 def function_scope_small_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
     tar_file = test_data_dir / "ensemble_test_warehouse_small.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "ensemble_test_warehouse_small",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="function")
 def function_scope_large_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
     tar_file = test_data_dir / "ensemble_test_warehouse_large.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "ensemble_test_warehouse_large",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="function")
 def function_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test warehouse once per test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
-    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
+    tar_file = test_data_dir / "three_location_test_warehouse.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "three_location_test_warehouse",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="function")
@@ -103,6 +118,7 @@ def function_scope_evaluation_template(spark_shared_session, tmp_path_factory):
         spark=spark,
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="module")
@@ -110,7 +126,7 @@ def module_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test warehouse once per test module."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data"
-    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    tar_file = test_data_dir / "three_location_test_warehouse.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
@@ -118,6 +134,7 @@ def module_scope_test_warehouse(tmp_path_factory, spark_shared_session):
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="session")
@@ -135,7 +152,7 @@ def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     """
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data"
-    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    tar_file = test_data_dir / "three_location_test_warehouse.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
 
@@ -145,6 +162,7 @@ def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     )
 
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="session")
@@ -162,6 +180,7 @@ def session_scope_evaluation_template(spark_shared_session, tmp_path_factory):
     )
 
     yield ev
+    _cleanup_spark(ev)
 
 
 # To hide warnings from py4j during pytest shutdown
