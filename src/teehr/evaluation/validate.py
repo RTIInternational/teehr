@@ -269,31 +269,51 @@ class Validate:
     def _add_missing_fields(
         self,
         df: pd.DataFrame | ps.DataFrame | gpd.GeoDataFrame,
-        columns: List[str],
+        table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
     ) -> pd.DataFrame | ps.DataFrame | gpd.GeoDataFrame:
-        """Add missing fields from the schema to the DataFrame with null values.
+        """Add missing nullable fields from the schema to the DataFrame.
+
+        Only adds columns that are nullable in the schema. Raises an error
+        if a required (non-nullable) column is missing.
 
         Parameters
         ----------
         df : pd.DataFrame | ps.DataFrame | gpd.GeoDataFrame
             The Pandas, Spark, or GeoPandas DataFrame to add missing fields to.
-        columns : List[str]
-            The list of columns to ensure exist in the DataFrame.
+        table_schema : SparkDataFrameSchema | PandasDataFrameSchema
+            The schema containing column definitions with nullability info.
 
         Returns
         -------
         pd.DataFrame | ps.DataFrame | gpd.GeoDataFrame
-            The DataFrame with missing fields added.
-        """
-        if isinstance(df, ps.DataFrame):
-            for col_name in columns:
-                if col_name not in df.columns:
-                    df = df.withColumn(col_name, lit(None))
-            return df
+            The DataFrame with missing nullable fields added.
 
-        for col_name in columns:
+        Raises
+        ------
+        ValueError
+            If a required (non-nullable) column is missing from the DataFrame.
+        """
+        schema_cols = table_schema.columns
+        missing_required = []
+
+        for col_name, col_schema in schema_cols.items():
             if col_name not in df.columns:
-                df[col_name] = None
+                # Check if column is nullable
+                is_nullable = getattr(col_schema, 'nullable', True)
+                if is_nullable:
+                    if isinstance(df, ps.DataFrame):
+                        df = df.withColumn(col_name, lit(None))
+                    else:
+                        df[col_name] = None
+                else:
+                    missing_required.append(col_name)
+
+        if missing_required:
+            raise ValueError(
+                f"Required (non-nullable) column(s) {missing_required} "
+                "are missing from the DataFrame."
+            )
+
         return df
 
     def _remove_extra_fields(
@@ -403,9 +423,9 @@ class Validate:
 
         schema_cols = table_schema.columns.keys()
 
-        # Add missing columns
+        # Add missing nullable columns (raises if required columns are missing)
         if add_missing_columns:
-            df = self._add_missing_fields(df, schema_cols)
+            df = self._add_missing_fields(df, table_schema)
 
         if strict:
             df = self._remove_extra_fields(df, schema_cols)
