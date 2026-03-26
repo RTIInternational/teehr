@@ -134,27 +134,27 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         return get_table(self, table_name, namespace_name, catalog_name)
 
     @property
-    def validate(self) -> Validate:
+    def _validate(self) -> Validate:
         """The validate component class for validating data."""
         return Validate(self)
 
     @property
-    def load(self) -> Load:
+    def _load(self) -> Load:
         """The load component class for loading data."""
         return Load(self)
 
     @property
-    def extract(self) -> Extract:
+    def _extract(self) -> Extract:
         """The extract component class for extracting data."""
         return Extract(self)
 
     @property
-    def write(self) -> Write:
+    def _write(self) -> Write:
         """The write component class for writing data."""
         return Write(self)
 
     @property
-    def read(self) -> Read:
+    def _read(self) -> Read:
         """The read component class for reading data."""
         return Read(self)
 

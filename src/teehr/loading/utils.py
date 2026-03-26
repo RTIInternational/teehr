@@ -340,6 +340,62 @@ def read_and_convert_xml_to_df(
     return df
 
 
+def single_file_to_dataframe(
+    in_filepath: Union[str, Path],
+    field_mapping: dict = None,
+    table_name: str = "data",
+    **kwargs
+) -> pd.DataFrame:
+    """Convert a single file to a pandas DataFrame.
+
+    Supports parquet, csv, and netcdf file formats.
+
+    Parameters
+    ----------
+    in_filepath : Union[str, Path]
+        The input file path.
+    field_mapping : dict, optional
+        A dictionary mapping input fields to output fields.
+        Format: {input_field: output_field}. The default is None.
+    table_name : str, optional
+        Name used for logging purposes. The default is "data".
+    **kwargs
+        Additional keyword arguments are passed to
+        pd.read_csv(), pd.read_parquet(), or xr.open_dataset().
+
+    Returns
+    -------
+    pd.DataFrame
+        The converted DataFrame with renamed columns if field_mapping provided.
+
+    Raises
+    ------
+    ValueError
+        If the file type is not supported.
+    """
+    in_filepath = Path(in_filepath)
+
+    logger.info(f"Converting {table_name} data from: {in_filepath}")
+
+    if in_filepath.suffix == ".parquet":
+        df = pd.read_parquet(in_filepath, **kwargs)
+    elif in_filepath.suffix == ".csv":
+        df = pd.read_csv(in_filepath, **kwargs)
+    elif in_filepath.suffix == ".nc":
+        df = read_and_convert_netcdf_to_df(
+            in_filepath,
+            field_mapping or {},
+            **kwargs
+        )
+    else:
+        raise ValueError(f"Unsupported file type: {in_filepath.suffix}")
+
+    if field_mapping:
+        df.rename(columns=field_mapping, inplace=True)
+
+    return df
+
+
 def validate_input_is_parquet(
         in_path: Union[str, Path]
 ) -> None:

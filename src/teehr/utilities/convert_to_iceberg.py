@@ -38,34 +38,34 @@ def convert_evaluation(
         Path.unlink(Path(zif))
 
     units_sdf = ev.spark.read.csv((dataset_dir / "units").as_posix(), header=True)
-    ev.write.to_warehouse(table_name="units", source_data=units_sdf)
+    ev._write.to_warehouse(table_name="units", source_data=units_sdf)
 
     configuration_sdf = ev.spark.read.csv((dataset_dir / "configurations").as_posix(), header=True)
-    ev.write.to_warehouse(table_name="configurations", source_data=configuration_sdf)
+    ev._write.to_warehouse(table_name="configurations", source_data=configuration_sdf)
 
     variables_sdf = ev.spark.read.csv((dataset_dir / "variables").as_posix(), header=True)
-    ev.write.to_warehouse(table_name="variables", source_data=variables_sdf)
+    ev._write.to_warehouse(table_name="variables", source_data=variables_sdf)
 
     attributes_sdf = ev.spark.read.csv((dataset_dir / "attributes").as_posix(), header=True)
-    ev.write.to_warehouse(table_name="attributes", source_data=attributes_sdf)
+    ev._write.to_warehouse(table_name="attributes", source_data=attributes_sdf)
 
     locations_sdf = ev.spark.read.parquet((dataset_dir / "locations").as_posix())
-    ev.write.to_warehouse(table_name="locations", source_data=locations_sdf)
+    ev._write.to_warehouse(table_name="locations", source_data=locations_sdf)
 
     location_attrs_sdf = ev.spark.read.parquet((dataset_dir / "location_attributes").as_posix())
-    ev.write.to_warehouse(table_name="location_attributes", source_data=location_attrs_sdf)
+    ev._write.to_warehouse(table_name="location_attributes", source_data=location_attrs_sdf)
 
     primary_timeseries_sdf = ev.spark.read.parquet((dataset_dir / "primary_timeseries").as_posix())
-    ev.write.to_warehouse(table_name="primary_timeseries", source_data=primary_timeseries_sdf)
+    ev._write.to_warehouse(table_name="primary_timeseries", source_data=primary_timeseries_sdf)
 
     secondary_timeseries_sdf = ev.spark.read.parquet((dataset_dir / "secondary_timeseries").as_posix())
-    ev.write.to_warehouse(table_name="secondary_timeseries", source_data=secondary_timeseries_sdf)
+    ev._write.to_warehouse(table_name="secondary_timeseries", source_data=secondary_timeseries_sdf)
 
     joined_timeseries_sdf = ev.spark.read.parquet((dataset_dir / "joined_timeseries").as_posix())
-    ev.write.to_warehouse(table_name="joined_timeseries", source_data=joined_timeseries_sdf, write_mode="create_or_replace")
+    ev._write.to_warehouse(table_name="joined_timeseries", source_data=joined_timeseries_sdf, write_mode="create_or_replace")
 
     location_crosswalk_sdf = ev.spark.read.parquet((dataset_dir / "location_crosswalks").as_posix())
-    ev.write.to_warehouse(table_name="location_crosswalks", source_data=location_crosswalk_sdf)
+    ev._write.to_warehouse(table_name="location_crosswalks", source_data=location_crosswalk_sdf)
     logger.info(f"Local warehouse created in {dir_path}/local.")
 
     # Remove the old version file if it exists.

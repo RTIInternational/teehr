@@ -57,6 +57,6 @@ class AttributeTable(DomainTable):
         >>>     type="continuous",
         >>>     description="Drainage area in square kilometers"
         >>> )
-        >>> ev.load.add_attribute(attribute)
+        >>> ev.attributes.add(attribute)
         """
         self._add(attribute)

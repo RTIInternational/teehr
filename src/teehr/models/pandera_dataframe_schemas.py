@@ -522,8 +522,7 @@ def secondary_timeseries_schema(
                 )
             },
             strict="filter",
-            coerce=True,
-            add_missing_columns=True,
+            coerce=True
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
