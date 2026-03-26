@@ -1,6 +1,7 @@
 """Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
+import logging
 
 import dask
 import numpy as np
@@ -12,7 +13,8 @@ from teehr.fetching.utils import (
     get_dataset,
     write_timeseries_parquet_file,
     parse_nwm_json_paths,
-    format_nwm_configuration_metadata
+    format_nwm_configuration_metadata,
+    convert_value_from_kelvin_to_celsius
 )
 from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -24,6 +26,8 @@ from teehr.fetching.const import (
     VARIABLE_NAME,
     CONFIGURATION_NAME
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_weights_row_col_stats(weights_df: pd.DataFrame) -> Dict:
@@ -246,9 +250,11 @@ def fetch_and_format_nwm_grids(
         )
         z_hour_df.sort_values([LOCATION_ID, VALUE_TIME], inplace=True)
 
-        if convert_k_to_c and variable_name == "T2D":
-            z_hour_df[VALUE] = z_hour_df[VALUE] - 273.15
-            z_hour_df.loc[:, UNIT_NAME] = "C"
+        if convert_k_to_c:
+            z_hour_df = convert_value_from_kelvin_to_celsius(
+                df=z_hour_df,
+                variable_name=variable_name.value
+            )
 
         if drop_overlapping_assimilation_values and "assim" in nwm_configuration_name:
             # Set reference_time to NaT for assimilation values

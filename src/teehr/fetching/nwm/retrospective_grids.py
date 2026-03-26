@@ -68,7 +68,8 @@ from teehr.fetching.utils import (
     write_timeseries_parquet_file,
     get_dataset,
     get_period_start_end_times,
-    create_periods_based_on_chunksize
+    create_periods_based_on_chunksize,
+    convert_value_from_kelvin_to_celsius
 )
 from teehr.fetching.nwm.retrospective_points import (
     format_grouped_filename,
@@ -426,9 +427,11 @@ def nwm_retro_grids_to_parquet(
                                         "configuration were found in GCS!")
             chunk_df = pd.concat(output)
 
-            if convert_k_to_c and variable_name.value == "T2D":
-                chunk_df["value"] = chunk_df["value"] - 273.15
-                chunk_df.loc[:, UNIT_NAME] = "C"
+            if convert_k_to_c:
+                chunk_df = convert_value_from_kelvin_to_celsius(
+                    df=chunk_df,
+                    variable_name=variable_name.value
+                )
 
             start = df.datetime.min().strftime("%Y%m%d")
             end = df.datetime.max().strftime("%Y%m%d")
@@ -517,9 +520,11 @@ def nwm_retro_grids_to_parquet(
                 variable_mapper=variable_mapper
             )
 
-            if convert_k_to_c and variable_name.value == "T2D":
-                chunk_df["value"] = chunk_df["value"] - 273.15
-                chunk_df.loc[:, UNIT_NAME] = "C"
+            if convert_k_to_c:
+                chunk_df = convert_value_from_kelvin_to_celsius(
+                    df=chunk_df,
+                    variable_name=variable_name.value
+                )
 
             fname = format_grouped_filename(da_i)
             output_filename = Path(
