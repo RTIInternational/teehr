@@ -124,11 +124,14 @@ class Load:
             # Here we pass in flds to get the correct column order.
             if field_mapping is not None:
                 df = df.rename(columns=field_mapping)
-            df = schema_func("pandas").validate(df)
-            df = df.to_wkb()
-            df = self._ev.spark.createDataFrame(
-                df[flds], schema=schema
+            df = self._ev._validate.dataframe(
+                df=df,
+                table_schema=schema_func("pandas"),
+                add_missing_columns=True,
+                strict=True
             )
+            df = df.to_wkb()
+            df = self._ev.spark.createDataFrame(df, schema=schema)
         elif isinstance(df, pd.DataFrame):
             # This is a bit of a workaround due to spark failing when converting
             # a pd.DataFrame with all null columns. We can pass in a schema, but
@@ -136,10 +139,13 @@ class Load:
             # Here we pass in flds to get the correct column order.
             if field_mapping is not None:
                 df = df.rename(columns=field_mapping)
-            df = schema_func("pandas").validate(df)
-            df = self._ev.spark.createDataFrame(
-                df[flds], schema=schema
+            df = self._ev._validate.dataframe(
+                df=df,
+                table_schema=schema_func("pandas"),
+                add_missing_columns=True,
+                strict=True
             )
+            df = self._ev.spark.createDataFrame(df, schema=schema)
         elif isinstance(df, ps.DataFrame):
             if field_mapping is not None:
                 df = df.withColumnsRenamed(field_mapping)
