@@ -7,8 +7,9 @@ import time
 
 from teehr.evaluation.spark_session_utils import create_spark_session
 from teehr import LocalReadWriteEvaluation
-from teehr.utilities import apply_migrations
 from teehr.utilities.import_evaluation import update_metadata_paths
+
+from tests.evaluation_test_class import TestEvaluation
 
 
 @pytest.fixture(scope="session")
@@ -84,53 +85,24 @@ def function_scope_test_warehouse(tmp_path_factory, spark_shared_session):
 
 
 @pytest.fixture(scope="function")
-def function_scope_evaluation_template(session_scope_evaluation_template, request):
-    """Function-level evaluation fixture with template cloned to a new namespace."""
-    ev = session_scope_evaluation_template
+def function_scope_evaluation_template(spark_shared_session, tmp_path_factory):
+    """Function-level evaluation fixture with template cloned.
 
-    # NOTE: Could I re-create the catalog db entirely here instead
-    # or as well?
-    # self._set_active_catalog("local")  # Creates the JDBC .db file
-    # But then you'd have to re-register all the tables too...
-
-    # Clear any temp views from previous tests to ensure isolation
-    temp_views = ev.spark.sql("SHOW VIEWS").filter("isTemporary = true").collect()
-    for view in temp_views:
-        try:
-            ev.spark.catalog.dropTempView(view.viewName)
-        except Exception:
-            pass  # View may already be dropped
-    ev.spark.catalog.clearCache()
-
-    # Save the original namespace to restore after test
-    original_namespace = ev.local_catalog.namespace_name
-
-    # Create unique namespace per test using test name
-    test_name = request.node.name.replace("[", "_").replace("]", "_")
-    test_namespace = f"{int(time.time() / 1e5)}_{test_name}"
-
-    # Create the namespace in Iceberg. Creates the namespace but not the directory yet.
-    ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{test_namespace}")
-
-    # Override the namespace for this evaluation
-    ev.local_catalog.namespace_name = test_namespace
-
-    # Set up the tables in the new namespace.
-    migrations_dir = Path(__file__).parents[1] / "src/teehr/migrations"
-    apply_migrations.evolve_catalog_schema(
-        spark=ev.spark,
-        migrations_dir_path=migrations_dir,
-        target_catalog_name="local",
-        target_namespace_name=test_namespace
+    This creates a new evaluation instance for each test function, using the
+    same Spark session and a new temporary directory for the local catalog.
+    The local catalog namespace is also unique per test to ensure isolation.
+    """
+    base_dir = tmp_path_factory.getbasetemp()
+    spark = spark_shared_session
+    dir_path = Path(base_dir) / "function-scoped-warehouse"
+    # Create LocalReadWriteEvaluation with custom namespace
+    ev = TestEvaluation(
+        dir_path=dir_path,
+        namespace_name=f"test_namespace_{int(time.time() * 1000)}",  # Unique namespace per test
+        create_dir=True,
+        spark=spark,
     )
-
-    # Clean up the catalog? Go back to original namespace and snapshot?
-
     yield ev
-    ev.spark.catalog.clearCache()  # not sure if necessary
-    # After the test reset the namespace name to original value to maintain isolation
-    ev.local_catalog.namespace_name = original_namespace
-    ev._activate_catalog()  # Reset active catalog to original
 
 
 @pytest.fixture(scope="module")
@@ -201,30 +173,3 @@ def pytest_configure(config):
     # Alternatively, to completely silence py4j:
     # py4j_logger.disabled = True
 
-
-# ==============================================================================
-# ============================Below are unused==================================
-# ==============================================================================
-
-# @pytest.fixture(scope="module")
-# def cached_joined_timeseries_df(evaluation_v0_3_module):
-#     """Cached joined timeseries DataFrame for read-only tests.
-
-#     This fixture loads the joined_timeseries data once per module and
-#     caches it in Spark memory. Use this for tests that only read data
-#     and don't modify it. This can significantly speed up metric calculation
-#     and query tests.
-#     """
-#     df = evaluation_v0_3_module.joined_timeseries.to_sdf()
-#     df.cache()
-#     yield df
-#     df.unpersist()
-
-
-# @pytest.fixture(scope="module")
-# def cached_primary_timeseries_df(evaluation_v0_3_module):
-#     """Cached primary timeseries DataFrame for read-only tests."""
-#     df = evaluation_v0_3_module.primary_timeseries.to_sdf()
-#     df.cache()
-#     yield df
-#     df.unpersist()
