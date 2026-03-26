@@ -253,7 +253,7 @@ def fetch_and_format_nwm_grids(
         if convert_k_to_c:
             z_hour_df = convert_value_from_kelvin_to_celsius(
                 df=z_hour_df,
-                variable_name=variable_name.value
+                variable_name=variable_name
             )
 
         if drop_overlapping_assimilation_values and "assim" in nwm_configuration_name:

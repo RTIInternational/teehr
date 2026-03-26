@@ -430,7 +430,7 @@ def nwm_retro_grids_to_parquet(
             if convert_k_to_c:
                 chunk_df = convert_value_from_kelvin_to_celsius(
                     df=chunk_df,
-                    variable_name=variable_name.value
+                    variable_name=variable_name
                 )
 
             start = df.datetime.min().strftime("%Y%m%d")
@@ -523,7 +523,7 @@ def nwm_retro_grids_to_parquet(
             if convert_k_to_c:
                 chunk_df = convert_value_from_kelvin_to_celsius(
                     df=chunk_df,
-                    variable_name=variable_name.value
+                    variable_name=variable_name
                 )
 
             fname = format_grouped_filename(da_i)
