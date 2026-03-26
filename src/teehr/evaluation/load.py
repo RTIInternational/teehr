@@ -84,14 +84,14 @@ class Load:
         secondary_location_id_field : str, optional
             The name of the secondary location ID field in the dataframe.
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         """
@@ -241,14 +241,14 @@ class Load:
         secondary_location_id_field : str, optional
             The name of the secondary location ID field in the dataframe.
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         update_attrs_table : bool, optional (default: True)
@@ -378,14 +378,14 @@ class Load:
             The catalog name to load the data into. The default is None,
             which uses the active catalog of the Evaluation.
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         update_attrs_table : bool, optional (default: True)

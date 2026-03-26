@@ -391,14 +391,15 @@ class BaseTable(TeehrDataFrameBase):
             A dictionary mapping field names to constant values.
             Format: {field_name: value}.
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options:
+
+            - ``"insert"``: Insert all rows directly without duplicate checking.
+            - ``"append"``: Insert new rows; skip rows matching uniqueness fields.
+            - ``"upsert"``: Insert new rows; update existing rows matching
+              uniqueness fields.
+            - ``"overwrite"``: Replace all data, preserving table history.
+            - ``"create_or_replace"``: Drop and recreate table. Loses history.
+
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         """ # noqa

@@ -149,14 +149,14 @@ class DomainTable(BaseTable):
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         **kwargs
@@ -227,14 +227,14 @@ class DomainTable(BaseTable):
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
         write_mode : str, optional (default: "append")
-            The write mode for the table.
-            Options are "append", "upsert", and "create_or_replace".
-            If "append", the table will be appended without checking
-            existing data.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "create_or_replace", a new table will be created or an existing
-            table will be replaced.
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         **kwargs

@@ -383,8 +383,15 @@ class TeehrDataFrameBase(ABC):
         table_name : str
             The name of the table to write to.
         write_mode : str, optional
-            The write mode. Options: "create", "append", "overwrite",
-            "create_or_replace". Default is "create_or_replace".
+            The write mode. Options:
+
+            - ``"insert"``: Insert all rows directly without duplicate checking.
+            - ``"append"``: Insert new rows; skip rows matching uniqueness fields.
+            - ``"upsert"``: Insert new rows; update existing rows matching uniqueness fields.
+            - ``"overwrite"``: Replace all data, preserving table history.
+            - ``"create_or_replace"``: Drop and recreate table. Loses history.
+
+            Default is "create_or_replace".
 
         Returns
         -------
@@ -411,8 +418,15 @@ class TeehrDataFrameBase(ABC):
         table_name : str
             The name of the table to write to.
         write_mode : str, optional
-            The write mode. Options: "create", "append", "overwrite",
-            "create_or_replace". Default is "create_or_replace".
+            The write mode. Options:
+
+            - ``"insert"``: Insert all rows directly without duplicate checking.
+            - ``"append"``: Insert new rows; skip rows matching uniqueness fields.
+            - ``"upsert"``: Insert new rows; update existing rows matching uniqueness fields.
+            - ``"overwrite"``: Replace all data, preserving table history.
+            - ``"create_or_replace"``: Drop and recreate table. Loses history.
+
+            Default is "create_or_replace".
 
         Returns
         -------
@@ -424,7 +438,7 @@ class TeehrDataFrameBase(ABC):
         >>> accessor.aggregate(
         ...     metrics=[KGE()],
         ...     group_by=["primary_location_id"]
-        ... ).write("location_metrics")
+        ... ).write_to("location_metrics")
         """
         logger.info(f"Writing to table: {table_name}.")
 
