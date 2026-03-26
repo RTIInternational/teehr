@@ -59,6 +59,6 @@ class UnitTable(DomainTable):
         >>>     name="m^3/s",
         >>>     long_name="Cubic meters per second"
         >>> )
-        >>> ev._load.add_unit(unit)
+        >>> ev.units.add(unit)
         """
         self._add(unit)

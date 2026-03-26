@@ -333,7 +333,7 @@ class Write:
         --------
         Preview rows that would be deleted (dry run):
 
-        >>> sdf = ev.write.delete_from(
+        >>> sdf = ev._write.delete_from(
         >>>     table_name="primary_timeseries",
         >>>     filters=["location_id = 'usgs-01234567'"],
         >>>     dry_run=True,
@@ -343,7 +343,7 @@ class Write:
 
         Delete rows and get the count:
 
-        >>> count = ev.write.delete_from(
+        >>> count = ev._write.delete_from(
         >>>     table_name="primary_timeseries",
         >>>     filters=["location_id = 'usgs-01234567'"],
         >>> )
@@ -353,7 +353,7 @@ class Write:
 
         >>> from teehr.models.filters import TableFilter
         >>> from teehr import Operators as ops
-        >>> count = ev.write.delete_from(
+        >>> count = ev._write.delete_from(
         >>>     table_name="primary_timeseries",
         >>>     filters=TableFilter(
         >>>         column="location_id",

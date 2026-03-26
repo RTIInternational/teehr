@@ -266,7 +266,7 @@ You can also load from Pandas/GeoPandas DataFrames:
        "configuration_name": ["usgs_observations"]
    })
 
-   ev._load.dataframe(df=df, table_name="primary_timeseries")
+   ev.primary_timeseries.load_dataframe(df)
 
 
 Filtering Data
