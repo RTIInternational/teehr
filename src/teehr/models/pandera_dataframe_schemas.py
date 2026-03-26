@@ -44,7 +44,8 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     unique=True,
                     checks=[
                         pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
-                    ]
+                    ],
+                    regex=r"^[a-zA-Z0-9_]+$"
                 ),
                 "type": pa.Column(
                     pa.String,
@@ -55,18 +56,6 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                 "description": pa.Column(
                     pa.String
                 ),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                )
             },
             strict="filter"
         )
@@ -87,16 +76,9 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     T.StringType(),
                     nullable=False
                 ),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                )
             },
             strict=True,
+            unique=["name"],
             coerce=True
         )
     if type == "arrow":
@@ -104,8 +86,6 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             ("name", pyarrow.string()),
             ("type", pyarrow.string()),
             ("description", pyarrow.string()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
         ])
 
 
@@ -125,18 +105,6 @@ def unit_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     pa.String,
                     checks=pa.Check(lambda s: not s.str.contains(",").any())
                 ),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                )
             },
             strict="filter"
         )
@@ -153,24 +121,15 @@ def unit_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     nullable=False,
                     checks=ps.Check(ln_no_commas, error="`long_name` column contains commas")
                 ),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                )
             },
             strict=True,
+            unique=["name"],
             coerce=True
         )
     if type == "arrow":
         return pyarrow.schema([
             ("name", pyarrow.string()),
             ("long_name", pyarrow.string()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
         ])
 
 
@@ -184,24 +143,13 @@ def variable_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     unique=True,
                     checks=[
                         pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
-                    ]
+                    ],
+                    regex=r"^[a-zA-Z0-9_]+$"
                 ),
                 "long_name": pa.Column(
                     pa.String,
                     checks=pa.Check(lambda s: not s.str.contains(",").any())
                 ),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                )
             },
             strict="filter"
         )
@@ -218,24 +166,15 @@ def variable_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     nullable=False,
                     checks=ps.Check(ln_no_commas, error="`long_name` column contains commas")
                 ),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                )
             },
             strict=True,
+            unique=["name"],
             coerce=True
         )
     if type == "arrow":
         return pyarrow.schema([
             ("name", pyarrow.string()),
             ("long_name", pyarrow.string()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
         ])
 
 
@@ -260,18 +199,6 @@ def attribute_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                 "description": pa.Column(
                     pa.String,
                 ),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                )
             },
             strict="filter"
         )
@@ -292,16 +219,9 @@ def attribute_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     T.StringType(),
                     nullable=False
                 ),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                )
             },
             strict=True,
+            unique=["name"],
             coerce=True
         )
     if type == "arrow":
@@ -309,8 +229,6 @@ def attribute_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             ("name", pyarrow.string()),
             ("type", pyarrow.string()),
             ("description", pyarrow.string()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
         ])
 
 
@@ -323,24 +241,7 @@ def locations_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             columns={
                 "id": pa.Column(str, coerce=True),
                 "name": pa.Column(str, coerce=True),
-                "geometry": pa.Column("geometry"),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "properties": pa.Column(
-                    dict,
-                    coerce=True,
-                    nullable=True,
-                )
+                "geometry": pa.Column("geometry")
             },
             strict="filter"
         )
@@ -350,20 +251,9 @@ def locations_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                 "id": ps.Column(T.StringType(), nullable=False),
                 "name": ps.Column(T.StringType(), nullable=False),
                 "geometry": ps.Column(T.BinaryType(), nullable=False),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "properties": ps.Column(
-                    T.MapType(T.StringType(), T.StringType()),
-                    nullable=True,
-                )
             },
             strict=True,
+            unique=["id"],
             coerce=True
         )
     if type == "arrow":
@@ -371,9 +261,6 @@ def locations_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             ("id", pyarrow.string()),
             ("name", pyarrow.string()),
             ("geometry", pyarrow.binary()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
-            ("properties", pyarrow.map_(pyarrow.string(), pyarrow.string())),
         ])
 
 
@@ -395,23 +282,6 @@ def location_attributes_schema(
                 "value": pa.Column(
                     pa.String,
                     coerce=True
-                ),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "properties": pa.Column(
-                    dict,
-                    coerce=True,
-                    nullable=True,
                 )
             },
             strict="filter"
@@ -430,18 +300,6 @@ def location_attributes_schema(
                 "value": ps.Column(
                     T.StringType(),
                     nullable=False,
-                ),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "properties": ps.Column(
-                    T.MapType(T.StringType(), T.StringType()),
-                    nullable=True,
                 )
             },
             strict=True,
@@ -452,9 +310,6 @@ def location_attributes_schema(
             ("location_id", pyarrow.string()),
             ("attribute_name", pyarrow.string()),
             ("value", pyarrow.string()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
-            ("properties", pyarrow.map_(pyarrow.string(), pyarrow.string())),
         ])
 
 
@@ -472,23 +327,6 @@ def location_crosswalks_schema(
                 "secondary_location_id": pa.Column(
                     pa.String,
                     coerce=True
-                ),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "properties": pa.Column(
-                    dict,
-                    coerce=True,
-                    nullable=True,
                 )
             },
             strict="filter"
@@ -503,18 +341,6 @@ def location_crosswalks_schema(
                 "secondary_location_id": ps.Column(
                     T.StringType(),
                     nullable=False,
-                ),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "properties": ps.Column(
-                    T.MapType(T.StringType(), T.StringType()),
-                    nullable=True,
                 )
             },
             strict=True,
@@ -524,9 +350,6 @@ def location_crosswalks_schema(
         return pyarrow.schema([
             ("primary_location_id", pyarrow.string()),
             ("secondary_location_id", pyarrow.string()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
-            ("properties", pyarrow.map_(pyarrow.string(), pyarrow.string())),
         ])
 
 
@@ -602,20 +425,7 @@ def primary_timeseries_schema(
                 "location_id": pa.Column(
                     pa.String,
                     nullable=False
-                ),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
                 )
-
             },
             strict="filter",
             coerce=True
@@ -651,14 +461,6 @@ def primary_timeseries_schema(
                 "location_id": ps.Column(
                     T.StringType(),
                     nullable=False
-                ),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
                 )
             },
             strict=True,
@@ -673,8 +475,6 @@ def primary_timeseries_schema(
             ("configuration_name", pyarrow.string()),
             ("unit_name", pyarrow.string()),
             ("location_id", pyarrow.string()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
         ])
 
 
@@ -688,14 +488,12 @@ def secondary_timeseries_schema(
                 "reference_time": pa.Column(
                     pa.DateTime,
                     parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
+                    nullable=True
                 ),
                 "value_time": pa.Column(
                     pa.DateTime,
                     parsers=pa.Parser(format_datetime64),
-                    nullable=False,
-                    coerce=True,
+                    nullable=False
                 ),
                 "value": pa.Column(
                     pandas_value_type,
@@ -721,18 +519,6 @@ def secondary_timeseries_schema(
                 "member": pa.Column(
                     pa.String,
                     nullable=True
-                ),
-                "created_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
-                ),
-                "updated_at": pa.Column(
-                    pa.DateTime,
-                    parsers=pa.Parser(format_datetime64),
-                    nullable=True,
-                    coerce=True,
                 )
             },
             strict="filter",
@@ -774,14 +560,6 @@ def secondary_timeseries_schema(
                 "member": ps.Column(
                     T.StringType(),
                     nullable=True,
-                ),
-                "created_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
-                ),
-                "updated_at": ps.Column(
-                    T.TimestampNTZType(),
-                    nullable=True,
                 )
             },
             strict=True,
@@ -797,6 +575,4 @@ def secondary_timeseries_schema(
             ("unit_name", pyarrow.string()),
             ("location_id", pyarrow.string()),
             ("member", pyarrow.string()),
-            ("created_at", pyarrow.timestamp("ms")),
-            ("updated_at", pyarrow.timestamp("ms")),
         ])
