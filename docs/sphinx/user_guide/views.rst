@@ -131,7 +131,7 @@ For repeated queries, materialize a view to an Iceberg table:
 .. code-block:: python
 
     # Write view to a named table
-    ev.joined_timeseries_view(add_attrs=True).write("joined_with_attrs")
+    ev.joined_timeseries_view(add_attrs=True).write_to("joined_with_attrs")
 
     # Later, query the materialized table directly
     df = ev.table("joined_with_attrs").aggregate(
@@ -168,7 +168,7 @@ traditional geospatial "attributes table".
     ).to_sdf().show()
 
     # Materialize for reuse
-    ev.location_attributes_view().write("pivoted_attrs")
+    ev.location_attributes_view().write_to("pivoted_attrs")
 
 See also: :class:`LocationAttributesView <teehr.evaluation.views.location_attributes_view.LocationAttributesView>`
 
@@ -451,7 +451,7 @@ For repeated use, write calculated fields to a table:
     # Compute and materialize
     ev.joined_timeseries_view().add_calculated_fields([
         tcf.AbovePercentileEventDetection()
-    ]).write("joined_timeseries")
+    ]).write_to("joined_timeseries")
 
     # Query the materialized table
     metrics_df = ev.table("joined_timeseries").aggregate(

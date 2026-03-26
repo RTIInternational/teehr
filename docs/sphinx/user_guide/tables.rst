@@ -349,13 +349,13 @@ Write query results to new tables:
    ev.joined_timeseries_view().aggregate(
        metrics=[dm.KlingGuptaEfficiency()],
        group_by=["primary_location_id", "configuration_name"]
-   ).write("location_metrics")
+   ).write_to("location_metrics")
 
    # Access the new table
    metrics_df = ev.table("location_metrics").to_pandas()
 
-You can also write data directly to any warehouse table using
-:meth:`ev._write.to_warehouse() <teehr.evaluation.write.Write.to_warehouse>`:
+You can also load DataFrames directly into tables using
+:meth:`load_dataframe() <teehr.evaluation.tables.base_table.BaseTable.load_dataframe>`:
 
 .. code-block:: python
 
@@ -366,17 +366,21 @@ You can also write data directly to any warehouse table using
        "long_name": ["Cubic meters per second"]
    })
 
-   # "insert" — fastest: INSERT INTO with no duplicate checking
-   ev._write.to_warehouse(source_data=df, table_name="units", write_mode="insert")
+   # Load using the table property
+   ev.units.load_dataframe(df)
 
-   # "append" — skip rows that match existing uniqueness fields (default)
-   ev._write.to_warehouse(source_data=df, table_name="units", write_mode="append")
+   # Or using the generic table accessor
+   ev.table("units").load_dataframe(df)
 
-   # "upsert" — update matching rows, insert new ones
-   ev._write.to_warehouse(source_data=df, table_name="units", write_mode="upsert")
+   # Specify write mode (default is "append")
+   ev.units.load_dataframe(df, write_mode="upsert")
 
-   # "overwrite" — replace all data, preserving table history
-   ev._write.to_warehouse(source_data=df, table_name="units", write_mode="overwrite")
+Write modes available:
+
+- ``"insert"`` — fastest: INSERT INTO with no duplicate checking
+- ``"append"`` — skip rows that match existing uniqueness fields (default)
+- ``"upsert"`` — update matching rows, insert new ones
+- ``"overwrite"`` — replace all data, preserving table history
 
 .. note::
 
@@ -384,7 +388,7 @@ You can also write data directly to any warehouse table using
    duplicates. Use it when you know your data is clean and want maximum throughput.
    Use ``"append"`` (the default) when you want to skip rows that already exist.
 
-See also: :meth:`Write.to_warehouse() <teehr.evaluation.write.Write.to_warehouse>`
+See also: :meth:`BaseTable.load_dataframe() <teehr.evaluation.tables.base_table.BaseTable.load_dataframe>`
 
 
 Deleting Data
@@ -468,7 +472,7 @@ property to check whether a table is a core table before attempting to drop it.
    ev.joined_timeseries_view().aggregate(
        metrics=[dm.KlingGuptaEfficiency()],
        group_by=["primary_location_id"]
-   ).write("location_metrics")
+   ).write_to("location_metrics")
 
    # Check whether it's a core table (always False for user-created tables)
    ev.table("location_metrics").is_core_table  # False

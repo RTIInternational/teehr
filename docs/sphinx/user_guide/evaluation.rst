@@ -299,20 +299,22 @@ are common operations you can perform with an Evaluation instance:
 
    ev = teehr.LocalReadWriteEvaluation(dir_path="./my_eval", create_dir=True)
 
-   # Access tables
+   # Access tables (read, filter, write)
    ev.locations          # LocationTable
    ev.primary_timeseries # PrimaryTimeseriesTable
    ev.secondary_timeseries # SecondaryTimeseriesTable
    # ... and more
 
-   # Access views
+   # Access views (computed on-the-fly)
    ev.joined_timeseries_view()  # Computed join of primary/secondary
 
-   # Access I/O components
-   ev.fetch      # Fetch from external sources (USGS, NWM)
-   ev.download   # Download from TEEHR warehouse
-   ev._load       # Load local files
-   ev._write      # Write query results
+   # Load data into tables
+   ev.primary_timeseries.load_parquet("./data.parquet")
+   ev.locations.load_spatial("./gages.geojson")
+
+   # Fetch from external sources
+   ev.fetch.usgs_streamflow(...)  # USGS
+   ev.fetch.nwm_retrospective_points(...)  # NWM
 
    # Run SQL queries directly
    df = ev.sql("SELECT * FROM primary_timeseries LIMIT 10")
