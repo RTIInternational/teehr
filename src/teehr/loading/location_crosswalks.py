@@ -1,12 +1,8 @@
 """Module for importing location crosswalks from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.loading.utils import read_and_convert_netcdf_to_df
+from teehr.loading.utils import single_file_to_dataframe
 import pandas as pd
-
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def convert_single_location_crosswalks(
@@ -31,27 +27,9 @@ def convert_single_location_crosswalks(
     -------
     pd.DataFrame
     """
-    in_filepath = Path(in_filepath)
-
-    logger.info(f"Converting location crosswalks data from: {in_filepath}")
-
-    if in_filepath.suffix == ".parquet":
-        # read and convert parquet file
-        location_crosswalks = pd.read_parquet(in_filepath, **kwargs)
-    elif in_filepath.suffix == ".csv":
-        # read and convert csv file
-        location_crosswalks = pd.read_csv(in_filepath, **kwargs)
-    elif in_filepath.suffix == ".nc":
-        # read and convert netcdf file
-        location_crosswalks = read_and_convert_netcdf_to_df(
-            in_filepath,
-            field_mapping,
-            **kwargs
-        )
-    else:
-        raise ValueError("Unsupported file type.")
-
-    # rename fields if field_mapping provided
-    location_crosswalks.rename(columns=field_mapping, inplace=True)
-
-    return location_crosswalks
+    return single_file_to_dataframe(
+        in_filepath=in_filepath,
+        field_mapping=field_mapping,
+        table_name="location_crosswalks",
+        **kwargs
+    )

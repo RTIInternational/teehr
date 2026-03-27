@@ -38,7 +38,7 @@ def update_metadata_paths(
     catalog_name: str = "local",
     namespace_name: str = "teehr",
     database_name: str = LOCAL_CATALOG_DB_NAME,
-) -> pd.DataFrame:
+) -> teehr.LocalReadWriteEvaluation:
     """Import a shared evaluation from a directory path.
 
     Notes

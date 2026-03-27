@@ -57,7 +57,7 @@ class ConfigurationTable(DomainTable):
         >>>     type="primary",
         >>>     description="USGS observations",
         >>> )
-        >>> ev.load.add_configuration(configuration)
+        >>> ev.configurations.add(configuration)
 
         """
         self._add(configuration)

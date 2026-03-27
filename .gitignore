@@ -147,4 +147,6 @@ poetry.toml
 # TEMP
 playground/iceberg/local-eval-warehouse
 
-copilot-instructions.md
+copilot-instructions.md# Local copy files
+*copy.py
+* copy.py
