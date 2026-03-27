@@ -130,6 +130,7 @@ def test_add_row_udfs(session_scope_test_warehouse):
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
 
+
 @pytest.mark.function_scope_small_ensemble_warehouse
 def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     """Test ForecastLeadTimeBins UDF."""
@@ -318,6 +319,7 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
         "value_time"
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
+
 
 @pytest.mark.function_scope_two_location_warehouse
 def test_add_timeseries_udfs(function_scope_two_location_warehouse):
@@ -514,6 +516,7 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     assert np.isclose(min_ep, 0.0, atol=0.001)
     assert np.isclose(max_ep, 1.0, atol=0.001)
     assert "exceedance_probability" in columns
+
 
 @pytest.mark.function_scope_evaluation_template
 def test_add_udfs_write(function_scope_evaluation_template):

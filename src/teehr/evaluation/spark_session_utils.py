@@ -1,6 +1,6 @@
 """Module to create and configure a Spark session."""
 # flake8: noqa
-from typing import Dict, List, Union, Any
+from typing import Dict, List, Union
 from pathlib import Path
 import psutil
 import logging
@@ -31,12 +31,10 @@ def create_spark_session(
     app_name: str = "TEEHR Evaluation",
     local_catalog_name: str = const.LOCAL_CATALOG_NAME,
     local_catalog_type: str = const.LOCAL_CATALOG_TYPE,
-    local_namespace_name: str = const.LOCAL_NAMESPACE_NAME,
     remote_warehouse_dir: str = const.REMOTE_WAREHOUSE_S3_PATH,
     remote_catalog_name: str = const.REMOTE_CATALOG_NAME,
     remote_catalog_type: str = const.REMOTE_CATALOG_TYPE,
     remote_catalog_uri: str = const.REMOTE_CATALOG_REST_URI,
-    remote_namespace_name: str = const.REMOTE_NAMESPACE_NAME,
     # Spark K8'specific parameters
     start_spark_cluster: bool = False,
     executor_instances: int = 2,
@@ -68,8 +66,6 @@ def create_spark_session(
         Name of the local Iceberg catalog. Default is "local".
     local_catalog_type : str
         Type of the local Iceberg catalog. Default is "jdbc".
-    local_namespace_name : str
-        Namespace for the local Iceberg catalog. Default is "teehr".
     remote_warehouse_dir : str
         Remote warehouse directory for Iceberg catalog. Default is TEEHR
         warehouse S3 path.
@@ -79,8 +75,6 @@ def create_spark_session(
         Type of the remote Iceberg catalog. Default is "rest".
     remote_catalog_uri : str
         URI for the remote Iceberg catalog. Default is TEEHR catalog REST URI.
-    remote_namespace_name : str
-        Namespace for the remote Iceberg catalog. Default is "teehr".
     start_spark_cluster : bool
         Whether to start a Spark cluster (Kubernetes mode).
         Default is False (local mode).
@@ -176,9 +170,7 @@ def create_spark_session(
         remote_catalog_name=remote_catalog_name,
         remote_catalog_type=remote_catalog_type,
         remote_catalog_uri=remote_catalog_uri,
-        remote_warehouse_dir=remote_warehouse_dir,
-        local_namespace_name=local_namespace_name,
-        remote_namespace_name=remote_namespace_name
+        remote_warehouse_dir=remote_warehouse_dir
     )
 
     # Apply catalog configurations
@@ -479,23 +471,19 @@ def _set_aws_credentials_in_spark(
 
 def _set_catalog_metadata(
     conf: SparkConf,
-    local_namespace_name: str,
     local_catalog_name: str,
     local_catalog_type: str,
     remote_catalog_name: str,
     remote_catalog_type: str,
     remote_catalog_uri: str,
     remote_warehouse_dir: str,
-    remote_namespace_name: str
 ):
     """Set catalog metadata in Spark configuration."""
     metadata_configs = {
         "local_catalog_name": local_catalog_name,
-        "local_namespace_name": local_namespace_name,
         "local_catalog_type": local_catalog_type,
         "remote_warehouse_dir": remote_warehouse_dir,
         "remote_catalog_name": remote_catalog_name,
-        "remote_namespace_name": remote_namespace_name,
         "remote_catalog_type": remote_catalog_type,
         "remote_catalog_uri": remote_catalog_uri
     }

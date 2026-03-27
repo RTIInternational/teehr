@@ -497,6 +497,7 @@ class Fetch:
         write_mode: str = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
+        convert_k_to_c: bool = True,
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -574,6 +575,10 @@ class Fetch:
             Default is None.
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
+        convert_k_to_c : bool, optional (default: True)
+            If True, convert temperature values from Kelvin to Celsius by
+            subtracting 273.15. The unit_name field will be set to "C".
+            Note: this argument is only valid when variable_name is "T2D".
 
         Examples
         --------
@@ -669,7 +674,8 @@ class Fetch:
             timeseries_type=timeseries_type,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
-            zone_polygons=locations_gdf
+            zone_polygons=locations_gdf,
+            convert_k_to_c=convert_k_to_c
         )
 
         if (
@@ -1003,6 +1009,7 @@ class Fetch:
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
         drop_overlapping_assimilation_values: bool = True,
+        convert_k_to_c: bool = True,
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -1122,6 +1129,10 @@ class Fetch:
             keeping those with the most recent reference_time. In this case, all
             reference_time values are set to None. If False, overlapping values are
             kept and reference_time is retained.
+        convert_k_to_c : bool, optional (default: True)
+            If True, convert temperature values from Kelvin to Celsius by
+            subtracting 273.15. The unit_name field will be set to "C".
+            Note: this argument is only valid when variable_name is "T2D".
 
 
         .. note::
@@ -1262,7 +1273,8 @@ class Fetch:
             calculate_zonal_weights=calculate_zonal_weights,
             zone_polygons=locations_gdf,
             timeseries_type=timeseries_type,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
+            convert_k_to_c=convert_k_to_c
         )
 
         if (

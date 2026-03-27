@@ -37,7 +37,8 @@ from teehr.fetching.const import (
     NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
     VARIABLE_NAME,
-    NWM_CONFIGURATION_DESCRIPTIONS
+    NWM_CONFIGURATION_DESCRIPTIONS,
+    UNIT_NAME
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
@@ -183,11 +184,7 @@ def format_nwm_configuration_metadata(
         ev_config_name = nwm_version + "_" + nwm_config_name
     # Get the config description.
     if nwm_config_name in NWM_CONFIGURATION_DESCRIPTIONS:
-        if ev_member is not None:
-            ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name] \
-                + f" {ev_member}"
-        else:
-            ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name]
+        ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name]
     else:
         ev_config_desc = "NWM operational forecasts"  # default description
     return {
@@ -979,3 +976,32 @@ def split_dataframe(df: pd.DataFrame, chunk_size: int) -> List[pd.DataFrame]:
     for i in range(0, df.shape[0], chunk_size):
         chunks.append(df.iloc[i:i + chunk_size])
     return chunks
+
+
+def convert_value_from_kelvin_to_celsius(df: pd.DataFrame, variable_name: str) -> pd.DataFrame:
+    """Convert temperature values from Kelvin to Celsius for a specific variable.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The input dataframe.
+    variable_name : str
+        The name of the variable to convert.
+
+    Returns
+    -------
+    pd.DataFrame
+        The dataframe with converted temperature values.
+    """
+    if variable_name == "T2D":
+        logger.info(
+            "Converting temperature values from Kelvin to Celsius for variable T2D"
+        )
+        df["value"] = df["value"] - 273.15
+        df.loc[:, UNIT_NAME] = "C"
+    else:
+        logger.warning(
+            "The convert_k_to_c flag is set to True but the variable being processed is not T2D."
+            " No conversion will be applied."
+        )
+    return df
