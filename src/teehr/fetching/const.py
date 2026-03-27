@@ -37,17 +37,54 @@ USGS_VARIABLE_MAPPER = {
 }
 
 NWM_CONFIGURATION_DESCRIPTIONS = {
-    "analysis_assim_extend_no_da": "NWM analysis extended - no nudging - STAGE IV forcing",
-    "analysis_assim_extend": "NWM analysis extended - with nudging - STAGE IV forcing",
-    "medium_range_mem": "NWM medium range - GFS forcing member",
-    "medium_range_blend": "NWM medium range - NBM forcing",
-    "short_range": "NWM short range - HRRR forcing"
+    # conus
+    "analysis_assim_extend_no_da": "CONUS NWM extended analysis, no nudging, STAGEIV forcing",
+    "analysis_assim_extend": "CONUS NWM extended analysis, with nudging, STAGEIV forcing",
+    "analysis_assim_no_da": "CONUS NWM standard analysis, no nudging, MRMS forcing",
+    "analysis_assim": "CONUS NWM standard analysis, with nudging, MRMS forcing",
+    "short_range": "CONUS NWM short range, HRRR forcing",
+    "medium_range_mem": "CONUS NWM medium range, GFS forcing",
+    "medium_range_blend": "CONUS NWM medium range, NBM forcing",
+    "medium_range_no_da": "CONUS NWM medium range, GFS forcing, initialized by no_da analysis_assim",
+    "forcing_analysis_assim_extend": "CONUS STAGEIV mean areal forcing for NWM extended analysis",
+    "forcing_analysis_assim": "CONUS MRMS mean areal forcing for NWM standard analysis",
+    "forcing_short_range": "CONUS HRRR mean areal forcing for NWM short range",
+    "forcing_medium_range": "CONUS GFS mean areal forcing for NWM medium range mem1",
+    "forcing_medium_range_blend": "CONUS NBM mean areal forcing for NWM medium range blend",
+    # hawaii
+    "analysis_assim_hawaii_no_da": "Hawaii NWM standard analysis, no nudging, MRMS forcing",
+    "analysis_assim_hawaii": "Hawaii NWM standard analysis, with nudging, MRMS forcing",
+    "short_range_hawaii": "Hawaii NWM short range, NAM-NEST forcing",
+    "short_range_hawaii_no_da": "Hawaii NWM short range, NAM-NEST forcing, initialized by no_da analysis_assim",
+    "forcing_analysis_assim_hawaii": "Hawaii MRMS mean areal forcing for NWM standard analysis",
+    "forcing_short_range_hawaii": "Hawaii NAM-NEST mean areal forcing for NWM short range",
+    # alaska
+    "analysis_assim_extend_alaska_no_da": "Alaska NWM extended analysis, no nudging, APRFC MPE forcing",
+    "analysis_assim_extend_alaska": "Alaska NWM extended analysis, with nudging, APRFC MPE forcing",
+    "analysis_assim_alaska_no_da": "Alaska NWM standard analysis, no nudging, MRMS forcing",
+    "analysis_assim_alaska": "Alaska NWM standard analysis, with nudging, MRMS forcing",
+    "short_range_alaska": "Alaska NWM short range, HRRR-AK/NBM forcing",
+    "medium_range_alaska_mem": "Alaska NWM medium range, GFS forcing",
+    "medium_range_blend_alaska": "Alaska NWM medium range, NBM forcing",
+    "forcing_analysis_assim_extend_alaska": "Alaska StageIV mean areal forcing for NWM extended analysis",
+    "forcing_analysis_assim_alaska": "Alaska MRMS mean areal forcing for NWM standard analysis",
+    "forcing_short_range_alaska": "Alaska HRRR mean areal forcing for NWM short range",
+    "forcing_medium_range_alaska": "Alaska GFS mean areal forcing for NWM medium range mem1",
+    "forcing_medium_range_blend_alaska": "Alaska NBM mean areal forcing for NWM medium range blend",
+    # puerto rico
+    "analysis_assim_puertorico_no_da": "PRVI NWM standard analysis, no nudging, MRMS forcing",
+    "analysis_assim_puertorico": "PRVI NWM standard analysis, with nudging, MRMS forcing",
+    "short_range_puertorico": "PRVI NWM short range, NAM-NEST forcing",
+    "short_range_puertorico_no_da": "PRVI NWM short range, NAM-NEST forcing, initialized by no_da analysis_assim",
+    "forcing_analysis_assim_puertorico": "PRVI MRMS mean areal forcing for NWM standard analysis",
+    "forcing_short_range_puertorico": "PRVI NAM-NEST mean areal forcing for NWM short range",
 }
 
 NWM_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
         "streamflow": "streamflow_hourly_inst",
         "RAINRATE": "rainfall_hourly_rate",
+        "T2D": "temperature_hourly_mean"
     },
     UNIT_NAME: {
         "m3 s-1": "m^3/s",

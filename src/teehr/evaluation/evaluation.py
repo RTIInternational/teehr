@@ -2,7 +2,7 @@
 import tempfile
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import Union, Literal, List
+from typing import Union, List
 from pathlib import Path
 from teehr.evaluation.tables import (
     AttributeTable,
@@ -23,10 +23,12 @@ from teehr.evaluation.views import (
     SecondaryTimeseriesView,
 )
 from teehr.const import (
+    LOCAL_NAMESPACE_NAME,
     LOCAL_CATALOG_DB_NAME,
     CACHE_DIR,
     REMOTE_CATALOG_REST_URI,
-    REMOTE_WAREHOUSE_S3_PATH
+    REMOTE_WAREHOUSE_S3_PATH,
+    REMOTE_NAMESPACE_NAME
 )
 from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
@@ -714,7 +716,8 @@ class LocalReadWriteEvaluation(BaseEvaluation):
         dir_path: Union[str, Path],
         create_dir: bool = False,
         check_evaluation_version: bool = True,
-        spark: SparkSession = None
+        spark: SparkSession = None,
+        namespace_name: str = LOCAL_NAMESPACE_NAME
     ):
         """Initialize the Evaluation class.
 
@@ -734,6 +737,8 @@ class LocalReadWriteEvaluation(BaseEvaluation):
         spark : SparkSession, optional
             The SparkSession object. If not provided, a new default Spark
             session will be created.
+        namespace_name : str, optional
+            The namespace name to use for the local catalog. Default is LOCAL_NAMESPACE_NAME ("teehr").
         """
         super().__init__(
             spark=spark,
@@ -771,7 +776,7 @@ class LocalReadWriteEvaluation(BaseEvaluation):
         self._catalog = LocalCatalog(
             warehouse_dir=warehouse_dir,
             catalog_name=local_catalog_name,
-            namespace_name=self.spark.conf.get("local_namespace_name"),
+            namespace_name=namespace_name,
             catalog_type=self.spark.conf.get("local_catalog_type"),
         )
         self.cache_dir = self._catalog.cache_dir
@@ -788,12 +793,12 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             with open(version_file, "w") as f:
                 f.write(teehr.__version__)
 
-            apply_migrations.evolve_catalog_schema(
-                spark=self.spark,
-                migrations_dir_path=Path(__file__).parents[1] / "migrations",
-                target_catalog_name=self._catalog.catalog_name,
-                target_namespace_name=self._catalog.namespace_name
-            )
+        apply_migrations.evolve_catalog_schema(
+            spark=self.spark,
+            migrations_dir_path=Path(__file__).parents[1] / "migrations",
+            target_catalog_name=self._catalog.catalog_name,
+            target_namespace_name=self._catalog.namespace_name
+        )
 
         self._activate_catalog()  # Creates the JDBC .db file
 
@@ -920,7 +925,8 @@ class Evaluation(LocalReadWriteEvaluation):
         dir_path: Union[str, Path],
         create_dir: bool = False,
         check_evaluation_version: bool = True,
-        spark: SparkSession = None
+        spark: SparkSession = None,
+        namespace_name: str = LOCAL_NAMESPACE_NAME
     ):
         """Initialize the Evaluation class.
 
@@ -940,12 +946,15 @@ class Evaluation(LocalReadWriteEvaluation):
         spark : SparkSession, optional
             The SparkSession object. If not provided, a new default Spark
             session will be created.
+        namespace_name : str, optional
+            The namespace name to use for the local catalog. Default is LOCAL_NAMESPACE_NAME ("teehr").
         """
         super().__init__(
             spark=spark,
             dir_path=dir_path,
             create_dir=create_dir,
-            check_evaluation_version=check_evaluation_version
+            check_evaluation_version=check_evaluation_version,
+            namespace_name=namespace_name
         )
 
 
@@ -1017,7 +1026,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
         self._catalog = RemoteCatalog(
             warehouse_dir=self.spark.conf.get("remote_warehouse_dir"),
             catalog_name=self.spark.conf.get("remote_catalog_name"),
-            namespace_name=self.spark.conf.get("remote_namespace_name"),
+            namespace_name=REMOTE_NAMESPACE_NAME,
             catalog_type=self.spark.conf.get("remote_catalog_type"),
             catalog_uri=self.spark.conf.get("remote_catalog_uri"),
         )

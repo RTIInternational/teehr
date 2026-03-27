@@ -58,7 +58,6 @@ CREATE TABLE IF NOT EXISTS location_attributes(
     value STRING
 ) USING iceberg;
 
--- Should these be if not exists?
 INSERT INTO units VALUES
     ("m^3/s", "Cubic Meters Per Second"),
     ("ft^3/s", "Cubic Feet Per Second"),

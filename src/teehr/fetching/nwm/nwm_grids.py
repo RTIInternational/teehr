@@ -59,7 +59,8 @@ def nwm_grids_to_parquet(
     calculate_zonal_weights: bool = False,
     zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
     unique_zone_id: Optional[str] = None,
-    drop_overlapping_assimilation_values: Optional[bool] = True
+    drop_overlapping_assimilation_values: Optional[bool] = True,
+    convert_k_to_c: bool = True
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -167,6 +168,10 @@ def nwm_grids_to_parquet(
         keeping those with the most recent reference_time. In this case, all
         reference_time values are set to None. If False, overlapping values are
         kept and reference_time is retained.
+    convert_k_to_c : bool, optional (default: True)
+        If True, convert temperature values from Kelvin to Celsius by
+        subtracting 273.15. The unit_name field will be set to "C".
+        Note: this argument is only valid when variable_name is "T2D".
 
 
     See Also
@@ -383,5 +388,6 @@ def nwm_grids_to_parquet(
             location_id_prefix=location_id_prefix,
             variable_mapper=variable_mapper,
             timeseries_type=timeseries_type,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,
+            convert_k_to_c=convert_k_to_c
         )
