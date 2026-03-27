@@ -3,6 +3,8 @@
 import pyspark.sql as ps
 from pyspark.sql.types import StructType, StructField, StringType
 import pytest
+from datetime import datetime
+import pandas as pd
 
 
 @pytest.mark.function_scope_evaluation_template
@@ -10,19 +12,10 @@ def test_table_writes(function_scope_evaluation_template):
     """Test creating a new study."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
-
-    sdf = ev.spark.createDataFrame(
-      data=[
-        ("ft/s", "Feet per second"),
-      ],
-      schema=schema
-    )
-
-    df = sdf.toPandas()
+    df = pd.DataFrame({
+        "name": ["ft/s"],
+        "long_name": ["Feet per second"]
+    })
 
     # Can pass a spark dataframe, pandas dataframe, or named view (str)
     ev._write.to_warehouse(
@@ -37,18 +30,10 @@ def test_insert_write_mode(function_scope_evaluation_template):
     """Test the 'insert' write mode (INSERT INTO without duplicate checking)."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
-
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-        ],
-        schema=schema
-    )
-    df = sdf.toPandas()
+    df = pd.DataFrame({
+        "name": ["f/k"],
+        "long_name": ["Fake unit for testing insert mode"]
+    })
 
     # First insert
     ev._write.to_warehouse(
@@ -77,21 +62,13 @@ def test_delete_from_with_filter(function_scope_evaluation_template):
     """Test delete_from with a filter condition."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
+    df = pd.DataFrame({
+        "name": ["m/s", "ft/s"],
+        "long_name": ["Meters per second", "Feet per second"]
+    })
 
-    # Add two units
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-            ("ft/s", "Feet per second"),
-        ],
-        schema=schema
-    )
     ev._write.to_warehouse(
-        source_data=sdf.toPandas(),
+        source_data=df,
         table_name="units",
         write_mode="append",
     )
@@ -123,21 +100,12 @@ def test_delete_from_dry_run(function_scope_evaluation_template):
     """Test delete_from dry_run returns a DataFrame without deleting."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
-
-    # Add units
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-            ("ft/s", "Feet per second"),
-        ],
-        schema=schema
-    )
+    df = pd.DataFrame({
+        "name": ["m/s", "ft/s"],
+        "long_name": ["Meters per second", "Feet per second"]
+    })
     ev._write.to_warehouse(
-        source_data=sdf.toPandas(),
+        source_data=df,
         table_name="units",
         write_mode="append",
     )
@@ -168,21 +136,12 @@ def test_delete_from_no_filter(function_scope_evaluation_template):
     """Test delete_from with no filter deletes all rows."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
-
-    # Add units
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-            ("ft/s", "Feet per second"),
-        ],
-        schema=schema
-    )
+    df = pd.DataFrame({
+        "name": ["m/s", "ft/s"],
+        "long_name": ["Meters per second", "Feet per second"]
+    })
     ev._write.to_warehouse(
-        source_data=sdf.toPandas(),
+        source_data=df,
         table_name="units",
         write_mode="append",
     )
@@ -205,20 +164,12 @@ def test_delete_from_dict_filter(function_scope_evaluation_template):
     """Test delete_from with a dictionary filter."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
-
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-            ("ft/s", "Feet per second"),
-        ],
-        schema=schema
-    )
+    df = pd.DataFrame({
+        "name": ["m/s", "ft/s"],
+        "long_name": ["Meters per second", "Feet per second"]
+    })
     ev._write.to_warehouse(
-        source_data=sdf.toPandas(),
+        source_data=df,
         table_name="units",
         write_mode="append",
     )
@@ -242,20 +193,13 @@ def test_table_delete_method_dict_filter(function_scope_evaluation_template):
     """Test the delete() method on a table instance with a dict filter."""
     ev = function_scope_evaluation_template
 
-    schema = StructType([
-        StructField("name", StringType(), True),
-        StructField("long_name", StringType(), True)
-    ])
+    df = pd.DataFrame({
+        "name": ["m/s", "ft/s"],
+        "long_name": ["Meters per second", "Feet per second"]
+    })
 
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-            ("ft/s", "Feet per second"),
-        ],
-        schema=schema
-    )
     ev._write.to_warehouse(
-        source_data=sdf.toPandas(),
+        source_data=df,
         table_name="units",
         write_mode="append",
     )
@@ -278,17 +222,13 @@ def test_table_delete_method(function_scope_evaluation_template):
     """Test the delete() method on a table instance."""
     ev = function_scope_evaluation_template
 
-    schema = ev.units.schema_func().to_structtype()
+    df = pd.DataFrame({
+        "name": ["m/s", "ft/s"],
+        "long_name": ["Meters per second", "Feet per second"]
+    })
 
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-            ("ft/s", "Feet per second"),
-        ],
-        schema=schema
-    )
     ev.units.load_dataframe(
-        df=sdf.toPandas(),
+        df=df,
         write_mode="append",
     )
 
@@ -311,17 +251,13 @@ def test_table_delete_method_dry_run(function_scope_evaluation_template):
     """Test the delete() dry_run on a table instance."""
     ev = function_scope_evaluation_template
 
-    schema = ev.units.schema_func().to_structtype()
+    df = pd.DataFrame({
+        "name": ["m/s", "ft/s"],
+        "long_name": ["Meters per second", "Feet per second"]
+    })
 
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-            ("ft/s", "Feet per second"),
-        ],
-        schema=schema
-    )
     ev.units.load_dataframe(
-        df=sdf.toPandas(),
+        df=df,
         write_mode="append",
     )
 
@@ -347,17 +283,12 @@ def test_table_delete_method_no_filter(function_scope_evaluation_template):
     """Test delete() on a table instance with no filter deletes all rows."""
     ev = function_scope_evaluation_template
 
-    schema = ev.units.schema_func().to_structtype()
-
-    sdf = ev.spark.createDataFrame(
-        data=[
-            ("m/s", "Meters per second"),
-            ("ft/s", "Feet per second"),
-        ],
-        schema=schema
-    )
+    df = pd.DataFrame({
+        "name": ["m/s", "ft/s"],
+        "long_name": ["Meters per second", "Feet per second"]
+    })
     ev.units.load_dataframe(
-        df=sdf.toPandas(),
+        df=df,
         write_mode="append",
     )
 
@@ -497,7 +428,7 @@ def test_load_arbitrary_dataframe_to_new_table(function_scope_evaluation_templat
     result_df = ev.table("my_arbitrary_results").to_pandas()
 
     assert len(result_df) == 3
-    assert set(result_df.columns) == {"id", "name", "value", "category"}
+    assert set(result_df.columns) == {"id", "name", "value", "category", "created_at", "updated_at"}
     assert list(result_df["name"]) == ["alpha", "beta", "gamma"]
 
     # Verify it's not a core table

@@ -19,7 +19,9 @@ def test_validate_dataframe_valid_data(session_scope_test_warehouse):
     pdf = pd.DataFrame({
         "name": ["test_config"],
         "type": ["primary"],
-        "description": ["A test configuration"]
+        "description": ["A test configuration"],
+        "created_at": [datetime(2022, 1, 1)],
+        "updated_at": [datetime(2022, 1, 1)]
     })
 
     schema = configuration_schema(type="pandas")
@@ -112,7 +114,9 @@ def test_validate_dataframe_strict_removes_extra_columns(session_scope_test_ware
         "name": ["test_config"],
         "type": ["primary"],
         "description": ["A test configuration"],
-        "extra_column": ["should be removed"]
+        "extra_column": ["should be removed"],
+        "created_at": [datetime(2022, 1, 1)],
+        "updated_at": [datetime(2022, 1, 1)]
     })
 
     schema = configuration_schema(type="pandas")
@@ -127,7 +131,7 @@ def test_validate_dataframe_strict_removes_extra_columns(session_scope_test_ware
     )
 
     assert "extra_column" not in result.columns
-    assert len(result.columns) == 3
+    assert len(result.columns) == 5
 
 
 @pytest.mark.session_scope_test_warehouse
@@ -139,7 +143,9 @@ def test_validate_dataframe_drop_duplicates(session_scope_test_warehouse):
     pdf = pd.DataFrame({
         "name": ["test_config", "test_config", "other_config"],
         "type": ["primary", "primary", "secondary"],
-        "description": ["First", "Duplicate", "Other"]
+        "description": ["First", "Duplicate", "Other"],
+        "created_at": [datetime(2022, 1, 1), datetime(2022, 1, 1), datetime(2022, 1, 2)],
+        "updated_at": [datetime(2022, 1, 1), datetime(2022, 1, 1), datetime(2022, 1, 2)]
     })
 
     schema = configuration_schema(type="pandas")
@@ -165,7 +171,9 @@ def test_validate_dataframe_invalid_type_value(session_scope_test_warehouse):
     pdf = pd.DataFrame({
         "name": ["test_config"],
         "type": ["invalid_type"],  # Not in ["primary", "secondary"]
-        "description": ["A test configuration"]
+        "description": ["A test configuration"],
+        "created_at": [datetime(2022, 1, 1)],
+        "updated_at": [datetime(2022, 1, 1)]
     })
 
     schema = configuration_schema(type="pandas")
@@ -191,6 +199,8 @@ def test_validate_dataframe_missing_required_column(session_scope_test_warehouse
         "name": ["test_config"],
         "type": ["primary"],
         # Missing "description"
+        "created_at": [datetime(2022, 1, 1)],
+        "updated_at": [datetime(2022, 1, 1)]
     })
 
     schema = configuration_schema(type="pandas")
@@ -215,7 +225,9 @@ def test_validate_dataframe_invalid_name_format(session_scope_test_warehouse):
     pdf = pd.DataFrame({
         "name": ["test-config!"],  # Invalid: contains hyphen and exclamation
         "type": ["primary"],
-        "description": ["A test configuration"]
+        "description": ["A test configuration"],
+        "created_at": [datetime(2022, 1, 1)],
+        "updated_at": [datetime(2022, 1, 1)]
     })
 
     schema = configuration_schema(type="pandas")
@@ -240,7 +252,10 @@ def test_validate_dataframe_pyspark(session_scope_test_warehouse):
     pdf = pd.DataFrame({
         "name": ["spark_test_config"],
         "type": ["primary"],
-        "description": ["A PySpark test configuration"]
+        "description": ["A PySpark test configuration"],
+        "created_at": [datetime(2022, 1, 1)],
+        "updated_at": [datetime(2022, 1, 1)]
+
     })
 
     # Convert to Spark DataFrame
@@ -302,7 +317,7 @@ def test_validate_dataframe_foreign_key_enforcement(session_scope_test_warehouse
             df=sdf,
             table_schema=schema,
             strict=True,
-            add_missing_columns=False,
+            add_missing_columns=True,
             drop_duplicates=True,
             uniqueness_fields=["location_id", "value_time", "configuration_name", "variable_name"],
             foreign_keys=foreign_keys
@@ -347,7 +362,7 @@ def test_validate_dataframe_foreign_key_violation(session_scope_test_warehouse):
             df=sdf,
             table_schema=schema,
             strict=True,
-            add_missing_columns=False,
+            add_missing_columns=True,
             drop_duplicates=True,
             uniqueness_fields=["location_id", "value_time", "configuration_name", "variable_name"],
             foreign_keys=foreign_keys
