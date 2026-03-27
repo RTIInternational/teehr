@@ -22,8 +22,6 @@ from teehr.evaluation.spark_session_utils import create_spark_session
 from teehr import LocalReadWriteEvaluation
 from teehr.utilities.import_evaluation import update_metadata_paths
 
-from tests.evaluation_test_class import TestEvaluation
-
 
 def _cleanup_spark(ev):
     """Drop all temporary views and clear the Spark cache."""
@@ -151,7 +149,7 @@ def function_scope_evaluation_template(spark_shared_session, tmp_path_factory):
     spark = spark_shared_session
     dir_path = Path(base_dir) / "function-scoped-warehouse"
     # Create LocalReadWriteEvaluation with custom namespace
-    ev = TestEvaluation(
+    ev = LocalReadWriteEvaluation(
         dir_path=dir_path,
         namespace_name=f"test_namespace_{int(time.time() * 1000)}",  # Unique namespace per test
         create_dir=True,
