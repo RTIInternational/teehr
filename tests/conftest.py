@@ -1,4 +1,17 @@
-"""Defines pytest fixtures for all tests."""
+"""Defines pytest fixtures for all tests.
+
+Function scope: When a fixture must be isolated for each test function
+(e.g., because the test modifies data).
+
+Module scope: When a fixture can be shared across all tests in a module
+(e.g., read-only data that is expensive to set up).
+
+Session scope: When a fixture can be shared across the entire test session
+(e.g., a Spark session or a large test warehouse that is read-only).
+
+In all fixtures returning an Evaluation instance,
+any un-registered TEEHR migrations are applied.
+"""
 import logging
 import pytest
 import shutil
@@ -7,8 +20,18 @@ import time
 
 from teehr.evaluation.spark_session_utils import create_spark_session
 from teehr import LocalReadWriteEvaluation
-from teehr.utilities import apply_migrations
 from teehr.utilities.import_evaluation import update_metadata_paths
+
+
+def _cleanup_spark(ev):
+    """Drop all temporary views and clear the Spark cache."""
+    temp_views = ev.spark.sql("SHOW VIEWS").filter("isTemporary = true").collect()
+    for view in temp_views:
+        try:
+            ev.spark.catalog.dropTempView(view.viewName)
+        except Exception:
+            pass  # View may already be dropped
+    ev.spark.catalog.clearCache()
 
 
 @pytest.fixture(scope="session")
@@ -25,171 +48,189 @@ def spark_shared_session():
 
 @pytest.fixture(scope="function")
 def function_scope_two_location_warehouse(tmp_path_factory, spark_shared_session):
-    """Unpack test ensemble warehouse for each test function."""
-    # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
+    """Extract and import the two location test warehouse for each test function.
+
+    This contains two locations with USGS observations and NWM 3.0 retrospective streamflow.
+
+    The joined_timeseries_view as written to "joined_timeseries" with attrs and
+    calculated fields (month, year, water year, season) were also added.
+
+    See: tests/data/test_warehouse_setup/create_two_locations_test_warehouse.py for how this was created.
+    """
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
     tar_file = test_data_dir / "two_location_test_warehouse.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "two_location_test_warehouse",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="function")
 def function_scope_small_ensemble_warehouse(tmp_path_factory, spark_shared_session):
-    """Unpack test ensemble warehouse for each test function."""
-    # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
+    """Extract and import the small ensemble test warehouse for each test function.
+
+    This contains a small HEFS ensemble sample with USGS observations at the Platte River.
+    Climatology/normals and benchmark forecast timeseries are also included.
+    The joined_timeseries_view as written to "joined_timeseries" without attrs or UDFs.
+
+    See: tests/data/test_warehouse_setup/create_small_ensemble_test_warehouse.py for how this was created.
+    """
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
     tar_file = test_data_dir / "ensemble_test_warehouse_small.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "ensemble_test_warehouse_small",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="function")
 def function_scope_large_ensemble_warehouse(tmp_path_factory, spark_shared_session):
-    """Unpack test ensemble warehouse for each test function."""
-    # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
+    """Extract and import the large ensemble test warehouse for each test function.
+
+    This contains several secondary ensemble configurations including enspost, LSTM, QQM, and "raw".
+    Benchmark forecasts based on daily normals are also included, as well as observations.
+    The joined_timeseries_view as written to "joined_timeseries" without attrs but includes
+    calculated fields (month, year, water year, season).
+
+    See: tests/data/test_warehouse_setup/create_large_ensemble_test_warehouse.py for how this was created.
+    """
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
     tar_file = test_data_dir / "ensemble_test_warehouse_large.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "ensemble_test_warehouse_large",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="function")
 def function_scope_test_warehouse(tmp_path_factory, spark_shared_session):
-    """Unpack test warehouse once per test function."""
-    # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
-    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    """Extract and import the three location test warehouse for each test function.
+
+    This contains three locations with USGS observations and NWM 3.0 retrospective streamflow.
+    Drainage area, ecoregion, and 2-yr discharge attributes are included for each location.
+    The joined_timeseries_view as written to "joined_timeseries" with attrs and
+    calculated fields (month, year, water year, season).
+
+    See: tests/data/test_warehouse_setup/create_three_location_test_warehouse.py for how this was created.
+    """
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
+    tar_file = test_data_dir / "three_location_test_warehouse.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "three_location_test_warehouse",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="function")
-def function_scope_evaluation_template(session_scope_evaluation_template, request):
-    """Function-level evaluation fixture with template cloned to a new namespace."""
-    ev = session_scope_evaluation_template
+def function_scope_evaluation_template(spark_shared_session, tmp_path_factory):
+    """Function-level evaluation fixture with template cloned.
 
-    # NOTE: Could I re-create the catalog db entirely here instead
-    # or as well?
-    # self._set_active_catalog("local")  # Creates the JDBC .db file
-    # But then you'd have to re-register all the tables too...
+    This creates an "empty" evaluation for each test function.
 
-    # Clear any temp views from previous tests to ensure isolation
-    temp_views = ev.spark.sql("SHOW VIEWS").filter("isTemporary = true").collect()
-    for view in temp_views:
-        try:
-            ev.spark.catalog.dropTempView(view.viewName)
-        except Exception:
-            pass  # View may already be dropped
-    ev.spark.catalog.clearCache()
-
-    # Save the original namespace to restore after test
-    original_namespace = ev.local_catalog.namespace_name
-
-    # Create unique namespace per test using test name
-    test_name = request.node.name.replace("[", "_").replace("]", "_")
-    test_namespace = f"{int(time.time() / 1e5)}_{test_name}"
-
-    # Create the namespace in Iceberg. Creates the namespace but not the directory yet.
-    ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{test_namespace}")
-
-    # Override the namespace for this evaluation
-    ev.local_catalog.namespace_name = test_namespace
-
-    # Set up the tables in the new namespace.
-    migrations_dir = Path(__file__).parents[1] / "src/teehr/migrations"
-    apply_migrations.evolve_catalog_schema(
-        spark=ev.spark,
-        migrations_dir_path=migrations_dir,
-        target_catalog_name="local",
-        target_namespace_name=test_namespace
+    Domain tables are populated per migrations but no data is loaded.
+    """
+    base_dir = tmp_path_factory.getbasetemp()
+    spark = spark_shared_session
+    dir_path = Path(base_dir) / "function-scoped-warehouse"
+    # Create LocalReadWriteEvaluation with custom namespace
+    ev = LocalReadWriteEvaluation(
+        dir_path=dir_path,
+        namespace_name=f"test_namespace_{int(time.time() * 1000)}",  # Unique namespace per test
+        create_dir=True,
+        spark=spark,
     )
-
-    # Clean up the catalog? Go back to original namespace and snapshot?
-
     yield ev
-    ev.spark.catalog.clearCache()  # not sure if necessary
-    # After the test reset the namespace name to original value to maintain isolation
-    ev.local_catalog.namespace_name = original_namespace
-    ev._activate_catalog()  # Reset active catalog to original
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="module")
 def module_scope_test_warehouse(tmp_path_factory, spark_shared_session):
-    """Unpack test warehouse once per test module."""
-    # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
-    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    """Extract and import the three location test warehouse for each test module.
+
+    This contains three locations with USGS observations and NWM 3.0 retrospective streamflow.
+    Drainage area, ecoregion, and 2-yr discharge attributes are included for each location.
+    The joined_timeseries_view as written to "joined_timeseries" with attrs and
+    calculated fields (month, year, water year, season).
+
+    See: tests/data/test_warehouse_setup/create_three_location_test_warehouse.py for how this was created.
+    """
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
+    tar_file = test_data_dir / "three_location_test_warehouse.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "three_location_test_warehouse",
         spark=spark_shared_session
     )
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="session")
 def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
-    """Unpack test warehouse once per test SESSION (not per test function).
+    """Extract and import the three location test warehouse for each test SESSION (not per test function).
 
-    This significantly speeds up tests by:
-    1. Unpacking warehouse once for entire test run
-    2. Sharing the warehouse across all tests
-    3. Reusing the same Spark session
+    This contains three locations with USGS observations and NWM 3.0 retrospective streamflow.
+    Drainage area, ecoregion, and 2-yr discharge attributes are included for each location.
+    The joined_timeseries_view as written to "joined_timeseries" with attrs and
+    calculated fields (month, year, water year, season).
 
-    Note: All tests using this fixture share the same warehouse data.
-    If tests modify data, they may affect each other. Use a function-scoped
-    fixture if you need isolation (but it will be much slower).
+    This can be used for tests that don't modify data and want to avoid the overhead
+    of initializing the warehouse multiple times.
+
+    See: tests/data/test_warehouse_setup/create_three_location_test_warehouse.py for how this was created..
     """
-    # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data"
-    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
+    tar_file = test_data_dir / "three_location_test_warehouse.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
 
     ev = update_metadata_paths(
-        dir_path=temp_extract_dir,
+        dir_path=temp_extract_dir / "three_location_test_warehouse",
         spark=spark_shared_session,
     )
 
     yield ev
+    _cleanup_spark(ev)
 
 
 @pytest.fixture(scope="session")
 def session_scope_evaluation_template(spark_shared_session, tmp_path_factory):
-    """Session-level evaluation fixture with template cloned."""
+    """Session-level evaluation template fixture.
+
+    This creates an "empty" evaluation for each test session. This can be used
+    for tests that don't modify data and want to avoid the overhead of initializing
+    the warehouse multiple times.
+
+    Domain tables are populated per migrations but no data is loaded.
+    """
     base_dir = tmp_path_factory.getbasetemp()
     spark = spark_shared_session
     warehouse_dir = Path(base_dir) / "session-scoped-warehouse"
-
-    # Create LocalReadWriteEvaluation with custom namespace
+    # Create LocalReadWriteEvaluation
     ev = LocalReadWriteEvaluation(
         dir_path=warehouse_dir,
         create_dir=True,
         spark=spark,
     )
-
     yield ev
+    _cleanup_spark(ev)
 
 
 # To hide warnings from py4j during pytest shutdown
@@ -201,30 +242,3 @@ def pytest_configure(config):
     # Alternatively, to completely silence py4j:
     # py4j_logger.disabled = True
 
-
-# ==============================================================================
-# ============================Below are unused==================================
-# ==============================================================================
-
-# @pytest.fixture(scope="module")
-# def cached_joined_timeseries_df(evaluation_v0_3_module):
-#     """Cached joined timeseries DataFrame for read-only tests.
-
-#     This fixture loads the joined_timeseries data once per module and
-#     caches it in Spark memory. Use this for tests that only read data
-#     and don't modify it. This can significantly speed up metric calculation
-#     and query tests.
-#     """
-#     df = evaluation_v0_3_module.joined_timeseries.to_sdf()
-#     df.cache()
-#     yield df
-#     df.unpersist()
-
-
-# @pytest.fixture(scope="module")
-# def cached_primary_timeseries_df(evaluation_v0_3_module):
-#     """Cached primary timeseries DataFrame for read-only tests."""
-#     df = evaluation_v0_3_module.primary_timeseries.to_sdf()
-#     df.cache()
-#     yield df
-#     df.unpersist()

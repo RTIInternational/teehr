@@ -1,8 +1,8 @@
-![alt text](https://github.com/RTIInternational/teehr/blob/main/docs/images/teehr.png)
+![alt text](https://github.com/RTIInternational/teehr/blob/main/docs/images/teehr.png?raw=true)
 
 | | |
 | --- | --- |
-| ![alt text](docs/images/readme/CIROHLogo_200x200.png) | Funding for this project was provided by the National Oceanic & Atmospheric Administration (NOAA), awarded to the Cooperative Institute for Research to Operations in Hydrology (CIROH) through the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003). |
+| ![alt text](https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/CIROHLogo_200x200.png?raw=true) | Funding for this project was provided by the National Oceanic & Atmospheric Administration (NOAA), awarded to the Cooperative Institute for Research to Operations in Hydrology (CIROH) through the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003). |
 
 
 # TEEHR - Tools for Exploratory Evaluation in Hydrologic Research
@@ -26,15 +26,15 @@ The TEEHR-Python package is comprised of three main features:
 
 <table>
   <tr>
-    <td><img src="docs/images/readme/fetching-and-loading.png" alt="Fetching and Loading" width="220"></td>
+    <td><img src="https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/fetching-and-loading.png?raw=true" alt="Fetching and Loading" width="220"></td>
     <td><strong>Fetching and Loading</strong> - Tools to bring external or local data into your Evaluation from a variety of sources and file formats.</td>
   </tr>
   <tr>
-    <td><img src="docs/images/readme/data-validation-and-storage.png" alt="Data Validation and Storage" width="220"></td>
+    <td><img src="https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/data-validation-and-storage.png?raw=true" alt="Data Validation and Storage" width="220"></td>
     <td><strong>Data Validation and Storage</strong> - TEEHR's data model helps ensure consistency in field values and types, and interfaces with Apache Iceberg for underlying data storage functionality.</td>
   </tr>
   <tr>
-    <td><img src="docs/images/readme/analytics.png" alt="Analytics" width="220"></td>
+    <td><img src="https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/analytics.png?raw=true" alt="Analytics" width="220"></td>
     <td><strong>Analytics</strong> - TEEHR contains a suite of robust and scalable analytic methods that enable users to fully interrogate their datasets.</td>
   </tr>
 </table>
@@ -46,5 +46,5 @@ The TEEHR-Cloud framework is made up of three components:
 - **TEEHR Services Stack**: A suite of cloud-based services acting as an Evaluation Manager enabling automated data ingestion, metric calculations, and dashboard visualizations.
 
 <p align="center">
-  <img src="docs/images/readme/teehr-cloud-venn-diagram.png" alt="TEEHR Cloud Venn Diagram" width="333">
+  <img src="https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/teehr-cloud-venn-diagram.png?raw=true" alt="TEEHR Cloud Venn Diagram" width="333">
 </p>

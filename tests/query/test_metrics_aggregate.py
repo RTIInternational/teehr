@@ -197,18 +197,18 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
     ).order_by(["primary_location_id", "configuration_name"]).to_pandas()
 
     # check CRPS values
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 21.861153)
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 22.64521)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 15.99071)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 16.27986)
     assert np.isclose(
-        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.214589
+        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.42549799
     )
     assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[2])
 
     # check Brier Score values
-    assert np.isclose(metrics_df.mean_brier_score.values[0], 0.187054)
-    assert np.isclose(metrics_df.mean_brier_score.values[1], 0.1934589)
+    assert np.isclose(metrics_df.mean_brier_score.values[0], 0.14653)
+    assert np.isclose(metrics_df.mean_brier_score.values[1], 0.144068)
     assert np.isclose(
-        metrics_df.mean_brier_score_skill_score.values[0], 0.275162
+        metrics_df.mean_brier_score_skill_score.values[0], 0.432196
     )
     assert np.isnan(
         metrics_df.mean_brier_score_skill_score.values[2]

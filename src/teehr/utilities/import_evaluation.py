@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 def _catalog_uri_is_configured(spark, catalog_name):
-    """
-    Checks if a local catalog URI is configured in the Spark session.
+    """Check if a local catalog URI is configured in the Spark session.
+
     Returns True if configured, False otherwise.
     """
     conf_key = f"spark.sql.catalog.{catalog_name}.uri"
@@ -36,7 +36,6 @@ def update_metadata_paths(
     dir_path: Union[str, Path],
     spark: SparkSession = None,
     catalog_name: str = "local",
-    namespace_name: str = "teehr",
     database_name: str = LOCAL_CATALOG_DB_NAME,
 ) -> teehr.LocalReadWriteEvaluation:
     """Import a shared evaluation from a directory path.
@@ -50,20 +49,6 @@ def update_metadata_paths(
     """
     if spark is None:
         spark = create_spark_session()
-
-    if _catalog_uri_is_configured(spark, catalog_name):
-        # If spark catalog database already exists, we need to clear
-        # the existing tables in the catalog to avoid conflicts
-        tables = spark.sql(f"SHOW TABLES IN {catalog_name}.{namespace_name}").collect()
-        for table in tables:
-            table_name = table.tableName
-            # Use "DROP TABLE IF EXISTS" to avoid errors if a table is transiently missing
-            # The PURGE option removes the underlying data files as well
-            try:
-                spark.sql(f"DROP TABLE IF EXISTS {catalog_name}.{namespace_name}.{table_name} PURGE")
-                print(f"Dropped table: {table_name}")
-            except Exception as e:
-                print(f"Error dropping table {table_name}: {e}")
 
     warehouse_dir = Path(dir_path) / catalog_name
     db_uri = f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
@@ -140,8 +125,8 @@ def update_metadata_paths(
         if isinstance(json_data, dict):  # If it's a dictionary, iterate over the keys and values
             for key, value in json_data.items():
                 if type(value) is str:
-                        if old_metadata_prefix in value:
-                            json_data[key] = value.replace(old_metadata_prefix, new_metadata_prefix)
+                    if old_metadata_prefix in value:
+                        json_data[key] = value.replace(old_metadata_prefix, new_metadata_prefix)
                 else:
                     replace_json_values(value, target_value, replacement_value) # Recursively call for nested values
 
@@ -177,7 +162,6 @@ def update_metadata_paths(
         .option("query", "SELECT * FROM iceberg_tables") \
         .load()
 
-
     # Replace "Guard" with "Gd" in the "position" column
     updated_sdf = iceberg_sdf.withColumn(
         "metadata_location",
@@ -198,27 +182,26 @@ def update_metadata_paths(
         .mode("overwrite") \
         .save()
 
-    # Test reading the evaluation tables
-    ev = teehr.LocalReadWriteEvaluation(
-        dir_path,
-        create_dir=False,
-        spark=spark,
-        check_evaluation_version=False
-    )
-
     # Remove .crc files -- these interfere with register_table
     crc_files = glob.glob(f"{new_metadata_prefix}/**/.*.crc", recursive=True)
     [Path(filepath).unlink() for filepath in crc_files]
 
     # Execute the register_table procedure
     for row in updated_tables_df.itertuples():
-        table_name = row.table_name
-        metadata_file = row.metadata_location
-        ev.sql(f"""
-        CALL local.system.register_table(
-            table => 'teehr.{table_name}',
-            metadata_file => '{metadata_file}'
-        )
+        spark.sql(f"DROP TABLE IF EXISTS {catalog_name}.{row.table_namespace}.{row.table_name} PURGE")
+        spark.sql(f"""
+            CALL local.system.register_table(
+                table => '{row.table_namespace}.{row.table_name}',
+                metadata_file => '{row.metadata_location}'
+            )
         """).show()
+
+    # Initialize the Evaluation, which applies any new migrations.
+    ev = teehr.LocalReadWriteEvaluation(
+        dir_path,
+        create_dir=False,
+        spark=spark,
+        check_evaluation_version=False
+    )
 
     return ev
