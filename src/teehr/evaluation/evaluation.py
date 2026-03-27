@@ -596,21 +596,6 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
             logger.info(f"Table: {tbl.name}, Type: {tbl.tableType}")
         return pd.DataFrame(metadata)
 
-    def list_namespaces(self, catalog_name: str = None) -> pd.DataFrame:
-        """List the namespaces in the catalog returning a Pandas DataFrame.
-
-        Parameters
-        ----------
-        catalog_name : str, optional
-            The catalog name to list namespaces from, by default None,
-             which means the catalog_name of the active catalog is used.
-        """
-        if catalog_name is None:
-            catalog_name = self.active_catalog.catalog_name
-        ns_list = self.spark.sql("SHOW NAMESPACES").toPandas()
-        logger.info(f"Namespaces in catalog '{catalog_name}': {ns_list['namespace'].tolist()}")
-        return ns_list
-
     def drop_table(
         self,
         table_name: str,
@@ -918,71 +903,6 @@ class LocalReadWriteEvaluation(BaseEvaluation):
                 raise ValueError(err_msg)
             else:
                 logger.info(f"Evaluation version {version} in {version_dir} is valid.")
-
-    def create_namespace(
-        self,
-        namespace_name: str,
-        make_active: bool = True
-    ):
-        """Create a new namespace in the local catalog.
-
-        Parameters
-        ----------
-        namespace_name : str
-            The name of the namespace to create.
-        make_active : bool, optional
-            Whether to set the new namespace as the active namespace after creation.
-            If True, subsequent queries will use the new namespace by default.
-            Default is True.
-
-        Examples
-        --------
-        >>> ev.create_namespace("my_namespace")
-
-        Namespace name can be specified when accessing tables and views:
-        >>> ev.table("primary_timeseries", namespace_name="my_namespace").to_pandas()
-        """
-        apply_migrations.evolve_catalog_schema(
-            spark=self.spark,
-            migrations_dir_path=Path(__file__).parents[1] / "migrations",
-            target_catalog_name=self._catalog.catalog_name,
-            target_namespace_name=namespace_name
-        )
-        logger.info(f"Namespace '{namespace_name}' created in catalog '{self._catalog.catalog_name}'.")
-        if make_active:
-            self._catalog = LocalCatalog(
-                warehouse_dir=self._catalog.warehouse_dir,
-                catalog_name=self._catalog.catalog_name,
-                namespace_name=namespace_name,
-                catalog_type=self.spark.conf.get("local_catalog_type"),
-            )
-            logger.info(f"Namespace '{namespace_name}' set as active namespace.")
-
-    def set_active_namespace(self, namespace_name: str):
-        """Set the active namespace for this evaluation.
-
-        Parameters
-        ----------
-        namespace_name : str
-            The name of the namespace to set as active. This namespace must already exist in the catalog.
-            Access to tables and views will use this namespace by default after calling this method.
-
-        Examples
-        --------
-        >>> ev.set_active_namespace("my_namespace")
-        """
-        available_namespaces = self.spark.sql("SHOW NAMESPACES").toPandas()["namespace"].tolist()
-        if namespace_name not in available_namespaces:
-            raise ValueError(
-                f"Namespace '{namespace_name}' does not exist in catalog '{self._catalog.catalog_name}'."
-            )
-        self._catalog = LocalCatalog(
-            warehouse_dir=self._catalog.warehouse_dir,
-            catalog_name=self._catalog.catalog_name,
-            namespace_name=namespace_name,
-            catalog_type=self.spark.conf.get("local_catalog_type"),
-        )
-        logger.info(f"Namespace '{namespace_name}' set as active namespace.")
 
 
 class Evaluation(LocalReadWriteEvaluation):
