@@ -89,113 +89,140 @@ def _format_df_column_names(
     df: pd.DataFrame,
     variable_name: str,
     unit_name: str,
-    service: str,
 ) -> pd.DataFrame:
     """Format dataretrieval dataframe columns to TEEHR data model."""
     logger.debug("Formatting column names.")
-    if service == "iv":
-        col_name = "00060"
-    elif service == "dv":
-        col_name = "00060_Mean"
-    if col_name not in df.columns:
-        logger.error(
-            "The requested USGS gage(s) does not contain parameter code"
-            f"'{col_name}'. Please check the site(s) and requested service."
-        )
-        return None
-
-    # create series for value_time to preserve timezone information in df.index
-    value_time_series = pd.Series(
-            df.index,
-            name=VALUE_TIME
-        )
-
     # Create numpy arrays for other columns
-    location_id_array = np.array("usgs-" + df['site_no'].values)
-    value_array = np.array(df[col_name])
+    location_id_array = df['monitoring_location_id'].str.lower().values
+    value_array = df["value"].values
     reference_time_array = np.full(len(df), np.nan, dtype=object)
     variable_name_array = np.full(len(df), variable_name, dtype=object)
     unit_name_array = np.full(len(df), unit_name, dtype=object)
     configuration_name_array = np.full(
         len(df), USGS_CONFIGURATION_NAME, dtype=object
     )
-
+    value_time_array = df["time"].values
     # Create dictionary with column names as keys
     data_dict = {
         LOCATION_ID: location_id_array,
         REFERENCE_TIME: reference_time_array,
-        VALUE_TIME: value_time_series,
+        VALUE_TIME: value_time_array,
         VALUE: value_array,
         VARIABLE_NAME: variable_name_array,
         UNIT_NAME: unit_name_array,
         CONFIGURATION_NAME: configuration_name_array
     }
-
     # Construct DataFrame from dictionary
     result_df = pd.DataFrame(data_dict)
-
     return result_df
 
 
-def _parse_site_id_list(
-    sites: Union[List[str], List[Dict[str, str]]]
-) -> List[str]:
-    """Parse the site ID list into a flat list of site IDs."""
-    parsed_sites = []
-    for site in sites:
-        if isinstance(site, dict):
-            # Confirm that the site dictionary contains the required keys.
-            if "site_no" not in site or "description" not in site:
-                err_msg = (
-                    "Each site dictionary must contain the keys"
-                    " 'site_no' and 'description'."
-                )
-                logger.error(err_msg)
-                raise ValueError(err_msg)
-            # Confirm that the 'description' field is valid.
-            site_no = site["site_no"]
-            response = nwis.query_waterservices(
-                "site",
-                sites=[site_no],
-                hasDataTypeCd="iv,dv",
-                outputDataTypeCd="iv,dv"
-            )
-            df = nwis._read_rdb(response.text)
-            is_valid = False
-            for row_values in df.values:
-                if site["description"] in row_values:
-                    is_valid = True
-                    break
-            if not is_valid:
-                err_msg = (
-                    f"The site '{site_no}' does not have a time series description matching"
-                    f" '{site['description']}'. Please check the site and description."
-                )
-                logger.error(err_msg)
-                raise ValueError(err_msg)
-            parsed_sites.append(site["site_no"])
-        else:
-            parsed_sites.append(site)
-    return parsed_sites
+# def _parse_site_id_list(
+#     sites: Union[List[str], List[Dict[str, str]]]
+# ) -> List[str]:
+#     """Parse the site ID list into a flat list of site IDs."""
+#     parsed_sites = []
+#     for site in sites:
+#         if isinstance(site, dict):
+#             # Confirm that the site dictionary contains the required keys.
+#             if "site_no" not in site or "description" not in site:
+#                 err_msg = (
+#                     "Each site dictionary must contain the keys"
+#                     " 'site_no' and 'description'."
+#                 )
+#                 logger.error(err_msg)
+#                 raise ValueError(err_msg)
+#             # Confirm that the 'description' field is valid.
+#             site_no = site["site_no"]
+#             response = nwis.query_waterservices(
+#                 "site",
+#                 sites=[site_no],
+#                 hasDataTypeCd="iv,dv",
+#                 outputDataTypeCd="iv,dv"
+#             )
+#             df = nwis._read_rdb(response.text)
+#             is_valid = False
+#             for row_values in df.values:
+#                 if site["description"] in row_values:
+#                     is_valid = True
+#                     break
+#             if not is_valid:
+#                 err_msg = (
+#                     f"The site '{site_no}' does not have a time series description matching"
+#                     f" '{site['description']}'. Please check the site and description."
+#                 )
+#                 logger.error(err_msg)
+#                 raise ValueError(err_msg)
+#             parsed_sites.append(site["site_no"])
+#         else:
+#             parsed_sites.append(site)
+#     return parsed_sites
 
 
-def _assign_discharge_by_description(
-    nwis_df: pd.DataFrame,
-    sites: Union[
-        List[str],
-        List[Dict[str, str]],
-        List[Union[str, Dict[str, str]]]
-    ],
+# def _assign_discharge_by_description(
+#     usgs_df: pd.DataFrame,
+#     sites: Union[
+#         List[str],
+#         List[Dict[str, str]],
+#         List[Union[str, Dict[str, str]]]
+#     ],
+# ) -> pd.DataFrame:
+#     """Filter the DataFrame by the timeseries description."""
+#     logger.debug("Filtering by timeseries description.")
+#     for site in sites:
+#         if isinstance(site, dict):
+#             site_no = site["site_no"]
+#             mask = usgs_df["monitoring_location_id"] == "USGS-" + site_no
+#             description = site["description"].strip("[]()").lower()
+#             usgs_df.loc[mask, "00060"] = usgs_df[f"00060_{description}"]
+#     return usgs_df
+
+
+def _fetch_site_data_by_description(
+    site_dict: Dict[str, str],
+    start_dt_iso: str,
+    end_dt_iso: str,
+    service: str
 ) -> pd.DataFrame:
-    """Filter the DataFrame by the timeseries description."""
-    logger.debug("Filtering by timeseries description.")
-    for site in sites:
-        if isinstance(site, dict):
-            site_no = site["site_no"]
-            mask = nwis_df["site_no"] == site_no
-            description = site["description"].strip("[]()").lower()
-            nwis_df.loc[mask, "00060"] = nwis_df[f"00060_{description}"]
-    return nwis_df
+    """Fetch data for a single site based on the description."""
+    site_no = "USGS-" + site_dict["site_no"]
+    description = site_dict["description"].strip("[]()").lower()
+    metadata_df, _ = waterdata.get_time_series_metadata(
+        monitoring_location_id=site_no,
+        parameter_code="00060"
+    )
+    matching_rows = metadata_df[
+        metadata_df["web_description"].str.strip("[]()").str.lower() == description
+    ]
+    if matching_rows.empty:
+        logger.error(
+            f"No time series found for site {site_no} with description '{description}'."
+            " Please check the site number and description."
+        )
+        return None
+    elif len(matching_rows) > 1:
+        logger.error(
+            f"Multiple time series found for site {site_no} with description '{description}'."
+            " Please check the site number and description to ensure it is specific enough to return a single time series."
+        )
+        return None
+    else:
+        time_series_id = matching_rows["time_series_id"].iloc[0]
+        if service == "iv":
+            usgs_df, _ = waterdata.get_continuous(
+                monitoring_location_id=site_no,
+                parameter_code="00060",
+                time=f"{start_dt_iso}Z/{end_dt_iso}Z",
+                time_series_id=time_series_id
+            )
+        elif service == "dv":
+            usgs_df, _ = waterdata.get_daily(
+                monitoring_location_id=site_no,
+                parameter_code='00060',
+                time=f"{start_dt_iso}Z/{end_dt_iso}Z",
+                time_series_id=time_series_id
+            )
+        return usgs_df
 
 
 def _fetch_usgs_streamflow(
@@ -221,51 +248,65 @@ def _fetch_usgs_streamflow(
         - timedelta(minutes=1)
     ).isoformat()
 
-    # Parse out list of sites.
-    # parsed_sites = _parse_site_id_list(sites)
+    # Split the sites into those that are a string and those that are dictionaries,
+    # to handle the description filtering for the latter.
+    string_sites = ["USGS-" + site for site in sites if isinstance(site, str)]
+    dict_sites = [site for site in sites if isinstance(site, dict)]
+    # Loop over dict_sites. For each site, make a call to get_time_series_metadata()
+    # to get the metadata for that site. From that output, get the time_series_id that
+    # matches the description in the site dictionary. Then, make a call to get_continuous()
+    # or get_daily() and filter by time_series_id to get the data for that site.
+    site_df_list = []
+    for site_dict in dict_sites:
+        site_df = _fetch_site_data_by_description(
+            site_dict=site_dict,
+            start_dt_iso=start_dt_iso,
+            end_dt_iso=end_dt_iso,
+            service=service
+         )
+        if site_df is not None:
+            site_df_list.append(site_df)
 
-    # Add "USGS-" prefix to site numbers to match the format of the location_id field in the NWIS data.
-    sites = ["USGS-" + site for site in sites]
+    # # TEMP
+    # sites = ["08025360"]
 
-    # Retrieve data --> dataretrieval
-    if service == "iv":
-        usgs_df, metadata = waterdata.get_continuous(
-            monitoring_location_id=sites,
-            parameter_code="00060",
-            time=f"{start_dt_iso}Z/{end_dt_iso}Z",
-        )
-    elif service == "dv":
-        usgs_df, metadata = waterdata.get_daily(
-            monitoring_location_id=sites,
-            parameter_code='00060',
-            time=f"{start_dt_iso}Z/{end_dt_iso}Z"
-        )
+    # Fetch sites that are just strings (i.e. no description filtering needed)
+    usgs_df = None
+    if len(string_sites) > 0:
+        # Retrieve data --> dataretrieval
+        if service == "iv":
+            usgs_df, _ = waterdata.get_continuous(
+                monitoring_location_id=string_sites,
+                parameter_code="00060",
+                time=f"{start_dt_iso}Z/{end_dt_iso}Z",
+            )
+        elif service == "dv":
+            usgs_df, _ = waterdata.get_daily(
+                monitoring_location_id=string_sites,
+                parameter_code='00060',
+                time=f"{start_dt_iso}Z/{end_dt_iso}Z"
+            )
 
-    pass
-
-    # usgs_df = nwis.get_record(
-    #     sites=parsed_sites,
-    #     service=service,
-    #     start=start_dt_str,
-    #     end=end_dt_str,
-    #     multi_index=False
-    # )
+    if len(site_df_list) > 0:
+        # site_df = pd.concat(site_df_list)
+        if usgs_df is not None and not usgs_df.empty:
+            site_df_list.append(usgs_df)
+        usgs_df = pd.concat(site_df_list)
 
     variable_name = variable_mapper[VARIABLE_NAME][service]
     unit_name = variable_mapper[UNIT_NAME]["Imperial"]
 
-    # # If any dictionaries were passed in, assign the values from
-    # # the description field to the 00060 column.
+    # If any dictionaries were passed in, assign the values from
+    # the description field to the 00060 column.
     # usgs_df = _assign_discharge_by_description(
-    #     nwis_df=usgs_df,
+    #     usgs_df=usgs_df,
     #     sites=sites
     # )
 
     usgs_df = _format_df_column_names(
         df=usgs_df,
         variable_name=variable_name,
-        unit_name=unit_name,
-        service=service
+        unit_name=unit_name
     )
 
     if usgs_df is None or usgs_df.empty:

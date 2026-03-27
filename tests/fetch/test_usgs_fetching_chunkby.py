@@ -8,14 +8,15 @@ import pytest
 
 from teehr.fetching.usgs.usgs import usgs_to_parquet
 
-@pytest.mark.skip(reason="This test fails and is a known issue.")
+
+# @pytest.mark.skip(reason="This test fails and is a known issue.")
 def test_by_description(tmpdir):
     """Test chunkby location id."""
     usgs_to_parquet(
         sites=[
             {
                 "site_no": "08025360",
-                "description": "[Total Spillway Releases]"
+                "description": "Total Spillway Releases"
             }
         ],
         start_date=datetime(2023, 2, 20),
