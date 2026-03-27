@@ -904,6 +904,43 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             else:
                 logger.info(f"Evaluation version {version} in {version_dir} is valid.")
 
+    def create_namespace(
+        self,
+        namespace_name: str,
+        make_active: bool = True
+    ):
+        """Create a new namespace in the local catalog.
+
+        Parameters
+        ----------
+        namespace_name : str
+            The name of the namespace to create.
+        make_active : bool, optional
+            Whether to set the new namespace as the active namespace after creation.
+            If True, subsequent queries will use the new namespace by default.
+            Default is True.
+
+        Examples
+        --------
+        >>> ev.create_namespace("my_namespace")
+
+        Namespace name can be specified when accessing tables and views:
+        >>> ev.table("primary_timeseries", namespace_name="my_namespace").to_pandas()
+        """
+        apply_migrations.evolve_catalog_schema(
+            spark=self.spark,
+            migrations_dir_path=Path(__file__).parents[1] / "migrations",
+            target_catalog_name=self._catalog.catalog_name,
+            target_namespace_name=namespace_name
+        )
+        if make_active:
+            self._catalog = LocalCatalog(
+                warehouse_dir=self._catalog.warehouse_dir,
+                catalog_name=self._catalog.catalog_name,
+                namespace_name=namespace_name,
+                catalog_type=self.spark.conf.get("local_catalog_type"),
+            )
+
 
 class Evaluation(LocalReadWriteEvaluation):
     """A read-write Evaluation class for accessing local catalogs.
