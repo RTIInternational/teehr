@@ -30,7 +30,7 @@ def test_download_evaluation_subset(function_scope_evaluation_template):
     assert ev.locations.to_sdf().count() == 1
     assert ev.location_attributes.to_sdf().count() >= 48
     assert ev.units.to_sdf().count() >= 5
-    assert ev.variables.to_sdf().count() >= 5
+    assert ev.variables.to_sdf().count() >= 6
     assert ev.attributes.to_sdf().count() >= 50
     assert ev.configurations.to_sdf().count() == 2
     assert ev.primary_timeseries.to_sdf().count() == 25
