@@ -1,23 +1,12 @@
+"""Tests new properties field in locations, location_crosswalks, and location_attributes tables."""
 import pandas as pd
-
 import pytest
-import teehr
-from pathlib import Path
-from teehr.utilities import apply_migrations
+
 
 @pytest.mark.function_scope_test_warehouse
 def test_location_properties_spark(function_scope_test_warehouse):
     """Test creating a new study."""
     ev = function_scope_test_warehouse
-
-    migrations_dir = Path(teehr.__file__).parent / "migrations"
-
-    apply_migrations.evolve_catalog_schema(
-        spark=ev.spark,
-        migrations_dir_path=migrations_dir,
-        target_catalog_name=ev._catalog.catalog_name,
-        target_namespace_name=ev._catalog.namespace_name
-    )
 
     # Check that properties column exists in locations table
     sdf = ev.locations.to_sdf()
@@ -52,15 +41,6 @@ def test_location_properties_spark(function_scope_test_warehouse):
 def test_location_properties_pandas(function_scope_test_warehouse):
     """Test creating a new study."""
     ev = function_scope_test_warehouse
-
-    migrations_dir = Path(teehr.__file__).parent / "migrations"
-
-    apply_migrations.evolve_catalog_schema(
-        spark=ev.spark,
-        migrations_dir_path=migrations_dir,
-        target_catalog_name=ev._catalog.catalog_name,
-        target_namespace_name=ev._catalog.namespace_name
-    )
 
     # Check that properties column exists in locations table
     sdf = ev.locations.to_sdf()

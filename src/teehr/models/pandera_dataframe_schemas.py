@@ -5,9 +5,9 @@ import pyspark.sql.types as T
 import pandas as pd
 import pyarrow as pw
 
+
 # Domains
 # PySpark Pandera Schemas
-
 def ln_no_commas(pyspark_obj) -> bool:
     """Ensure long_name column does not contain commas."""
     return pyspark_obj.filter(pyspark_obj["long_name"].contains(",")).count() == 0

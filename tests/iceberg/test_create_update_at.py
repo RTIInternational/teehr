@@ -1,22 +1,12 @@
+"""Tests created_at and updated_at columns in domains tables."""
 import pytest
 import teehr
-from pathlib import Path
-from teehr.utilities import apply_migrations
 
 
 @pytest.mark.function_scope_test_warehouse
 def test_domains_upsert_new(function_scope_test_warehouse):
     """Test creating a new study."""
     ev = function_scope_test_warehouse
-
-    migrations_dir = Path(teehr.__file__).parent / "migrations"
-
-    apply_migrations.evolve_catalog_schema(
-        spark=ev.spark,
-        migrations_dir_path=migrations_dir,
-        target_catalog_name=ev._catalog.catalog_name,
-        target_namespace_name=ev._catalog.namespace_name
-    )
 
     # Units
     ev.units.add([teehr.Unit(name="t/s", long_name="Unit 1")])
@@ -67,15 +57,6 @@ def test_domains_upsert_existing(function_scope_test_warehouse):
     """Test creating a new study."""
     ev = function_scope_test_warehouse
 
-    migrations_dir = Path(teehr.__file__).parent / "migrations"
-
-    apply_migrations.evolve_catalog_schema(
-        spark=ev.spark,
-        migrations_dir_path=migrations_dir,
-        target_catalog_name=ev._catalog.catalog_name,
-        target_namespace_name=ev._catalog.namespace_name
-    )
-
     # Units
     df = ev.units.filter("name = 'm^3/s'").to_sdf().select("name", "long_name").toPandas()
     ev._write.to_warehouse(df, "units", "upsert")
@@ -86,7 +67,9 @@ def test_domains_upsert_existing(function_scope_test_warehouse):
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
 
     # Configurations
-    df = ev.configurations.filter("name = 'usgs_observations'").to_sdf().select("name", "type", "description").toPandas()
+    df = ev.configurations.filter(
+        "name = 'usgs_observations'"
+    ).to_sdf().select("name", "type", "description").toPandas()
     ev._write.to_warehouse(df, "configurations", "upsert")
 
     sdf = ev.configurations.filter("name = 'usgs_observations'").to_sdf()
