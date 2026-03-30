@@ -23,12 +23,12 @@ def _create_warehouse(dir_path):
     ev.configurations.add([
         teehr.Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="setup_v0_3_study primary configuration"
         ),
         teehr.Configuration(
             name="nwm30_retrospective",
-            type="secondary",
+            timeseries_type="secondary",
             description="setup_v0_3_study secondary configuration"
         )
     ])
@@ -37,17 +37,17 @@ def _create_warehouse(dir_path):
         [
             teehr.Attribute(
                 name="drainage_area",
-                type="continuous",
+                timeseries_type="continuous",
                 description="Drainage area in square kilometers"
             ),
             teehr.Attribute(
                 name="ecoregion",
-                type="categorical",
+                timeseries_type="categorical",
                 description="Ecoregion"
             ),
             teehr.Attribute(
                 name="year_2_discharge",
-                type="continuous",
+                timeseries_type="continuous",
                 description="2-yr discharge in cubic meters per second"
             ),
         ]

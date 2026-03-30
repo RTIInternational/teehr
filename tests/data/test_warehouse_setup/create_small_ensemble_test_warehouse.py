@@ -27,12 +27,12 @@ def _create_warehouse(dir_path):
     ev.configurations.add([
         teehr.Configuration(
             name="MEFP",
-            type="secondary",
+            timeseries_type="secondary",
             description="MBRFC HEFS Data"
         ),
         teehr.Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="USGS observed test data"
         )
     ])
@@ -67,7 +67,7 @@ def _create_warehouse(dir_path):
         [
             teehr.Configuration(
                 name="benchmark_forecast_hourly_normals",
-                type="secondary",
+                timeseries_type="secondary",
                 description="Reference forecast based on USGS climatology summarized by hour of year"  # noqa
             )
         ]

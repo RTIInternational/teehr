@@ -35,6 +35,8 @@ def format_datetime64(s: pd.Series) -> pd.Series:
 
 def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
     """Return the schema for configuration data."""
+    timeseries_types = ["primary", "secondary"]
+
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
@@ -45,11 +47,9 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                         pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
                     ]
                 ),
-                "type": pa.Column(
+                "timeseries_type": pa.Column(
                     pa.String,
-                    checks=pa.Check.isin(
-                        ["primary", "secondary"]
-                    )
+                    checks=pa.Check.isin(timeseries_types)
                 ),
                 "description": pa.Column(
                     pa.String
@@ -65,6 +65,10 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     parsers=pa.Parser(format_datetime64),
                     nullable=True,
                     coerce=True,
+                ),
+                "properties": pa.Column(
+                    pa.Object,
+                    nullable=True,
                 )
             },
             strict="filter"
@@ -77,10 +81,10 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                     nullable=False,
                     checks=ps.Check(valid_name, error="`name` column contains special characters")
                 ),
-                "type": ps.Column(
+                "timeseries_type": ps.Column(
                     T.StringType(),
                     nullable=False,
-                    checks=ps.Check.isin(["primary", "secondary"])
+                    checks=ps.Check.isin(timeseries_types)
                 ),
                 "description": ps.Column(
                     T.StringType(),
@@ -93,6 +97,10 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
                 "updated_at": ps.Column(
                     T.TimestampNTZType(),
                     nullable=True,
+                ),
+                "properties": ps.Column(
+                    T.MapType(T.StringType(), T.StringType()),
+                    nullable=True,
                 )
             },
             strict=True,
@@ -101,10 +109,11 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
     if type == "arrow":
         return pw.schema([
             pw.field("name", pw.string()),
-            pw.field("type", pw.string()),
+            pw.field("timeseries_type", pw.string()),
             pw.field("description", pw.string()),
             pw.field("created_at", pw.timestamp("ms")),
             pw.field("updated_at", pw.timestamp("ms")),
+            pw.field("properties", pw.map_(pw.string(), pw.string())),
         ])
 
 

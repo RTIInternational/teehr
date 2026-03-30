@@ -54,7 +54,7 @@ class ConfigurationTable(DomainTable):
         >>> from teehr import Configuration
         >>> configuration = Configuration(
         >>>     name="usgs_observations",
-        >>>     type="primary",
+        >>>     timeseries_type="primary",
         >>>     description="USGS observations",
         >>> )
         >>> ev.configurations.add(configuration)

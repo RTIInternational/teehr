@@ -47,7 +47,7 @@ def _create_warehouse(dir_path):
         ev.configurations.add(
             teehr.Configuration(
                 name=row["name"],
-                type=row["type"],
+                timeseries_type=row["type"],
                 description=row["description"]
             )
         )

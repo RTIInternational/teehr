@@ -20,13 +20,13 @@ def test_domains_upsert_new(function_scope_test_warehouse):
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
 
     # Configurations
-    ev.configurations.add([teehr.Configuration(name="conf_1", type="primary", description="Configuration 1")])
+    ev.configurations.add([teehr.Configuration(name="conf_1", timeseries_type="primary", description="Configuration 1")])
 
     # Check that new configuration is added and can be read back with created_at and updated_at columns
     sdf = ev.configurations.filter("name = 'conf_1'").to_sdf()
 
     # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
-    assert sorted(sdf.columns) == sorted(["name", "type", "description", "created_at", "updated_at"])
+    assert sorted(sdf.columns) == sorted(["name", "timeseries_type", "description", "created_at", "updated_at", "properties"])
     assert sdf.filter("created_at IS NOT NULL").count() == 1
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
 
@@ -69,11 +69,11 @@ def test_domains_upsert_existing(function_scope_test_warehouse):
     # Configurations
     df = ev.configurations.filter(
         "name = 'usgs_observations'"
-    ).to_sdf().select("name", "type", "description").toPandas()
-    ev._write.to_warehouse(df, "configurations", "upsert")
+    ).to_sdf().select("name", "timeseries_type", "description").toPandas()
+    ev.configurations.load_dataframe(df, write_mode="upsert")
 
     sdf = ev.configurations.filter("name = 'usgs_observations'").to_sdf()
-    assert sorted(sdf.columns) == sorted(["name", "type", "description", "created_at", "updated_at"])
+    assert sorted(sdf.columns) == sorted(["name", "timeseries_type", "description", "created_at", "updated_at", "properties"])
     assert sdf.filter("created_at IS NOT NULL").count() == 0
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
 

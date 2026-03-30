@@ -59,7 +59,7 @@ def setup_nwm_example(tmpdir):
     for tpl in configs_df.itertuples():
         config_obj = teehr.Configuration(
             name=tpl.name,
-            type=tpl.type,
+            timeseries_type=tpl.type,
             description=tpl.description
         )
         configs_list.append(config_obj)

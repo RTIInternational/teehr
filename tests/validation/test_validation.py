@@ -18,10 +18,11 @@ def test_validate_dataframe_valid_data(session_scope_test_warehouse):
     # Create valid configuration data
     pdf = pd.DataFrame({
         "name": ["test_config"],
-        "type": ["primary"],
+        "timeseries_type": ["primary"],
         "description": ["A test configuration"],
         "created_at": [datetime(2022, 1, 1)],
-        "updated_at": [datetime(2022, 1, 1)]
+        "updated_at": [datetime(2022, 1, 1)],
+        "properties": [{"key1": "value1", "key2": "value2"}]
     })
 
     schema = configuration_schema(type="pandas")
@@ -112,11 +113,12 @@ def test_validate_dataframe_strict_removes_extra_columns(session_scope_test_ware
     # Create data with extra columns
     pdf = pd.DataFrame({
         "name": ["test_config"],
-        "type": ["primary"],
+        "timeseries_type": ["primary"],
         "description": ["A test configuration"],
         "extra_column": ["should be removed"],
         "created_at": [datetime(2022, 1, 1)],
-        "updated_at": [datetime(2022, 1, 1)]
+        "updated_at": [datetime(2022, 1, 1)],
+        "properties": [{"key1": "value1", "key2": "value2"}]
     })
 
     schema = configuration_schema(type="pandas")
@@ -131,7 +133,7 @@ def test_validate_dataframe_strict_removes_extra_columns(session_scope_test_ware
     )
 
     assert "extra_column" not in result.columns
-    assert len(result.columns) == 5
+    assert len(result.columns) == 6
 
 
 @pytest.mark.session_scope_test_warehouse
@@ -142,10 +144,11 @@ def test_validate_dataframe_drop_duplicates(session_scope_test_warehouse):
     # Create data with duplicates
     pdf = pd.DataFrame({
         "name": ["test_config", "test_config", "other_config"],
-        "type": ["primary", "primary", "secondary"],
+        "timeseries_type": ["primary", "primary", "secondary"],
         "description": ["First", "Duplicate", "Other"],
         "created_at": [datetime(2022, 1, 1), datetime(2022, 1, 1), datetime(2022, 1, 2)],
-        "updated_at": [datetime(2022, 1, 1), datetime(2022, 1, 1), datetime(2022, 1, 2)]
+        "updated_at": [datetime(2022, 1, 1), datetime(2022, 1, 1), datetime(2022, 1, 2)],
+        "properties": [{"key1": "value1"}, {"key1": "value1"}, {"key2": "value2"}]
     })
 
     schema = configuration_schema(type="pandas")
@@ -170,10 +173,11 @@ def test_validate_dataframe_invalid_type_value(session_scope_test_warehouse):
     # Create data with invalid type value
     pdf = pd.DataFrame({
         "name": ["test_config"],
-        "type": ["invalid_type"],  # Not in ["primary", "secondary"]
+        "timeseries_type": ["invalid_type"],  # Not in ["primary", "secondary"]
         "description": ["A test configuration"],
         "created_at": [datetime(2022, 1, 1)],
-        "updated_at": [datetime(2022, 1, 1)]
+        "updated_at": [datetime(2022, 1, 1)],
+        "properties": [{"key1": "value1", "key2": "value2"}]
     })
 
     schema = configuration_schema(type="pandas")
@@ -197,10 +201,11 @@ def test_validate_dataframe_missing_required_column(session_scope_test_warehouse
     # Create data missing required column
     pdf = pd.DataFrame({
         "name": ["test_config"],
-        "type": ["primary"],
+        "timeseries_type": ["primary"],
         # Missing "description"
         "created_at": [datetime(2022, 1, 1)],
-        "updated_at": [datetime(2022, 1, 1)]
+        "updated_at": [datetime(2022, 1, 1)],
+        "properties": [{"key1": "value1", "key2": "value2"}]
     })
 
     schema = configuration_schema(type="pandas")
@@ -224,10 +229,11 @@ def test_validate_dataframe_invalid_name_format(session_scope_test_warehouse):
     # Create data with invalid name (contains special characters)
     pdf = pd.DataFrame({
         "name": ["test-config!"],  # Invalid: contains hyphen and exclamation
-        "type": ["primary"],
+        "timeseries_type": ["primary"],
         "description": ["A test configuration"],
         "created_at": [datetime(2022, 1, 1)],
-        "updated_at": [datetime(2022, 1, 1)]
+        "updated_at": [datetime(2022, 1, 1)],
+        "properties": [{"key1": "value1", "key2": "value2"}]
     })
 
     schema = configuration_schema(type="pandas")
@@ -251,10 +257,11 @@ def test_validate_dataframe_pyspark(session_scope_test_warehouse):
     # Create valid configuration data as pandas first
     pdf = pd.DataFrame({
         "name": ["spark_test_config"],
-        "type": ["primary"],
+        "timeseries_type": ["primary"],
         "description": ["A PySpark test configuration"],
         "created_at": [datetime(2022, 1, 1)],
-        "updated_at": [datetime(2022, 1, 1)]
+        "updated_at": [datetime(2022, 1, 1)],
+        "properties": [{"key1": "value1", "key2": "value2"}]
 
     })
 

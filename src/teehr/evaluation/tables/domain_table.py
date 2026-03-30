@@ -80,7 +80,7 @@ class DomainTable(BaseTable):
 
         # validate the data to be added
         sdf = self._ev.spark.createDataFrame(
-            pd.DataFrame([o.model_dump() for o in obj])
+            pd.DataFrame([o.model_dump() for o in obj]), schema=self.schema_func().to_structtype()
         )
 
         validated_df = self._ev._validate.dataframe(

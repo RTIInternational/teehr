@@ -9,6 +9,7 @@ class TableBaseModel(BaseModel):
 
     Adds a class method to get the field names.
     """
+
     pass
 
 
@@ -16,8 +17,11 @@ class Configuration(TableBaseModel):
     """Configuration model."""
 
     name: str
-    type: str
+    timeseries_type: str
     description: str
+    properties: dict | None = None
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
 
 class Unit(TableBaseModel):
@@ -25,6 +29,8 @@ class Unit(TableBaseModel):
 
     name: str
     long_name: str
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
 
 class Variable(TableBaseModel):
@@ -32,6 +38,8 @@ class Variable(TableBaseModel):
 
     name: str
     long_name: str
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
 
 class Attribute(TableBaseModel):
@@ -40,6 +48,8 @@ class Attribute(TableBaseModel):
     name: str
     type: str
     description: str
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
 
 # class Location(TableBaseModel):
