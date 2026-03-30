@@ -341,6 +341,15 @@ def usgs_to_parquet(
        such as '00060_total spillway releases' in the case of a reservoir,
        the function will return None and log an error message.
 
+    .. note::
+
+       For higher rate limits and more reliable access, register for a free
+       USGS Water Data API key at https://api.waterdata.usgs.gov/signup/.
+       Once obtained, set it as an environment variable before fetching data::
+
+           import os
+           os.environ['API_USGS_PAT'] = 'your_api_key_here'
+
     Examples
     --------
     Here we fetch five days worth of USGS hourly streamflow data, to two gages,
