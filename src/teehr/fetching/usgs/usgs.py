@@ -22,7 +22,6 @@ import numpy as np
 from typing import List, Union, Optional, Dict
 from pathlib import Path
 from datetime import datetime, timedelta
-# import dataretrieval.nwis as nwis  # deprecated
 from dataretrieval import waterdata
 from teehr.models.fetching.utils import USGSChunkByEnum, USGSServiceEnum
 from pydantic import validate_call, ConfigDict
@@ -101,12 +100,11 @@ def _format_df_column_names(
     configuration_name_array = np.full(
         len(df), USGS_CONFIGURATION_NAME, dtype=object
     )
-    value_time_array = df["time"].values
     # Create dictionary with column names as keys
     data_dict = {
         LOCATION_ID: location_id_array,
         REFERENCE_TIME: reference_time_array,
-        VALUE_TIME: value_time_array,
+        VALUE_TIME: df["time"],  # preserve UTC timezone-aware datetime
         VALUE: value_array,
         VARIABLE_NAME: variable_name_array,
         UNIT_NAME: unit_name_array,
@@ -115,67 +113,6 @@ def _format_df_column_names(
     # Construct DataFrame from dictionary
     result_df = pd.DataFrame(data_dict)
     return result_df
-
-
-# def _parse_site_id_list(
-#     sites: Union[List[str], List[Dict[str, str]]]
-# ) -> List[str]:
-#     """Parse the site ID list into a flat list of site IDs."""
-#     parsed_sites = []
-#     for site in sites:
-#         if isinstance(site, dict):
-#             # Confirm that the site dictionary contains the required keys.
-#             if "site_no" not in site or "description" not in site:
-#                 err_msg = (
-#                     "Each site dictionary must contain the keys"
-#                     " 'site_no' and 'description'."
-#                 )
-#                 logger.error(err_msg)
-#                 raise ValueError(err_msg)
-#             # Confirm that the 'description' field is valid.
-#             site_no = site["site_no"]
-#             response = nwis.query_waterservices(
-#                 "site",
-#                 sites=[site_no],
-#                 hasDataTypeCd="iv,dv",
-#                 outputDataTypeCd="iv,dv"
-#             )
-#             df = nwis._read_rdb(response.text)
-#             is_valid = False
-#             for row_values in df.values:
-#                 if site["description"] in row_values:
-#                     is_valid = True
-#                     break
-#             if not is_valid:
-#                 err_msg = (
-#                     f"The site '{site_no}' does not have a time series description matching"
-#                     f" '{site['description']}'. Please check the site and description."
-#                 )
-#                 logger.error(err_msg)
-#                 raise ValueError(err_msg)
-#             parsed_sites.append(site["site_no"])
-#         else:
-#             parsed_sites.append(site)
-#     return parsed_sites
-
-
-# def _assign_discharge_by_description(
-#     usgs_df: pd.DataFrame,
-#     sites: Union[
-#         List[str],
-#         List[Dict[str, str]],
-#         List[Union[str, Dict[str, str]]]
-#     ],
-# ) -> pd.DataFrame:
-#     """Filter the DataFrame by the timeseries description."""
-#     logger.debug("Filtering by timeseries description.")
-#     for site in sites:
-#         if isinstance(site, dict):
-#             site_no = site["site_no"]
-#             mask = usgs_df["monitoring_location_id"] == "USGS-" + site_no
-#             description = site["description"].strip("[]()").lower()
-#             usgs_df.loc[mask, "00060"] = usgs_df[f"00060_{description}"]
-#     return usgs_df
 
 
 def _fetch_site_data_by_description(
@@ -267,9 +204,6 @@ def _fetch_usgs_streamflow(
         if site_df is not None:
             site_df_list.append(site_df)
 
-    # # TEMP
-    # sites = ["08025360"]
-
     # Fetch sites that are just strings (i.e. no description filtering needed)
     usgs_df = None
     if len(string_sites) > 0:
@@ -278,17 +212,17 @@ def _fetch_usgs_streamflow(
             usgs_df, _ = waterdata.get_continuous(
                 monitoring_location_id=string_sites,
                 parameter_code="00060",
-                time=f"{start_dt_iso}Z/{end_dt_iso}Z",
+                time=f"{start_dt_iso}Z/{end_dt_iso}Z"
             )
         elif service == "dv":
             usgs_df, _ = waterdata.get_daily(
                 monitoring_location_id=string_sites,
                 parameter_code='00060',
-                time=f"{start_dt_iso}Z/{end_dt_iso}Z"
+                time=f"{start_dt_iso}Z/{end_dt_iso}Z",
+                skip_geometry=True
             )
 
     if len(site_df_list) > 0:
-        # site_df = pd.concat(site_df_list)
         if usgs_df is not None and not usgs_df.empty:
             site_df_list.append(usgs_df)
         usgs_df = pd.concat(site_df_list)
@@ -296,19 +230,16 @@ def _fetch_usgs_streamflow(
     variable_name = variable_mapper[VARIABLE_NAME][service]
     unit_name = variable_mapper[UNIT_NAME]["Imperial"]
 
-    # If any dictionaries were passed in, assign the values from
-    # the description field to the 00060 column.
-    # usgs_df = _assign_discharge_by_description(
-    #     usgs_df=usgs_df,
-    #     sites=sites
-    # )
+    if usgs_df["time"].dt.tz is None:
+        usgs_df["time"] = usgs_df["time"].dt.tz_localize("UTC")
+    else:
+        usgs_df["time"] = usgs_df["time"].dt.tz_convert("UTC")
 
     usgs_df = _format_df_column_names(
         df=usgs_df,
         variable_name=variable_name,
         unit_name=unit_name
     )
-
     if usgs_df is None or usgs_df.empty:
         return None
 
@@ -537,4 +468,3 @@ def usgs_to_parquet(
                 data=usgs_df,
                 timeseries_type=timeseries_type
             )
-
