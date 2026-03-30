@@ -122,7 +122,7 @@ def _fetch_site_data_by_description(
     service: str
 ) -> pd.DataFrame:
     """Fetch data for a single site based on the description."""
-    site_no = "USGS-" + site_dict["site_no"]
+    site_no = site_dict["site_no"]
     description = site_dict["description"].strip("[]()").lower()
     metadata_df, _ = waterdata.get_time_series_metadata(
         monitoring_location_id=site_no,
@@ -187,7 +187,7 @@ def _fetch_usgs_streamflow(
 
     # Split the sites into those that are a string and those that are dictionaries,
     # to handle the description filtering for the latter.
-    string_sites = ["USGS-" + site for site in sites if isinstance(site, str)]
+    string_sites = [site for site in sites if isinstance(site, str)]
     dict_sites = [site for site in sites if isinstance(site, dict)]
     # Loop over dict_sites. For each site, make a call to get_time_series_metadata()
     # to get the metadata for that site. From that output, get the time_series_id that
@@ -292,7 +292,8 @@ def usgs_to_parquet(
     ----------
     sites : List[str]
         List of USGS gages sites to fetch.
-        Must be string to preserve the leading 0.
+        Must be string consisting of the USGS site number prefixed with "USGS-"
+        (note capitalization).
 
         In some edge cases, a gage site may contain one or more
         sub-locations that also measure discharge. To differentiate
@@ -300,7 +301,7 @@ def usgs_to_parquet(
         Each dictionary should contain the site number and a description
         of the sub-location. The description is used to filter the
         data to the specific sub-location. For example:
-        [{"site_no": "02449838", "description": "Main Gage"}]
+        [{"site_no": "USGS-02449838", "description": "Main Gage"}]
 
         Note that the dictionary must contain the keywords
         'site_no' and 'description'.
@@ -361,7 +362,7 @@ def usgs_to_parquet(
 
     Set the input variables.
 
-    >>> SITES=["02449838", "02450825"]
+    >>> SITES=["USGS-02449838", "USGS-02450825"]
     >>> START_DATE=datetime(2023, 2, 20)
     >>> END_DATE=datetime(2023, 2, 25)
     >>> OUTPUT_PARQUET_DIR=Path(Path().home(), "temp", "usgs")
