@@ -1,5 +1,6 @@
 """Class for validating data."""
 import logging
+import time
 from typing import List, Dict, Union
 
 import pyspark.sql as ps
@@ -420,7 +421,8 @@ class Validate:
         ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame
             The Spark, Pandas, or GeoPandas DataFrame with the enforced schema.
         """
-        logger.info("Enforcing warehouse schema.")
+        start_time = time.time()
+        logger.info("Start enforcing dataframe schema.")
 
         schema_cols = table_schema.columns.keys()
 
@@ -442,4 +444,6 @@ class Validate:
                 foreign_keys=foreign_keys
             )
 
+        elapsed_time = time.time() - start_time
+        logger.info(f"Finished enforcing dataframe schema in {elapsed_time:.3f} seconds.")
         return df

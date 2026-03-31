@@ -1,4 +1,6 @@
 """Writer class for TEEHR evaluations."""
+import logging
+import time
 from typing import List, Union
 from pathlib import Path
 
@@ -12,6 +14,8 @@ import json
 
 from teehr.const import REMOTE_CATALOG_NAME
 from teehr.models.filters import TableFilter
+
+logger = logging.getLogger(__name__)
 
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
 AUDIT_COLUMNS = ["created_at", "updated_at"]
@@ -286,6 +290,9 @@ class Write:
             The namespace name to write to, by default None, which means the
             namespace_name of the active catalog is used.
         """
+        start_time = time.time()
+        logger.info(f"Start writing to warehouse table '{table_name}'.")
+
         if (
             self._ev.read_only_remote is True and
             self._ev.active_catalog.catalog_name == REMOTE_CATALOG_NAME
@@ -373,6 +380,9 @@ class Write:
 
         if created_temp_view:
             self._ev.sql(f"DROP VIEW IF EXISTS {source_view_name}")
+
+        elapsed_time = time.time() - start_time
+        logger.info(f"Finished writing to warehouse table '{table_name}' in {elapsed_time:.3f} seconds.")
 
     def delete_from(
         self,
