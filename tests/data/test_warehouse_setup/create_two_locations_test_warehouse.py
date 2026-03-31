@@ -26,12 +26,12 @@ def _create_warehouse(dir_path):
     ev.configurations.add([
         teehr.Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="USGS observations"
         ),
         teehr.Configuration(
             name="nwm30_retrospective",
-            type="secondary",
+            timeseries_type="secondary",
             description="NWM 3.0 Retrospective"
         )
     ])

@@ -28,7 +28,7 @@ def test_generate_timeseries_normals(function_scope_evaluation_template):
         [
             teehr.Configuration(
                 name="usgs_observations",
-                type="primary",
+                timeseries_type="primary",
                 description="USGS streamflow observations"
             )
         ]
@@ -37,7 +37,7 @@ def test_generate_timeseries_normals(function_scope_evaluation_template):
         [
             teehr.Configuration(
                 name="nwm30_medium_range_forcing",
-                type="primary",
+                timeseries_type="primary",
                 description="Synthetic NWM 30 Medium Range AnA Forcing"
             )
         ]
@@ -132,7 +132,7 @@ def test_generate_reference_forecast(function_scope_evaluation_template):
     ev.configurations.add(
         teehr.Configuration(
             name="usgs_climatology",
-            type="primary",
+            timeseries_type="primary",
             description="USGS climatology data"
         )
     )
@@ -156,7 +156,7 @@ def test_generate_reference_forecast(function_scope_evaluation_template):
     ev.configurations.add(
         teehr.Configuration(
             name="MEFP",
-            type="secondary",
+            timeseries_type="secondary",
             description="MBRFC HEFS Data"
         )
     )
@@ -193,7 +193,7 @@ def test_generate_reference_forecast(function_scope_evaluation_template):
     ev.configurations.add(
         teehr.Configuration(
             name="benchmark_forecast_daily_normals",
-            type="secondary",
+            timeseries_type="secondary",
             description="Reference forecast based on USGS climatology"
         )
     )

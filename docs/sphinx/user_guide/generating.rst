@@ -105,7 +105,7 @@ Example: Daily Normals
     ev.configurations.add(
         teehr.Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="USGS streamflow observations"
         )
     )
@@ -165,7 +165,7 @@ historical reference values (e.g., climatology) to forecast timesteps:
     ev.configurations.add(
         teehr.Configuration(
             name="benchmark_forecast_daily_normals",
-            type="secondary",
+            timeseries_type="secondary",
             description="Reference forecast based on USGS climatology"
         )
     )
@@ -247,7 +247,7 @@ A typical workflow for generating benchmark forecasts:
     ev.configurations.add(
         teehr.Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="USGS streamflow observations"
         )
     )
@@ -271,7 +271,7 @@ A typical workflow for generating benchmark forecasts:
     ev.configurations.add(
         teehr.Configuration(
             name="nwm_forecast",
-            type="secondary",
+            timeseries_type="secondary",
             description="NWM Medium Range Forecast"
         )
     )
@@ -281,7 +281,7 @@ A typical workflow for generating benchmark forecasts:
     ev.configurations.add(
         teehr.Configuration(
             name="benchmark_climatology",
-            type="secondary",
+            timeseries_type="secondary",
             description="Benchmark forecast from daily normals"
         )
     )

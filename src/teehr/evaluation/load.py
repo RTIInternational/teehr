@@ -130,49 +130,6 @@ class Load:
                 )
             df = df.withColumnsRenamed(field_mapping)
 
-
-
-
-        # if isinstance(df, pd.DataFrame | gpd.GeoDataFrame):
-        #     if field_mapping is not None:
-        #         df = df.rename(columns=field_mapping)
-        # elif isinstance(df, ps.DataFrame):
-        #     if field_mapping is not None:
-        #         df = df.withColumnsRenamed(field_mapping)
-        # else:
-        #     raise TypeError(
-        #         "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
-        #     )
-        # # If it is a core table validate and convert to Spark DataFrame,
-        # # otherwise just convert to Spark DataFrame
-        # # Convert the input DataFrame to Spark DataFrame
-        # # This is a bit of a workaround due to spark failing when converting
-        # # a pd.DataFrame with all null columns. We can pass in a schema, but
-        # # first we validate with pandera to ensure all columns are present.
-        # if is_core_table:
-        #     schema = schema_func().to_structtype()
-        #     df = self._ev._validate.dataframe(
-        #         df=df,
-        #         table_schema=schema_func("pandas"),
-        #         add_missing_columns=True,
-        #         strict=True
-        #      )
-        #     if isinstance(df, gpd.GeoDataFrame):
-        #         df = df.to_wkb()
-        #     df = self._ev.spark.createDataFrame(df, schema=schema)
-        # else:
-        #      if isinstance(df, gpd.GeoDataFrame):
-        #         df = df.to_wkb()
-        #         df = self._ev.spark.createDataFrame(df)
-        #      elif isinstance(df, pd.DataFrame):
-        #         df = self._ev.spark.createDataFrame(df)
-        #      elif isinstance(df, ps.DataFrame):
-        #         pass
-        #      else:
-        #         raise TypeError(
-        #             "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
-        #         )
-
         if constant_field_values:
             for field, value in constant_field_values.items():
                 df = df.withColumn(field, F.lit(value))
@@ -196,7 +153,8 @@ class Load:
                 table_schema=schema_func(),
                 drop_duplicates=drop_duplicates,
                 foreign_keys=foreign_keys,
-                uniqueness_fields=uniqueness_fields
+                uniqueness_fields=uniqueness_fields,
+                add_missing_columns=True,
             )
 
         self._write.to_warehouse(
@@ -367,7 +325,8 @@ class Load:
             table_schema=schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=foreign_keys,
-            uniqueness_fields=uniqueness_fields
+            uniqueness_fields=uniqueness_fields,
+            add_missing_columns=True,
         )
 
         self._write.to_warehouse(
@@ -458,7 +417,8 @@ class Load:
             table_schema=schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=foreign_keys,
-            uniqueness_fields=uniqueness_fields
+            uniqueness_fields=uniqueness_fields,
+            add_missing_columns=True
         )
 
         self._write.to_warehouse(

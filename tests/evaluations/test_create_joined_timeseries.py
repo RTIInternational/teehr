@@ -36,7 +36,7 @@ def test_create_joined_timeseries(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="test primary configuration"
         )
     )
@@ -74,7 +74,7 @@ def test_create_joined_timeseries(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="nwm30_retrospective",
-            type="secondary",
+            timeseries_type="secondary",
             description="test secondary configuration"
         )
     )
@@ -165,7 +165,7 @@ def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="test primary configuration"
         )
     )
@@ -197,7 +197,7 @@ def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="nwm30_retrospective",
-            type="secondary",
+            timeseries_type="secondary",
             description="test secondary configuration"
         )
     )
@@ -389,7 +389,7 @@ def test_inst_join_across_periods(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="test primary configuration"
         )
     )
@@ -397,7 +397,7 @@ def test_inst_join_across_periods(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="nwm30_retrospective",
-            type="secondary",
+            timeseries_type="secondary",
             description="test secondary configuration"
         )
     )
@@ -490,7 +490,7 @@ def test_non_inst_join_requires_matching_period(
     ev.configurations.add(
         Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="test primary configuration"
         )
     )
@@ -498,7 +498,7 @@ def test_non_inst_join_requires_matching_period(
     ev.configurations.add(
         Configuration(
             name="nwm30_retrospective",
-            type="secondary",
+            timeseries_type="secondary",
             description="test secondary configuration"
         )
     )
@@ -583,7 +583,7 @@ def test_non_inst_join_with_matching_period(
     ev.configurations.add(
         Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="test primary configuration"
         )
     )
@@ -591,7 +591,7 @@ def test_non_inst_join_with_matching_period(
     ev.configurations.add(
         Configuration(
             name="nwm30_retrospective",
-            type="secondary",
+            timeseries_type="secondary",
             description="test secondary configuration"
         )
     )

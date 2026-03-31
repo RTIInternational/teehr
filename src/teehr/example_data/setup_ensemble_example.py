@@ -26,7 +26,7 @@ def setup_hefs_example(tmpdir):
     ev.configurations.add(
         teehr.Configuration(
             name="CNRFC_HEFS",
-            type="secondary",
+            timeseries_type="secondary",
             description="CNRFC HEFS Extended Forecast"
         )
     )
@@ -34,7 +34,7 @@ def setup_hefs_example(tmpdir):
     ev.configurations.add(
         teehr.Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="USGS Observations"
         )
     )

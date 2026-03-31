@@ -293,7 +293,7 @@ class Fetch:
             self._ev.configurations.add(
                 Configuration(
                     name=USGS_CONFIGURATION_NAME,
-                    type="primary",
+                    timeseries_type="primary",
                     description="USGS streamflow gauge observations"
                 )
             )
@@ -468,7 +468,7 @@ class Fetch:
             self._ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
-                    type=timeseries_type,
+                    timeseries_type=timeseries_type,
                     description=f"{nwm_version} retrospective"
                 )
             )
@@ -693,7 +693,7 @@ class Fetch:
             self._ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
-                    type=timeseries_type,
+                    timeseries_type=timeseries_type,
                     description=f"{nwm_version} retrospective"
                 )
             )
@@ -971,7 +971,7 @@ class Fetch:
             self._ev.configurations.add(
                 Configuration(
                     name=ev_config["name"],
-                    type=timeseries_type,
+                    timeseries_type=timeseries_type,
                     description=ev_config["description"]
                 )
             )
@@ -1294,7 +1294,7 @@ class Fetch:
             self._ev.configurations.add(
                 Configuration(
                     name=ev_config["name"],
-                    type=timeseries_type,
+                    timeseries_type=timeseries_type,
                     description=ev_config["description"]
                 )
             )

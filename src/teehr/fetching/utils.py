@@ -372,6 +372,15 @@ def write_timeseries_parquet_file(
         write_schema = schemas.secondary_timeseries_schema(type="arrow")
 
     try:
+        # This is a bit of a workaround until we refactor the fetching code
+        schema_cols = schema.columns
+        for col_name, col_schema in schema_cols.items():
+            if col_name not in df.columns:
+                # Check if column is nullable
+                is_nullable = getattr(col_schema, 'nullable', True)
+                if is_nullable:
+                    df[col_name] = None
+
         validated_df = schema.validate(df, lazy=True)
     except pandera.errors.SchemaErrors as exc:
         msg = json.dumps(exc.message, indent=2)

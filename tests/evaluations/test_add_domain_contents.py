@@ -22,7 +22,7 @@ def test_add_domains(function_scope_evaluation_template):
         configuration=[
             Configuration(
                 name="conf1",
-                type="secondary",
+                timeseries_type="secondary",
                 description="Configuration 1",
             )
         ]
@@ -33,7 +33,7 @@ def test_add_domains(function_scope_evaluation_template):
 
     assert list(cols.sort_values()) == list(df.columns.sort_values())
     assert df.name.iloc[0] == "conf1"
-    assert df.type.iloc[0] == "secondary"
+    assert df.timeseries_type.iloc[0] == "secondary"
     assert df.description.iloc[0] == "Configuration 1"
 
     # Check units.add doesn't add columns
@@ -101,7 +101,7 @@ def test_upsert_domain(function_scope_evaluation_template):
         configuration=[
             Configuration(
                 name="conf1",
-                type="secondary",
+                timeseries_type="secondary",
                 description="Configuration 1",
             )
         ]
@@ -111,7 +111,7 @@ def test_upsert_domain(function_scope_evaluation_template):
         configuration=[
             Configuration(
                 name="conf1",
-                type="secondary",
+                timeseries_type="secondary",
                 description="Configuration 1a",
             )
         ]
@@ -131,7 +131,7 @@ def test_invalid_name_domain(function_scope_evaluation_template):
             configuration=[
                 Configuration(
                     name="special chars !@#$%^&*() not allowed",
-                    type="secondary",
+                    timeseries_type="secondary",
                     description="Configuration 1",
                 )
             ]
@@ -148,7 +148,7 @@ def test_invalid_type_domain(function_scope_evaluation_template):
             configuration=[
                 Configuration(
                     name="Configuration 1",
-                    type="invalid_type",
+                    timeseries_type="invalid_type",
                     description="Configuration 1",
                 )
             ]

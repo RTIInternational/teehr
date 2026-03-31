@@ -1,5 +1,5 @@
 """Component class for fetching data from from the TEEHR data warehouse."""
-from typing import Union, List, Optional
+from typing import Union, List
 from datetime import datetime
 import logging
 from io import BytesIO
@@ -546,7 +546,7 @@ class Download:
     def configurations(
         self,
         name: str = None,
-        type: str = None,
+        timeseries_type: str = None,
         page_size: int = 10000,
         load: bool = False,
         write_mode: str = "append",
@@ -559,7 +559,7 @@ class Download:
         ----------
         name : str, optional
             Filter by configuration name
-        type : str, optional
+        timeseries_type : str, optional
             Filter by configuration type ("primary" or "secondary")
         page_size : int, optional
             Number of configurations to fetch per API request.
@@ -584,7 +584,7 @@ class Download:
         Examples
         --------
         >>> # Fetch all primary configurations
-        >>> configs = ev.download.configurations(type="primary")
+        >>> configs = ev.download.configurations(timeseries_type="primary")
         >>> # Fetch and load into local evaluation
         >>> configs = ev.download.configurations(load=True)
         """
@@ -592,8 +592,8 @@ class Download:
 
         if name:
             params["name"] = name
-        if type:
-            params["type"] = type
+        if timeseries_type:
+            params["timeseries_type"] = timeseries_type
 
         items = self._fetch_paginated_items(
             "collections/configurations/items",

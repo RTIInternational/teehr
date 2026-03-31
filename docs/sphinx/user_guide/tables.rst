@@ -240,10 +240,14 @@ Domain tables can be populated manually.
 
 .. code-block:: python
 
-   # Or add individual records
-   ev.configurations.add(
-       teehr.Configuration(name="my_model", type="model", description="My custom model")
-   )
+    # Or add individual records
+    ev.configurations.add(
+        teehr.Configuration(
+            name="my_model",
+            timeseries_type="secondary",
+            description="My custom model"
+        )
+    )
 
 See also: :meth:`ConfigurationTable.add() <teehr.evaluation.tables.configuration_table.ConfigurationTable.add>`
 

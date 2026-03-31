@@ -50,7 +50,7 @@ def test_load_spark_dataframe(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="test_obs",
-            type="primary",
+            timeseries_type="primary",
             description="Test Observations Data"
         )
     )
@@ -103,7 +103,7 @@ def test_dropping_duplicates(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="test_obs",
-            type="primary",
+            timeseries_type="primary",
             description="Test Observations Data"
         )
     )
@@ -167,7 +167,7 @@ def test_validate_and_insert_timeseries(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="test_obs",
-            type="primary",
+            timeseries_type="primary",
             description="Test Observations Data"
         )
     )
@@ -219,7 +219,7 @@ def test_validate_and_insert_timeseries(function_scope_evaluation_template):
     ev.configurations.add(
         Configuration(
             name="test_short",
-            type="secondary",
+            timeseries_type="secondary",
             description="Test Forecast Data"
         )
     )
@@ -252,12 +252,12 @@ def test_validate_and_insert_timeseries_set_const(function_scope_evaluation_temp
         [
             Configuration(
                 name="usgs_observations",
-                type="primary",
+                timeseries_type="primary",
                 description="USGS Data"
             ),
             Configuration(
                 name="nwm30_retrospective",
-                type="secondary",
+                timeseries_type="secondary",
                 description="NWM Data"
             )
         ]
@@ -316,7 +316,7 @@ def test_validate_and_insert_summa_nc_timeseries(function_scope_evaluation_templ
     ev.configurations.add(
         Configuration(
             name="summa",
-            type="primary",
+            timeseries_type="primary",
             description="Summa Runoff Data"
         )
     )
@@ -369,7 +369,7 @@ def test_validate_and_insert_mizu_nc_timeseries(function_scope_evaluation_templa
     ev.configurations.add(
         Configuration(
             name="mizuroute",
-            type="primary",
+            timeseries_type="primary",
             description="Mizuroute Runoff Data"
         )
     )
@@ -443,12 +443,12 @@ def test_validate_and_insert_fews_xml_timeseries(function_scope_evaluation_templ
         [
             Configuration(
                 name="MEFP",
-                type="secondary",
+                timeseries_type="secondary",
                 description="MBRFC HEFS Data"
             ),
             Configuration(
                 name="usgs_observations",
-                type="primary",
+                timeseries_type="primary",
                 description="USGS Data"
             )
         ]
@@ -496,12 +496,12 @@ def test_validate_and_insert_in_memory_timeseries(function_scope_evaluation_temp
         [
             Configuration(
                 name="usgs_observations",
-                type="primary",
+                timeseries_type="primary",
                 description="USGS Data"
             ),
             Configuration(
                 name="nwm30_retrospective",
-                type="secondary",
+                timeseries_type="secondary",
                 description="NWM Data"
             )
         ]

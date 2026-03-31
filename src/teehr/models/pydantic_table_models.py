@@ -1,32 +1,24 @@
 """Pydantic models for domain table entries."""
+import datetime
+
 from pydantic import BaseModel
 
 
 class TableBaseModel(BaseModel):
-    """Base model for all tables.
+    """Base model for all tables."""
 
-    Adds a class method to get the field names.
-    """
-
-    @classmethod
-    def get_field_names(cls, by_alias=False) -> list[str]:
-        """Get the field names of the model."""
-        field_names = []
-        for k, v in cls.model_fields.items():
-            if by_alias and v.alias:
-                field_names.append(v.alias)
-            else:
-                field_names.append(k)
-
-        return field_names
+    pass
 
 
 class Configuration(TableBaseModel):
     """Configuration model."""
 
     name: str
-    type: str
+    timeseries_type: str
     description: str
+    properties: dict | None = None
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
 
 class Unit(TableBaseModel):
@@ -34,6 +26,8 @@ class Unit(TableBaseModel):
 
     name: str
     long_name: str
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
 
 class Variable(TableBaseModel):
@@ -41,14 +35,18 @@ class Variable(TableBaseModel):
 
     name: str
     long_name: str
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
 
 class Attribute(TableBaseModel):
-    """Variable model."""
+    """Attribute model."""
 
     name: str
     type: str
     description: str
+    created_at: datetime.datetime | None = None
+    updated_at: datetime.datetime | None = None
 
 
 # class Location(TableBaseModel):

@@ -16,7 +16,10 @@ def test_configurations_load_csv(function_scope_evaluation_template):
 
     ev.configurations.load_csv(
         in_path=DOMAINS_DIR / "configurations.csv",
-        write_mode="append"
+        write_mode="append",
+        field_mapping={
+            "type": "timeseries_type"
+        }
     )
 
     ev.configurations._load_sdf()
@@ -40,7 +43,10 @@ def test_configurations_load_parquet(function_scope_evaluation_template):
 
     ev.configurations.load_parquet(
         in_path=DOMAINS_DIR / "configurations.parquet",
-        write_mode="append"
+        write_mode="append",
+        field_mapping={
+            "type": "timeseries_type"
+        }
     )
 
     ev.configurations._load_sdf()
@@ -162,7 +168,7 @@ def test_configurations_load_csv_with_field_mapping(function_scope_evaluation_te
         in_path=temp_path,
         field_mapping={
             "config_name": "name",
-            "config_type": "type",
+            "config_type": "timeseries_type",
             "config_description": "description"
         },
         write_mode="append"

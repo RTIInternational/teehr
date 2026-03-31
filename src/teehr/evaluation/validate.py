@@ -107,7 +107,7 @@ class Validate:
                                 f"{err.get('error', err.get('check', 'validation failed'))}"
                             )
                 raise ValueError(
-                    f"Schema validation failed:\n" + "\n".join(error_msgs)
+                    "Schema validation failed:\n" + "\n".join(error_msgs)
                 )
 
         return validated_df
@@ -260,7 +260,7 @@ class Validate:
                     f"Foreign key constraint violation: "
                     f"A {fk['column']} entry is not found in "
                     f"the {fk['domain_column']} column in {fk['domain_table']}"
-                    # f"\nSample offending records:\n" + result_sdf.show(truncate=False)
+                    f"\nFirst offending record: {result_sdf.first()}"
                 )
                 logger.info(msg)
                 raise ValueError(msg)
@@ -274,7 +274,9 @@ class Validate:
         """Add missing nullable fields from the schema to the DataFrame.
 
         Only adds columns that are nullable in the schema. Raises an error
-        if a required (non-nullable) column is missing.
+        if a required (non-nullable) column is missing. For GeoDataFrames,
+        map/dict columns are skipped since they can't be written to parquet
+        when all null (GeoDataFrame.to_parquet doesn't support arrow schema).
 
         Parameters
         ----------
@@ -298,7 +300,6 @@ class Validate:
 
         for col_name, col_schema in schema_cols.items():
             if col_name not in df.columns:
-                # Check if column is nullable
                 is_nullable = getattr(col_schema, 'nullable', True)
                 if is_nullable:
                     if isinstance(df, ps.DataFrame):
