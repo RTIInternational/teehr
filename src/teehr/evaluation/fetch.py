@@ -210,6 +210,15 @@ class Fetch:
             into the Evaluation, it should be loaded or cached manually. This will
             prevent it from being deleted when the fetch job is resumed.
 
+        .. note::
+
+            For higher rate limits and more reliable access, register for a free
+            USGS Water Data API key at https://api.waterdata.usgs.gov/signup/.
+            Once obtained, set it as an environment variable before fetching data::
+
+                import os
+                os.environ['API_USGS_PAT'] = 'your_api_key_here'
+
         Examples
         --------
         Here we fetch over a year of USGS hourly streamflow data.
@@ -253,7 +262,7 @@ class Fetch:
                 "value": "usgs-%"
             }
         ).to_pandas()
-        sites = locations_df["id"].str.removeprefix("usgs-").to_list()
+        sites = locations_df["id"].str.upper().to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 

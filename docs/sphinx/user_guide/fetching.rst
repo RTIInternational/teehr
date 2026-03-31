@@ -81,8 +81,8 @@ the underlying function directly with a dictionary:
 
    # Site with sub-locations
    sites = [
-       {"site_no": "02449838", "description": "Main Gage"},
-       "01234567"  # Regular site
+       {"site_no": "USGS-02449838", "description": "Main Gage"},
+       "USGS-01234567"  # Regular site
    ]
 
    usgs_to_parquet(

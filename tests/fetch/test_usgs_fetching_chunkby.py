@@ -4,22 +4,21 @@ from pathlib import Path
 import tempfile
 
 import pandas as pd
-import pytest
 
 from teehr.fetching.usgs.usgs import usgs_to_parquet
 
-@pytest.mark.skip(reason="This test fails and is a known issue.")
+
 def test_by_description(tmpdir):
     """Test chunkby location id."""
     usgs_to_parquet(
         sites=[
             {
-                "site_no": "08025360",
-                "description": "[Total Spillway Releases]"
+                "site_no": "USGS-08025360",
+                "description": "Total Spillway Releases"
             }
         ],
-        start_date=datetime(2023, 2, 20),
-        end_date=datetime(2023, 2, 21),
+        start_date=datetime(2023, 2, 19),
+        end_date=datetime(2023, 2, 20),
         output_parquet_dir=Path(tmpdir),
         chunk_by="location_id",
         overwrite_output=True,
@@ -28,20 +27,20 @@ def test_by_description(tmpdir):
     df = pd.read_parquet(
         Path(
             tmpdir,
-            "08025360.parquet"
+            "USGS-08025360.parquet"
         )
     )
     assert len(df) == 24
-    assert df["value_time"].min() == pd.Timestamp("2023-02-20 00:00:00")
-    assert df["value_time"].max() == pd.Timestamp("2023-02-20 23:00:00")
+    assert df["value_time"].min() == pd.Timestamp("2023-02-19 00:00:00")
+    assert df["value_time"].max() == pd.Timestamp("2023-02-19 23:00:00")
 
 
 def test_chunkby_location_id(tmpdir):
     """Test chunkby location id."""
     usgs_to_parquet(
         sites=[
-            "02449838",
-            "02450825",
+            "USGS-02449838",
+            "USGS-02450825",
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 21),
@@ -53,7 +52,7 @@ def test_chunkby_location_id(tmpdir):
     df = pd.read_parquet(
         Path(
             tmpdir,
-            "02449838.parquet"
+            "USGS-02449838.parquet"
         )
     )
     assert len(df) == 24
@@ -62,7 +61,7 @@ def test_chunkby_location_id(tmpdir):
     df = pd.read_parquet(
         Path(
             tmpdir,
-            "02450825.parquet"
+            "USGS-02450825.parquet"
         )
     )
     assert len(df) == 24
@@ -74,8 +73,8 @@ def test_chunkby_day(tmpdir):
     """Test chunkby day."""
     usgs_to_parquet(
         sites=[
-            "02449838",
-            "02450825"
+            "USGS-02449838",
+            "USGS-02450825"
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
@@ -131,8 +130,8 @@ def test_chunkby_week(tmpdir):
     """Test chunk by week."""
     usgs_to_parquet(
         sites=[
-            "02449838",
-            "02450825"
+            "USGS-02449838",
+            "USGS-02450825"
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 3, 3),
@@ -160,8 +159,8 @@ def test_chunkby_month(tmpdir):
     """Test chunk by month."""
     usgs_to_parquet(
         sites=[
-            "02449838",
-            "02450825"
+            "USGS-02449838",
+            "USGS-02450825"
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 3, 25),
@@ -189,8 +188,8 @@ def test_chunkby_all(tmpdir):
     """Test chunkby all."""
     usgs_to_parquet(
         sites=[
-            "02449838",
-            "02450825"
+            "USGS-02449838",
+            "USGS-02450825"
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
@@ -212,8 +211,8 @@ def test_daily_service(tmpdir):
     """Test chunkby location id."""
     usgs_to_parquet(
         sites=[
-            "02449838",
-            "02450825",
+            "USGS-02449838",
+            "USGS-02450825",
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 21),
@@ -226,13 +225,13 @@ def test_daily_service(tmpdir):
     df1 = pd.read_parquet(
         Path(
             tmpdir,
-            "02449838.parquet"
+            "USGS-02449838.parquet"
         )
     )
     df2 = pd.read_parquet(
         Path(
             tmpdir,
-            "02450825.parquet"
+            "USGS-02450825.parquet"
         )
     )
     assert len(df1) == 1
