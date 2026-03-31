@@ -3,7 +3,6 @@
 import pyspark.sql as ps
 from pyspark.sql.types import StructType, StructField, StringType
 import pytest
-from datetime import datetime
 import pandas as pd
 
 

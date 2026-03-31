@@ -14,7 +14,7 @@ def test_domains_upsert_new(function_scope_test_warehouse):
     # Check that new unit is added and can be read back with created_at and updated_at columns
     sdf = ev.units.filter("long_name = 'Unit 1'").to_sdf()
 
-    # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
+    # assert that created_at is not NULL and updated_at is not NULL (since it's a new record)
     assert sorted(sdf.columns) == sorted(["name", "long_name", "created_at", "updated_at"])
     assert sdf.filter("created_at IS NOT NULL").count() == 1
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
@@ -25,7 +25,7 @@ def test_domains_upsert_new(function_scope_test_warehouse):
     # Check that new configuration is added and can be read back with created_at and updated_at columns
     sdf = ev.configurations.filter("name = 'conf_1'").to_sdf()
 
-    # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
+    # assert that created_at is not NULL and updated_at is not NULL (since it's a new record)
     assert sorted(sdf.columns) == sorted(["name", "timeseries_type", "description", "created_at", "updated_at", "properties"])
     assert sdf.filter("created_at IS NOT NULL").count() == 1
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
@@ -35,7 +35,7 @@ def test_domains_upsert_new(function_scope_test_warehouse):
 
     sdf = ev.variables.filter("long_name = 'Variable 1'").to_sdf()
 
-    # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
+    # assert that created_at is not NULL and updated_at is not NULL (since it's a new record)
     assert sorted(sdf.columns) == sorted(["name", "long_name", "created_at", "updated_at"])
     assert sdf.filter("created_at IS NOT NULL").count() == 1
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
@@ -46,7 +46,7 @@ def test_domains_upsert_new(function_scope_test_warehouse):
     # Check that new attribute is added and can be read back with created_at and updated_at columns
     sdf = ev.attributes.filter("name = 'attr_1'").to_sdf()
 
-    # assert that created_at is not NULL and updated_at is NULL (since it's a new record)
+    # assert that created_at is not NULL and updated_at is not NULL (since it's a new record)
     assert sorted(sdf.columns) == sorted(["name", "type", "description", "created_at", "updated_at"])
     assert sdf.filter("created_at IS NOT NULL").count() == 1
     assert sdf.filter("updated_at IS NOT NULL").count() == 1

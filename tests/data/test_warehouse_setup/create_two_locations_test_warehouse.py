@@ -42,7 +42,7 @@ def _create_warehouse(dir_path):
         attr_list.append(
             teehr.Attribute(
                 name=row.name,
-                timeseries_type=row.type,
+                type=row.type,
                 description=row.description
             )
         )

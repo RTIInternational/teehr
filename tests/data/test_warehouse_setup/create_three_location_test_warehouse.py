@@ -37,17 +37,17 @@ def _create_warehouse(dir_path):
         [
             teehr.Attribute(
                 name="drainage_area",
-                timeseries_type="continuous",
+                type="continuous",
                 description="Drainage area in square kilometers"
             ),
             teehr.Attribute(
                 name="ecoregion",
-                timeseries_type="categorical",
+                type="categorical",
                 description="Ecoregion"
             ),
             teehr.Attribute(
                 name="year_2_discharge",
-                timeseries_type="continuous",
+                type="continuous",
                 description="2-yr discharge in cubic meters per second"
             ),
         ]

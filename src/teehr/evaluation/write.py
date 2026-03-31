@@ -57,7 +57,7 @@ class Write:
         add_created_at: bool = True,
         add_updated_at: bool = True
     ) -> str:
-        """Add timestamp columns to view if they don't exist.
+        """Create or update timestamp columns in the view.
 
         Parameters
         ----------

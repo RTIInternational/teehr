@@ -5,10 +5,7 @@ from pydantic import BaseModel
 
 
 class TableBaseModel(BaseModel):
-    """Base model for all tables.
-
-    Adds a class method to get the field names.
-    """
+    """Base model for all tables."""
 
     pass
 
