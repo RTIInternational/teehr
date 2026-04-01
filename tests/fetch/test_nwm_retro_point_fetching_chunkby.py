@@ -41,7 +41,9 @@ def test_nwm20_retro_one_file(tmpdir):
         "configuration_name",
         "unit_name",
         "location_id",
-        "member"
+        "member",
+        "created_at",
+        "updated_at"
     ]
 
 
@@ -74,7 +76,9 @@ def test_nwm20_retro_week(tmpdir):
         "configuration_name",
         "unit_name",
         "location_id",
-        "member"
+        "member",
+        "created_at",
+        "updated_at"
     ]
 
 
@@ -107,7 +111,9 @@ def test_nwm20_retro_month(tmpdir):
         "configuration_name",
         "unit_name",
         "location_id",
-        "member"
+        "member",
+        "created_at",
+        "updated_at"
     ]
 
 
@@ -140,7 +146,9 @@ def test_nwm20_retro_year(tmpdir):
         "configuration_name",
         "unit_name",
         "location_id",
-        "member"
+        "member",
+        "created_at",
+        "updated_at"
     ]
 
 
@@ -174,7 +182,9 @@ def test_nwm21_retro_one_file(tmpdir):
         "configuration_name",
         "unit_name",
         "location_id",
-        "member"
+        "member",
+        "created_at",
+        "updated_at"
     ]
 
 
@@ -210,7 +220,9 @@ def test_nwm30_one_file(tmpdir):
         "configuration_name",
         "unit_name",
         "location_id",
-        "member"
+        "member",
+        "created_at",
+        "updated_at"
     ]
     assert math.isclose(df.value.max(), 0.1799999, rel_tol=1e-4)
     assert math.isclose(df.value.min(), 0.1699999, rel_tol=1e-4)
