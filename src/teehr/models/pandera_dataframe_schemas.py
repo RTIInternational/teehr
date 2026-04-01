@@ -678,9 +678,8 @@ def primary_timeseries_schema(
             pw.field("configuration_name", pw.string()),
             pw.field("unit_name", pw.string()),
             pw.field("location_id", pw.string()),
-            # Used to write to cache with created_at and updated_at timestamps not required.
-            # pw.field("created_at", pw.timestamp("ms"), nullable=True),
-            # pw.field("updated_at", pw.timestamp("ms"), nullable=True),
+            pw.field("created_at", pw.timestamp("ms")),
+            pw.field("updated_at", pw.timestamp("ms")),
         ])
 
 
@@ -802,7 +801,6 @@ def secondary_timeseries_schema(
             pw.field("unit_name", pw.string()),
             pw.field("location_id", pw.string()),
             pw.field("member", pw.string()),
-            # Used to write to cache with created_at and updated_at timestamps not required.
-            # pw.field("created_at", pw.timestamp("ms"), nullable=True),
-            # pw.field("updated_at", pw.timestamp("ms"), nullable=True),
+            pw.field("created_at", pw.timestamp("ms")),
+            pw.field("updated_at", pw.timestamp("ms")),
         ])

@@ -2,6 +2,84 @@ Release Notes
 =============
 
 
+0.6.1 - 2026-04-01
+-------------------
+
+This release focuses on (1) making the public Evaluation API safer/clearer by moving
+lower-level components behind “private” attributes, (2) improving table loading/writing
+ergonomics (including audit timestamps and safer writes), and (3) updating fetching
+capability (notably USGS via dataretrieval.waterdata and NWM temperature handling).
+
+### Upgrade notes
+- Replace any `Configuration(..., type="primary")` with `Configuration(..., timeseries_type="primary")`.
+- Prefer:
+  - `ev.primary_timeseries.load_parquet(...)` over `ev.load.primary_timeseries.from_parquet(...)`
+  - `df_accessor.write_to("my_results")` over `df_accessor.write("my_results")`
+
+- If you were calling `ev.write.*`/ `ev.load.*` directly, expect those to be internal/private (`ev._write`, `ev._load`)
+and migrate to table methods where possible.
+
+### Breaking / behavior changes
+- Renamed `Configuration.type` → `Configuration.timeseries_type` (and corresponding schema/docs updates).
+- Internal Evaluation components are now treated as private (`ev._write`, `ev._load`, `ev._validate`,
+`ev._read`, `ev._extract`) and many call sites were updated accordingly.
+- USGS site IDs are now expected to be prefixed (e.g., `"USGS-02449838"`) when calling the fetch methods.
+This happens automatically when using the `fetch.usgs_streamflow()` method, but users calling the underlying fetch
+functions directly will need to update their site ID formats.
+
+### Added
+- **Audit + metadata fields**
+  - Added `created_at` and `updated_at` columns (via migrations) across core tables;
+  warehouse writes now manage these timestamps automatically.
+  - Added `properties` map columns (via migrations) to `locations`, `location_crosswalks`, `location_attributes`,
+  and `configurations`.
+- **Safer / clearer write APIs**
+  - Added `write_to()` on DataFrame accessors for writing results to Iceberg tables.
+  - Added protections preventing accidental writes to **core** tables via accessor writes; use table
+  loading methods instead.
+- **Table-centric loading ergonomics**
+  - Added `BaseTable.load_dataframe()` so data can be loaded to all tables via `ev.<table>.load_dataframe(...)`.
+  - Added domain-table file loading helpers (e.g., `load_csv`, `load_parquet`) using shared single-file extraction utilities.
+- **Fetching enhancements**
+  - NWM: expanded operational configuration descriptions and added support for `T2D` with optional
+  Kelvin→Celsius conversion (`convert_k_to_c`).
+  - USGS: migrated streamflow fetching to `dataretrieval.waterdata` to support the latests USGS API changes and added
+  description-based time series selection via metadata lookup.
+- **Migrations**
+  - Added migrations to (1) update units/variables for temperature support, (2) add audit timestamps,
+  (3) add properties map fields, and (4) rename configuration `type` → `timeseries_type`.
+
+### Changed
+- Refactored validation into `Validate.dataframe(...)` with improved handling for:
+  - adding missing nullable columns
+  - strict column enforcement
+  - duplicate dropping
+  - clearer foreign key constraint enforcement
+- Improved GeoDataFrame caching/parquet writing by converting geometry to WKB and writing GeoParquet metadata.
+- `LocalReadWriteEvaluation` / `LocalReadEvaluation` now accept `namespace_name` and use constants for
+local/remote namespaces rather than Spark conf.
+- Updated docs/notebooks to reflect:
+  - `timeseries_type` rename
+  - table-first load/write patterns (e.g., `ev.primary_timeseries.load_parquet(...)`)
+  - `write_to()` usage
+  - updated USGS ID format
+
+### Fixed
+- Improved `import_evaluation.update_metadata_paths(...)` robustness when re-registering imported
+Iceberg tables and applying migrations.
+- Updated/expanded test fixtures and added new tests covering:
+  - `created_at` / `updated_at` behavior
+  - `properties` fields
+  - domain table CSV/Parquet loading
+  - validation edge cases
+
+### Dependencies
+- Bumped `dataretrieval` to `>=1.1.2,<2` (and updated lockfile).
+
+### Deprecated
+- `TeehrDataFrameBase.write()` is deprecated in favor of `write_to()` (will be removed in a future release).
+
+
 0.6.0 - 2026-03-19
 -------------------
 
