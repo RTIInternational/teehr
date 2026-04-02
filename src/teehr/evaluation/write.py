@@ -126,23 +126,93 @@ class Write:
         self._ev.sql(sql_query)
         self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
+    def _build_on_clause(
+        self,
+        uniqueness_fields: List[str],
+        nullable_fields: List[str]
+    ) -> str:
+        """Build the ON clause for MERGE statements.
+
+        Uses regular = for non-nullable fields (better optimization)
+        and <=> for nullable fields (null-safe equality).
+        """
+        parts = []
+        for fld in uniqueness_fields:
+            if fld in nullable_fields:
+                # Use null-safe equality for nullable fields
+                parts.append(f"t.{fld} <=> s.{fld}")
+            else:
+                # Use regular equality for non-nullable fields
+                parts.append(f"t.{fld} = s.{fld}")
+        return " AND ".join(parts)
+
+    def _build_time_range_filter(
+        self,
+        source_view: str,
+        uniqueness_fields: List[str],
+        value_time_partition_filter: bool = True
+    ) -> str:
+        """Build time-range filter for partition pruning if value_time is present.
+
+        This filter allows Iceberg to prune partitions during MERGE operations.
+        Pre-computes min/max values as literals since subqueries aren't allowed
+        in MERGE conditions.
+
+        Parameters
+        ----------
+        source_view : str
+            Name of the source view to get min/max values from.
+        uniqueness_fields : List[str]
+            List of uniqueness fields to check for value_time.
+        value_time_partition_filter : bool, optional
+            Whether to include the time-range filter. Default True.
+        """
+        if not value_time_partition_filter:
+            return ""
+
+        if "value_time" not in uniqueness_fields:
+            return ""
+
+        # Pre-compute min/max value_time as literals (subqueries not allowed in MERGE)
+        bounds = self._ev.spark.sql(f"""
+            SELECT MIN(value_time) as min_time, MAX(value_time) as max_time
+            FROM {source_view}
+        """).collect()[0]
+
+        min_time = bounds["min_time"]
+        max_time = bounds["max_time"]
+
+        if min_time is None or max_time is None:
+            return ""
+
+        return f"""
+            AND t.value_time >= TIMESTAMP '{min_time}'
+            AND t.value_time <= TIMESTAMP '{max_time}'"""
+
     def _upsert(
         self,
         source_view: str,
         table_name: str,
         uniqueness_fields: List[str],
         catalog_name: str,
-        namespace_name: str
+        namespace_name: str,
+        nullable_fields: List[str] = None,
+        value_time_partition_filter: bool = True
     ):
         """Upsert the DataFrame to the specified target in the catalog.
 
         For new rows: sets both created_at and updated_at to current timestamp.
         For existing rows: updates updated_at only, preserves created_at.
         """
-        # Use the <=> operator for null-safe equality comparison
-        # so that two null values are considered equal.
-        on_sql = " AND ".join(
-            [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
+        if nullable_fields is None:
+            nullable_fields = []
+
+        # Build ON clause with optimized operators
+        on_sql = self._build_on_clause(uniqueness_fields, nullable_fields)
+
+        # Add time-range filter for partition pruning
+        time_filter = self._build_time_range_filter(
+            source_view, uniqueness_fields, value_time_partition_filter
         )
 
         # Add timestamps to source view for new inserts
@@ -164,7 +234,7 @@ class Write:
         sql_query = f"""
             MERGE INTO {catalog_name}.{namespace_name}.{table_name} t
             USING {timestamp_view} s
-            ON {on_sql}
+            ON {on_sql}{time_filter}
             WHEN MATCHED THEN UPDATE SET {update_set_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
@@ -177,17 +247,24 @@ class Write:
         table_name: str,
         uniqueness_fields: List[str],
         catalog_name: str,
-        namespace_name: str
+        namespace_name: str,
+        nullable_fields: List[str] = None,
+        value_time_partition_filter: bool = True
     ):
         """Append the DataFrame to the specified target in the catalog.
 
         Only inserts new rows (skips existing). Sets both created_at and
         updated_at to current timestamp for new rows.
         """
-        # Use the <=> operator for null-safe equality comparison
-        # so that two null values are considered equal.
-        on_sql = " AND ".join(
-            [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
+        if nullable_fields is None:
+            nullable_fields = []
+
+        # Build ON clause with optimized operators
+        on_sql = self._build_on_clause(uniqueness_fields, nullable_fields)
+
+        # Add time-range filter for partition pruning
+        time_filter = self._build_time_range_filter(
+            source_view, uniqueness_fields, value_time_partition_filter
         )
 
         # Add timestamps to source view for new inserts
@@ -196,7 +273,7 @@ class Write:
         sql_query = f"""
             MERGE INTO {catalog_name}.{namespace_name}.{table_name} t
             USING {timestamp_view} s
-            ON {on_sql}
+            ON {on_sql}{time_filter}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
         self._ev.sql(sql_query)
@@ -252,7 +329,8 @@ class Write:
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
         catalog_name: str = None,
-        namespace_name: str = None
+        namespace_name: str = None,
+        value_time_partition_filter: bool = True
     ):
         """Write the DataFrame to the specified target in the catalog.
 
@@ -289,6 +367,11 @@ class Write:
         namespace_name : str, optional
             The namespace name to write to, by default None, which means the
             namespace_name of the active catalog is used.
+        value_time_partition_filter : bool, optional
+            Whether to add time-range filter for partition pruning in MERGE
+            operations. When True, adds WHERE clause to limit target table
+            scan to partitions matching source data's value_time range.
+            Default is ``True``.
         """
         start_time = time.time()
         logger.info(f"Start writing to warehouse table '{table_name}'.")
@@ -306,9 +389,19 @@ class Write:
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
 
+        # Get table metadata for uniqueness and nullable fields
+        tbl = self._ev.table(table_name=table_name)
         if uniqueness_fields is None:
-            tbl = self._ev.table(table_name=table_name)
             uniqueness_fields = tbl.uniqueness_fields
+
+        # Get nullable fields from the Pandera schema
+        nullable_fields = []
+        if tbl.schema_func is not None:
+            schema = tbl.schema_func(type="pyspark")
+            nullable_fields = [
+                col_name for col_name, col in schema.columns.items()
+                if col.nullable is True
+            ]
 
         source_view_name = "source_view"
         created_temp_view = False
@@ -344,7 +437,9 @@ class Write:
                 table_name=table_name,
                 uniqueness_fields=uniqueness_fields,
                 catalog_name=catalog_name,
-                namespace_name=namespace_name
+                namespace_name=namespace_name,
+                nullable_fields=nullable_fields,
+                value_time_partition_filter=value_time_partition_filter
             )
         elif write_mode == "upsert":
             if uniqueness_fields is None:
@@ -356,7 +451,9 @@ class Write:
                 table_name=table_name,
                 uniqueness_fields=uniqueness_fields,
                 catalog_name=catalog_name,
-                namespace_name=namespace_name
+                namespace_name=namespace_name,
+                nullable_fields=nullable_fields,
+                value_time_partition_filter=value_time_partition_filter
             )
         elif write_mode == "create_or_replace":
             self._create_or_replace(
