@@ -317,7 +317,7 @@ class Write:
         uniqueness_fields: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None,
-        partition_filter: bool = False
+        partition_filter: bool = True
     ):
         """Write the DataFrame to the specified target in the catalog.
 
