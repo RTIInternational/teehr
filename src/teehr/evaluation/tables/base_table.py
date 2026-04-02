@@ -33,6 +33,7 @@ class BaseTable(TeehrDataFrameBase):
     # Class-level defaults (None for generic/unknown tables)
     table_name: str = None
     uniqueness_fields: List[str] = None
+    nullable_fields: List[str] = []  # Fields that can be NULL (need <=> in MERGE)
     foreign_keys: List[Dict[str, str]] = None
     schema_func: Callable = None
     strict_validation: bool = None
