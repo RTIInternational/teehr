@@ -155,6 +155,8 @@ class Write:
         """Build time-range filter for partition pruning if value_time is present.
 
         This filter allows Iceberg to prune partitions during MERGE operations.
+        Pre-computes min/max values as literals since subqueries aren't allowed
+        in MERGE conditions.
 
         Parameters
         ----------
@@ -171,10 +173,21 @@ class Write:
         if "value_time" not in uniqueness_fields:
             return ""
 
-        # Get min/max value_time from source to enable partition pruning
+        # Pre-compute min/max value_time as literals (subqueries not allowed in MERGE)
+        bounds = self._ev.spark.sql(f"""
+            SELECT MIN(value_time) as min_time, MAX(value_time) as max_time
+            FROM {source_view}
+        """).collect()[0]
+
+        min_time = bounds["min_time"]
+        max_time = bounds["max_time"]
+
+        if min_time is None or max_time is None:
+            return ""
+
         return f"""
-            AND t.value_time >= (SELECT MIN(value_time) FROM {source_view})
-            AND t.value_time <= (SELECT MAX(value_time) FROM {source_view})"""
+            AND t.value_time >= TIMESTAMP '{min_time}'
+            AND t.value_time <= TIMESTAMP '{max_time}'"""
 
     def _upsert(
         self,
