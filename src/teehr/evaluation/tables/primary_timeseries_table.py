@@ -26,7 +26,6 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         "unit_name",
         "configuration_name"
     ]
-    nullable_fields = ["reference_time"]  # Fields that can be NULL
     foreign_keys: List[Dict[str, str]] = [
         {
             "column": "variable_name",

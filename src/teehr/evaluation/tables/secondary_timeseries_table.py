@@ -21,7 +21,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         "configuration_name",
         "member"
     ]
-    nullable_fields = ["reference_time", "member"]  # Fields that can be NULL
     foreign_keys: List[Dict[str, str]] = [
         {
             "column": "variable_name",

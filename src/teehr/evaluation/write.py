@@ -150,7 +150,7 @@ class Write:
         self,
         source_view: str,
         uniqueness_fields: List[str],
-        partition_filter: bool = True
+        value_time_partition_filter: bool = True
     ) -> str:
         """Build time-range filter for partition pruning if value_time is present.
 
@@ -164,10 +164,10 @@ class Write:
             Name of the source view to get min/max values from.
         uniqueness_fields : List[str]
             List of uniqueness fields to check for value_time.
-        partition_filter : bool, optional
+        value_time_partition_filter : bool, optional
             Whether to include the time-range filter. Default True.
         """
-        if not partition_filter:
+        if not value_time_partition_filter:
             return ""
 
         if "value_time" not in uniqueness_fields:
@@ -197,7 +197,7 @@ class Write:
         catalog_name: str,
         namespace_name: str,
         nullable_fields: List[str] = None,
-        partition_filter: bool = True
+        value_time_partition_filter: bool = True
     ):
         """Upsert the DataFrame to the specified target in the catalog.
 
@@ -212,7 +212,7 @@ class Write:
 
         # Add time-range filter for partition pruning
         time_filter = self._build_time_range_filter(
-            source_view, uniqueness_fields, partition_filter
+            source_view, uniqueness_fields, value_time_partition_filter
         )
 
         # Add timestamps to source view for new inserts
@@ -249,7 +249,7 @@ class Write:
         catalog_name: str,
         namespace_name: str,
         nullable_fields: List[str] = None,
-        partition_filter: bool = True
+        value_time_partition_filter: bool = True
     ):
         """Append the DataFrame to the specified target in the catalog.
 
@@ -264,7 +264,7 @@ class Write:
 
         # Add time-range filter for partition pruning
         time_filter = self._build_time_range_filter(
-            source_view, uniqueness_fields, partition_filter
+            source_view, uniqueness_fields, value_time_partition_filter
         )
 
         # Add timestamps to source view for new inserts
@@ -330,7 +330,7 @@ class Write:
         uniqueness_fields: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None,
-        partition_filter: bool = True
+        value_time_partition_filter: bool = True
     ):
         """Write the DataFrame to the specified target in the catalog.
 
@@ -367,11 +367,11 @@ class Write:
         namespace_name : str, optional
             The namespace name to write to, by default None, which means the
             namespace_name of the active catalog is used.
-        partition_filter : bool, optional
+        value_time_partition_filter : bool, optional
             Whether to add time-range filter for partition pruning in MERGE
             operations. When True, adds WHERE clause to limit target table
             scan to partitions matching source data's value_time range.
-            Default False.
+            Default is ``True``.
         """
         start_time = time.time()
         logger.info(f"Start writing to warehouse table '{table_name}'.")
@@ -393,7 +393,15 @@ class Write:
         tbl = self._ev.table(table_name=table_name)
         if uniqueness_fields is None:
             uniqueness_fields = tbl.uniqueness_fields
-        nullable_fields = getattr(tbl, 'nullable_fields', [])
+
+        # Get nullable fields from the Pandera schema
+        nullable_fields = []
+        if tbl.schema_func is not None:
+            schema = tbl.schema_func(type="pyspark")
+            nullable_fields = [
+                col_name for col_name, col in schema.columns.items()
+                if col.nullable is True
+            ]
 
         source_view_name = "source_view"
         created_temp_view = False
@@ -431,7 +439,7 @@ class Write:
                 catalog_name=catalog_name,
                 namespace_name=namespace_name,
                 nullable_fields=nullable_fields,
-                partition_filter=partition_filter
+                value_time_partition_filter=value_time_partition_filter
             )
         elif write_mode == "upsert":
             if uniqueness_fields is None:
@@ -445,7 +453,7 @@ class Write:
                 catalog_name=catalog_name,
                 namespace_name=namespace_name,
                 nullable_fields=nullable_fields,
-                partition_filter=partition_filter
+                value_time_partition_filter=value_time_partition_filter
             )
         elif write_mode == "create_or_replace":
             self._create_or_replace(
