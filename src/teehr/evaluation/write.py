@@ -317,7 +317,7 @@ class Write:
         uniqueness_fields: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None,
-        partition_filter: bool = True
+        partition_filter: bool = False
     ):
         """Write the DataFrame to the specified target in the catalog.
 
@@ -358,7 +358,7 @@ class Write:
             Whether to add time-range filter for partition pruning in MERGE
             operations. When True, adds WHERE clause to limit target table
             scan to partitions matching source data's value_time range.
-            Default True.
+            Default False.
         """
         start_time = time.time()
         logger.info(f"Start writing to warehouse table '{table_name}'.")
