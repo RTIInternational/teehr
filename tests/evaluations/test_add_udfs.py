@@ -500,46 +500,37 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     event_count = sdf.select('event_below_id').distinct().count()
     assert event_count == 92
 
-    # test threshold event detection (above threshold, numeric)
+    # test threshold event detection (above threshold field, string value cast to float)
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
+    sdf = sdf.withColumn("threshold", F.lit("50.0"))
     ted = tcf.AboveThresholdEventDetection(
-        threshold=50.0,
+        threshold_field_name="threshold",
         skip_event_id=True
     )
     sdf = ted.apply_to(sdf)
     assert "event_above" in sdf.columns
-    num_event_timesteps_float = sdf.filter(sdf.event_above).count()
-    assert num_event_timesteps_float > 0
+    num_event_timesteps = sdf.filter(sdf.event_above).count()
+    assert num_event_timesteps > 0
 
-    # test threshold event detection (above threshold, string cast gives same result)
+    # test threshold event detection (above threshold field, with event ids)
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
-    ted = tcf.AboveThresholdEventDetection(
-        threshold="50.0",
-        skip_event_id=True
-    )
-    sdf = ted.apply_to(sdf)
-    num_event_timesteps_str = sdf.filter(sdf.event_above).count()
-    assert num_event_timesteps_str == num_event_timesteps_float
-
-    # test threshold event detection (above threshold, with event ids)
-    sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
-    ).to_sdf()
-    ted = tcf.AboveThresholdEventDetection(threshold=50.0)
+    sdf = sdf.withColumn("threshold", F.lit("50.0"))
+    ted = tcf.AboveThresholdEventDetection(threshold_field_name="threshold")
     sdf = ted.apply_to(sdf)
     assert "event_above_id" in sdf.columns
     event_count = sdf.select('event_above_id').distinct().count()
     assert event_count > 0
 
-    # test threshold event detection (below threshold)
+    # test threshold event detection (below threshold field)
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
-    ted = tcf.BelowThresholdEventDetection(threshold=50.0)
+    sdf = sdf.withColumn("threshold", F.lit("50.0"))
+    ted = tcf.BelowThresholdEventDetection(threshold_field_name="threshold")
     sdf = ted.apply_to(sdf)
     assert "event_below_id" in sdf.columns
     event_count = sdf.select('event_below_id').distinct().count()

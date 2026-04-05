@@ -495,22 +495,23 @@ class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
 
 
 class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
-    """Adds "event" and "event_id" columns to the DataFrame based on a fixed threshold.
+    """Adds "event" and "event_id" columns to the DataFrame based on a threshold field.
 
-    The "event" column (bool) indicates whether the value is above the specified
-    threshold. For the "event" column, True values indicate that the
-    corresponding value exceeds the threshold, while False values indicate
-    that the value is below or equal to the threshold.
+    The "event" column (bool) indicates whether the value is above the threshold
+    read from a specified column. True values indicate that the corresponding
+    value exceeds the threshold, while False values indicate that the value is
+    below or equal to the threshold. Threshold values are cast to float before
+    comparison to handle attribute fields, which are always stored as strings.
     The "event_id" column (string) groups continuous segments of events and
     assigns a unique ID to each segment in the format "startdate-enddate".
 
     Properties
     ----------
-    - threshold:
-        The threshold value to use for event detection. Can be a numeric
-        value or a string (e.g., from an attribute field) that will be
-        cast to float before use.
-        Default: 0.0
+    - threshold_field_name:
+        The name of the column containing the threshold value. Threshold
+        values are cast to float before use, so string attribute fields
+        are supported.
+        Default: "threshold"
     - value_time_field_name:
         The name of the column containing the timestamp.
         Default: "value_time"
@@ -540,8 +541,8 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
             ]
     """
 
-    threshold: Union[float, str] = Field(
-        default=0.0
+    threshold_field_name: str = Field(
+        default="threshold"
     )
     value_time_field_name: str = Field(
         default="value_time"
@@ -567,7 +568,7 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
         sdf: ps.DataFrame,
         output_field,
         input_field,
-        threshold,
+        threshold_field,
         group_by,
         return_type=T.BooleanType()
 
@@ -578,23 +579,23 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
         # Create a copy of the schema and add the new column
         output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
 
-        def is_event(pdf, input_field, threshold, output_field) -> pd.DataFrame:
+        def is_event(pdf, input_field, threshold_field, output_field) -> pd.DataFrame:
             pvs = pdf[input_field]
 
-            # Cast threshold to float in case it was provided as a string
-            threshold_value = float(threshold)
+            # Cast threshold to float; attribute fields are always stored as strings
+            threshold_value = float(pdf[threshold_field].iloc[0])
 
             # Create a new column indicating whether each value is above the threshold
             pdf[output_field] = pvs > threshold_value
 
             return pdf
 
-        def wrapper(pdf, input_field, threshold, output_field):
-            return is_event(pdf, input_field, threshold, output_field)
+        def wrapper(pdf, input_field, threshold_field, output_field):
+            return is_event(pdf, input_field, threshold_field, output_field)
 
         # Group the data and apply the UDF
         sdf = sdf.groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, threshold, output_field),
+            lambda pdf: wrapper(pdf, input_field, threshold_field, output_field),
             schema=output_schema
         )
 
@@ -660,7 +661,7 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
         sdf = self.add_is_event(
             sdf=sdf,
             input_field=self.value_field_name,
-            threshold=self.threshold,
+            threshold_field=self.threshold_field_name,
             output_field=self.output_event_field_name,
             group_by=self.uniqueness_fields
         )
@@ -677,22 +678,23 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
 
 
 class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
-    """Adds "event" and "event_id" columns to the DataFrame based on a fixed threshold.
+    """Adds "event" and "event_id" columns to the DataFrame based on a threshold field.
 
-    The "event" column (bool) indicates whether the value is below the specified
-    threshold. For the "event" column, True values indicate that the
-    corresponding value is below the threshold, while False values indicate
-    that the value is above or equal to the threshold.
+    The "event" column (bool) indicates whether the value is below the threshold
+    read from a specified column. True values indicate that the corresponding
+    value is below the threshold, while False values indicate that the value is
+    above or equal to the threshold. Threshold values are cast to float before
+    comparison to handle attribute fields, which are always stored as strings.
     The "event_id" column (string) groups continuous segments of events and
     assigns a unique ID to each segment in the format "startdate-enddate".
 
     Properties
     ----------
-    - threshold:
-        The threshold value to use for event detection. Can be a numeric
-        value or a string (e.g., from an attribute field) that will be
-        cast to float before use.
-        Default: 0.0
+    - threshold_field_name:
+        The name of the column containing the threshold value. Threshold
+        values are cast to float before use, so string attribute fields
+        are supported.
+        Default: "threshold"
     - value_time_field_name:
         The name of the column containing the timestamp.
         Default: "value_time"
@@ -722,8 +724,8 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
             ]
     """
 
-    threshold: Union[float, str] = Field(
-        default=0.0
+    threshold_field_name: str = Field(
+        default="threshold"
     )
     value_time_field_name: str = Field(
         default="value_time"
@@ -749,7 +751,7 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
         sdf: ps.DataFrame,
         output_field,
         input_field,
-        threshold,
+        threshold_field,
         group_by,
         return_type=T.BooleanType()
 
@@ -760,23 +762,23 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
         # Create a copy of the schema and add the new column
         output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
 
-        def is_event(pdf, input_field, threshold, output_field) -> pd.DataFrame:
+        def is_event(pdf, input_field, threshold_field, output_field) -> pd.DataFrame:
             pvs = pdf[input_field]
 
-            # Cast threshold to float in case it was provided as a string
-            threshold_value = float(threshold)
+            # Cast threshold to float; attribute fields are always stored as strings
+            threshold_value = float(pdf[threshold_field].iloc[0])
 
             # Create a new column indicating whether each value is below the threshold
             pdf[output_field] = pvs < threshold_value
 
             return pdf
 
-        def wrapper(pdf, input_field, threshold, output_field):
-            return is_event(pdf, input_field, threshold, output_field)
+        def wrapper(pdf, input_field, threshold_field, output_field):
+            return is_event(pdf, input_field, threshold_field, output_field)
 
         # Group the data and apply the UDF
         sdf = sdf.groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, threshold, output_field),
+            lambda pdf: wrapper(pdf, input_field, threshold_field, output_field),
             schema=output_schema
         )
 
@@ -842,7 +844,7 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
         sdf = self.add_is_event(
             sdf=sdf,
             input_field=self.value_field_name,
-            threshold=self.threshold,
+            threshold_field=self.threshold_field_name,
             output_field=self.output_event_field_name,
             group_by=self.uniqueness_fields
         )
