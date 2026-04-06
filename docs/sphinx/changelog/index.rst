@@ -11,6 +11,9 @@ Bleeding Edge (main)
   - Added ``AboveThresholdEventDetection`` and ``BelowThresholdEventDetection`` timeseries-aware
     calculated fields. These detect events based on a threshold read from a DataFrame column
     (e.g., an attribute field), supporting both numeric and string-typed fields.
+- **Write optimizations**
+  - Added partition filters to the upsert and append methods in the Write class to enable partition
+    pruning when writing large datasets. The filters are applied by default.
 
 ### Changed
 - None
@@ -39,8 +42,8 @@ capability (notably USGS via dataretrieval.waterdata and NWM temperature handlin
   - `ev.primary_timeseries.load_parquet(...)` over `ev.load.primary_timeseries.from_parquet(...)`
   - `df_accessor.write_to("my_results")` over `df_accessor.write("my_results")`
 
-- If you were calling `ev.write.*`/ `ev.load.*` directly, expect those to be internal/private (`ev._write`, `ev._load`)
-and migrate to table methods where possible.
+- If you were calling `ev.write.*`/ `ev.load.*` directly, expect those to be internal/private
+  (`ev._write`, `ev._load`) and migrate to table methods where possible.
 
 ### Breaking / behavior changes
 - Renamed `Configuration.type` → `Configuration.timeseries_type` (and corresponding schema/docs updates).
