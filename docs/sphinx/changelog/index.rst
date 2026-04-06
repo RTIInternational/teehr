@@ -28,6 +28,10 @@ This happens automatically when using the `fetch.usgs_streamflow()` method, but 
 functions directly will need to update their site ID formats.
 
 ### Added
+- **Calculated Fields**
+  - Added ``AboveThresholdEventDetection`` and ``BelowThresholdEventDetection`` timeseries-aware
+    calculated fields. These detect events based on a threshold read from a DataFrame column
+    (e.g., an attribute field), supporting both numeric and string-typed fields.
 - **Audit + metadata fields**
   - Added `created_at` and `updated_at` columns (via migrations) across core tables;
   warehouse writes now manage these timestamps automatically.

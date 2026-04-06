@@ -351,6 +351,10 @@ Available timeseries-aware fields:
      - Flags values above a percentile threshold, assigns event IDs
    * - :class:`BelowPercentileEventDetection <teehr.models.calculated_fields.timeseries_aware.BelowPercentileEventDetection>`
      - Flags values below a percentile threshold, assigns event IDs
+   * - :class:`AboveThresholdEventDetection <teehr.models.calculated_fields.timeseries_aware.AboveThresholdEventDetection>`
+     - Flags values above a threshold from an input field, assigns event IDs
+   * - :class:`BelowThresholdEventDetection <teehr.models.calculated_fields.timeseries_aware.BelowThresholdEventDetection>`
+     - Flags values below a threshold from an input field, assigns event IDs
    * - :class:`ExceedanceProbability <teehr.models.calculated_fields.timeseries_aware.ExceedanceProbability>`
      - Computes probability of value being exceeded
    * - :class:`BaseflowPeriodDetection <teehr.models.calculated_fields.timeseries_aware.BaseflowPeriodDetection>`
@@ -411,6 +415,49 @@ Detect events when values fall below a percentile threshold:
     )
 
     jt = ev.joined_timeseries_view().add_calculated_fields([low_event])
+
+Above Threshold Events
+----------------------
+
+Detect events when values exceed a threshold read from a DataFrame column (e.g., an
+attribute field loaded with ``add_attrs=True``). Threshold values are cast to ``float``
+before comparison, so string-typed attribute fields are supported.
+
+.. code-block:: python
+
+    import teehr.models.calculated_fields.timeseries_aware as tcf
+
+    # Detect high-flow events where primary_value exceeds the 'flood_stage' attribute
+    event_detection = tcf.AboveThresholdEventDetection(
+        threshold_field_name="flood_stage",
+        value_field_name="primary_value",
+        output_event_field_name="event_above",
+        output_event_id_field_name="event_above_id",
+    )
+
+    jt = ev.joined_timeseries_view(add_attrs=True).add_calculated_fields([event_detection])
+    jt.to_sdf().show()
+
+    # Result includes:
+    # - event_above (bool): True if value > flood_stage
+    # - event_above_id (str): Unique ID for continuous event periods
+
+Below Threshold Events
+----------------------
+
+Detect events when values fall below a threshold from a DataFrame column:
+
+.. code-block:: python
+
+    # Detect low-flow events where primary_value is below the 'low_flow_threshold' attribute
+    low_event = tcf.BelowThresholdEventDetection(
+        threshold_field_name="low_flow_threshold",
+        value_field_name="primary_value",
+        output_event_field_name="event_below",
+        output_event_id_field_name="event_below_id",
+    )
+
+    jt = ev.joined_timeseries_view(add_attrs=True).add_calculated_fields([low_event])
 
 Combining Multiple Calculated Fields
 ------------------------------------
