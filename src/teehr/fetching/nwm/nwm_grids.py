@@ -16,7 +16,8 @@ from teehr.fetching.utils import (
     start_on_z_hour,
     end_on_z_hour,
     get_dataset,
-    get_end_date_from_ingest_days
+    get_end_date_from_ingest_days,
+    log_temperature_conversion_message
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -258,6 +259,11 @@ def nwm_grids_to_parquet(
 
     if isinstance(end_date, str):
         end_date = parse(end_date)
+
+    log_temperature_conversion_message(
+        variable_name=variable_name,
+        convert_k_to_c=convert_k_to_c
+    )
 
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:

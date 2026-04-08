@@ -987,7 +987,7 @@ def split_dataframe(df: pd.DataFrame, chunk_size: int) -> List[pd.DataFrame]:
     return chunks
 
 
-def convert_value_from_kelvin_to_celsius(df: pd.DataFrame, variable_name: str) -> pd.DataFrame:
+def convert_value_from_kelvin_to_celsius(df: pd.DataFrame) -> pd.DataFrame:
     """Convert temperature values from Kelvin to Celsius for a specific variable.
 
     Parameters
@@ -1002,15 +1002,28 @@ def convert_value_from_kelvin_to_celsius(df: pd.DataFrame, variable_name: str) -
     pd.DataFrame
         The dataframe with converted temperature values.
     """
-    if variable_name == "T2D":
-        logger.info(
-            "Converting temperature values from Kelvin to Celsius for variable T2D"
-        )
-        df["value"] = df["value"] - 273.15
-        df.loc[:, UNIT_NAME] = "C"
-    else:
-        logger.warning(
-            "The convert_k_to_c flag is set to True but the variable being processed is not T2D."
-            " No conversion will be applied."
-        )
+    df["value"] = df["value"] - 273.15
+    df.loc[:, UNIT_NAME] = "C"
     return df
+
+
+def log_temperature_conversion_message(
+    variable_name: str,
+    convert_k_to_c: bool
+):
+    """Log the conversion of temperature values from Kelvin to Celsius."""
+    if variable_name == "T2D" and convert_k_to_c:
+        logger.info(
+            f"Temperature values for {variable_name} will be converted from Kelvin to Celsius."
+        )
+    elif variable_name == "T2D" and not convert_k_to_c:
+        logger.warning(
+            f"Temperature values for {variable_name} will be kept in Kelvin."
+            " If you would like to convert to Celsius, set 'convert_k_to_c=True'."
+        )
+    elif variable_name != "T2D" and convert_k_to_c:
+        logger.warning(
+            "Temperature conversion from Kelvin to Celsius is only applicable for the variable 'T2D'."
+            f" The variable you are fetching is {variable_name}, so no conversion will be applied."
+            " Set 'convert_k_to_c=False' to suppress this warning."
+        )

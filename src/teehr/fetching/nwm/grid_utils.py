@@ -250,11 +250,8 @@ def fetch_and_format_nwm_grids(
         )
         z_hour_df.sort_values([LOCATION_ID, VALUE_TIME], inplace=True)
 
-        if convert_k_to_c:
-            z_hour_df = convert_value_from_kelvin_to_celsius(
-                df=z_hour_df,
-                variable_name=variable_name
-            )
+        if convert_k_to_c and variable_name == "T2D":
+            z_hour_df = convert_value_from_kelvin_to_celsius(df=z_hour_df)
 
         if drop_overlapping_assimilation_values and "assim" in nwm_configuration_name:
             # Set reference_time to NaT for assimilation values
