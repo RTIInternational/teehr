@@ -1,6 +1,7 @@
 """Module defining shared functions for processing NWM point data."""
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
+import re
 
 import dask
 import numpy as np
@@ -144,17 +145,17 @@ def process_chunk_of_files(
     output = [tbl for tbl in output if tbl is not None]
     output_table = pa.concat_tables(output)
 
+    df.sort_values(by="filepath", inplace=True)
     if process_by_z_hour:
         row = df.iloc[0]
         filename = f"{row.day}T{row.z_hour[1:3]}.parquet"
     else:
         # Use start and end dates including forecast hour
         #  for the output file name.
-        filepath_list = df.filepath.sort_values().tolist()
-        start_json = filepath_list[0].split("/")[-1].split(".")
-        start = f"{start_json[1]}T{start_json[3][1:3]}F{start_json[6][1:]}"
-        end_json = filepath_list[-1].split("/")[-1].split(".")
-        end = f"{end_json[1]}T{end_json[3][1:3]}F{end_json[6][1:]}"
+        start_forecast_hour = re.search(r'\.f(\d+)\.', df.filepath.iloc[0]).group(1)
+        end_forecast_hour = re.search(r'\.f(\d+)\.', df.filepath.iloc[-1]).group(1)
+        start = f"{df.day.iloc[0]}T{df.z_hour.iloc[0][1:3]}F{start_forecast_hour}"
+        end = f"{df.day.iloc[-1]}T{df.z_hour.iloc[-1][1:3]}F{end_forecast_hour}"
         filename = f"{start}_{end}.parquet"
 
     if drop_overlapping_assimilation_values and "assim" in configuration:
