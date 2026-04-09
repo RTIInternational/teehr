@@ -123,8 +123,7 @@ def process_single_nwm_grid_file(
     """Fetch data for a single reference file and compute weighted average."""
     ds = get_dataset(
         row.filepath,
-        ignore_missing_file,
-        remote_options={"token": "anon"}
+        ignore_missing_file
     )
     if not ds:
         return None

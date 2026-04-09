@@ -47,7 +47,7 @@ def nwm_grids_to_parquet(
     end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
     ingest_days: Optional[int] = None,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
-    kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
+    kerchunk_method: Optional[SupportedKerchunkMethod] = "auto",
     prioritize_analysis_value_time: Optional[bool] = False,
     t_minus_hours: Optional[List[int]] = None,
     ignore_missing_file: Optional[bool] = True,
@@ -117,11 +117,11 @@ def nwm_grids_to_parquet(
         Currently only "GCS" is implemented.
     kerchunk_method : Optional[SupportedKerchunkMethod]
         When data_source = "GCS", specifies the preference in creating Kerchunk
-        reference json files. "local" (default) will create new json files from
+        reference json files. "local" - create new json files from
         netcdf files in GCS and save to a local directory if they do not already
         exist locally, in which case the creation is skipped. "remote" - read the
         CIROH pre-generated jsons from s3, ignoring any that are unavailable.
-        "auto" - read the CIROH pre-generated jsons from s3, and create any that
+        "auto" (default) - read the CIROH pre-generated jsons from s3, and create any that
         are unavailable, storing locally.
     prioritize_analysis_value_time : Optional[bool]
         A boolean flag that determines the method of fetching analysis data.
@@ -368,7 +368,6 @@ def nwm_grids_to_parquet(
             template_ds = get_dataset(
                 json_paths[0],
                 ignore_missing_file=False,
-                remote_options={"token": "anon"}
             )
 
             generate_weights_file(
