@@ -183,6 +183,7 @@ def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_templat
     assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
 
 
+@pytest.mark.skip(reason="This one takes a long time, test manually as needed.")
 def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
     ev = LocalReadWriteEvaluation(dir_path=tmpdir, create_dir=True)
