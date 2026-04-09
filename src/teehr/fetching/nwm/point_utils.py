@@ -150,12 +150,18 @@ def process_chunk_of_files(
         row = df.iloc[0]
         filename = f"{row.day}T{row.z_hour[1:3]}.parquet"
     else:
-        # Use start and end dates including forecast hour
-        #  for the output file name.
-        start_forecast_hour = re.search(r'\.f(\d+)\.', df.filepath.iloc[0]).group(1)
-        end_forecast_hour = re.search(r'\.f(\d+)\.', df.filepath.iloc[-1]).group(1)
-        start = f"{df.day.iloc[0]}T{df.z_hour.iloc[0][1:3]}F{start_forecast_hour}"
-        end = f"{df.day.iloc[-1]}T{df.z_hour.iloc[-1][1:3]}F{end_forecast_hour}"
+        # Use start and end dates including forecast hour or t-minus hour (assimilation)
+        # for the output file name.
+        if "assim" in configuration:
+            start_tm_hour = re.search(r'\.tm(\d+)\.', df.filepath.iloc[0]).group(1)
+            end_tm_hour = re.search(r'\.tm(\d+)\.', df.filepath.iloc[-1]).group(1)
+            start = f"{df.day.iloc[0]}T{df.z_hour.iloc[0][1:3]}M{start_tm_hour}"
+            end = f"{df.day.iloc[-1]}T{df.z_hour.iloc[-1][1:3]}M{end_tm_hour}"
+        else:
+            start_forecast_hour = re.search(r'\.f(\d+)\.', df.filepath.iloc[0]).group(1)
+            end_forecast_hour = re.search(r'\.f(\d+)\.', df.filepath.iloc[-1]).group(1)
+            start = f"{df.day.iloc[0]}T{df.z_hour.iloc[0][1:3]}F{start_forecast_hour}"
+            end = f"{df.day.iloc[-1]}T{df.z_hour.iloc[-1][1:3]}F{end_forecast_hour}"
         filename = f"{start}_{end}.parquet"
 
     if drop_overlapping_assimilation_values and "assim" in configuration:

@@ -153,6 +153,7 @@ def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_templat
         process_by_z_hour=False,
         starting_z_hour=3,
         ending_z_hour=20,
+        kerchunk_method="auto"
     )
     ts_df = ev.secondary_timeseries.to_pandas()
 
