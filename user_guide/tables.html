@@ -1,0 +1,1058 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tables &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=2bd037f0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/tables';</script>
+    <script src="../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Views" href="views.html" />
+    <link rel="prev" title="The Evaluation" href="evaluation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+    <img src="../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">The Evaluation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="views.html">Views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics/metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetching.html">Fetching and Downloading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generating.html">Generating Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Additional Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tutorials/joining_timeseries.html">Joining Timeseries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_content/legacy_content.html">Legacy TEEHR Content</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tables</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tables">
+<span id="id1"></span><h1>Tables<a class="headerlink" href="#tables" title="Link to this heading">#</a></h1>
+<p>Tables are the core data structures in TEEHR. They represent persistent Iceberg tables
+that store your evaluation data. This section covers the table schema, loading methods,
+querying, and method chaining.</p>
+<section id="the-teehr-schema">
+<h2>The TEEHR Schema<a class="headerlink" href="#the-teehr-schema" title="Link to this heading">#</a></h2>
+<p>TEEHR uses a structured schema with three categories of tables:</p>
+<figure class="align-default">
+<a class="reference internal image-reference" href="../_images/TEEHR_schema.png"><img alt="../_images/TEEHR_schema.png" src="../_images/TEEHR_schema.png" style="width: 432.0px; height: 768.0px;" />
+</a>
+</figure>
+<p><strong>Domain Tables</strong> (small reference data, CSV-like):</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.unit_table.UnitTable.html#teehr.evaluation.tables.unit_table.UnitTable" title="teehr.evaluation.tables.unit_table.UnitTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">units</span></code></a> - Measurement units (e.g., “m3/s”, “ft3/s”)</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.variable_table.VariableTable.html#teehr.evaluation.tables.variable_table.VariableTable" title="teehr.evaluation.tables.variable_table.VariableTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">variables</span></code></a> - Variable names (e.g., “streamflow_hourly_inst”)</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.configuration_table.ConfigurationTable.html#teehr.evaluation.tables.configuration_table.ConfigurationTable" title="teehr.evaluation.tables.configuration_table.ConfigurationTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">configurations</span></code></a> - Data source configurations (e.g., “nwm30_retrospective”)</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.attribute_table.AttributeTable.html#teehr.evaluation.tables.attribute_table.AttributeTable" title="teehr.evaluation.tables.attribute_table.AttributeTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">attributes</span></code></a> - Attribute definitions (e.g., “drainage_area”, “ecoregion”)</p></li>
+</ul>
+<p><strong>Location Data</strong>:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.location_table.LocationTable.html#teehr.evaluation.tables.location_table.LocationTable" title="teehr.evaluation.tables.location_table.LocationTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">locations</span></code></a> - Point geometries with IDs (e.g., USGS gage locations)</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.html#teehr.evaluation.tables.location_attribute_table.LocationAttributeTable" title="teehr.evaluation.tables.location_attribute_table.LocationAttributeTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">location_attributes</span></code></a> - Attribute values for each location</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.html#teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable" title="teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">location_crosswalks</span></code></a> - Maps primary IDs to secondary IDs (e.g., USGS to NWM)</p></li>
+</ul>
+<p><strong>Timeseries Data</strong>:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html#teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable" title="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">primary_timeseries</span></code></a> - Observed/reference data (e.g., USGS streamflow)</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.html#teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable" title="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">secondary_timeseries</span></code></a> - Simulated/forecast data (e.g., NWM outputs)</p></li>
+</ul>
+</section>
+<section id="accessing-tables">
+<h2>Accessing Tables<a class="headerlink" href="#accessing-tables" title="Link to this heading">#</a></h2>
+<p>There are two ways to access a table:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;./my_eval&quot;</span><span class="p">)</span>
+
+<span class="c1"># Method 1: Named property (for standard tables)</span>
+<span class="n">locs</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">locations</span>
+<span class="n">pts</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span>
+<span class="n">sts</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span>
+
+<span class="c1"># Method 2: Generic accessor (for any table)</span>
+<span class="n">pts</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">)</span>
+<span class="n">custom</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;my_custom_table&quot;</span><span class="p">)</span>  <span class="c1"># User-defined tables</span>
+</pre></div>
+</div>
+<p>Both methods return a table object with the same methods.</p>
+</section>
+<section id="table-methods-overview">
+<h2>Table Methods Overview<a class="headerlink" href="#table-methods-overview" title="Link to this heading">#</a></h2>
+<p>All tables inherit common methods from the <a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable" title="teehr.evaluation.tables.base_table.BaseTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseTable</span></code></a> class:</p>
+<p><strong>Output Methods:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.to_sdf" title="teehr.evaluation.tables.base_table.BaseTable.to_sdf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_sdf()</span></code></a> - Return a PySpark DataFrame (lazy)</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.to_pandas" title="teehr.evaluation.tables.base_table.BaseTable.to_pandas"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_pandas()</span></code></a> - Return a Pandas DataFrame (eager)</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.to_geopandas" title="teehr.evaluation.tables.base_table.BaseTable.to_geopandas"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_geopandas()</span></code></a> - Return a GeoPandas GeoDataFrame (eager)</p></li>
+</ul>
+<p><strong>Query Methods:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.filter" title="teehr.evaluation.tables.base_table.BaseTable.filter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">filter()</span></code></a> - Apply filters</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.order_by" title="teehr.evaluation.tables.base_table.BaseTable.order_by"><code class="xref py py-meth docutils literal notranslate"><span class="pre">order_by()</span></code></a> - Sort results</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.aggregate" title="teehr.evaluation.tables.base_table.BaseTable.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a> - Calculate metrics with grouping</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.add_calculated_fields" title="teehr.evaluation.tables.base_table.BaseTable.add_calculated_fields"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_calculated_fields()</span></code></a> - Add computed columns</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.add_geometry" title="teehr.evaluation.tables.base_table.BaseTable.add_geometry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_geometry()</span></code></a> - Join geometry from locations table</p></li>
+</ul>
+<p><strong>Output Operations:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.write" title="teehr.evaluation.tables.base_table.BaseTable.write"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write()</span></code></a> - Write results to a new table</p></li>
+</ul>
+<p><strong>Table Management:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.is_core_table" title="teehr.evaluation.tables.base_table.BaseTable.is_core_table"><code class="xref py py-attr docutils literal notranslate"><span class="pre">is_core_table</span></code></a> - <code class="docutils literal notranslate"><span class="pre">True</span></code> if this table is a built-in TEEHR table</p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.drop" title="teehr.evaluation.tables.base_table.BaseTable.drop"><code class="xref py py-meth docutils literal notranslate"><span class="pre">drop()</span></code></a> - Drop a user-created (non-core) table from the catalog</p></li>
+</ul>
+</section>
+<section id="loading-data">
+<h2>Loading Data<a class="headerlink" href="#loading-data" title="Link to this heading">#</a></h2>
+<p>Tables have methods to load data from various file formats. The loading process
+validates data against the table schema and handles duplicates.</p>
+<section id="loading-timeseries-data">
+<h3>Loading Timeseries Data<a class="headerlink" href="#loading-timeseries-data" title="Link to this heading">#</a></h3>
+<p>Primary and secondary timeseries tables support multiple formats.</p>
+<p><strong>From Parquet:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">load_parquet</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;./data/observed.parquet&quot;</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;datetime&quot;</span><span class="p">:</span> <span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;discharge&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;site_no&quot;</span><span class="p">:</span> <span class="s2">&quot;location_id&quot;</span>
+    <span class="p">},</span>
+    <span class="n">constant_field_values</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;configuration_name&quot;</span><span class="p">:</span> <span class="s2">&quot;usgs_observations&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="s2">&quot;streamflow_hourly_inst&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit_name&quot;</span><span class="p">:</span> <span class="s2">&quot;m3/s&quot;</span>
+    <span class="p">},</span>
+    <span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html#teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.load_parquet" title="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.load_parquet"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable.load_parquet()</span></code></a></p>
+<p><strong>From CSV:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;./data/forecasts/&quot;</span><span class="p">,</span>
+    <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;**/*.csv&quot;</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;forecast_time&quot;</span><span class="p">:</span> <span class="s2">&quot;reference_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;valid_time&quot;</span><span class="p">:</span> <span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;flow&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span>
+    <span class="p">},</span>
+    <span class="n">constant_field_values</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;configuration_name&quot;</span><span class="p">:</span> <span class="s2">&quot;my_model_v1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="s2">&quot;streamflow_hourly_inst&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit_name&quot;</span><span class="p">:</span> <span class="s2">&quot;m3/s&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.html#teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.load_csv" title="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.load_csv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable.load_csv()</span></code></a></p>
+<p><strong>From NetCDF:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">load_netcdf</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;./data/model_output.nc&quot;</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;streamflow&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">},</span>
+    <span class="n">constant_field_values</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;configuration_name&quot;</span><span class="p">:</span> <span class="s2">&quot;model_run_001&quot;</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.html#teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.load_netcdf" title="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.load_netcdf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable.load_netcdf()</span></code></a></p>
+<p><strong>From FEWS PI-XML:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">load_fews_pixml</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;./data/observed.xml&quot;</span><span class="p">,</span>
+    <span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">&quot;fews&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html#teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.load_fews_xml" title="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.load_fews_xml"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable.load_fews_xml()</span></code></a></p>
+</section>
+<section id="loading-parameters">
+<h3>Loading Parameters<a class="headerlink" href="#loading-parameters" title="Link to this heading">#</a></h3>
+<p>Common parameters for loading methods:</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">field_mapping</span></code><span class="classifier">dict</span></dt><dd><p>Maps source column names to TEEHR schema names:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;source_col&quot;</span><span class="p">:</span> <span class="s2">&quot;teehr_col&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">constant_field_values</span></code><span class="classifier">dict</span></dt><dd><p>Sets constant values for fields not in source data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;configuration_name&quot;</span><span class="p">:</span> <span class="s2">&quot;my_config&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_name&quot;</span><span class="p">:</span> <span class="s2">&quot;m3/s&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">location_id_prefix</span></code><span class="classifier">str</span></dt><dd><p>Prefix added to location IDs for uniqueness:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span>  <span class="c1"># &quot;12345&quot; becomes &quot;usgs-12345&quot;</span>
+</pre></div>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">write_mode</span></code><span class="classifier">str</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;insert&quot;</span></code> - Insert all rows directly (no duplicate checking, fastest)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code> - Add new data, skip duplicates (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;upsert&quot;</span></code> - Update existing, add new</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;create_or_replace&quot;</span></code> - Replace entire table</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">drop_duplicates</span></code><span class="classifier">bool</span></dt><dd><p>Remove duplicate rows during validation (default: True)</p>
+</dd>
+</dl>
+</section>
+<section id="loading-location-data">
+<h3>Loading Location Data<a class="headerlink" href="#loading-location-data" title="Link to this heading">#</a></h3>
+<p>Load locations from GeoJSON or other spatial formats.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">load_spatial</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;./data/gages.geojson&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.location_table.LocationTable.html#teehr.evaluation.tables.location_table.LocationTable.load_spatial" title="teehr.evaluation.tables.location_table.LocationTable.load_spatial"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LocationTable.load_spatial()</span></code></a></p>
+<p>Load location attributes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">location_attributes</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;./data/attributes.csv&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.html#teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.load_csv" title="teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.load_csv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LocationAttributeTable.load_csv()</span></code></a></p>
+<p>Load crosswalks.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;./data/crosswalk.csv&quot;</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;usgs_id&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;nwm_id&quot;</span><span class="p">:</span> <span class="s2">&quot;secondary_location_id&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.html#teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.load_csv" title="teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.load_csv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LocationCrosswalkTable.load_csv()</span></code></a></p>
+</section>
+<section id="loading-domain-data">
+<h3>Loading Domain Data<a class="headerlink" href="#loading-domain-data" title="Link to this heading">#</a></h3>
+<p>Domain tables can be populated manually.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Or add individual records</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">teehr</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_model&quot;</span><span class="p">,</span>
+        <span class="n">timeseries_type</span><span class="o">=</span><span class="s2">&quot;secondary&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;My custom model&quot;</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.configuration_table.ConfigurationTable.html#teehr.evaluation.tables.configuration_table.ConfigurationTable.add" title="teehr.evaluation.tables.configuration_table.ConfigurationTable.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ConfigurationTable.add()</span></code></a></p>
+</section>
+<section id="using-dataframes">
+<h3>Using DataFrames<a class="headerlink" href="#using-dataframes" title="Link to this heading">#</a></h3>
+<p>You can also load from Pandas/GeoPandas DataFrames:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;location_id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;usgs-01234&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;value_time&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2024-01-01 00:00:00&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">100.5</span><span class="p">],</span>
+    <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;streamflow_hourly_inst&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;unit_name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;m3 s-1&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;configuration_name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;usgs_observations&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">load_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="filtering-data">
+<h2>Filtering Data<a class="headerlink" href="#filtering-data" title="Link to this heading">#</a></h2>
+<p>Filter tables to select specific subsets of data.</p>
+<p><strong>SQL String Filters:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="s2">&quot;location_id LIKE &#39;usgs%&#39;&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">filter</span><span class="p">([</span>
+    <span class="s2">&quot;value_time &gt; &#39;2024-01-01&#39;&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;value_time &lt; &#39;2024-02-01&#39;&quot;</span>
+<span class="p">])</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Dictionary Filters:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span>
+    <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;location_id&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;like&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;usgs%&quot;</span>
+<span class="p">})</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>TableFilter Objects:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">TableFilter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operators</span> <span class="k">as</span> <span class="n">ops</span>
+
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="n">TableFilter</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="n">ops</span><span class="o">.</span><span class="n">gt</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html#teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.filter" title="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.filter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable.filter()</span></code></a></p>
+</section>
+<section id="method-chaining">
+<h2>Method Chaining<a class="headerlink" href="#method-chaining" title="Link to this heading">#</a></h2>
+<p>Table methods return <code class="docutils literal notranslate"><span class="pre">self</span></code> to enable fluent method chaining:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RowLevelCalculatedFields</span> <span class="k">as</span> <span class="n">rcf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicMetrics</span> <span class="k">as</span> <span class="n">dm</span>
+
+<span class="c1"># Chain multiple operations</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;primary_location_id LIKE &#39;usgs%&#39;&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span><span class="n">rcf</span><span class="o">.</span><span class="n">Month</span><span class="p">(),</span> <span class="n">rcf</span><span class="o">.</span><span class="n">WaterYear</span><span class="p">()])</span>
+    <span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+        <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">dm</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">(),</span>
+            <span class="n">dm</span><span class="o">.</span><span class="n">RelativeBias</span><span class="p">()</span>
+        <span class="p">],</span>
+        <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">order_by</span><span class="p">([</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="writing-results">
+<h2>Writing Results<a class="headerlink" href="#writing-results" title="Link to this heading">#</a></h2>
+<p>Write query results to new tables:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Calculate metrics and save to a new table</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">dm</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">()],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">write_to</span><span class="p">(</span><span class="s2">&quot;location_metrics&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access the new table</span>
+<span class="n">metrics_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;location_metrics&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can also load DataFrames directly into tables using
+<a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.load_dataframe" title="teehr.evaluation.tables.base_table.BaseTable.load_dataframe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_dataframe()</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;m3/s&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Cubic meters per second&quot;</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># Load using the table property</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">load_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+<span class="c1"># Or using the generic table accessor</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+<span class="c1"># Specify write mode (default is &quot;append&quot;)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">load_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">write_mode</span><span class="o">=</span><span class="s2">&quot;upsert&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Write modes available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;insert&quot;</span></code> — fastest: INSERT INTO with no duplicate checking</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code> — skip rows that match existing uniqueness fields (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;upsert&quot;</span></code> — update matching rows, insert new ones</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;overwrite&quot;</span></code> — replace all data, preserving table history</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;insert&quot;</span></code> uses a plain <code class="docutils literal notranslate"><span class="pre">INSERT</span> <span class="pre">INTO</span></code> statement and does <strong>not</strong> check for
+duplicates. Use it when you know your data is clean and want maximum throughput.
+Use <code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code> (the default) when you want to skip rows that already exist.</p>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.load_dataframe" title="teehr.evaluation.tables.base_table.BaseTable.load_dataframe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BaseTable.load_dataframe()</span></code></a></p>
+</section>
+<section id="deleting-data">
+<h2>Deleting Data<a class="headerlink" href="#deleting-data" title="Link to this heading">#</a></h2>
+<p>There are two equivalent ways to delete rows from a table.</p>
+<p><strong>Via a table instance</strong> (<code class="docutils literal notranslate"><span class="pre">ev.table().delete()</span></code> or <code class="docutils literal notranslate"><span class="pre">ev.primary_timeseries.delete()</span></code>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Dry run — preview rows that would be deleted</span>
+<span class="n">sdf</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;location_id = &#39;usgs-01234567&#39;&quot;</span><span class="p">],</span>
+    <span class="n">dry_run</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rows to delete: </span><span class="si">{</span><span class="n">sdf</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Execute deletion on a named table property</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;location_id = &#39;usgs-01234567&#39;&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deleted </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> rows.&quot;</span><span class="p">)</span>
+
+<span class="c1"># Delete all rows</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Via the write interface</strong> (<code class="docutils literal notranslate"><span class="pre">ev._write.delete_from()</span></code>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">count</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">_write</span><span class="o">.</span><span class="n">delete_from</span><span class="p">(</span>
+    <span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">,</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;location_id = &#39;usgs-01234567&#39;&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deleted </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> rows.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Both methods support SQL strings, dicts, and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">TableFilter</span></code> objects as filter arguments:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">TableFilter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operators</span> <span class="k">as</span> <span class="n">ops</span>
+
+<span class="c1"># Dict filter</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">,</span> <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;old_run&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="c1"># TableFilter object</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="n">filters</span><span class="o">=</span><span class="n">TableFilter</span><span class="p">(</span>
+        <span class="n">column</span><span class="o">=</span><span class="s2">&quot;configuration_name&quot;</span><span class="p">,</span>
+        <span class="n">operator</span><span class="o">=</span><span class="n">ops</span><span class="o">.</span><span class="n">eq</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="s2">&quot;old_run&quot;</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.delete" title="teehr.evaluation.tables.base_table.BaseTable.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BaseTable.delete()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.write.Write.html#teehr.evaluation.write.Write.delete_from" title="teehr.evaluation.write.Write.delete_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Write.delete_from()</span></code></a></p></li>
+</ul>
+</section>
+<section id="dropping-tables">
+<h2>Dropping Tables<a class="headerlink" href="#dropping-tables" title="Link to this heading">#</a></h2>
+<p>User-created tables (such as materialized views and saved query results) can be
+dropped when they are no longer needed. Core TEEHR tables (like <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code>
+and <code class="docutils literal notranslate"><span class="pre">locations</span></code>) are protected and cannot be dropped.</p>
+<p>Use the <a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.is_core_table" title="teehr.evaluation.tables.base_table.BaseTable.is_core_table"><code class="xref py py-attr docutils literal notranslate"><span class="pre">is_core_table</span></code></a>
+property to check whether a table is a core table before attempting to drop it.</p>
+<p><strong>Drop a user-created table via the table instance:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Write a user-created table</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">dm</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">()],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">write_to</span><span class="p">(</span><span class="s2">&quot;location_metrics&quot;</span><span class="p">)</span>
+
+<span class="c1"># Check whether it&#39;s a core table (always False for user-created tables)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;location_metrics&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_core_table</span>  <span class="c1"># False</span>
+
+<span class="c1"># Drop the table</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;location_metrics&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Drop a user-created table via the evaluation:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convenience method on the Evaluation class</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">drop_table</span><span class="p">(</span><span class="s2">&quot;location_metrics&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Attempting to drop a core table raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">drop_table</span><span class="p">(</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">)</span>  <span class="c1"># raises ValueError</span>
+<span class="c1"># ValueError: Cannot drop core table &#39;primary_timeseries&#39;. Only user-created</span>
+<span class="c1"># tables (e.g., materialized views or saved query results) can be dropped.</span>
+</pre></div>
+</div>
+</div>
+<p>See also:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.drop" title="teehr.evaluation.tables.base_table.BaseTable.drop"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BaseTable.drop()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.is_core_table" title="teehr.evaluation.tables.base_table.BaseTable.is_core_table"><code class="xref py py-attr docutils literal notranslate"><span class="pre">BaseTable.is_core_table</span></code></a></p></li>
+<li><p><a class="reference internal" href="../api/generated/teehr.LocalReadWriteEvaluation.html#teehr.LocalReadWriteEvaluation.drop_table" title="teehr.LocalReadWriteEvaluation.drop_table"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BaseEvaluation.drop_table()</span></code></a></p></li>
+</ul>
+</section>
+<section id="inspecting-tables">
+<h2>Inspecting Tables<a class="headerlink" href="#inspecting-tables" title="Link to this heading">#</a></h2>
+<p>Get information about table contents:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># List all tables</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">list_tables</span><span class="p">()</span>
+
+<span class="c1"># Get distinct values for a column</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">distinct_values</span><span class="p">(</span><span class="s2">&quot;location_id&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get location prefixes</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">distinct_values</span><span class="p">(</span><span class="s2">&quot;location_id&quot;</span><span class="p">,</span> <span class="n">location_prefixes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># View schema (via Spark)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">printSchema</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="direct-sql-access">
+<h2>Direct SQL Access<a class="headerlink" href="#direct-sql-access" title="Link to this heading">#</a></h2>
+<p>For complex queries, use SQL directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    SELECT</span>
+<span class="s2">        location_id,</span>
+<span class="s2">        COUNT(*) as record_count,</span>
+<span class="s2">        MIN(value_time) as first_date,</span>
+<span class="s2">        MAX(value_time) as last_date</span>
+<span class="s2">    FROM primary_timeseries</span>
+<span class="s2">    GROUP BY location_id</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="evaluation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">The Evaluation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="views.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Views</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-teehr-schema">The TEEHR Schema</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#accessing-tables">Accessing Tables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#table-methods-overview">Table Methods Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-data">Loading Data</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-timeseries-data">Loading Timeseries Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-parameters">Loading Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-location-data">Loading Location Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-domain-data">Loading Domain Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-dataframes">Using DataFrames</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filtering-data">Filtering Data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#method-chaining">Method Chaining</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-results">Writing Results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deleting-data">Deleting Data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dropping-tables">Dropping Tables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inspecting-tables">Inspecting Tables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-sql-access">Direct SQL Access</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_guide/tables.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.1</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

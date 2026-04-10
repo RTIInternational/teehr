@@ -1,0 +1,33 @@
+﻿LocationAttributesView
+======================
+
+.. currentmodule:: teehr.evaluation.views.location_attributes_view
+
+.. autoclass:: LocationAttributesView
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LocationAttributesView.add_attributes
+      ~LocationAttributesView.add_calculated_fields
+      ~LocationAttributesView.add_geometry
+      ~LocationAttributesView.aggregate
+      ~LocationAttributesView.filter
+      ~LocationAttributesView.order_by
+      ~LocationAttributesView.to_geopandas
+      ~LocationAttributesView.to_pandas
+      ~LocationAttributesView.to_sdf
+      ~LocationAttributesView.write
+      ~LocationAttributesView.write_to
+   
+   
+
+   
+   
+   

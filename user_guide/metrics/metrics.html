@@ -1,0 +1,873 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Metrics &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=2bd037f0"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/metrics/metrics';</script>
+    <script src="../../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Fetching and Downloading" href="../fetching.html" />
+    <link rel="prev" title="Views" href="../views.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../evaluation.html">The Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tables.html">Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../views.html">Views</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fetching.html">Fetching and Downloading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generating.html">Generating Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Additional Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/joining_timeseries.html">Joining Timeseries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../legacy_content/legacy_content.html">Legacy TEEHR Content</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Metrics</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="metrics">
+<span id="id1"></span><h1>Metrics<a class="headerlink" href="#metrics" title="Link to this heading">#</a></h1>
+<p>TEEHR provides comprehensive metrics for evaluating hydrologic model performance.
+The <a class="reference internal" href="../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.aggregate" title="teehr.evaluation.tables.base_table.BaseTable.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a> method on tables and views computes metrics across grouped data,
+with support for bootstrapping, transforms, and multiple metric categories.</p>
+<section id="using-the-aggregate-method">
+<h2>Using the Aggregate Method<a class="headerlink" href="#using-the-aggregate-method" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.aggregate" title="teehr.evaluation.tables.base_table.BaseTable.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a> method is available on all Table and View objects. It computes
+specified metrics grouped by selected fields:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicMetrics</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;/path/to/evaluation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Basic metrics query</span>
+<span class="n">metrics_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;joined_timeseries&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">(),</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">NashSutcliffeEfficiency</span><span class="p">(),</span>
+    <span class="p">],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">],</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="aggregate-parameters">
+<h3>Aggregate Parameters<a class="headerlink" href="#aggregate-parameters" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p>List of metric instances to compute</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">group_by</span></code></p></td>
+<td><p>List of fields to group by before computing metrics</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="group-by-fields">
+<h3>Group By Fields<a class="headerlink" href="#group-by-fields" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">group_by</span></code> parameter controls how metrics are aggregated. Common groupings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.row_level</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rcf</span>
+
+<span class="c1"># Group by location only</span>
+<span class="n">jt</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">])</span>
+
+<span class="c1"># Group by location and configuration</span>
+<span class="n">jt</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">])</span>
+
+<span class="c1"># Group by calculated fields</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">Month</span><span class="p">(),</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">WaterYear</span><span class="p">(),</span>
+<span class="p">])</span>
+<span class="n">jt</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;water_year&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="using-metrics">
+<h2>Using Metrics<a class="headerlink" href="#using-metrics" title="Link to this heading">#</a></h2>
+<p>Import metric classes and instantiate them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicMetrics</span><span class="p">,</span> <span class="n">Signatures</span><span class="p">,</span> <span class="n">ProbabilisticMetrics</span>
+
+<span class="c1"># Deterministic metrics</span>
+<span class="n">kge</span> <span class="o">=</span> <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">()</span>
+<span class="n">nse</span> <span class="o">=</span> <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">NashSutcliffeEfficiency</span><span class="p">()</span>
+<span class="n">rmse</span> <span class="o">=</span> <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">RootMeanSquareError</span><span class="p">()</span>
+
+<span class="c1"># Signatures (single field statistics)</span>
+<span class="n">avg</span> <span class="o">=</span> <span class="n">Signatures</span><span class="o">.</span><span class="n">Average</span><span class="p">()</span>
+<span class="n">fdc</span> <span class="o">=</span> <span class="n">Signatures</span><span class="o">.</span><span class="n">FlowDurationCurveSlope</span><span class="p">()</span>
+
+<span class="c1"># Probabilistic metrics (ensemble forecasts)</span>
+<span class="n">crps</span> <span class="o">=</span> <span class="n">ProbabilisticMetrics</span><span class="o">.</span><span class="n">CRPS</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="transforms">
+<h3>Transforms<a class="headerlink" href="#transforms" title="Link to this heading">#</a></h3>
+<p>Apply mathematical transformations before computing metrics:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.metrics.basemodels</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformEnum</span>
+
+<span class="c1"># Log-transformed RMSE</span>
+<span class="n">rmse</span> <span class="o">=</span> <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">RootMeanSquareError</span><span class="p">()</span>
+<span class="n">rmse</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">TransformEnum</span><span class="o">.</span><span class="n">log</span>
+<span class="n">rmse</span><span class="o">.</span><span class="n">add_epsilon</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Avoid log(0)</span>
+</pre></div>
+</div>
+<p>Available transforms: <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">sqrt</span></code>, <code class="docutils literal notranslate"><span class="pre">square</span></code>, <code class="docutils literal notranslate"><span class="pre">cube</span></code>, <code class="docutils literal notranslate"><span class="pre">exp</span></code>, <code class="docutils literal notranslate"><span class="pre">inv</span></code>, <code class="docutils literal notranslate"><span class="pre">abs</span></code></p>
+</section>
+<section id="bootstrapping">
+<h3>Bootstrapping<a class="headerlink" href="#bootstrapping" title="Link to this heading">#</a></h3>
+<p>Compute confidence intervals using bootstrap resampling:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.metrics.bootstrap_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bootstrappers</span>
+
+<span class="c1"># Configure bootstrap</span>
+<span class="n">boot</span> <span class="o">=</span> <span class="n">Bootstrappers</span><span class="o">.</span><span class="n">CircularBlock</span><span class="p">(</span>
+    <span class="n">reps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">block_size</span><span class="o">=</span><span class="mi">365</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+    <span class="n">quantiles</span><span class="o">=</span><span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Apply to metric</span>
+<span class="n">kge</span> <span class="o">=</span> <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">()</span>
+<span class="n">kge</span><span class="o">.</span><span class="n">bootstrap</span> <span class="o">=</span> <span class="n">boot</span>
+<span class="n">kge</span><span class="o">.</span><span class="n">unpack_results</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Separate columns for quantiles</span>
+
+<span class="n">metrics_df</span> <span class="o">=</span> <span class="n">jt</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">kge</span><span class="p">],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">],</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+
+<span class="c1"># Results: kling_gupta_efficiency_0.05, _0.5, _0.95</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../../api/generated/teehr.Bootstrappers.html#teehr.Bootstrappers" title="teehr.Bootstrappers"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bootstrappers</span></code></a></p>
+</section>
+<section id="complete-example">
+<h3>Complete Example<a class="headerlink" href="#complete-example" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicMetrics</span><span class="p">,</span> <span class="n">Signatures</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.row_level</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rcf</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;/path/to/evaluation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Build view with calculated fields</span>
+<span class="n">metrics_df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span><span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span><span class="n">rcf</span><span class="o">.</span><span class="n">WaterYear</span><span class="p">(),</span> <span class="n">rcf</span><span class="o">.</span><span class="n">Seasons</span><span class="p">()])</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;water_year &gt;= 2015&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+        <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">(),</span>
+            <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">RelativeBias</span><span class="p">(),</span>
+            <span class="n">Signatures</span><span class="o">.</span><span class="n">Average</span><span class="p">(),</span>
+        <span class="p">],</span>
+        <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;season&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">order_by</span><span class="p">([</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;season&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">metrics_df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="available-metrics">
+<h4>Available Metrics<a class="headerlink" href="#available-metrics" title="Link to this heading">#</a></h4>
+<p>The metrics currently built into TEEHR are listed in the tables below.
+The metrics currently built into TEEHR are listed in the tables below.
+Please note that some are still in development and planned for inclusion in future versions.</p>
+</section>
+</section>
+</section>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">#</a></h2>
+</section>
+<section id="id2">
+<h2>Signatures<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<p>Signatures operate on a single field to characterize timeseries properties.
+Signatures operate on a single field to characterize timeseries properties.</p>
+<div class="pst-scrollable-table-container"><table class="metrics-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Available</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Short Name</p></th>
+<th class="head"><p>Equation</p></th>
+<th class="head"><p>API Reference</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Average</p></td>
+<td><p><span class="math notranslate nohighlight">\(Average\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\frac{\sum(prim)}{count}\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.Signatures.html#teehr.Signatures.Average" title="teehr.Signatures.Average"><code class="xref py py-class docutils literal notranslate"><span class="pre">Average</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Count</p></td>
+<td><p><span class="math notranslate nohighlight">\(Count\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(count\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.Signatures.html#teehr.Signatures.Count" title="teehr.Signatures.Count"><code class="xref py py-class docutils literal notranslate"><span class="pre">Count</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Flow Duration Curve Slope</p></td>
+<td><p><span class="math notranslate nohighlight">\(FDC\ Slope\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\frac{q85-q25}{p85-p25}\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.Signatures.html#teehr.Signatures.FlowDurationCurveSlope" title="teehr.Signatures.FlowDurationCurveSlope"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flow</span> <span class="pre">Duration</span> <span class="pre">Curve</span> <span class="pre">Slope</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Max Value Time</p></td>
+<td><p><span class="math notranslate nohighlight">\(Max\ Value\ Time\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(peak\ time_{prim}\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.Signatures.html#teehr.Signatures.MaxValueTime" title="teehr.Signatures.MaxValueTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">Max</span> <span class="pre">Value</span> <span class="pre">Time</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Maximum</p></td>
+<td><p><span class="math notranslate nohighlight">\(Max\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(max(prim)\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.Signatures.html#teehr.Signatures.Maximum" title="teehr.Signatures.Maximum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Maximum</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Minimum</p></td>
+<td><p><span class="math notranslate nohighlight">\(Min\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(min(prim)\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.Signatures.html#teehr.Signatures.Minimum" title="teehr.Signatures.Minimum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Minimum</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Sum</p></td>
+<td><p><span class="math notranslate nohighlight">\(Sum\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\sum(prim)\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.Signatures.html#teehr.Signatures.Sum" title="teehr.Signatures.Sum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sum</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Variance</p></td>
+<td><p><span class="math notranslate nohighlight">\(Variance\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\sigma^2_{prim}\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.Signatures.html#teehr.Signatures.Variance" title="teehr.Signatures.Variance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variance</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="deterministic-metrics">
+<h2>Deterministic Metrics<a class="headerlink" href="#deterministic-metrics" title="Link to this heading">#</a></h2>
+<p>Deterministic metrics compare two timeseries, typically primary (“observed”) vs. secondary (“modeled”) values.</p>
+</section>
+<section id="probabilistic-metrics">
+<h2>Probabilistic Metrics<a class="headerlink" href="#probabilistic-metrics" title="Link to this heading">#</a></h2>
+<p>Probabilistic metrics compare a value against a distribution of predicted values, such as ensemble forecasts.</p>
+<div class="pst-scrollable-table-container"><table class="metrics-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Available</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Short Name</p></th>
+<th class="head"><p>Equation</p></th>
+<th class="head"><p>API Reference</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Continuous Ranked Probability Score</p></td>
+<td><p><span class="math notranslate nohighlight">\(CRPS\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\int_{-\infty}^{\infty} (F(x) - \mathbf{1}_{x \geq y})^2 dx\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.ProbabilisticMetrics.html#teehr.ProbabilisticMetrics.CRPS" title="teehr.ProbabilisticMetrics.CRPS"><code class="xref py py-class docutils literal notranslate"><span class="pre">Continuous</span> <span class="pre">Ranked</span> <span class="pre">Probability</span> <span class="pre">Score</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Brier Score</p></td>
+<td><p><span class="math notranslate nohighlight">\(BS\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\frac{\sum(sec\ ensemble\ prob-prim\ outcome)^2}{n}\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.ProbabilisticMetrics.html#teehr.ProbabilisticMetrics.BrierScore" title="teehr.ProbabilisticMetrics.BrierScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brier</span> <span class="pre">Score</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Brier Skill Score</p></td>
+<td><p><span class="math notranslate nohighlight">\(BSS\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(1-\frac{BS}{BS_{ref}}\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.ProbabilisticMetrics.html#teehr.ProbabilisticMetrics.BrierScore" title="teehr.ProbabilisticMetrics.BrierScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brier</span> <span class="pre">Score</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><svg version="4.0.0.63c5cb3" width="1.5em" height="1.5em" class="sd-material-icon sd-material-icon-check sd-text-success" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg></p></td>
+<td><p>Continuous Ranked Probability Skill Score</p></td>
+<td><p><span class="math notranslate nohighlight">\(CRPSS\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(1-\frac{CRPS}{CRPS_{ref}}\)</span></p></td>
+<td><p><a class="reference internal" href="../../api/generated/teehr.ProbabilisticMetrics.html#teehr.ProbabilisticMetrics.CRPS" title="teehr.ProbabilisticMetrics.CRPS"><code class="xref py py-class docutils literal notranslate"><span class="pre">Continuous</span> <span class="pre">Ranked</span> <span class="pre">Probability</span> <span class="pre">Score</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../views.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Views</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../fetching.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Fetching and Downloading</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-aggregate-method">Using the Aggregate Method</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aggregate-parameters">Aggregate Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-by-fields">Group By Fields</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-metrics">Using Metrics</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transforms">Transforms</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bootstrapping">Bootstrapping</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#available-metrics">Available Metrics</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#signatures">Signatures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Signatures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deterministic-metrics">Deterministic Metrics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#probabilistic-metrics">Probabilistic Metrics</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/metrics/metrics.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.1</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

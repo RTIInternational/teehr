@@ -1,0 +1,40 @@
+﻿ReferenceForecast
+=================
+
+.. currentmodule:: teehr.models.generate.timeseries_generator_models
+
+.. autoclass:: ReferenceForecast
+   :members:
+   :special-members: __call__, __add__, __mul__
+   :no-inherited-members:
+   :exclude-members: model_config
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+         ~ReferenceForecast.generate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ReferenceForecast.model_computed_fields
+      ~ReferenceForecast.model_config
+      ~ReferenceForecast.model_extra
+      ~ReferenceForecast.model_fields
+      ~ReferenceForecast.model_fields_set
+      ~ReferenceForecast.aggregate_reference_timeseries
+      ~ReferenceForecast.aggregation_time_window
+      ~ReferenceForecast.df
+      ~ReferenceForecast.aggregate_reference_timesteps
+   
+   
+   

@@ -1,0 +1,84 @@
+﻿Operators
+=========
+
+.. currentmodule:: teehr
+
+.. autoclass:: Operators
+   :members:
+   :special-members: __call__, __add__, __mul__
+   :no-inherited-members:
+   :exclude-members: model_config
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+         ~Operators.encode
+         ~Operators.replace
+         ~Operators.split
+         ~Operators.rsplit
+         ~Operators.join
+         ~Operators.capitalize
+         ~Operators.casefold
+         ~Operators.title
+         ~Operators.center
+         ~Operators.count
+         ~Operators.expandtabs
+         ~Operators.find
+         ~Operators.partition
+         ~Operators.index
+         ~Operators.ljust
+         ~Operators.lower
+         ~Operators.lstrip
+         ~Operators.rfind
+         ~Operators.rindex
+         ~Operators.rjust
+         ~Operators.rstrip
+         ~Operators.rpartition
+         ~Operators.splitlines
+         ~Operators.strip
+         ~Operators.swapcase
+         ~Operators.translate
+         ~Operators.upper
+         ~Operators.startswith
+         ~Operators.endswith
+         ~Operators.removeprefix
+         ~Operators.removesuffix
+         ~Operators.isascii
+         ~Operators.islower
+         ~Operators.isupper
+         ~Operators.istitle
+         ~Operators.isspace
+         ~Operators.isdecimal
+         ~Operators.isdigit
+         ~Operators.isnumeric
+         ~Operators.isalpha
+         ~Operators.isalnum
+         ~Operators.isidentifier
+         ~Operators.isprintable
+         ~Operators.zfill
+         ~Operators.format
+         ~Operators.format_map
+         ~Operators.maketrans
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Operators.eq
+      ~Operators.gt
+      ~Operators.lt
+      ~Operators.gte
+      ~Operators.lte
+      ~Operators.islike
+      ~Operators.isin
+   
+   
+   

@@ -1,0 +1,1242 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DeterministicMetrics &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=2bd037f0"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/teehr.DeterministicMetrics';</script>
+    <script src="../../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Signatures" href="teehr.Signatures.html" />
+    <link rel="prev" title="teehr.metrics.bootstrap_funcs.create_stationary_func" href="teehr.metrics.bootstrap_funcs.create_stationary_func.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ev_index.html">Evaluation Dataset</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.LocalReadWriteEvaluation.html">LocalReadWriteEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.RemoteReadOnlyEvaluation.html">RemoteReadOnlyEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.RemoteReadWriteEvaluation.html">RemoteReadWriteEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.base_table.BaseTable.html">BaseTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.domain_table.DomainTable.html">DomainTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.unit_table.UnitTable.html">UnitTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.variable_table.VariableTable.html">VariableTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.attribute_table.AttributeTable.html">AttributeTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.configuration_table.ConfigurationTable.html">ConfigurationTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_table.LocationTable.html">LocationTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.html">LocationAttributeTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.html">LocationCrosswalkTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.timeseries_table.TimeseriesTable.html">TimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html">PrimaryTimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.html">SecondaryTimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.base_view.View.html">View</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.joined_timeseries_view.JoinedTimeseriesView.html">JoinedTimeseriesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.location_attributes_view.LocationAttributesView.html">LocationAttributesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.primary_timeseries_view.PrimaryTimeseriesView.html">PrimaryTimeseriesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.secondary_timeseries_view.SecondaryTimeseriesView.html">SecondaryTimeseriesView</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../io_index.html">Data I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.fetch.Fetch.html">Fetch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.read.Read.html">Read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.write.Write.html">Write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.load.Load.html">Load</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.extract.Extract.html">Extract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.validate.Validate.html">Validate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.download.Download.html">Download</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../m_index.html">Metrics and Analysis</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.metrics.Metrics.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html">RowLevelCalculatedFields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html">TimeseriesAwareCalculatedFields</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.deterministic_funcs.html">deterministic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.annual_peak_relative_bias.html">teehr.metrics.deterministic_funcs.annual_peak_relative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.confusion_matrix.html">teehr.metrics.deterministic_funcs.confusion_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.critical_success_index.html">teehr.metrics.deterministic_funcs.critical_success_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.false_alarm_ratio.html">teehr.metrics.deterministic_funcs.false_alarm_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.frequency_bias_index.html">teehr.metrics.deterministic_funcs.frequency_bias_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod1.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod2.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.max_value_delta.html">teehr.metrics.deterministic_funcs.max_value_delta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.max_value_timedelta.html">teehr.metrics.deterministic_funcs.max_value_timedelta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_absolute_error.html">teehr.metrics.deterministic_funcs.mean_absolute_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_absolute_relative_error.html">teehr.metrics.deterministic_funcs.mean_absolute_relative_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_error.html">teehr.metrics.deterministic_funcs.mean_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_squared_error.html">teehr.metrics.deterministic_funcs.mean_squared_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.multiplicative_bias.html">teehr.metrics.deterministic_funcs.multiplicative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency.html">teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency_normalized.html">teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency_normalized</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.pearson_correlation.html">teehr.metrics.deterministic_funcs.pearson_correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.probability_of_detection.html">teehr.metrics.deterministic_funcs.probability_of_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.probability_of_false_detection.html">teehr.metrics.deterministic_funcs.probability_of_false_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.r_squared.html">teehr.metrics.deterministic_funcs.r_squared</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.relative_bias.html">teehr.metrics.deterministic_funcs.relative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.root_mean_squared_error.html">teehr.metrics.deterministic_funcs.root_mean_squared_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.root_mean_standard_deviation_ratio.html">teehr.metrics.deterministic_funcs.root_mean_standard_deviation_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.spearman_correlation.html">teehr.metrics.deterministic_funcs.spearman_correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.success_ratio.html">teehr.metrics.deterministic_funcs.success_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.variability_ratio.html">teehr.metrics.deterministic_funcs.variability_ratio</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.signature_funcs.html">signature_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.average.html">teehr.metrics.signature_funcs.average</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.count.html">teehr.metrics.signature_funcs.count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.flow_duration_curve_slope.html">teehr.metrics.signature_funcs.flow_duration_curve_slope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.max_value_time.html">teehr.metrics.signature_funcs.max_value_time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.maximum.html">teehr.metrics.signature_funcs.maximum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.minimum.html">teehr.metrics.signature_funcs.minimum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.sum.html">teehr.metrics.signature_funcs.sum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.variance.html">teehr.metrics.signature_funcs.variance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.html">probabilistic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.ensemble_brier_score.html">teehr.metrics.probabilistic_funcs.ensemble_brier_score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.ensemble_crps.html">teehr.metrics.probabilistic_funcs.ensemble_crps</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.html">bootstrap_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_circularblock_func.html">teehr.metrics.bootstrap_funcs.create_circularblock_func</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_gumboot_func.html">teehr.metrics.bootstrap_funcs.create_gumboot_func</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_stationary_func.html">teehr.metrics.bootstrap_funcs.create_stationary_func</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">DeterministicMetrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Signatures.html">Signatures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.ProbabilisticMetrics.html">ProbabilisticMetrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Bootstrappers.html">Bootstrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Operators.html">Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.generate.GeneratedTimeseries.html">GeneratedTimeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.Normals.html">Normals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.ReferenceForecast.html">ReferenceForecast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.Persistence.html">Persistence</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../m_index.html" class="nav-link">Metrics and Analysis</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">DeterministicMetrics</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="deterministicmetrics">
+<h1>DeterministicMetrics<a class="headerlink" href="#deterministicmetrics" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeterministicMetrics</span></span><a class="reference internal" href="../../_modules/teehr/models/metrics/deterministic_models.html#DeterministicMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.DeterministicMetrics" title="Link to this definition">#</a></dt>
+<dd><p>Define and customize deterministic metrics.</p>
+<p class="rubric">Notes</p>
+<p>Deterministic metrics compare two timeseries, typically primary
+(“observed”) vs. secondary (“modeled”) values. Available metrics:</p>
+<p><strong>Error Metrics:</strong>
+- MeanError, MeanSquareError, RootMeanSquareError
+- MeanAbsoluteError, MeanAbsoluteRelativeError</p>
+<p><strong>Bias Metrics:</strong>
+- RelativeBias, MultiplicativeBias, AnnualPeakRelativeBias</p>
+<p><strong>Correlation Metrics:</strong>
+- PearsonCorrelation, SpearmanCorrelation, Rsquared</p>
+<p><strong>Efficiency Metrics:</strong>
+- NashSutcliffeEfficiency, NormalizedNashSutcliffeEfficiency
+- KlingGuptaEfficiency, KlingGuptaEfficiencyMod1, KlingGuptaEfficiencyMod2</p>
+<p><strong>Threshold-Based Metrics:</strong>
+- ConfusionMatrix, FalseAlarmRatio, ProbabilityOfDetection
+- ProbabilityOfFalseDetection, CriticalSuccessIndex</p>
+<p><strong>Other:</strong>
+- MaxValueDelta, MaxValueTimeDelta
+- RootMeanStandardDeviationRatio</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicMetrics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kge</span> <span class="o">=</span> <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="n">add_epsilon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rmse</span> <span class="o">=</span> <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">RootMeanSquareError</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.AnnualPeakRelativeBias">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AnnualPeakRelativeBias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.AnnualPeakRelativeBias" title="Link to this definition">#</a></dt>
+<dd><p>Annual Peak Relative Bias: bias computed on annual peak values.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.AnnualPeakRelativeBias.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.AnnualPeakRelativeBias.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the annual_peak_relative_bias metric function.</p>
+<p><span class="math notranslate nohighlight">\(Ann\ PF\ Bias=\frac{\sum(ann.\ peak_{sec}-ann.\ peak_{prim})}{\sum(ann.\ peak_{prim})}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.ConfusionMatrix">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConfusionMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">~pyspark.sql.types.DataType</span> <span class="pre">=</span> <span class="pre">MapType(StringType()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IntegerType()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">True)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.ConfusionMatrix" title="Link to this definition">#</a></dt>
+<dd><p>Confusion Matrix: TP, TN, FP, FN counts based on threshold exceedance.</p>
+<section id="additional-parameters">
+<h2>Additional Parameters<a class="headerlink" href="#additional-parameters" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>threshold_field_name<span class="classifier">str</span></dt><dd><p>Field name containing location-specific threshold values.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.ConfusionMatrix.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.ConfusionMatrix.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the confusion_matrix metric function.</p>
+<p>Returns counts of TP, TN, FP, FN as a dictionary.</p>
+<p><span class="math notranslate nohighlight">\(TP=\sum((prim&gt;=threshold_{prim})\ and\ (sec&gt;=threshold_{sec}))\)</span>
+<span class="math notranslate nohighlight">\(TN=\sum((prim&lt;threshold_{prim})\ and\ (sec&lt;threshold_{sec}))\)</span>
+<span class="math notranslate nohighlight">\(FP=\sum((prim&lt;threshold_{prim})\ and\ (sec&gt;=threshold_{sec}))\)</span>
+<span class="math notranslate nohighlight">\(FN=\sum((prim&gt;=threshold_{prim})\ and\ (sec&lt;threshold_{sec}))\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.CriticalSuccessIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CriticalSuccessIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.CriticalSuccessIndex" title="Link to this definition">#</a></dt>
+<dd><p>Critical Success Index (Threat Score): TP / (TP + FN + FP).</p>
+<section id="id1">
+<h2>Additional Parameters<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>threshold_field_name<span class="classifier">str</span></dt><dd><p>Field name containing location-specific threshold values.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.CriticalSuccessIndex.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.CriticalSuccessIndex.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the critical_success_index metric function.</p>
+<p><span class="math notranslate nohighlight">\(CSI=\frac{TP}{(TP+FP+FN)}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.FalseAlarmRatio">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FalseAlarmRatio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.FalseAlarmRatio" title="Link to this definition">#</a></dt>
+<dd><p>False Alarm Ratio: FP / (TP + FP).</p>
+<section id="id2">
+<h2>Additional Parameters<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>threshold_field_name<span class="classifier">str</span></dt><dd><p>Field name containing location-specific threshold values.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.FalseAlarmRatio.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.FalseAlarmRatio.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the false_alarm_ratio metric function.</p>
+<p><span class="math notranslate nohighlight">\(FAR=\frac{FP}{(TP+FP)}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.FrequencyBiasIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FrequencyBiasIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.FrequencyBiasIndex" title="Link to this definition">#</a></dt>
+<dd><p>Frequency Bias Index: (TP + FP) / (TP + FN).</p>
+<section id="id3">
+<h2>Additional Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>threshold_field_name<span class="classifier">str</span></dt><dd><p>Field name containing location-specific threshold values.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.FrequencyBiasIndex.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.FrequencyBiasIndex.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the frequency_bias_index metric function.</p>
+<p><span class="math notranslate nohighlight">\(FBIAS=\frac{TP+FP}{TP+FN}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.KlingGuptaEfficiency">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KlingGuptaEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sr:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sb:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.KlingGuptaEfficiency" title="Link to this definition">#</a></dt>
+<dd><p>Kling-Gupta Efficiency (original formulation).</p>
+<section id="id4">
+<h2>Additional Parameters<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>sr<span class="classifier">float</span></dt><dd><p>Scaling factor for correlation component, by default 1.0.</p>
+</dd>
+<dt>sa<span class="classifier">float</span></dt><dd><p>Scaling factor for variability component, by default 1.0.</p>
+</dd>
+<dt>sb<span class="classifier">float</span></dt><dd><p>Scaling factor for bias component, by default 1.0.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.KlingGuptaEfficiency.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.KlingGuptaEfficiency.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the kling_gupta_efficiency metric function.</p>
+<p><span class="math notranslate nohighlight">\(KGE=1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}}{\sigma_{prim}}-1)^2+(\frac{\mu_{sec}}{\mu_{sec}/\mu_{prim}}-1)^2}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.KlingGuptaEfficiencyMod1">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KlingGuptaEfficiencyMod1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sr:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sb:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod1" title="Link to this definition">#</a></dt>
+<dd><p>Kling-Gupta Efficiency - modified 1 (2012).</p>
+<section id="id5">
+<h2>Additional Parameters<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>sr<span class="classifier">float</span></dt><dd><p>Scaling factor for correlation component, by default 1.0.</p>
+</dd>
+<dt>sa<span class="classifier">float</span></dt><dd><p>Scaling factor for variability component, by default 1.0.</p>
+</dd>
+<dt>sb<span class="classifier">float</span></dt><dd><p>Scaling factor for bias component, by default 1.0.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.KlingGuptaEfficiencyMod1.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod1.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the kling_gupta_efficiency_mod1 metric function.</p>
+<p><span class="math notranslate nohighlight">\(KGE'=1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}/\mu_{sec}}{\sigma_{prim}/\mu_{prim}}-1)^2+(\frac{\mu_{sec}}{\mu_{sec}/\mu_{prim}}-1)^2}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.KlingGuptaEfficiencyMod2">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KlingGuptaEfficiencyMod2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sr:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sb:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod2" title="Link to this definition">#</a></dt>
+<dd><p>Kling-Gupta Efficiency - modified 2 (2021).</p>
+<section id="id6">
+<h2>Additional Parameters<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>sr<span class="classifier">float</span></dt><dd><p>Scaling factor for correlation component, by default 1.0.</p>
+</dd>
+<dt>sa<span class="classifier">float</span></dt><dd><p>Scaling factor for variability component, by default 1.0.</p>
+</dd>
+<dt>sb<span class="classifier">float</span></dt><dd><p>Scaling factor for bias component, by default 1.0.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.KlingGuptaEfficiencyMod2.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod2.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the kling_gupta_efficiency_mod2 metric function.</p>
+<p><span class="math notranslate nohighlight">\(KGE''=1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}}{\sigma_{prim}}-1)^2+\frac{(\mu_{sec}-\mu_{prim})^2}{\sigma_{prim}^2}}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MaxValueDelta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MaxValueDelta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.MaxValueDelta" title="Link to this definition">#</a></dt>
+<dd><p>Max Value Delta: difference between maximum values.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MaxValueDelta.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.MaxValueDelta.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the max_value_delta metric function.</p>
+<p><span class="math notranslate nohighlight">\(mvd=max(value_{sec})-max(value_{prim})\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MaxValueTimeDelta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MaxValueTimeDelta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.MaxValueTimeDelta" title="Link to this definition">#</a></dt>
+<dd><p>Max Value Time Delta: time difference between max value occurrences.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MaxValueTimeDelta.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.MaxValueTimeDelta.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the max_value_timedelta metric function.</p>
+<p><span class="math notranslate nohighlight">\(mvtd=max\_value\_time_{sec}-max\_value\_time_{prim}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MeanAbsoluteError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MeanAbsoluteError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.MeanAbsoluteError" title="Link to this definition">#</a></dt>
+<dd><p>Mean Absolute Error: average of absolute differences.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MeanAbsoluteError.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.MeanAbsoluteError.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the mean_absolute_error metric function.</p>
+<p><span class="math notranslate nohighlight">\(MAE=\frac{\sum|sec-prim|}{count}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MeanAbsoluteRelativeError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MeanAbsoluteRelativeError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.MeanAbsoluteRelativeError" title="Link to this definition">#</a></dt>
+<dd><p>Mean Absolute Relative Error: sum of absolute differences / sum of primary.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MeanAbsoluteRelativeError.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.MeanAbsoluteRelativeError.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the Absolute Relative Error metric function.</p>
+<p><span class="math notranslate nohighlight">\(Relative\ MAE=\frac{\sum|sec-prim|}{\sum(prim)}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MeanError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MeanError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.MeanError" title="Link to this definition">#</a></dt>
+<dd><p>Mean Error: average difference between secondary and primary values.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MeanError.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.MeanError.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the Mean Error metric function.</p>
+<p><span class="math notranslate nohighlight">\(Mean\ Error=\frac{\sum(sec-prim)}{count}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MeanSquareError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MeanSquareError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.MeanSquareError" title="Link to this definition">#</a></dt>
+<dd><p>Mean Square Error: average of squared differences.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MeanSquareError.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.MeanSquareError.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the mean_squared_error metric function.</p>
+<p><span class="math notranslate nohighlight">\(MSE=\frac{\sum(sec-prim)^2}{count}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MultiplicativeBias">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultiplicativeBias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.MultiplicativeBias" title="Link to this definition">#</a></dt>
+<dd><p>Multiplicative Bias: ratio of secondary mean to primary mean.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.MultiplicativeBias.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.MultiplicativeBias.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the Multiplicative Bias metric function.</p>
+<p><span class="math notranslate nohighlight">\(Mult.\ Bias=\frac{\mu_{sec}}{\mu_{prim}}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.NashSutcliffeEfficiency">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NashSutcliffeEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.NashSutcliffeEfficiency" title="Link to this definition">#</a></dt>
+<dd><p>Nash-Sutcliffe Efficiency: 1 - (MSE / variance of primary).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.NashSutcliffeEfficiency.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.NashSutcliffeEfficiency.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the nash_sutcliffe_efficiency metric function.</p>
+<p><span class="math notranslate nohighlight">\(NSE=1-\frac{\sum(prim-sec)^2}{\sum(prim-\mu_{prim}^2)}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.NormalizedNashSutcliffeEfficiency">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NormalizedNashSutcliffeEfficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.NormalizedNashSutcliffeEfficiency" title="Link to this definition">#</a></dt>
+<dd><p>Normalized Nash-Sutcliffe Efficiency: 1 / (2 - NSE).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.NormalizedNashSutcliffeEfficiency.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.NormalizedNashSutcliffeEfficiency.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the nash_sutcliffe_efficiency_normalized metric function.</p>
+<p><span class="math notranslate nohighlight">\(NNSE=\frac{1}{(2-NSE)}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.PearsonCorrelation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PearsonCorrelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.PearsonCorrelation" title="Link to this definition">#</a></dt>
+<dd><p>Pearson Correlation Coefficient: linear correlation between series.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.PearsonCorrelation.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.PearsonCorrelation.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the Pearson Correlation Coefficient metric function.</p>
+<p><span class="math notranslate nohighlight">\(r=r(sec, prim)\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.ProbabilityOfDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ProbabilityOfDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.ProbabilityOfDetection" title="Link to this definition">#</a></dt>
+<dd><p>Probability of Detection (Hit Rate): TP / (TP + FN).</p>
+<section id="id7">
+<h2>Additional Parameters<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>threshold_field_name<span class="classifier">str</span></dt><dd><p>Field name containing location-specific threshold values.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.ProbabilityOfDetection.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.ProbabilityOfDetection.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the probability_of_detection metric function.</p>
+<p><span class="math notranslate nohighlight">\(POD=\frac{TP}{(TP+FN)}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.ProbabilityOfFalseDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ProbabilityOfFalseDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.ProbabilityOfFalseDetection" title="Link to this definition">#</a></dt>
+<dd><p>Probability of False Detection: FP / (TN + FP).</p>
+<section id="id8">
+<h2>Additional Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>threshold_field_name<span class="classifier">str</span></dt><dd><p>Field name containing location-specific threshold values.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.ProbabilityOfFalseDetection.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.ProbabilityOfFalseDetection.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the probability_of_false_detection metric function.</p>
+<p><span class="math notranslate nohighlight">\(POFD=\frac{FP}{(FP+TN)}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.RelativeBias">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RelativeBias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.RelativeBias" title="Link to this definition">#</a></dt>
+<dd><p>Relative Bias: sum of differences divided by sum of primary values.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.RelativeBias.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.RelativeBias.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the Relative Bias metric function.</p>
+<p><span class="math notranslate nohighlight">\(Relative\ Bias=\frac{\sum(sec-prim)}{\sum(prim)}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.RootMeanSquareError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RootMeanSquareError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.RootMeanSquareError" title="Link to this definition">#</a></dt>
+<dd><p>Root Mean Square Error: square root of mean squared error.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.RootMeanSquareError.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.RootMeanSquareError.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the root_mean_squared_error metric function.</p>
+<p><span class="math notranslate nohighlight">\(RMSE=\sqrt{\frac{\sum(sec-prim)^2}{count}}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.RootMeanStandardDeviationRatio">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RootMeanStandardDeviationRatio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.RootMeanStandardDeviationRatio" title="Link to this definition">#</a></dt>
+<dd><p>Root Mean Standard Deviation Ratio (RSR): RMSE / std dev of primary.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.RootMeanStandardDeviationRatio.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.RootMeanStandardDeviationRatio.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the root_mean_standard_deviation_ratio metric function.</p>
+<p><span class="math notranslate nohighlight">\(RMSE_{ratio}=\frac{RMSE}{\sigma_{obs}}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.Rsquared">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Rsquared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.Rsquared" title="Link to this definition">#</a></dt>
+<dd><p>Coefficient of Determination: square of Pearson correlation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.Rsquared.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.Rsquared.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the R-squared metric function.</p>
+<p><span class="math notranslate nohighlight">\(r^2=r(sec, prim)^2\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.SpearmanCorrelation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SpearmanCorrelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.SpearmanCorrelation" title="Link to this definition">#</a></dt>
+<dd><p>Spearman Rank Correlation Coefficient: rank-based correlation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.SpearmanCorrelation.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.SpearmanCorrelation.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the Spearman metric function.</p>
+<p><span class="math notranslate nohighlight">\(r_s=1-\frac{6*\sum|rank_{prim}-rank_{sec}|^2}{count(count^2-1)}\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.SuccessRatio">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SuccessRatio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.ArrayType</span> <span class="pre">|</span> <span class="pre">~pyspark.sql.types.MapType</span> <span class="pre">=</span> <span class="pre">'float'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_results:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpack_function:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">unpack_sdf_dict_columns&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_configuration:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_epsilon:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_names:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum</span> <span class="pre">|</span> <span class="pre">~typing.List[str</span> <span class="pre">|</span> <span class="pre">~teehr.models.str_enum.StrEnum]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_field_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.DeterministicMetrics.SuccessRatio" title="Link to this definition">#</a></dt>
+<dd><p>Success Ratio: TP + TN / (TP + FP + FN + TN).</p>
+<section id="id9">
+<h2>Additional Parameters<a class="headerlink" href="#id9" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>threshold_field_name<span class="classifier">str</span></dt><dd><p>Field name containing location-specific threshold values.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.DeterministicMetrics.SuccessRatio.default_func">
+<span class="sig-name descname"><span class="pre">default_func</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#teehr.DeterministicMetrics.SuccessRatio.default_func" title="Link to this definition">#</a></dt>
+<dd><p>Create the success_ratio metric function.</p>
+<p><span class="math notranslate nohighlight">\(SR=\frac{TP+TN}{TP+TN+FP+FN}\)</span></p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="teehr.metrics.bootstrap_funcs.create_stationary_func.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">teehr.metrics.bootstrap_funcs.create_stationary_func</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="teehr.Signatures.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Signatures</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.AnnualPeakRelativeBias"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.AnnualPeakRelativeBias</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.AnnualPeakRelativeBias.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.AnnualPeakRelativeBias.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.ConfusionMatrix"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.ConfusionMatrix</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.ConfusionMatrix.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.ConfusionMatrix.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.CriticalSuccessIndex"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.CriticalSuccessIndex</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.CriticalSuccessIndex.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.CriticalSuccessIndex.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.FalseAlarmRatio"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.FalseAlarmRatio</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.FalseAlarmRatio.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.FalseAlarmRatio.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.FrequencyBiasIndex"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.FrequencyBiasIndex</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.FrequencyBiasIndex.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.FrequencyBiasIndex.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.KlingGuptaEfficiency"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.KlingGuptaEfficiency</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.KlingGuptaEfficiency.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.KlingGuptaEfficiency.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod1"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.KlingGuptaEfficiencyMod1</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod1.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.KlingGuptaEfficiencyMod1.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod2"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.KlingGuptaEfficiencyMod2</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod2.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.KlingGuptaEfficiencyMod2.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MaxValueDelta"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MaxValueDelta</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MaxValueDelta.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MaxValueDelta.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MaxValueTimeDelta"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MaxValueTimeDelta</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MaxValueTimeDelta.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MaxValueTimeDelta.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MeanAbsoluteError"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MeanAbsoluteError</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MeanAbsoluteError.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MeanAbsoluteError.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MeanAbsoluteRelativeError"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MeanAbsoluteRelativeError</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MeanAbsoluteRelativeError.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MeanAbsoluteRelativeError.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MeanError"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MeanError</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MeanError.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MeanError.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MeanSquareError"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MeanSquareError</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MeanSquareError.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MeanSquareError.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MultiplicativeBias"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MultiplicativeBias</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.MultiplicativeBias.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.MultiplicativeBias.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.NashSutcliffeEfficiency"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.NashSutcliffeEfficiency</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.NashSutcliffeEfficiency.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.NashSutcliffeEfficiency.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.NormalizedNashSutcliffeEfficiency"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.NormalizedNashSutcliffeEfficiency</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.NormalizedNashSutcliffeEfficiency.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.NormalizedNashSutcliffeEfficiency.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.PearsonCorrelation"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.PearsonCorrelation</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.PearsonCorrelation.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.PearsonCorrelation.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.ProbabilityOfDetection"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.ProbabilityOfDetection</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.ProbabilityOfDetection.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.ProbabilityOfDetection.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.ProbabilityOfFalseDetection"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.ProbabilityOfFalseDetection</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.ProbabilityOfFalseDetection.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.ProbabilityOfFalseDetection.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.RelativeBias"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.RelativeBias</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.RelativeBias.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.RelativeBias.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.RootMeanSquareError"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.RootMeanSquareError</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.RootMeanSquareError.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.RootMeanSquareError.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.RootMeanStandardDeviationRatio"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.RootMeanStandardDeviationRatio</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.RootMeanStandardDeviationRatio.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.RootMeanStandardDeviationRatio.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.Rsquared"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.Rsquared</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.Rsquared.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.Rsquared.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.SpearmanCorrelation"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.SpearmanCorrelation</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.SpearmanCorrelation.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.SpearmanCorrelation.default_func()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.SuccessRatio"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.SuccessRatio</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.DeterministicMetrics.SuccessRatio.default_func"><code class="docutils literal notranslate"><span class="pre">DeterministicMetrics.SuccessRatio.default_func()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/generated/teehr.DeterministicMetrics.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.1</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

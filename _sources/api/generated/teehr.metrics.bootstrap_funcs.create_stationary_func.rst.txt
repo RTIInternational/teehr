@@ -1,0 +1,6 @@
+teehr.metrics.bootstrap\_funcs.create\_stationary\_func
+=======================================================
+
+.. currentmodule:: teehr.metrics.bootstrap_funcs
+
+.. autofunction:: create_stationary_func

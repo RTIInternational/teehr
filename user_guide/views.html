@@ -1,0 +1,1157 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Views &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=2bd037f0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/views';</script>
+    <script src="../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Metrics" href="metrics/metrics.html" />
+    <link rel="prev" title="Tables" href="tables.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+    <img src="../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">The Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tables.html">Tables</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics/metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetching.html">Fetching and Downloading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generating.html">Generating Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Additional Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tutorials/joining_timeseries.html">Joining Timeseries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_content/legacy_content.html">Legacy TEEHR Content</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Views</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="views">
+<span id="id1"></span><h1>Views<a class="headerlink" href="#views" title="Link to this heading">#</a></h1>
+<p>Views are computed DataFrames that dynamically join and transform data from multiple
+tables on-the-fly. Unlike persisted tables, views compute their data when accessed
+and can optionally be materialized to tables for performance.</p>
+<section id="joinedtimeseriesview">
+<h2>JoinedTimeseriesView<a class="headerlink" href="#joinedtimeseriesview" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesView</span></code> is the most commonly used view and typically the starting
+point for generating metrics and doing analysis.  It joins primary and secondary
+timeseries data with the location crosswalks and optionally adds location attributes.</p>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.views.joined_timeseries_view.JoinedTimeseriesView.html#teehr.evaluation.views.joined_timeseries_view.JoinedTimeseriesView" title="teehr.evaluation.views.joined_timeseries_view.JoinedTimeseriesView"><code class="xref py py-class docutils literal notranslate"><span class="pre">JoinedTimeseriesView</span></code></a></p>
+<section id="understanding-the-join-process">
+<h3>Understanding the Join Process<a class="headerlink" href="#understanding-the-join-process" title="Link to this heading">#</a></h3>
+<figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/joinedTS_tutorial-1.png"><img alt="../_images/joinedTS_tutorial-1.png" src="../_images/joinedTS_tutorial-1.png" style="width: 768.0px; height: 432.0px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Example NWM and USGS data in the TEEHR data model.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The view brings together multiple tables:</p>
+<ul class="simple">
+<li><p><strong>Primary Timeseries</strong>: Observed data (e.g., USGS streamflow)</p></li>
+<li><p><strong>Secondary Timeseries</strong>: Simulated data (e.g., NWM forecasts)</p></li>
+<li><p><strong>Locations</strong>: Point geometries</p></li>
+<li><p><strong>Location Crosswalks</strong>: Mapping between primary and secondary location IDs</p></li>
+<li><p><strong>Location Attributes</strong>: Attribute values for each location</p></li>
+</ul>
+<figure class="align-default" id="id3">
+<a class="reference internal image-reference" href="../_images/joinedTS_tutorial-2.png"><img alt="../_images/joinedTS_tutorial-2.png" src="../_images/joinedTS_tutorial-2.png" style="width: 704.0px; height: 396.00000000000006px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Joining primary and secondary values by location, time, variable name, and unit.  The variable
+joining has some special behavior that allows any instantaneous values to be joined to any
+other instantaneous values regardless of the interval, which is covered in the documentation
+for the view method parameters.</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The result is a unified table for analysis such as calculating metrics or generating visualizations.</p>
+<figure class="align-default" id="id4">
+<a class="reference internal image-reference" href="../_images/joinedTS_tutorial-3.png"><img alt="../_images/joinedTS_tutorial-3.png" src="../_images/joinedTS_tutorial-3.png" style="width: 515.2px; height: 101.2px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Example joined timeseries table.</span><a class="headerlink" href="#id4" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="basic-usage">
+<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h3>
+<p>Create a joined timeseries view:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;/path/to/evaluation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Basic joined view</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span>
+
+<span class="c1"># View as Spark DataFrame (recommended for large datasets)</span>
+<span class="n">jt</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Or convert to pandas for smaller datasets</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">jt</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="adding-location-attributes">
+<h3>Adding Location Attributes<a class="headerlink" href="#adding-location-attributes" title="Link to this heading">#</a></h3>
+<p>Join location attributes to the timeseries data:</p>
+<figure class="align-default" id="id5">
+<a class="reference internal image-reference" href="../_images/joinedTS_tutorial-5.png"><img alt="../_images/joinedTS_tutorial-5.png" src="../_images/joinedTS_tutorial-5.png" style="width: 768.0px; height: 432.0px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Joining attributes to the joined timeseries table.</span><a class="headerlink" href="#id5" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add all available attributes</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span><span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Add specific attributes only</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span>
+    <span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">attr_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">,</span> <span class="s2">&quot;ecoregion&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="filtering-views">
+<h3>Filtering Views<a class="headerlink" href="#filtering-views" title="Link to this heading">#</a></h3>
+<p>Apply SQL-style filters to narrow results:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Filter by location pattern</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="s2">&quot;primary_location_id LIKE &#39;usgs-02424000&#39;&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Filter by date range</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="s2">&quot;value_time BETWEEN &#39;2020-01-01&#39; AND &#39;2020-12-31&#39;&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Multiple filter conditions</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span><span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    primary_location_id LIKE &#39;usgs-02424000&#39;</span>
+<span class="s2">    AND CAST(drainage_area AS DOUBLE) &gt; 100</span>
+<span class="s2">    AND configuration_name = &#39;nwm30_retrospective&#39;</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="materializing-views-to-tables">
+<h3>Materializing Views to Tables<a class="headerlink" href="#materializing-views-to-tables" title="Link to this heading">#</a></h3>
+<p>For repeated queries, materialize a view to an Iceberg table:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Writing a view to a table is only available for users with write permissions,
+so <code class="docutils literal notranslate"><span class="pre">LocalReadWriteEvaluation</span></code> is required.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Materializing a view creates a physical table with the current data. Future changes
+to source tables won’t affect the materialized table unless you overwrite it.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Write view to a named table</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span><span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">write_to</span><span class="p">(</span><span class="s2">&quot;joined_with_attrs&quot;</span><span class="p">)</span>
+
+<span class="c1"># Later, query the materialized table directly</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;joined_with_attrs&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">()],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="other-views">
+<h2>Other Views<a class="headerlink" href="#other-views" title="Link to this heading">#</a></h2>
+<section id="locationattributesview">
+<h3>LocationAttributesView<a class="headerlink" href="#locationattributesview" title="Link to this heading">#</a></h3>
+<p>Pivots the <code class="docutils literal notranslate"><span class="pre">location_attributes</span></code> table from long format to wide format, with
+each attribute as a column.  This view is useful for joining location attributes
+to timeseries data or for other analyses that require a wide format, similar to a
+traditional geospatial “attributes table”.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Pivot all attributes</span>
+<span class="n">la</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">location_attributes_view</span><span class="p">()</span>
+<span class="n">la</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Pivot specific attributes</span>
+<span class="n">la</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">location_attributes_view</span><span class="p">(</span>
+    <span class="n">attr_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">,</span> <span class="s2">&quot;percent_forest&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Filter and view</span>
+<span class="n">la</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="s2">&quot;CAST(drainage_area AS DOUBLE) &gt; 100&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Materialize for reuse</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">location_attributes_view</span><span class="p">()</span><span class="o">.</span><span class="n">write_to</span><span class="p">(</span><span class="s2">&quot;pivoted_attrs&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.views.location_attributes_view.LocationAttributesView.html#teehr.evaluation.views.location_attributes_view.LocationAttributesView" title="teehr.evaluation.views.location_attributes_view.LocationAttributesView"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocationAttributesView</span></code></a></p>
+</section>
+<section id="primarytimeseriesview">
+<h3>PrimaryTimeseriesView<a class="headerlink" href="#primarytimeseriesview" title="Link to this heading">#</a></h3>
+<p>View of primary timeseries with optional location attributes:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic view</span>
+<span class="n">pv</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries_view</span><span class="p">()</span>
+
+<span class="c1"># With location attributes joined</span>
+<span class="n">pv</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries_view</span><span class="p">(</span>
+    <span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">attr_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">,</span> <span class="s2">&quot;ecoregion&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Filter and view</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="s2">&quot;ecoregion = &#39;Coastal Plains&#39;&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.views.primary_timeseries_view.PrimaryTimeseriesView.html#teehr.evaluation.views.primary_timeseries_view.PrimaryTimeseriesView" title="teehr.evaluation.views.primary_timeseries_view.PrimaryTimeseriesView"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrimaryTimeseriesView</span></code></a></p>
+</section>
+<section id="secondarytimeseriesview">
+<h3>SecondaryTimeseriesView<a class="headerlink" href="#secondarytimeseriesview" title="Link to this heading">#</a></h3>
+<p>View of secondary timeseries with optional location attributes.  Tis view also adds
+the <code class="docutils literal notranslate"><span class="pre">primary_location_id</span></code> so you can filter both the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> and
+the <code class="docutils literal notranslate"><span class="pre">secondary_timeseries_view()</span></code> by the same <code class="docutils literal notranslate"><span class="pre">location_id</span></code> value for convenience.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic view</span>
+<span class="n">sv</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries_view</span><span class="p">()</span>
+
+<span class="c1"># With attributes</span>
+<span class="n">sv</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries_view</span><span class="p">(</span>
+    <span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">attr_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">sv</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="s2">&quot;primary_location_id = &#39;usgs-02424000&#39;&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.views.secondary_timeseries_view.SecondaryTimeseriesView.html#teehr.evaluation.views.secondary_timeseries_view.SecondaryTimeseriesView" title="teehr.evaluation.views.secondary_timeseries_view.SecondaryTimeseriesView"><code class="xref py py-class docutils literal notranslate"><span class="pre">SecondaryTimeseriesView</span></code></a></p>
+</section>
+</section>
+<section id="calculated-fields">
+<h2>Calculated Fields<a class="headerlink" href="#calculated-fields" title="Link to this heading">#</a></h2>
+<p>TEEHR provides two categories of calculated fields that can be added to views:</p>
+<ul class="simple">
+<li><p><strong>Row-Level Calculated Fields</strong>: Compute values independently for each row</p></li>
+<li><p><strong>Timeseries-Aware Calculated Fields</strong>: Perform computations across related timeseries groups</p></li>
+</ul>
+<section id="row-level-calculated-fields">
+<h3>Row-Level Calculated Fields<a class="headerlink" href="#row-level-calculated-fields" title="Link to this heading">#</a></h3>
+<p>These fields operate on individual rows without aggregation or consideration of other rows.  They
+are useful for extracting components from timestamps, normalizing values.</p>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields" title="teehr.models.calculated_fields.row_level.RowLevelCalculatedFields"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowLevelCalculatedFields</span></code></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.row_level</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rcf</span>
+
+<span class="c1"># Add month and water year from timestamps</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">Month</span><span class="p">(),</span>       <span class="c1"># Extracts month (1-12)</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">Year</span><span class="p">(),</span>        <span class="c1"># Extracts calendar year</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">WaterYear</span><span class="p">(),</span>   <span class="c1"># Computes water year (Oct-Sep)</span>
+<span class="p">])</span>
+
+<span class="n">jt</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Available row-level fields:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.Month" title="teehr.models.calculated_fields.row_level.Month"><code class="xref py py-class docutils literal notranslate"><span class="pre">Month</span></code></a></p></td>
+<td><p>Extracts month (1-12) from timestamp</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.Year" title="teehr.models.calculated_fields.row_level.Year"><code class="xref py py-class docutils literal notranslate"><span class="pre">Year</span></code></a></p></td>
+<td><p>Extracts calendar year from timestamp</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.WaterYear" title="teehr.models.calculated_fields.row_level.WaterYear"><code class="xref py py-class docutils literal notranslate"><span class="pre">WaterYear</span></code></a></p></td>
+<td><p>Computes water year (year + 1 if month &gt;= October)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.DayOfYear" title="teehr.models.calculated_fields.row_level.DayOfYear"><code class="xref py py-class docutils literal notranslate"><span class="pre">DayOfYear</span></code></a></p></td>
+<td><p>Day of year (1-366)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.HourOfYear" title="teehr.models.calculated_fields.row_level.HourOfYear"><code class="xref py py-class docutils literal notranslate"><span class="pre">HourOfYear</span></code></a></p></td>
+<td><p>Hour of year (0-8784)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.Seasons" title="teehr.models.calculated_fields.row_level.Seasons"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seasons</span></code></a></p></td>
+<td><p>Maps months to seasons (winter, spring, summer, fall)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.NormalizedFlow" title="teehr.models.calculated_fields.row_level.NormalizedFlow"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormalizedFlow</span></code></a></p></td>
+<td><p>Divides flow by drainage area</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.ForecastLeadTime" title="teehr.models.calculated_fields.row_level.ForecastLeadTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForecastLeadTime</span></code></a></p></td>
+<td><p>Computes lead time from reference_time to value_time</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.ForecastLeadTimeBins" title="teehr.models.calculated_fields.row_level.ForecastLeadTimeBins"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForecastLeadTimeBins</span></code></a></p></td>
+<td><p>Groups lead times into bins</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.ThresholdValueExceeded" title="teehr.models.calculated_fields.row_level.ThresholdValueExceeded"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdValueExceeded</span></code></a></p></td>
+<td><p>Boolean indicating if value exceeds threshold</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.ThresholdValueNotExceeded" title="teehr.models.calculated_fields.row_level.ThresholdValueNotExceeded"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdValueNotExceeded</span></code></a></p></td>
+<td><p>Boolean indicating if value is at or below threshold</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="configuring-row-level-fields">
+<h4>Configuring Row-Level Fields<a class="headerlink" href="#configuring-row-level-fields" title="Link to this heading">#</a></h4>
+<p>Most fields have configurable parameters:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.row_level</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rcf</span>
+
+<span class="c1"># Custom field names and input columns</span>
+<span class="n">month_field</span> <span class="o">=</span> <span class="n">rcf</span><span class="o">.</span><span class="n">Month</span><span class="p">(</span>
+    <span class="n">input_field_name</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+    <span class="n">output_field_name</span><span class="o">=</span><span class="s2">&quot;my_month_column&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Normalized flow with custom attribute</span>
+<span class="n">normalized</span> <span class="o">=</span> <span class="n">rcf</span><span class="o">.</span><span class="n">NormalizedFlow</span><span class="p">(</span>
+    <span class="n">value_field_name</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span>
+    <span class="n">attribute_field_name</span><span class="o">=</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">,</span>
+    <span class="n">output_field_name</span><span class="o">=</span><span class="s2">&quot;normalized_flow&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Custom seasons mapping</span>
+<span class="n">seasons</span> <span class="o">=</span> <span class="n">rcf</span><span class="o">.</span><span class="n">Seasons</span><span class="p">(</span>
+    <span class="n">season_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;dry&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+        <span class="s2">&quot;wet&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="n">output_field_name</span><span class="o">=</span><span class="s2">&quot;season&quot;</span>
+<span class="p">)</span>
+
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span><span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span>
+    <span class="n">month_field</span><span class="p">,</span>
+    <span class="n">normalized</span><span class="p">,</span>
+    <span class="n">seasons</span><span class="p">,</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="timeseries-aware-calculated-fields">
+<h3>Timeseries-Aware Calculated Fields<a class="headerlink" href="#timeseries-aware-calculated-fields" title="Link to this heading">#</a></h3>
+<p>These fields perform computations that require knowledge of the full timeseries,
+such as percentile calculations or event detection.</p>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields" title="teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeseriesAwareCalculatedFields</span></code></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.timeseries_aware</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tcf</span>
+
+<span class="c1"># Add event detection based on percentile threshold</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span>
+    <span class="n">tcf</span><span class="o">.</span><span class="n">AbovePercentileEventDetection</span><span class="p">(</span>
+        <span class="n">quantile</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span>               <span class="c1"># 85th percentile</span>
+        <span class="n">value_field_name</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span>
+        <span class="n">output_event_field_name</span><span class="o">=</span><span class="s2">&quot;event_above&quot;</span><span class="p">,</span>
+        <span class="n">add_quantile_field</span><span class="o">=</span><span class="kc">True</span>      <span class="c1"># Also output the threshold value</span>
+    <span class="p">)</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+<p>Available timeseries-aware fields:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.AbovePercentileEventDetection" title="teehr.models.calculated_fields.timeseries_aware.AbovePercentileEventDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbovePercentileEventDetection</span></code></a></p></td>
+<td><p>Flags values above a percentile threshold, assigns event IDs</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.BelowPercentileEventDetection" title="teehr.models.calculated_fields.timeseries_aware.BelowPercentileEventDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">BelowPercentileEventDetection</span></code></a></p></td>
+<td><p>Flags values below a percentile threshold, assigns event IDs</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.AboveThresholdEventDetection" title="teehr.models.calculated_fields.timeseries_aware.AboveThresholdEventDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">AboveThresholdEventDetection</span></code></a></p></td>
+<td><p>Flags values above a threshold from an input field, assigns event IDs</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.BelowThresholdEventDetection" title="teehr.models.calculated_fields.timeseries_aware.BelowThresholdEventDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">BelowThresholdEventDetection</span></code></a></p></td>
+<td><p>Flags values below a threshold from an input field, assigns event IDs</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.ExceedanceProbability" title="teehr.models.calculated_fields.timeseries_aware.ExceedanceProbability"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExceedanceProbability</span></code></a></p></td>
+<td><p>Computes probability of value being exceeded</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.BaseflowPeriodDetection" title="teehr.models.calculated_fields.timeseries_aware.BaseflowPeriodDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseflowPeriodDetection</span></code></a></p></td>
+<td><p>Identifies baseflow periods in hydrograph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.LyneHollickBaseflow" title="teehr.models.calculated_fields.timeseries_aware.LyneHollickBaseflow"><code class="xref py py-class docutils literal notranslate"><span class="pre">LyneHollickBaseflow</span></code></a></p></td>
+<td><p>Baseflow separation using Lyne-Hollick filter</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.ChapmanBaseflow" title="teehr.models.calculated_fields.timeseries_aware.ChapmanBaseflow"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChapmanBaseflow</span></code></a></p></td>
+<td><p>Baseflow separation using Chapman filter</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/generated/teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html#teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.ChapmanMaxwellBaseflow" title="teehr.models.calculated_fields.timeseries_aware.ChapmanMaxwellBaseflow"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChapmanMaxwellBaseflow</span></code></a></p></td>
+<td><p>Baseflow separation using Chapman-Maxwell filter</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="event-detection">
+<h2>Event Detection<a class="headerlink" href="#event-detection" title="Link to this heading">#</a></h2>
+<p>Event detection identifies periods where values exceed (or fall below) thresholds,
+useful for analyzing high-flow or low-flow events.</p>
+<section id="above-percentile-events">
+<h3>Above Percentile Events<a class="headerlink" href="#above-percentile-events" title="Link to this heading">#</a></h3>
+<p>Detect events when values exceed a percentile threshold:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.timeseries_aware</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tcf</span>
+
+<span class="c1"># Detect high-flow events (above 85th percentile)</span>
+<span class="n">event_detection</span> <span class="o">=</span> <span class="n">tcf</span><span class="o">.</span><span class="n">AbovePercentileEventDetection</span><span class="p">(</span>
+    <span class="n">quantile</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span>
+    <span class="n">value_field_name</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span>
+    <span class="n">output_event_field_name</span><span class="o">=</span><span class="s2">&quot;event_above&quot;</span><span class="p">,</span>
+    <span class="n">output_event_id_field_name</span><span class="o">=</span><span class="s2">&quot;event_above_id&quot;</span><span class="p">,</span>
+    <span class="n">add_quantile_field</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span><span class="n">event_detection</span><span class="p">])</span>
+<span class="n">jt</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Result includes:</span>
+<span class="c1"># - event_above (bool): True if value &gt; 85th percentile</span>
+<span class="c1"># - event_above_id (str): Unique ID for continuous event periods</span>
+<span class="c1"># - quantile_value (float): The 85th percentile threshold value</span>
+</pre></div>
+</div>
+</section>
+<section id="below-percentile-events">
+<h3>Below Percentile Events<a class="headerlink" href="#below-percentile-events" title="Link to this heading">#</a></h3>
+<p>Detect events when values fall below a percentile threshold:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Detect low-flow events (below 15th percentile)</span>
+<span class="n">low_event</span> <span class="o">=</span> <span class="n">tcf</span><span class="o">.</span><span class="n">BelowPercentileEventDetection</span><span class="p">(</span>
+    <span class="n">quantile</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span>
+    <span class="n">value_field_name</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span>
+    <span class="n">output_event_field_name</span><span class="o">=</span><span class="s2">&quot;event_below&quot;</span><span class="p">,</span>
+    <span class="n">output_event_id_field_name</span><span class="o">=</span><span class="s2">&quot;event_below_id&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span><span class="n">low_event</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="above-threshold-events">
+<h3>Above Threshold Events<a class="headerlink" href="#above-threshold-events" title="Link to this heading">#</a></h3>
+<p>Detect events when values exceed a threshold read from a DataFrame column (e.g., an
+attribute field loaded with <code class="docutils literal notranslate"><span class="pre">add_attrs=True</span></code>). Threshold values are cast to <code class="docutils literal notranslate"><span class="pre">float</span></code>
+before comparison, so string-typed attribute fields are supported.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.timeseries_aware</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tcf</span>
+
+<span class="c1"># Detect high-flow events where primary_value exceeds the &#39;flood_stage&#39; attribute</span>
+<span class="n">event_detection</span> <span class="o">=</span> <span class="n">tcf</span><span class="o">.</span><span class="n">AboveThresholdEventDetection</span><span class="p">(</span>
+    <span class="n">threshold_field_name</span><span class="o">=</span><span class="s2">&quot;flood_stage&quot;</span><span class="p">,</span>
+    <span class="n">value_field_name</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span>
+    <span class="n">output_event_field_name</span><span class="o">=</span><span class="s2">&quot;event_above&quot;</span><span class="p">,</span>
+    <span class="n">output_event_id_field_name</span><span class="o">=</span><span class="s2">&quot;event_above_id&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span><span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span><span class="n">event_detection</span><span class="p">])</span>
+<span class="n">jt</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Result includes:</span>
+<span class="c1"># - event_above (bool): True if value &gt; flood_stage</span>
+<span class="c1"># - event_above_id (str): Unique ID for continuous event periods</span>
+</pre></div>
+</div>
+</section>
+<section id="below-threshold-events">
+<h3>Below Threshold Events<a class="headerlink" href="#below-threshold-events" title="Link to this heading">#</a></h3>
+<p>Detect events when values fall below a threshold from a DataFrame column:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Detect low-flow events where primary_value is below the &#39;low_flow_threshold&#39; attribute</span>
+<span class="n">low_event</span> <span class="o">=</span> <span class="n">tcf</span><span class="o">.</span><span class="n">BelowThresholdEventDetection</span><span class="p">(</span>
+    <span class="n">threshold_field_name</span><span class="o">=</span><span class="s2">&quot;low_flow_threshold&quot;</span><span class="p">,</span>
+    <span class="n">value_field_name</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span>
+    <span class="n">output_event_field_name</span><span class="o">=</span><span class="s2">&quot;event_below&quot;</span><span class="p">,</span>
+    <span class="n">output_event_id_field_name</span><span class="o">=</span><span class="s2">&quot;event_below_id&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span><span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span><span class="n">low_event</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="combining-multiple-calculated-fields">
+<h3>Combining Multiple Calculated Fields<a class="headerlink" href="#combining-multiple-calculated-fields" title="Link to this heading">#</a></h3>
+<p>Chain multiple calculated fields together:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.row_level</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rcf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.timeseries_aware</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tcf</span>
+
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span><span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span>
+    <span class="c1"># Row-level fields</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">Month</span><span class="p">(),</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">WaterYear</span><span class="p">(),</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">Seasons</span><span class="p">(),</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">NormalizedFlow</span><span class="p">(),</span>
+    <span class="c1"># Timeseries-aware fields</span>
+    <span class="n">tcf</span><span class="o">.</span><span class="n">AbovePercentileEventDetection</span><span class="p">(</span><span class="n">quantile</span><span class="o">=</span><span class="mf">0.90</span><span class="p">),</span>
+<span class="p">])</span>
+
+<span class="c1"># Now query metrics grouped by these new fields</span>
+<span class="n">metrics_df</span> <span class="o">=</span> <span class="n">jt</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">(),</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">NashSutcliffeEfficiency</span><span class="p">(),</span>
+    <span class="p">],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;water_year&quot;</span><span class="p">,</span> <span class="s2">&quot;season&quot;</span><span class="p">,</span> <span class="s2">&quot;event_above_id&quot;</span><span class="p">],</span>
+<span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">([</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;water_year&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="materializing-computed-fields">
+<h3>Materializing Computed Fields<a class="headerlink" href="#materializing-computed-fields" title="Link to this heading">#</a></h3>
+<p>For repeated use, write calculated fields to a table:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compute and materialize</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span>
+    <span class="n">tcf</span><span class="o">.</span><span class="n">AbovePercentileEventDetection</span><span class="p">()</span>
+<span class="p">])</span><span class="o">.</span><span class="n">write_to</span><span class="p">(</span><span class="s2">&quot;joined_timeseries&quot;</span><span class="p">)</span>
+
+<span class="c1"># Query the materialized table</span>
+<span class="n">metrics_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;joined_timeseries&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">()],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;event_above&quot;</span><span class="p">],</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="complete-workflow-example">
+<h2>Complete Workflow Example<a class="headerlink" href="#complete-workflow-example" title="Link to this heading">#</a></h2>
+<p>A typical workflow combining views, calculated fields, and metrics:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicMetrics</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.row_level</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">rcf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.timeseries_aware</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tcf</span>
+
+<span class="c1"># Open evaluation</span>
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;/path/to/evaluation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create view with attributes and calculated fields</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">(</span>
+    <span class="n">add_attrs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">attr_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">,</span> <span class="s2">&quot;ecoregion&quot;</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">Month</span><span class="p">(),</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">WaterYear</span><span class="p">(),</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">Seasons</span><span class="p">(),</span>
+    <span class="n">rcf</span><span class="o">.</span><span class="n">NormalizedFlow</span><span class="p">(),</span>
+    <span class="n">tcf</span><span class="o">.</span><span class="n">AbovePercentileEventDetection</span><span class="p">(</span>
+        <span class="n">quantile</span><span class="o">=</span><span class="mf">0.90</span><span class="p">,</span>
+        <span class="n">add_quantile_field</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">),</span>
+<span class="p">])</span>
+
+<span class="c1"># Filter to specific criteria</span>
+<span class="n">jt</span> <span class="o">=</span> <span class="n">jt</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    primary_location_id LIKE &#39;usgs-%&#39;</span>
+<span class="s2">    AND value_time &gt;= &#39;2019-10-01&#39;</span>
+<span class="s2">    AND CAST(drainage_area AS DOUBLE) &lt; 1000</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># Query metrics grouped by computed fields</span>
+<span class="n">metrics_df</span> <span class="o">=</span> <span class="n">jt</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">(),</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">RelativeBias</span><span class="p">(),</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">RootMeanSquareError</span><span class="p">(),</span>
+    <span class="p">],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;water_year&quot;</span><span class="p">,</span> <span class="s2">&quot;ecoregion&quot;</span><span class="p">,</span> <span class="s2">&quot;event_above_id&quot;</span><span class="p">],</span>
+<span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">([</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;water_year&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">metrics_df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+
+<span class="c1"># Clean up</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tables.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tables</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="metrics/metrics.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Metrics</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#joinedtimeseriesview">JoinedTimeseriesView</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#understanding-the-join-process">Understanding the Join Process</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-location-attributes">Adding Location Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filtering-views">Filtering Views</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#materializing-views-to-tables">Materializing Views to Tables</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-views">Other Views</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#locationattributesview">LocationAttributesView</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primarytimeseriesview">PrimaryTimeseriesView</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#secondarytimeseriesview">SecondaryTimeseriesView</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calculated-fields">Calculated Fields</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#row-level-calculated-fields">Row-Level Calculated Fields</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#configuring-row-level-fields">Configuring Row-Level Fields</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#timeseries-aware-calculated-fields">Timeseries-Aware Calculated Fields</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#event-detection">Event Detection</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#above-percentile-events">Above Percentile Events</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#below-percentile-events">Below Percentile Events</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#above-threshold-events">Above Threshold Events</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#below-threshold-events">Below Threshold Events</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#combining-multiple-calculated-fields">Combining Multiple Calculated Fields</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#materializing-computed-fields">Materializing Computed Fields</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-workflow-example">Complete Workflow Example</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_guide/views.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.1</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

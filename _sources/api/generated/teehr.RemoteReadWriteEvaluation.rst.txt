@@ -1,0 +1,55 @@
+﻿RemoteReadWriteEvaluation
+=========================
+
+.. currentmodule:: teehr
+
+.. autoclass:: RemoteReadWriteEvaluation
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~RemoteReadWriteEvaluation.drop_table
+      ~RemoteReadWriteEvaluation.enable_logging
+      ~RemoteReadWriteEvaluation.joined_timeseries_view
+      ~RemoteReadWriteEvaluation.list_tables
+      ~RemoteReadWriteEvaluation.list_views
+      ~RemoteReadWriteEvaluation.location_attributes_view
+      ~RemoteReadWriteEvaluation.log_spark_config
+      ~RemoteReadWriteEvaluation.primary_timeseries_view
+      ~RemoteReadWriteEvaluation.secondary_timeseries_view
+      ~RemoteReadWriteEvaluation.sql
+      ~RemoteReadWriteEvaluation.table
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RemoteReadWriteEvaluation.active_catalog
+      ~RemoteReadWriteEvaluation.attributes
+      ~RemoteReadWriteEvaluation.catalog
+      ~RemoteReadWriteEvaluation.configurations
+      ~RemoteReadWriteEvaluation.download
+      ~RemoteReadWriteEvaluation.fetch
+      ~RemoteReadWriteEvaluation.generate
+      ~RemoteReadWriteEvaluation.location_attributes
+      ~RemoteReadWriteEvaluation.location_crosswalks
+      ~RemoteReadWriteEvaluation.locations
+      ~RemoteReadWriteEvaluation.metrics
+      ~RemoteReadWriteEvaluation.primary_timeseries
+      ~RemoteReadWriteEvaluation.remote_catalog
+      ~RemoteReadWriteEvaluation.secondary_timeseries
+      ~RemoteReadWriteEvaluation.units
+      ~RemoteReadWriteEvaluation.variables
+   
+   
+   

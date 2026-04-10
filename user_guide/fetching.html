@@ -1,0 +1,990 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Fetching and Downloading &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=2bd037f0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/fetching';</script>
+    <script src="../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Generating Data" href="generating.html" />
+    <link rel="prev" title="Metrics" href="metrics/metrics.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+    <img src="../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">The Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tables.html">Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="views.html">Views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics/metrics.html">Metrics</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Fetching and Downloading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generating.html">Generating Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Additional Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tutorials/joining_timeseries.html">Joining Timeseries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_content/legacy_content.html">Legacy TEEHR Content</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Fetching and Downloading</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="fetching-and-downloading">
+<span id="fetching"></span><h1>Fetching and Downloading<a class="headerlink" href="#fetching-and-downloading" title="Link to this heading">#</a></h1>
+<p>TEEHR provides methods to fetch data from external sources and download data from
+the TEEHR warehouse. This section covers both approaches.</p>
+<section id="fetching-external-data">
+<h2>Fetching External Data<a class="headerlink" href="#fetching-external-data" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">fetch</span></code> component retrieves data from USGS and the National Water Model (NWM),
+validates it, and loads it directly into your evaluation.</p>
+<section id="usgs-streamflow-data">
+<h3>USGS Streamflow Data<a class="headerlink" href="#usgs-streamflow-data" title="Link to this heading">#</a></h3>
+<p>Fetch observed streamflow data from USGS gages:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;./my_eval&quot;</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># First, load your USGS gage locations</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">load_spatial</span><span class="p">(</span><span class="s2">&quot;./data/usgs_gages.geojson&quot;</span><span class="p">)</span>
+
+<span class="c1"># Fetch streamflow data for all locations in the locations table</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">usgs_streamflow</span><span class="p">(</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+    <span class="n">service</span><span class="o">=</span><span class="s2">&quot;iv&quot;</span><span class="p">,</span>              <span class="c1"># &quot;iv&quot; = hourly instantaneous, &quot;dv&quot; = daily</span>
+    <span class="n">filter_to_hourly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>     <span class="c1"># Drop 15-minute data</span>
+    <span class="n">convert_to_si</span><span class="o">=</span><span class="kc">True</span>         <span class="c1"># Convert from ft³/s to m³/s</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.fetch.Fetch.html#teehr.evaluation.fetch.Fetch.usgs_streamflow" title="teehr.evaluation.fetch.Fetch.usgs_streamflow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Fetch.usgs_streamflow()</span></code></a></p>
+<p>The data is automatically:</p>
+<ol class="arabic simple">
+<li><p>Fetched from USGS NWIS</p></li>
+<li><p>Converted to the TEEHR schema</p></li>
+<li><p>Validated</p></li>
+<li><p>Loaded into the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> table</p></li>
+</ol>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h4>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">start_date</span></code>, <code class="docutils literal notranslate"><span class="pre">end_date</span></code></dt><dd><p>Time range to fetch (inclusive start, exclusive end).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">service</span></code></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;iv&quot;</span></code> - Instantaneous values (15-min or hourly)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;dv&quot;</span></code> - Daily mean values</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">chunk_by</span></code></dt><dd><p>Process data in chunks to manage memory:
+<code class="docutils literal notranslate"><span class="pre">&quot;location_id&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;week&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">filter_to_hourly</span></code></dt><dd><p>When True, keeps only values on the hour (drops 15-minute data).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">convert_to_si</span></code></dt><dd><p>Convert from ft³/s to m³/s.</p>
+</dd>
+</dl>
+</section>
+<section id="edge-cases-sub-locations">
+<h4>Edge Cases: Sub-Locations<a class="headerlink" href="#edge-cases-sub-locations" title="Link to this heading">#</a></h4>
+<p>Some USGS sites have multiple measurement points. To handle these, use
+the underlying function directly with a dictionary:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr.fetching.usgs.usgs</span><span class="w"> </span><span class="kn">import</span> <span class="n">usgs_to_parquet</span>
+
+<span class="c1"># Site with sub-locations</span>
+<span class="n">sites</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;site_no&quot;</span><span class="p">:</span> <span class="s2">&quot;USGS-02449838&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Main Gage&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;USGS-01234567&quot;</span>  <span class="c1"># Regular site</span>
+<span class="p">]</span>
+
+<span class="n">usgs_to_parquet</span><span class="p">(</span>
+    <span class="n">sites</span><span class="o">=</span><span class="n">sites</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2024-01-31&quot;</span><span class="p">,</span>
+    <span class="n">output_parquet_dir</span><span class="o">=</span><span class="s2">&quot;./cache/usgs&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Then load the resulting Parquet files into TEEHR</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">load_parquet</span><span class="p">(</span><span class="s2">&quot;./cache/usgs/*.parquet&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="nwm-retrospective-data-points">
+<h3>NWM Retrospective Data (Points)<a class="headerlink" href="#nwm-retrospective-data-points" title="Link to this heading">#</a></h3>
+<p>Fetch NWM retrospective streamflow simulations at point locations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># First, set up crosswalks mapping USGS to NWM location IDs</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span><span class="s2">&quot;./data/usgs_nwm_crosswalk.csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># Fetch NWM v3.0 retrospective data</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">nwm_retrospective_points</span><span class="p">(</span>
+    <span class="n">nwm_version</span><span class="o">=</span><span class="s2">&quot;nwm30&quot;</span><span class="p">,</span>
+    <span class="n">variable_name</span><span class="o">=</span><span class="s2">&quot;streamflow&quot;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2020</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2020</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+    <span class="n">chunk_by</span><span class="o">=</span><span class="s2">&quot;month&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.fetch.Fetch.html#teehr.evaluation.fetch.Fetch.nwm_retrospective_points" title="teehr.evaluation.fetch.Fetch.nwm_retrospective_points"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Fetch.nwm_retrospective_points()</span></code></a></p>
+<section id="supported-nwm-versions">
+<h4>Supported NWM Versions<a class="headerlink" href="#supported-nwm-versions" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Version</p></th>
+<th class="head"><p>Date Range</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nwm20</span></code></p></td>
+<td><p>1993-01-01 to 2018-12-31</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nwm21</span></code></p></td>
+<td><p>1979-01-01 to 2020-12-31</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nwm30</span></code></p></td>
+<td><p>1979-02-01 to 2023-01-31</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="supported-variables">
+<h4>Supported Variables<a class="headerlink" href="#supported-variables" title="Link to this heading">#</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">streamflow</span></code> - Channel streamflow (m³/s)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">velocity</span></code> - Channel velocity (m/s)</p></li>
+</ul>
+</section>
+</section>
+<section id="nwm-operational-data-points">
+<h3>NWM Operational Data (Points)<a class="headerlink" href="#nwm-operational-data-points" title="Link to this heading">#</a></h3>
+<p>Fetch real-time NWM forecast data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">nwm_operational_points</span><span class="p">(</span>
+    <span class="n">nwm_version</span><span class="o">=</span><span class="s2">&quot;nwm30&quot;</span><span class="p">,</span>
+    <span class="n">forecast_configuration</span><span class="o">=</span><span class="s2">&quot;analysis_assim&quot;</span><span class="p">,</span>
+    <span class="n">variable_name</span><span class="o">=</span><span class="s2">&quot;streamflow&quot;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.fetch.Fetch.html#teehr.evaluation.fetch.Fetch.nwm_operational_points" title="teehr.evaluation.fetch.Fetch.nwm_operational_points"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Fetch.nwm_operational_points()</span></code></a></p>
+<section id="forecast-configurations">
+<h4>Forecast Configurations<a class="headerlink" href="#forecast-configurations" title="Link to this heading">#</a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">analysis_assim</span></code> - Analysis and assimilation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">short_range</span></code> - Short-range forecast (0-18 hours)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">medium_range</span></code> - Medium-range forecast (0-10 days)</p></li>
+</ul>
+</section>
+</section>
+<section id="nwm-gridded-data">
+<h3>NWM Gridded Data<a class="headerlink" href="#nwm-gridded-data" title="Link to this heading">#</a></h3>
+<p>Fetch gridded NWM data (e.g., forcing variables) and compute zonal statistics:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Fetch gridded precipitation and compute zonal means</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">nwm_retrospective_grids</span><span class="p">(</span>
+    <span class="n">nwm_version</span><span class="o">=</span><span class="s2">&quot;nwm30&quot;</span><span class="p">,</span>
+    <span class="n">variable_name</span><span class="o">=</span><span class="s2">&quot;RAINRATE&quot;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2020</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2020</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+    <span class="n">calculate_zonal_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Compute weights first time</span>
+    <span class="n">domain</span><span class="o">=</span><span class="s2">&quot;CONUS&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.fetch.Fetch.html#teehr.evaluation.fetch.Fetch.nwm_retrospective_grids" title="teehr.evaluation.fetch.Fetch.nwm_retrospective_grids"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Fetch.nwm_retrospective_grids()</span></code></a></p>
+<section id="zonal-weights">
+<h4>Zonal Weights<a class="headerlink" href="#zonal-weights" title="Link to this heading">#</a></h4>
+<p>When <code class="docutils literal notranslate"><span class="pre">calculate_zonal_weights=True</span></code>, TEEHR computes area-weighted averages
+for each location’s drainage basin. The weights are cached for subsequent calls.</p>
+<p>For custom polygons, provide a weights file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">nwm_retrospective_grids</span><span class="p">(</span>
+    <span class="n">nwm_version</span><span class="o">=</span><span class="s2">&quot;nwm30&quot;</span><span class="p">,</span>
+    <span class="n">variable_name</span><span class="o">=</span><span class="s2">&quot;RAINRATE&quot;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2020-06-01&quot;</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2020-06-30&quot;</span><span class="p">,</span>
+    <span class="n">zonal_weights_filepath</span><span class="o">=</span><span class="s2">&quot;./data/custom_weights.parquet&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="gridded-variables">
+<h4>Gridded Variables<a class="headerlink" href="#gridded-variables" title="Link to this heading">#</a></h4>
+<p>Forcing variables available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RAINRATE</span></code> - Precipitation rate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">T2D</span></code> - 2-meter temperature</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LWDOWN</span></code> - Longwave radiation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SWDOWN</span></code> - Shortwave radiation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Q2D</span></code> - Specific humidity</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">U2D</span></code>, <code class="docutils literal notranslate"><span class="pre">V2D</span></code> - Wind components</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PSFC</span></code> - Surface pressure</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="downloading-from-teehr-warehouse">
+<h2>Downloading from TEEHR Warehouse<a class="headerlink" href="#downloading-from-teehr-warehouse" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">download</span></code> component retrieves pre-processed data from the TEEHR data warehouse
+via the TEEHR-HUB REST API. This is useful for quickly setting up evaluations with
+curated datasets.</p>
+<section id="configure-the-api">
+<h3>Configure the API<a class="headerlink" href="#configure-the-api" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Default configuration (public TEEHR warehouse)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
+
+<span class="c1"># Or specify a custom endpoint</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
+    <span class="n">api_base_url</span><span class="o">=</span><span class="s2">&quot;https://api.teehr.rtiamanzi.org&quot;</span><span class="p">,</span>
+    <span class="n">verify_ssl</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.configure" title="teehr.evaluation.download.Download.configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.configure()</span></code></a></p>
+</section>
+<section id="download-locations">
+<h3>Download Locations<a class="headerlink" href="#download-locations" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Preview available locations</span>
+<span class="n">locs_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">locations</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">locs_df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+
+<span class="c1"># Download and load directly into evaluation</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">locations</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Filter by bounding box</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">locations</span><span class="p">(</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span><span class="p">,</span>
+    <span class="n">bbox</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">85</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="mi">35</span><span class="p">],</span>  <span class="c1"># [minx, miny, maxx, maxy]</span>
+    <span class="n">load</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Include attributes in response (for preview only)</span>
+<span class="n">locs_with_attrs</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">locations</span><span class="p">(</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span><span class="p">,</span>
+    <span class="n">include_attributes</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.locations" title="teehr.evaluation.download.Download.locations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.locations()</span></code></a></p>
+</section>
+<section id="download-domain-data">
+<h3>Download Domain Data<a class="headerlink" href="#download-domain-data" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download all configurations</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">configurations</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Download specific unit</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">units</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;m3/s&quot;</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Download variables</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">variables</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Download attributes (definitions)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">attributes</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.configurations" title="teehr.evaluation.download.Download.configurations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.configurations()</span></code></a>,
+<a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.units" title="teehr.evaluation.download.Download.units"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.units()</span></code></a>,
+<a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.variables" title="teehr.evaluation.download.Download.variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.variables()</span></code></a>,
+<a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.attributes" title="teehr.evaluation.download.Download.attributes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.attributes()</span></code></a></p>
+</section>
+<section id="download-location-attributes">
+<h3>Download Location Attributes<a class="headerlink" href="#download-location-attributes" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download attributes for specific locations</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">location_attributes</span><span class="p">(</span>
+    <span class="n">location_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;usgs-01010000&quot;</span><span class="p">,</span> <span class="s2">&quot;usgs-01020000&quot;</span><span class="p">],</span>
+    <span class="n">load</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Download all attributes for locations with a prefix</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">location_attributes</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.location_attributes" title="teehr.evaluation.download.Download.location_attributes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.location_attributes()</span></code></a></p>
+</section>
+<section id="download-crosswalks">
+<h3>Download Crosswalks<a class="headerlink" href="#download-crosswalks" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download crosswalks for NWM v3.0</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="p">(</span>
+    <span class="n">secondary_location_id_prefix</span><span class="o">=</span><span class="s2">&quot;nwm30&quot;</span><span class="p">,</span>
+    <span class="n">load</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.location_crosswalks" title="teehr.evaluation.download.Download.location_crosswalks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.location_crosswalks()</span></code></a></p>
+</section>
+<section id="download-timeseries">
+<h3>Download Timeseries<a class="headerlink" href="#download-timeseries" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download primary (observed) timeseries</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="p">(</span>
+    <span class="n">primary_location_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;usgs-01010000&quot;</span><span class="p">],</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2020-12-31&quot;</span><span class="p">,</span>
+    <span class="n">load</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Download secondary (simulated) timeseries</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="p">(</span>
+    <span class="n">configuration_name</span><span class="o">=</span><span class="s2">&quot;nwm30_retrospective&quot;</span><span class="p">,</span>
+    <span class="n">primary_location_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;usgs-01010000&quot;</span><span class="p">],</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2020-12-31&quot;</span><span class="p">,</span>
+    <span class="n">load</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.primary_timeseries" title="teehr.evaluation.download.Download.primary_timeseries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.primary_timeseries()</span></code></a>,
+<a class="reference internal" href="../api/generated/teehr.evaluation.download.Download.html#teehr.evaluation.download.Download.secondary_timeseries" title="teehr.evaluation.download.Download.secondary_timeseries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Download.secondary_timeseries()</span></code></a></p>
+</section>
+</section>
+<section id="complete-workflow-examples">
+<h2>Complete Workflow Examples<a class="headerlink" href="#complete-workflow-examples" title="Link to this heading">#</a></h2>
+<section id="example-1-new-evaluation-with-teehr-warehouse-data">
+<h3>Example 1: New Evaluation with TEEHR Warehouse Data<a class="headerlink" href="#example-1-new-evaluation-with-teehr-warehouse-data" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+
+<span class="c1"># Create evaluation</span>
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;./nwm_eval&quot;</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Download curated data from warehouse</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
+
+<span class="c1"># Get domain tables</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">units</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">variables</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">configurations</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">attributes</span><span class="p">(</span><span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Get locations and crosswalks</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">locations</span><span class="p">(</span><span class="n">primary_location_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;usgs-01010000&quot;</span><span class="p">],</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">location_attributes</span><span class="p">(</span><span class="n">primary_location_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;usgs-01010000&quot;</span><span class="p">],</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="p">(</span><span class="n">secondary_location_id_prefix</span><span class="o">=</span><span class="s2">&quot;nwm30&quot;</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Get timeseries data</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="p">(</span>
+     <span class="n">configuration_name</span><span class="o">=</span><span class="s2">&quot;usgs_observations&quot;</span><span class="p">,</span>
+     <span class="n">primary_location_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;usgs-01010000&quot;</span><span class="p">],</span>
+     <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span>
+     <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2020-12-31&quot;</span><span class="p">,</span>
+     <span class="n">load</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="p">(</span>
+     <span class="n">configuration_name</span><span class="o">=</span><span class="s2">&quot;nwm30_retrospective&quot;</span><span class="p">,</span>
+     <span class="n">primary_location_id</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;usgs-01010000&quot;</span><span class="p">],</span>
+     <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span>
+     <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2020-12-31&quot;</span><span class="p">,</span>
+     <span class="n">load</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="example-2-fresh-data-from-usgs-and-nwm">
+<h3>Example 2: Fresh Data from USGS and NWM<a class="headerlink" href="#example-2-fresh-data-from-usgs-and-nwm" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;./fresh_eval&quot;</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Load your location data</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">load_spatial</span><span class="p">(</span><span class="s2">&quot;./data/my_gages.geojson&quot;</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span><span class="s2">&quot;./data/my_crosswalk.csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># Fetch fresh USGS data</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">usgs_streamflow</span><span class="p">(</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">31</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Fetch corresponding NWM retrospective data</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">nwm_retrospective_points</span><span class="p">(</span>
+    <span class="n">nwm_version</span><span class="o">=</span><span class="s2">&quot;nwm30&quot;</span><span class="p">,</span>
+    <span class="n">variable_name</span><span class="o">=</span><span class="s2">&quot;streamflow&quot;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2020</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+    <span class="n">chunk_by</span><span class="o">=</span><span class="s2">&quot;year&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="metrics/metrics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Metrics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="generating.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Generating Data</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fetching-external-data">Fetching External Data</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usgs-streamflow-data">USGS Streamflow Data</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#edge-cases-sub-locations">Edge Cases: Sub-Locations</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nwm-retrospective-data-points">NWM Retrospective Data (Points)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-nwm-versions">Supported NWM Versions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-variables">Supported Variables</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nwm-operational-data-points">NWM Operational Data (Points)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-configurations">Forecast Configurations</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nwm-gridded-data">NWM Gridded Data</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#zonal-weights">Zonal Weights</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gridded-variables">Gridded Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downloading-from-teehr-warehouse">Downloading from TEEHR Warehouse</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-the-api">Configure the API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-locations">Download Locations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-domain-data">Download Domain Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-location-attributes">Download Location Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-crosswalks">Download Crosswalks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-timeseries">Download Timeseries</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-workflow-examples">Complete Workflow Examples</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-1-new-evaluation-with-teehr-warehouse-data">Example 1: New Evaluation with TEEHR Warehouse Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-2-fresh-data-from-usgs-and-nwm">Example 2: Fresh Data from USGS and NWM</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_guide/fetching.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.1</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

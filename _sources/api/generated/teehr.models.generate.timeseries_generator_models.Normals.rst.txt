@@ -1,0 +1,41 @@
+﻿Normals
+=======
+
+.. currentmodule:: teehr.models.generate.timeseries_generator_models
+
+.. autoclass:: Normals
+   :members:
+   :special-members: __call__, __add__, __mul__
+   :no-inherited-members:
+   :exclude-members: model_config
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+         ~Normals.generate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Normals.model_computed_fields
+      ~Normals.model_config
+      ~Normals.model_extra
+      ~Normals.model_fields
+      ~Normals.model_fields_set
+      ~Normals.temporal_resolution
+      ~Normals.summary_statistic
+      ~Normals.df
+      ~Normals.table_name
+      ~Normals.filters
+   
+   
+   

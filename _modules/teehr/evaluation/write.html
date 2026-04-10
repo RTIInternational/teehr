@@ -1,0 +1,1181 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>teehr.evaluation.write &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=2bd037f0"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/teehr/evaluation/write';</script>
+    <script src="../../../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+    <img src="../../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">teehr.evaluation.write</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for teehr.evaluation.write</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Writer class for TEEHR evaluations.&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ps</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Schema</span> <span class="k">as</span> <span class="n">ArrowSchema</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.const</span><span class="w"> </span><span class="kn">import</span> <span class="n">REMOTE_CATALOG_NAME</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">TableFilter</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">DATATYPE_WRITE_TRANSFORMS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;forecast_lead_time&quot;</span><span class="p">:</span> <span class="s2">&quot;BIGINT&quot;</span><span class="p">}</span>
+<span class="n">AUDIT_COLUMNS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="s2">&quot;updated_at&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Write">
+<a class="viewcode-back" href="../../../api/generated/teehr.evaluation.write.Write.html#teehr.evaluation.write.Write">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Write</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to handle writing to the warehouse.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Writer with an Evaluation instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ev : Evaluation</span>
+<span class="sd">            An instance of the Evaluation class containing Spark session</span>
+<span class="sd">            and catalog details. The default is None, which allows access to</span>
+<span class="sd">            the classes static methods only.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span> <span class="o">=</span> <span class="n">ev</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_datatype_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cast fields in the DataFrame to the pre-defined types.&quot;&quot;&quot;</span>
+        <span class="n">all_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">view_name</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">select_clauses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">except_clauses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">all_columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">DATATYPE_WRITE_TRANSFORMS</span><span class="p">:</span>
+                <span class="n">except_clauses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;EXCEPT(</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                <span class="n">select_clauses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CAST(</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2"> AS </span><span class="si">{</span><span class="n">DATATYPE_WRITE_TRANSFORMS</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="si">}</span><span class="s2">) AS </span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">select_clauses</span><span class="p">)</span>
+        <span class="n">except_sql</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">except_clauses</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT * </span><span class="si">{</span><span class="n">except_sql</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">select_sql</span><span class="si">}</span>
+<span class="s2">            FROM </span><span class="si">{</span><span class="n">view_name</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="n">view_name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_timestamps_to_view</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_view</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">add_created_at</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">add_updated_at</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create or update timestamp columns in the view.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_view : str</span>
+<span class="sd">            The name of the source view.</span>
+<span class="sd">        add_created_at : bool, optional</span>
+<span class="sd">            Whether to add created_at column, by default True.</span>
+<span class="sd">        add_updated_at : bool, optional</span>
+<span class="sd">            Whether to add updated_at column, by default True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The name of the view with timestamps added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">source_view</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">timestamp_view</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">source_view</span><span class="si">}</span><span class="s2">_with_timestamps&quot;</span>
+
+        <span class="n">select_parts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span>
+        <span class="n">exclude_parts</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">add_created_at</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;created_at&quot;</span> <span class="ow">in</span> <span class="n">source_columns</span><span class="p">:</span>
+                <span class="n">exclude_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">)</span>
+            <span class="n">select_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;current_timestamp() AS created_at&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">add_updated_at</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;updated_at&quot;</span> <span class="ow">in</span> <span class="n">source_columns</span><span class="p">:</span>
+                <span class="n">exclude_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;updated_at&quot;</span><span class="p">)</span>
+            <span class="n">select_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;current_timestamp() AS updated_at&quot;</span><span class="p">)</span>
+
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">select_parts</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exclude_parts</span><span class="p">:</span>
+            <span class="n">exclude_sql</span> <span class="o">=</span> <span class="s2">&quot;EXCEPT(&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">exclude_parts</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+            <span class="n">select_sql</span> <span class="o">=</span> <span class="n">select_sql</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">exclude_sql</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT </span><span class="si">{</span><span class="n">select_sql</span><span class="si">}</span>
+<span class="s2">            FROM </span><span class="si">{</span><span class="n">source_view</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="n">timestamp_view</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">timestamp_view</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_or_replace</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_view</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">catalog_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">namespace_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Drop and recreate the table with source data.</span>
+
+<span class="sd">        Creates the table if it doesn&#39;t exist. Loses table history/snapshots.</span>
+<span class="sd">        Can change schema if source data has different columns.</span>
+<span class="sd">        Sets both created_at and updated_at to current timestamp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">timestamp_view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_timestamps_to_view</span><span class="p">(</span><span class="n">source_view</span><span class="p">)</span>
+        <span class="n">sql_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            CREATE OR REPLACE TABLE </span><span class="si">{</span><span class="n">catalog_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">namespace_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span>
+<span class="s2">            AS SELECT * FROM </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">sql_query</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DROP VIEW IF EXISTS </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_on_clause</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">uniqueness_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">nullable_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the ON clause for MERGE statements.</span>
+
+<span class="sd">        Uses regular = for non-nullable fields (better optimization)</span>
+<span class="sd">        and &lt;=&gt; for nullable fields (null-safe equality).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">fld</span> <span class="ow">in</span> <span class="n">uniqueness_fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fld</span> <span class="ow">in</span> <span class="n">nullable_fields</span><span class="p">:</span>
+                <span class="c1"># Use null-safe equality for nullable fields</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;t.</span><span class="si">{</span><span class="n">fld</span><span class="si">}</span><span class="s2"> &lt;=&gt; s.</span><span class="si">{</span><span class="n">fld</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Use regular equality for non-nullable fields</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;t.</span><span class="si">{</span><span class="n">fld</span><span class="si">}</span><span class="s2"> = s.</span><span class="si">{</span><span class="n">fld</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot; AND &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_time_range_filter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_view</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">uniqueness_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">value_time_partition_filter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build time-range filter for partition pruning if value_time is present.</span>
+
+<span class="sd">        This filter allows Iceberg to prune partitions during MERGE operations.</span>
+<span class="sd">        Pre-computes min/max values as literals since subqueries aren&#39;t allowed</span>
+<span class="sd">        in MERGE conditions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_view : str</span>
+<span class="sd">            Name of the source view to get min/max values from.</span>
+<span class="sd">        uniqueness_fields : List[str]</span>
+<span class="sd">            List of uniqueness fields to check for value_time.</span>
+<span class="sd">        value_time_partition_filter : bool, optional</span>
+<span class="sd">            Whether to include the time-range filter. Default True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">value_time_partition_filter</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="s2">&quot;value_time&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">uniqueness_fields</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># Pre-compute min/max value_time as literals (subqueries not allowed in MERGE)</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT MIN(value_time) as min_time, MAX(value_time) as max_time</span>
+<span class="s2">            FROM </span><span class="si">{</span><span class="n">source_view</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">min_time</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;min_time&quot;</span><span class="p">]</span>
+        <span class="n">max_time</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;max_time&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">min_time</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">max_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            AND t.value_time &gt;= TIMESTAMP &#39;</span><span class="si">{</span><span class="n">min_time</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">            AND t.value_time &lt;= TIMESTAMP &#39;</span><span class="si">{</span><span class="n">max_time</span><span class="si">}</span><span class="s2">&#39;&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_upsert</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_view</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">uniqueness_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">catalog_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">namespace_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nullable_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">value_time_partition_filter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Upsert the DataFrame to the specified target in the catalog.</span>
+
+<span class="sd">        For new rows: sets both created_at and updated_at to current timestamp.</span>
+<span class="sd">        For existing rows: updates updated_at only, preserves created_at.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">nullable_fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nullable_fields</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Build ON clause with optimized operators</span>
+        <span class="n">on_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_on_clause</span><span class="p">(</span><span class="n">uniqueness_fields</span><span class="p">,</span> <span class="n">nullable_fields</span><span class="p">)</span>
+
+        <span class="c1"># Add time-range filter for partition pruning</span>
+        <span class="n">time_filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_time_range_filter</span><span class="p">(</span>
+            <span class="n">source_view</span><span class="p">,</span> <span class="n">uniqueness_fields</span><span class="p">,</span> <span class="n">value_time_partition_filter</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Add timestamps to source view for new inserts</span>
+        <span class="n">timestamp_view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_timestamps_to_view</span><span class="p">(</span><span class="n">source_view</span><span class="p">)</span>
+
+        <span class="n">source_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">source_view</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="c1"># Exclude audit columns and uniqueness fields from update fields</span>
+        <span class="n">non_audit_source_fields</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">source_fields</span> <span class="k">if</span> <span class="n">f</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">AUDIT_COLUMNS</span>
+        <span class="p">]</span>
+        <span class="n">update_fields</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">set</span><span class="p">(</span><span class="n">non_audit_source_fields</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">uniqueness_fields</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># Build update SET clause: update regular fields and updated_at only</span>
+        <span class="n">update_set_parts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;t.</span><span class="si">{</span><span class="n">fld</span><span class="si">}</span><span class="s2"> = s.</span><span class="si">{</span><span class="n">fld</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">fld</span> <span class="ow">in</span> <span class="n">update_fields</span><span class="p">]</span>
+        <span class="n">update_set_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;t.updated_at = current_timestamp()&quot;</span><span class="p">)</span>
+        <span class="n">update_set_sql</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">update_set_parts</span><span class="p">)</span>
+
+        <span class="n">sql_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            MERGE INTO </span><span class="si">{</span><span class="n">catalog_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">namespace_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> t</span>
+<span class="s2">            USING </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span><span class="s2"> s</span>
+<span class="s2">            ON </span><span class="si">{</span><span class="n">on_sql</span><span class="si">}{</span><span class="n">time_filter</span><span class="si">}</span>
+<span class="s2">            WHEN MATCHED THEN UPDATE SET </span><span class="si">{</span><span class="n">update_set_sql</span><span class="si">}</span>
+<span class="s2">            WHEN NOT MATCHED THEN INSERT *</span>
+<span class="s2">        &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">sql_query</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DROP VIEW IF EXISTS </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_append</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_view</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">uniqueness_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">catalog_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">namespace_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nullable_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">value_time_partition_filter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append the DataFrame to the specified target in the catalog.</span>
+
+<span class="sd">        Only inserts new rows (skips existing). Sets both created_at and</span>
+<span class="sd">        updated_at to current timestamp for new rows.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">nullable_fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nullable_fields</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Build ON clause with optimized operators</span>
+        <span class="n">on_sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_on_clause</span><span class="p">(</span><span class="n">uniqueness_fields</span><span class="p">,</span> <span class="n">nullable_fields</span><span class="p">)</span>
+
+        <span class="c1"># Add time-range filter for partition pruning</span>
+        <span class="n">time_filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_time_range_filter</span><span class="p">(</span>
+            <span class="n">source_view</span><span class="p">,</span> <span class="n">uniqueness_fields</span><span class="p">,</span> <span class="n">value_time_partition_filter</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Add timestamps to source view for new inserts</span>
+        <span class="n">timestamp_view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_timestamps_to_view</span><span class="p">(</span><span class="n">source_view</span><span class="p">)</span>
+
+        <span class="n">sql_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            MERGE INTO </span><span class="si">{</span><span class="n">catalog_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">namespace_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> t</span>
+<span class="s2">            USING </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span><span class="s2"> s</span>
+<span class="s2">            ON </span><span class="si">{</span><span class="n">on_sql</span><span class="si">}{</span><span class="n">time_filter</span><span class="si">}</span>
+<span class="s2">            WHEN NOT MATCHED THEN INSERT *</span>
+<span class="s2">        &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">sql_query</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DROP VIEW IF EXISTS </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_insert</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_view</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">catalog_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">namespace_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Insert the DataFrame into the target table without duplicate checking.</span>
+
+<span class="sd">        This is faster than ``_append`` because it uses a simple</span>
+<span class="sd">        ``INSERT INTO`` statement instead of ``MERGE INTO``.</span>
+<span class="sd">        Duplicate rows will be inserted if they exist in the source data.</span>
+<span class="sd">        Sets both created_at and updated_at to current timestamp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">timestamp_view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_timestamps_to_view</span><span class="p">(</span><span class="n">source_view</span><span class="p">)</span>
+        <span class="n">sql_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            INSERT INTO </span><span class="si">{</span><span class="n">catalog_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">namespace_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span>
+<span class="s2">            SELECT * FROM </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">sql_query</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DROP VIEW IF EXISTS </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_overwrite</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_view</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">catalog_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">namespace_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace all data in the table while preserving table structure.</span>
+
+<span class="sd">        Table must already exist. Preserves table history - creates new</span>
+<span class="sd">        snapshot so you can time-travel back to previous data.</span>
+<span class="sd">        Sets both created_at and updated_at to current timestamp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">timestamp_view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_timestamps_to_view</span><span class="p">(</span><span class="n">source_view</span><span class="p">)</span>
+        <span class="n">sql_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            INSERT OVERWRITE TABLE </span><span class="si">{</span><span class="n">catalog_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">namespace_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span>
+<span class="s2">            SELECT * FROM </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">sql_query</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DROP VIEW IF EXISTS </span><span class="si">{</span><span class="n">timestamp_view</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Write.to_warehouse">
+<a class="viewcode-back" href="../../../api/generated/teehr.evaluation.write.Write.html#teehr.evaluation.write.Write.to_warehouse">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_warehouse</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">write_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span>
+        <span class="n">uniqueness_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">catalog_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">namespace_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">value_time_partition_filter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the DataFrame to the specified target in the catalog.</span>
+
+<span class="sd">        Skips validation!</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_data : pd.DataFrame | ps.DataFrame | str</span>
+<span class="sd">            The Spark or Pandas DataFrame or temporary view name to write.</span>
+<span class="sd">        table_name : str</span>
+<span class="sd">            The target table name in the catalog.</span>
+<span class="sd">        write_mode : str, optional</span>
+<span class="sd">            The mode to use when writing the DataFrame. Options:</span>
+
+<span class="sd">            - ``&quot;insert&quot;``: Insert all rows directly without duplicate</span>
+<span class="sd">              checking. Faster than ``&quot;append&quot;`` but may create duplicates.</span>
+<span class="sd">            - ``&quot;append&quot;``: Insert new rows; skip rows matching</span>
+<span class="sd">              uniqueness_fields (uses ``MERGE INTO``).</span>
+<span class="sd">            - ``&quot;upsert&quot;``: Insert new rows; update existing rows matching</span>
+<span class="sd">              uniqueness_fields.</span>
+<span class="sd">            - ``&quot;overwrite&quot;``: Replace all data in table. Preserves table</span>
+<span class="sd">              structure and history (can time-travel back).</span>
+<span class="sd">            - ``&quot;create_or_replace&quot;``: Drop and recreate table. Loses history.</span>
+<span class="sd">              Can change schema.</span>
+
+<span class="sd">            Default is ``&quot;append&quot;``.</span>
+<span class="sd">        uniqueness_fields : List[str], optional</span>
+<span class="sd">            List of fields that uniquely identify a record, by default None,</span>
+<span class="sd">            which means the uniqueness_fields are taken from the table class.</span>
+<span class="sd">            Only used for ``&quot;append&quot;`` and ``&quot;upsert&quot;`` write modes.</span>
+<span class="sd">        catalog_name : str, optional</span>
+<span class="sd">            The catalog name to write to, by default None, which means the</span>
+<span class="sd">            catalog_name of the active catalog is used.</span>
+<span class="sd">        namespace_name : str, optional</span>
+<span class="sd">            The namespace name to write to, by default None, which means the</span>
+<span class="sd">            namespace_name of the active catalog is used.</span>
+<span class="sd">        value_time_partition_filter : bool, optional</span>
+<span class="sd">            Whether to add time-range filter for partition pruning in MERGE</span>
+<span class="sd">            operations. When True, adds WHERE clause to limit target table</span>
+<span class="sd">            scan to partitions matching source data&#39;s value_time range.</span>
+<span class="sd">            Default is ``True``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Start writing to warehouse table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">read_only_remote</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">active_catalog</span><span class="o">.</span><span class="n">catalog_name</span> <span class="o">==</span> <span class="n">REMOTE_CATALOG_NAME</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot write to the TEEHR-Cloud warehouse in read-only remote mode.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">catalog_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">catalog_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">active_catalog</span><span class="o">.</span><span class="n">catalog_name</span>
+        <span class="k">if</span> <span class="n">namespace_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">namespace_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">active_catalog</span><span class="o">.</span><span class="n">namespace_name</span>
+
+        <span class="c1"># Get table metadata for uniqueness and nullable fields</span>
+        <span class="n">tbl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">uniqueness_fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">uniqueness_fields</span> <span class="o">=</span> <span class="n">tbl</span><span class="o">.</span><span class="n">uniqueness_fields</span>
+
+        <span class="c1"># Get nullable fields from the Pandera schema</span>
+        <span class="n">nullable_fields</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">tbl</span><span class="o">.</span><span class="n">schema_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">schema</span> <span class="o">=</span> <span class="n">tbl</span><span class="o">.</span><span class="n">schema_func</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;pyspark&quot;</span><span class="p">)</span>
+            <span class="n">nullable_fields</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">col_name</span> <span class="k">for</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">nullable</span> <span class="ow">is</span> <span class="kc">True</span>
+            <span class="p">]</span>
+
+        <span class="n">source_view_name</span> <span class="o">=</span> <span class="s2">&quot;source_view&quot;</span>
+        <span class="n">created_temp_view</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">source_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">source_data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_data</span><span class="p">,</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">source_data</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="n">source_view_name</span><span class="p">)</span>
+            <span class="n">created_temp_view</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">source_view_name</span> <span class="o">=</span> <span class="n">source_data</span>
+
+        <span class="n">tbl_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">source_view_name</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="n">DATATYPE_WRITE_TRANSFORMS</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">tbl_columns</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_datatype_transform</span><span class="p">(</span><span class="n">source_view_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">write_mode</span> <span class="o">==</span> <span class="s2">&quot;insert&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span>
+                <span class="n">source_view</span><span class="o">=</span><span class="n">source_view_name</span><span class="p">,</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                <span class="n">catalog_name</span><span class="o">=</span><span class="n">catalog_name</span><span class="p">,</span>
+                <span class="n">namespace_name</span><span class="o">=</span><span class="n">namespace_name</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">write_mode</span> <span class="o">==</span> <span class="s2">&quot;append&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">uniqueness_fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;uniqueness_fields must be provided for append write mode.&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">(</span>
+                <span class="n">source_view</span><span class="o">=</span><span class="n">source_view_name</span><span class="p">,</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                <span class="n">uniqueness_fields</span><span class="o">=</span><span class="n">uniqueness_fields</span><span class="p">,</span>
+                <span class="n">catalog_name</span><span class="o">=</span><span class="n">catalog_name</span><span class="p">,</span>
+                <span class="n">namespace_name</span><span class="o">=</span><span class="n">namespace_name</span><span class="p">,</span>
+                <span class="n">nullable_fields</span><span class="o">=</span><span class="n">nullable_fields</span><span class="p">,</span>
+                <span class="n">value_time_partition_filter</span><span class="o">=</span><span class="n">value_time_partition_filter</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">write_mode</span> <span class="o">==</span> <span class="s2">&quot;upsert&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">uniqueness_fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;uniqueness_fields must be provided for upsert write mode.&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_upsert</span><span class="p">(</span>
+                <span class="n">source_view</span><span class="o">=</span><span class="n">source_view_name</span><span class="p">,</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                <span class="n">uniqueness_fields</span><span class="o">=</span><span class="n">uniqueness_fields</span><span class="p">,</span>
+                <span class="n">catalog_name</span><span class="o">=</span><span class="n">catalog_name</span><span class="p">,</span>
+                <span class="n">namespace_name</span><span class="o">=</span><span class="n">namespace_name</span><span class="p">,</span>
+                <span class="n">nullable_fields</span><span class="o">=</span><span class="n">nullable_fields</span><span class="p">,</span>
+                <span class="n">value_time_partition_filter</span><span class="o">=</span><span class="n">value_time_partition_filter</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">write_mode</span> <span class="o">==</span> <span class="s2">&quot;create_or_replace&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_or_replace</span><span class="p">(</span>
+                <span class="n">source_view</span><span class="o">=</span><span class="n">source_view_name</span><span class="p">,</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                <span class="n">catalog_name</span><span class="o">=</span><span class="n">catalog_name</span><span class="p">,</span>
+                <span class="n">namespace_name</span><span class="o">=</span><span class="n">namespace_name</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">write_mode</span> <span class="o">==</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_overwrite</span><span class="p">(</span>
+                <span class="n">source_view</span><span class="o">=</span><span class="n">source_view_name</span><span class="p">,</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">,</span>
+                <span class="n">catalog_name</span><span class="o">=</span><span class="n">catalog_name</span><span class="p">,</span>
+                <span class="n">namespace_name</span><span class="o">=</span><span class="n">namespace_name</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;write_mode must be one of &#39;insert&#39;, &#39;append&#39;, &#39;upsert&#39;, &quot;</span>
+                <span class="s2">&quot;&#39;overwrite&#39;, or &#39;create_or_replace&#39;.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">created_temp_view</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DROP VIEW IF EXISTS </span><span class="si">{</span><span class="n">source_view_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished writing to warehouse table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; in </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> seconds.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Write.delete_from">
+<a class="viewcode-back" href="../../../api/generated/teehr.evaluation.write.Write.html#teehr.evaluation.write.Write.delete_from">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_from</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">filters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">TableFilter</span><span class="p">,</span>
+            <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">TableFilter</span><span class="p">]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">catalog_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">namespace_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete rows from a table based on filter conditions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        table_name : str</span>
+<span class="sd">            The name of the table to delete rows from.</span>
+<span class="sd">        filters : Union[str, dict, TableFilter, List[...]], optional</span>
+<span class="sd">            Filter conditions specifying which rows to delete.</span>
+<span class="sd">            Supports SQL strings, dictionaries, or</span>
+<span class="sd">            :class:`~teehr.models.filters.TableFilter` objects.</span>
+<span class="sd">            If ``None``, all rows in the table will be deleted.</span>
+<span class="sd">        catalog_name : str, optional</span>
+<span class="sd">            The catalog name, by default None, which uses the active catalog.</span>
+<span class="sd">        namespace_name : str, optional</span>
+<span class="sd">            The namespace name, by default None, which uses the active</span>
+<span class="sd">            namespace.</span>
+<span class="sd">        dry_run : bool, optional</span>
+<span class="sd">            If ``True``, returns a Spark DataFrame of rows that would be</span>
+<span class="sd">            deleted without performing the actual deletion. This allows the</span>
+<span class="sd">            user to inspect or count the rows before committing the delete.</span>
+<span class="sd">            Default is ``False``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int or ps.DataFrame</span>
+<span class="sd">            If ``dry_run=False``, returns the number of rows deleted (int).</span>
+<span class="sd">            If ``dry_run=True``, returns a Spark DataFrame of rows that</span>
+<span class="sd">            would be deleted.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Preview rows that would be deleted (dry run):</span>
+
+<span class="sd">        &gt;&gt;&gt; sdf = ev._write.delete_from(</span>
+<span class="sd">        &gt;&gt;&gt;     table_name=&quot;primary_timeseries&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[&quot;location_id = &#39;usgs-01234567&#39;&quot;],</span>
+<span class="sd">        &gt;&gt;&gt;     dry_run=True,</span>
+<span class="sd">        &gt;&gt;&gt; )</span>
+<span class="sd">        &gt;&gt;&gt; sdf.show()</span>
+<span class="sd">        &gt;&gt;&gt; print(f&quot;Rows to delete: {sdf.count()}&quot;)</span>
+
+<span class="sd">        Delete rows and get the count:</span>
+
+<span class="sd">        &gt;&gt;&gt; count = ev._write.delete_from(</span>
+<span class="sd">        &gt;&gt;&gt;     table_name=&quot;primary_timeseries&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[&quot;location_id = &#39;usgs-01234567&#39;&quot;],</span>
+<span class="sd">        &gt;&gt;&gt; )</span>
+<span class="sd">        &gt;&gt;&gt; print(f&quot;Deleted {count} rows.&quot;)</span>
+
+<span class="sd">        Delete using a TableFilter object:</span>
+
+<span class="sd">        &gt;&gt;&gt; from teehr.models.filters import TableFilter</span>
+<span class="sd">        &gt;&gt;&gt; from teehr import Operators as ops</span>
+<span class="sd">        &gt;&gt;&gt; count = ev._write.delete_from(</span>
+<span class="sd">        &gt;&gt;&gt;     table_name=&quot;primary_timeseries&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;     filters=TableFilter(</span>
+<span class="sd">        &gt;&gt;&gt;         column=&quot;location_id&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         operator=ops.eq,</span>
+<span class="sd">        &gt;&gt;&gt;         value=&quot;usgs-01234567&quot;</span>
+<span class="sd">        &gt;&gt;&gt;     ),</span>
+<span class="sd">        &gt;&gt;&gt; )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">read_only_remote</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">active_catalog</span><span class="o">.</span><span class="n">catalog_name</span> <span class="o">==</span> <span class="n">REMOTE_CATALOG_NAME</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot delete from the TEEHR-Cloud warehouse in read-only remote mode.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">catalog_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">catalog_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">active_catalog</span><span class="o">.</span><span class="n">catalog_name</span>
+        <span class="k">if</span> <span class="n">namespace_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">namespace_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">active_catalog</span><span class="o">.</span><span class="n">namespace_name</span>
+
+        <span class="n">full_table_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">catalog_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">namespace_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Build the WHERE clause from filters</span>
+        <span class="n">where_clause</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">filters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">full_table_name</span><span class="p">)</span>
+            <span class="n">validated_filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">_validate</span><span class="o">.</span><span class="n">sdf_filters</span><span class="p">(</span>
+                <span class="n">sdf</span><span class="o">=</span><span class="n">sdf</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+                <span class="n">validate</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">where_clause</span> <span class="o">=</span> <span class="s2">&quot; AND &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">validated_filters</span><span class="p">)</span>
+
+        <span class="c1"># Build matching query for counting or dry run</span>
+        <span class="k">if</span> <span class="n">where_clause</span><span class="p">:</span>
+            <span class="n">match_sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT * FROM </span><span class="si">{</span><span class="n">full_table_name</span><span class="si">}</span><span class="s2"> WHERE </span><span class="si">{</span><span class="n">where_clause</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">match_sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT * FROM </span><span class="si">{</span><span class="n">full_table_name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">matching_sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">match_sql</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">matching_sdf</span>
+
+        <span class="c1"># Count before deletion, then execute delete</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">matching_sdf</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">where_clause</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DELETE FROM </span><span class="si">{</span><span class="n">full_table_name</span><span class="si">}</span><span class="s2"> WHERE </span><span class="si">{</span><span class="n">where_clause</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DELETE FROM </span><span class="si">{</span><span class="n">full_table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">count</span></div>
+
+
+<div class="viewcode-block" id="Write.to_cache">
+<a class="viewcode-back" href="../../../api/generated/teehr.evaluation.write.Write.html#teehr.evaluation.write.Write.to_cache">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_cache</span><span class="p">(</span>
+        <span class="n">source_data</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">,</span>
+        <span class="n">cache_filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">write_schema</span><span class="p">:</span> <span class="n">ArrowSchema</span><span class="p">,</span>
+        <span class="n">write_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overwrite&quot;</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the DataFrame to a parquet file for caching.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_data : ps.DataFrame | pd.DataFrame | gpd.GeoDataFrame</span>
+<span class="sd">            The Spark, Pandas, or GeoPandas DataFrame to cache.</span>
+<span class="sd">        cache_filepath : str</span>
+<span class="sd">            The path to use for the cached table.</span>
+<span class="sd">        write_schema : ArrowSchema</span>
+<span class="sd">            The pyarrow schema to use when writing the parquet file.</span>
+<span class="sd">        write_mode : str, optional</span>
+<span class="sd">            The mode to use when a PySpark DataFrame is written to the cache</span>
+<span class="sd">            using PySpark&#39;s DataFrame.write.mode. Default is &quot;overwrite&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Allow additional kwargs for to_parquet?</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_data</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">):</span>
+            <span class="c1"># Convert geometry to WKB manually</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">source_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">crs_json</span> <span class="o">=</span> <span class="n">source_data</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span> <span class="k">if</span> <span class="n">source_data</span><span class="o">.</span><span class="n">crs</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">df</span><span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">to_wkb</span><span class="p">()</span>
+            <span class="n">pdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+            <span class="c1"># Now use regular pandas to_parquet with schema</span>
+            <span class="c1"># pdf.to_parquet(cache_filepath, engine=&quot;pyarrow&quot;, schema=write_schema)</span>
+
+            <span class="n">table</span> <span class="o">=</span> <span class="n">pw</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">write_schema</span><span class="p">)</span>
+
+            <span class="c1"># Add GeoParquet metadata</span>
+            <span class="n">geo_metadata</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;primary_column&quot;</span><span class="p">:</span> <span class="s2">&quot;geometry&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;columns&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;encoding&quot;</span><span class="p">:</span> <span class="s2">&quot;WKB&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">crs_json</span><span class="p">)</span> <span class="k">if</span> <span class="n">crs_json</span> <span class="k">else</span> <span class="kc">None</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="sa">b</span><span class="s2">&quot;geo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">geo_metadata</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">replace_schema_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+
+            <span class="n">pq</span><span class="o">.</span><span class="n">write_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">cache_filepath</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">source_data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span>
+                <span class="n">cache_filepath</span><span class="p">,</span>
+                <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;pyarrow&quot;</span><span class="p">,</span>
+                <span class="n">schema</span><span class="o">=</span><span class="n">write_schema</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_data</span><span class="p">,</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">source_data</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">write_mode</span><span class="p">)</span><span class="o">.</span><span class="n">parquet</span><span class="p">(</span><span class="n">cache_filepath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;source_data must be a Spark or Pandas DataFrame.&quot;</span>
+            <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.1</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
