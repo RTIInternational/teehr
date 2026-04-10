@@ -90,8 +90,6 @@ def test_fetch_and_load_nwm_retro_points(function_scope_evaluation_template):
     assert sts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
     assert sts_df.value_time.max() == pd.Timestamp("2022-02-25 23:00:00")
 
-    # ev.spark.stop()
-
 
 @pytest.mark.function_scope_evaluation_template
 def test_fetch_and_load_nwm_retro_grids(function_scope_evaluation_template):
@@ -126,8 +124,6 @@ def test_fetch_and_load_nwm_retro_grids(function_scope_evaluation_template):
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 10:00:00")
 
-    # ev.spark.stop()
-
 
 @pytest.mark.function_scope_evaluation_template
 def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_template):
@@ -153,6 +149,7 @@ def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_templat
         process_by_z_hour=False,
         starting_z_hour=3,
         ending_z_hour=20,
+        kerchunk_method="auto"
     )
     ts_df = ev.secondary_timeseries.to_pandas()
 
@@ -185,10 +182,8 @@ def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_templat
     assert updated_df.value_time.max() == pd.Timestamp("2024-02-23 06:00:00")
     assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
 
-    # ev.spark.stop()
 
-
-@pytest.mark.skip(reason="This takes forever!")
+@pytest.mark.skip(reason="This one takes a long time, test manually as needed.")
 def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
     ev = LocalReadWriteEvaluation(dir_path=tmpdir, create_dir=True)
@@ -208,7 +203,8 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
         location_id_prefix="huc10",
         calculate_zonal_weights=True,
         starting_z_hour=2,
-        ending_z_hour=22
+        ending_z_hour=22,
+        kerchunk_method="auto"
     )
     ts_df = ev.primary_timeseries.to_pandas()
 
