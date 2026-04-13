@@ -255,6 +255,11 @@ def _create_spark_base_session(
     conf.set("spark.driver.host", "127.0.0.1")
     conf.set("spark.driver.port", "0")  # Let Spark choose an available port
 
+    # Default shuffle partitions: 2x local CPU cores
+    local_cores = os.cpu_count() or 1
+    default_shuffle_partitions = 2 * local_cores
+    conf.set("spark.sql.shuffle.partitions", str(default_shuffle_partitions))
+
     return conf
 
 
@@ -340,6 +345,11 @@ def _set_spark_cluster_configuration(
         raise FileNotFoundError(f"Executor pod template not found: {pod_template_path}")
 
     conf.set("spark.kubernetes.executor.deleteOnTermination", "true")
+
+    # Default shuffle partitions: 2x total executor cores
+    total_executor_cores = executor_cores * executor_instances
+    default_shuffle_partitions = 2 * total_executor_cores
+    conf.set("spark.sql.shuffle.partitions", str(default_shuffle_partitions))
 
     # Authentication - use service account token if available
     token_file = const.SERVICE_ACCOUNT_TOKEN_PATH
