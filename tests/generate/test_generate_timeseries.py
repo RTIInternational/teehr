@@ -101,11 +101,8 @@ def test_generate_timeseries_normals(function_scope_evaluation_template):
     prim_df.loc[following_leap_day_mask, "day_of_year"] -= 1
     mean_prim_srs = prim_df.copy().groupby("day_of_year")["value"].mean()
     # Check that the climatology matches the manual calculation.
-    # Apply the same leap year adjustment to clim_df as was applied to prim_df,
-    # matching the Spark DayOfYear calculated field logic.
     clim_df["day_of_year"] = clim_df.value_time.dt.dayofyear
-    # Use .unique()[0] to verify all values for a day_of_year are identical
-    # (as they should be from the join), avoiding partition ordering issues.
+
     assert clim_df[(clim_df.day_of_year == 59) & (clim_df.value_time.dt.year == 2023)].value.values[0] == mean_prim_srs.loc[59]
     assert clim_df[(clim_df.day_of_year == 60) & (clim_df.value_time.dt.year == 2023)].value.values[0] == mean_prim_srs.loc[60]
 
