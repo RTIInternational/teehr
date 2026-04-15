@@ -102,12 +102,13 @@ def test_generate_timeseries_normals(function_scope_evaluation_template):
     mean_prim_srs = prim_df.copy().groupby("day_of_year")["value"].mean()
     # Check that the climatology matches the manual calculation.
     clim_df["day_of_year"] = clim_df.value_time.dt.dayofyear
-    assert clim_df[
-        clim_df.day_of_year == 59
-    ].value.values[0] == mean_prim_srs.loc[59]
-    assert clim_df[
-        clim_df.day_of_year == 61
-    ].value.values[0] == mean_prim_srs.loc[60]
+
+    assert clim_df[(clim_df.day_of_year == 59) & (clim_df.value_time.dt.year == 2023)].value.values[0] == mean_prim_srs.loc[59]
+    assert clim_df[(clim_df.day_of_year == 60) & (clim_df.value_time.dt.year == 2023)].value.values[0] == mean_prim_srs.loc[60]
+
+    assert clim_df[(clim_df.day_of_year == 59) & (clim_df.value_time.dt.year == 2024)].value.values[0] == mean_prim_srs.loc[59]
+    assert clim_df[(clim_df.day_of_year == 60) & (clim_df.value_time.dt.year == 2024)].value.values[0] == mean_prim_srs.loc[59]
+    assert clim_df[(clim_df.day_of_year == 61) & (clim_df.value_time.dt.year == 2024)].value.values[0] == mean_prim_srs.loc[60]
 
 
 @pytest.mark.function_scope_evaluation_template

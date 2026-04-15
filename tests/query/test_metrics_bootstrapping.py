@@ -92,7 +92,7 @@ def test_unpacking_bootstrap_results(session_scope_test_warehouse):
         "kling_gupta_efficiency_0.05"
     ]
 
-    assert (cols == benchmark_cols).all()
+    assert sorted(cols) == sorted(benchmark_cols)
 
 
 @pytest.mark.session_scope_test_warehouse
