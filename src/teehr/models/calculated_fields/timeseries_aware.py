@@ -494,6 +494,372 @@ class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
         return sdf
 
 
+class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds "event" and "event_id" columns to the DataFrame based on a threshold field.
+
+    The "event" column (bool) indicates whether the value is above the threshold
+    read from a specified column. True values indicate that the corresponding
+    value exceeds the threshold, while False values indicate that the value is
+    below or equal to the threshold. Threshold values are cast to float before
+    comparison to handle attribute fields, which are always stored as strings.
+    The "event_id" column (string) groups continuous segments of events and
+    assigns a unique ID to each segment in the format "startdate-enddate".
+
+    Properties
+    ----------
+    - threshold_field_name:
+        The name of the column containing the threshold value. Threshold
+        values are cast to float before use, so string attribute fields
+        are supported.
+        Default: "threshold"
+    - value_time_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - value_field_name:
+        The name of the column containing the value to detect events on.
+        Default: "primary_value"
+    - output_event_field_name:
+        The name of the column to store the event detection.
+        Default: "event_above"
+    - output_event_id_field_name:
+        The name of the column to store the event ID.
+        Default: "event_above_id"
+    - skip_event_id:
+        Whether to skip the event ID generation.
+        Default: False
+    - uniqueness_fields:
+        The columns to use to uniquely identify each timeseries.
+
+        .. code-block:: python
+
+            Default: [
+                'reference_time',
+                'primary_location_id',
+                'configuration_name',
+                'variable_name',
+                'unit_name'
+            ]
+    """
+
+    threshold_field_name: str = Field(
+        default="threshold"
+    )
+    value_time_field_name: str = Field(
+        default="value_time"
+    )
+    value_field_name: str = Field(
+        default="primary_value"
+    )
+    output_event_field_name: str = Field(
+        default="event_above"
+    )
+    output_event_id_field_name: str = Field(
+        default="event_above_id"
+    )
+    skip_event_id: bool = Field(
+        default=False
+    )
+    uniqueness_fields: Union[str, List[str]] = Field(
+        default=None
+    )
+
+    @staticmethod
+    def add_is_event(
+        sdf: ps.DataFrame,
+        output_field,
+        input_field,
+        threshold_field,
+        group_by,
+        return_type=T.BooleanType()
+
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def is_event(pdf, input_field, threshold_field, output_field) -> pd.DataFrame:
+            pvs = pdf[input_field]
+
+            # Cast threshold to float; attribute fields are always stored as strings
+            threshold_value = float(pdf[threshold_field].iloc[0])
+
+            # Create a new column indicating whether each value is above the threshold
+            pdf[output_field] = pvs > threshold_value
+
+            return pdf
+
+        def wrapper(pdf, input_field, threshold_field, output_field):
+            return is_event(pdf, input_field, threshold_field, output_field)
+
+        # Group the data and apply the UDF
+        sdf = sdf.groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf, input_field, threshold_field, output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    @staticmethod
+    def add_event_ids(
+        sdf,
+        output_field,
+        input_field,
+        time_field,
+        group_by,
+        return_type=T.StringType(),
+
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def event_ids(pdf: pd.DataFrame, input_field, time_field, output_field) -> pd.DataFrame:
+            # Create a new column for continuous segments
+            pdf['segment'] = (pdf[input_field] != pdf[input_field].shift()).cumsum()
+
+            # Filter only the segments where values are over the threshold
+            segments = pdf[pdf[input_field]]
+
+            # Group by segment and create startdate-enddate string
+            segment_ranges = segments.groupby('segment').agg(
+                startdate=(time_field, 'min'),
+                enddate=(time_field, 'max')
+            ).reset_index()
+
+            # Merge the segment ranges back to the original DataFrame
+            pdf = pdf.merge(segment_ranges[['segment', 'startdate', 'enddate']], on='segment', how='left')
+
+            # Create the startdate-enddate string column
+            pdf[output_field] = pdf.apply(
+                lambda row: f"{row['startdate']}-{row['enddate']}" if pd.notnull(row['startdate']) else None,
+                axis=1
+            )
+
+            # Drop the 'segment', 'startdate', and 'enddate' columns before returning
+            pdf.drop(columns=['segment', 'startdate', 'enddate'], inplace=True)
+
+            return pdf
+
+        def wrapper(pdf, input_field, time_field, output_field):
+            return event_ids(pdf, input_field, time_field, output_field)
+
+        # Group the data and apply the UDF
+        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
+        sdf = self.add_is_event(
+            sdf=sdf,
+            input_field=self.value_field_name,
+            threshold_field=self.threshold_field_name,
+            output_field=self.output_event_field_name,
+            group_by=self.uniqueness_fields
+        )
+        if not self.skip_event_id:
+            sdf = self.add_event_ids(
+                sdf=sdf,
+                input_field=self.output_event_field_name,
+                time_field=self.value_time_field_name,
+                output_field=self.output_event_id_field_name,
+                group_by=self.uniqueness_fields
+            )
+
+        return sdf
+
+
+class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds "event" and "event_id" columns to the DataFrame based on a threshold field.
+
+    The "event" column (bool) indicates whether the value is below the threshold
+    read from a specified column. True values indicate that the corresponding
+    value is below the threshold, while False values indicate that the value is
+    above or equal to the threshold. Threshold values are cast to float before
+    comparison to handle attribute fields, which are always stored as strings.
+    The "event_id" column (string) groups continuous segments of events and
+    assigns a unique ID to each segment in the format "startdate-enddate".
+
+    Properties
+    ----------
+    - threshold_field_name:
+        The name of the column containing the threshold value. Threshold
+        values are cast to float before use, so string attribute fields
+        are supported.
+        Default: "threshold"
+    - value_time_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - value_field_name:
+        The name of the column containing the value to detect events on.
+        Default: "primary_value"
+    - output_event_field_name:
+        The name of the column to store the event detection.
+        Default: "event_below"
+    - output_event_id_field_name:
+        The name of the column to store the event ID.
+        Default: "event_below_id"
+    - skip_event_id:
+        Whether to skip the event ID generation.
+        Default: False
+    - uniqueness_fields:
+        The columns to use to uniquely identify each timeseries.
+
+        .. code-block:: python
+
+            Default: [
+                'reference_time',
+                'primary_location_id',
+                'configuration_name',
+                'variable_name',
+                'unit_name'
+            ]
+    """
+
+    threshold_field_name: str = Field(
+        default="threshold"
+    )
+    value_time_field_name: str = Field(
+        default="value_time"
+    )
+    value_field_name: str = Field(
+        default="primary_value"
+    )
+    output_event_field_name: str = Field(
+        default="event_below"
+    )
+    output_event_id_field_name: str = Field(
+        default="event_below_id"
+    )
+    skip_event_id: bool = Field(
+        default=False
+    )
+    uniqueness_fields: Union[str, List[str]] = Field(
+        default=None
+    )
+
+    @staticmethod
+    def add_is_event(
+        sdf: ps.DataFrame,
+        output_field,
+        input_field,
+        threshold_field,
+        group_by,
+        return_type=T.BooleanType()
+
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def is_event(pdf, input_field, threshold_field, output_field) -> pd.DataFrame:
+            pvs = pdf[input_field]
+
+            # Cast threshold to float; attribute fields are always stored as strings
+            threshold_value = float(pdf[threshold_field].iloc[0])
+
+            # Create a new column indicating whether each value is below the threshold
+            pdf[output_field] = pvs < threshold_value
+
+            return pdf
+
+        def wrapper(pdf, input_field, threshold_field, output_field):
+            return is_event(pdf, input_field, threshold_field, output_field)
+
+        # Group the data and apply the UDF
+        sdf = sdf.groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf, input_field, threshold_field, output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    @staticmethod
+    def add_event_ids(
+        sdf,
+        output_field,
+        input_field,
+        time_field,
+        group_by,
+        return_type=T.StringType(),
+
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def event_ids(pdf: pd.DataFrame, input_field, time_field, output_field) -> pd.DataFrame:
+            # Create a new column for continuous segments
+            pdf['segment'] = (pdf[input_field] != pdf[input_field].shift()).cumsum()
+
+            # Filter only the segments where values are below the threshold
+            segments = pdf[pdf[input_field]]
+
+            # Group by segment and create startdate-enddate string
+            segment_ranges = segments.groupby('segment').agg(
+                startdate=(time_field, 'min'),
+                enddate=(time_field, 'max')
+            ).reset_index()
+
+            # Merge the segment ranges back to the original DataFrame
+            pdf = pdf.merge(segment_ranges[['segment', 'startdate', 'enddate']], on='segment', how='left')
+
+            # Create the startdate-enddate string column
+            pdf[output_field] = pdf.apply(
+                lambda row: f"{row['startdate']}-{row['enddate']}" if pd.notnull(row['startdate']) else None,
+                axis=1
+            )
+
+            # Drop the 'segment', 'startdate', and 'enddate' columns before returning
+            pdf.drop(columns=['segment', 'startdate', 'enddate'], inplace=True)
+
+            return pdf
+
+        def wrapper(pdf, input_field, time_field, output_field):
+            return event_ids(pdf, input_field, time_field, output_field)
+
+        # Group the data and apply the UDF
+        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
+        sdf = self.add_is_event(
+            sdf=sdf,
+            input_field=self.value_field_name,
+            threshold_field=self.threshold_field_name,
+            output_field=self.output_event_field_name,
+            group_by=self.uniqueness_fields
+        )
+        if not self.skip_event_id:
+            sdf = self.add_event_ids(
+                sdf=sdf,
+                input_field=self.output_event_field_name,
+                time_field=self.value_time_field_name,
+                output_field=self.output_event_id_field_name,
+                group_by=self.uniqueness_fields
+            )
+
+        return sdf
+
+
 class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
     """Calculates exceedance probability for a flow duration curve.
 
@@ -2420,6 +2786,8 @@ class TimeseriesAwareCalculatedFields():
 
     - AbovePercentileEventDetection
     - BelowPercentileEventDetection
+    - AboveThresholdEventDetection
+    - BelowThresholdEventDetection
     - ExceedanceProbability
     - BaseflowPeriodDetection
     - LyneHollickBaseflow
@@ -2444,6 +2812,8 @@ class TimeseriesAwareCalculatedFields():
 
     AbovePercentileEventDetection = AbovePercentileEventDetection
     BelowPercentileEventDetection = BelowPercentileEventDetection
+    AboveThresholdEventDetection = AboveThresholdEventDetection
+    BelowThresholdEventDetection = BelowThresholdEventDetection
     ExceedanceProbability = ExceedanceProbability
     BaseflowPeriodDetection = BaseflowPeriodDetection
     LyneHollickBaseflow = LyneHollickBaseflow
