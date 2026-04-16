@@ -1,6 +1,6 @@
 """Test fetching and loading data into the dataset."""
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from teehr.fetching.nwm.nwm_points import nwm_to_parquet
 from teehr import LocalReadWriteEvaluation
