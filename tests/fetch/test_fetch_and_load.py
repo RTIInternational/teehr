@@ -235,13 +235,16 @@ def test_fetching_nwm_operational_hawaii_points(tmpdir):
         output_type="channel_rt",
         variable_name="streamflow",
         start_date=datetime(2024, 2, 22),
-        end_date=datetime(2025, 2, 22),
+        end_date=datetime(2024, 2, 22),
         ingest_days=1,
         nwm_version="nwm30",
         json_dir=Path(tmpdir, "nwm_jsons"),
-        output_parquet_dir=Path(tmpdir, "nwm_parquets")
+        output_parquet_dir=Path(tmpdir, "nwm_parquets"),
+        prioritize_analysis_value_time=False,
+        ending_z_hour=23,
     )
     df = pd.read_parquet(Path(tmpdir, "nwm_parquets"))
 
-    assert len(df.value_time.diff().dropna().unique()) == 1
-    assert df.value_time.diff().dropna().unique()[0] == timedelta(minutes=-15)
+    assert df.value_time.min() == pd.Timestamp("2024-02-21 21:15:00")
+    assert df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
+    assert len(df) == 104

@@ -110,8 +110,8 @@ def parse_nwm_gcs_paths(
         reference_time = datetime.strptime(day, "%Y%m%d") + timedelta(hours=int(z_hour))
         # Hawaii has 15-minute intervals, so we need to account for that.
         # (Hawaii forcing analysis has hourly intervals)
-        if nwm_configuration == "analysis_assim_hawaii":
-            value_time = reference_time - timedelta(minutes=int(tm_hour))
+        if "hawaii" in nwm_configuration and "forcing" not in nwm_configuration:
+            value_time = reference_time - timedelta(hours=int(tm_hour[0:2])) - timedelta(minutes=int(tm_hour[2:4]))
         else:
             value_time = reference_time - timedelta(hours=int(tm_hour))
         parsed_data.append({
@@ -661,7 +661,7 @@ def construct_assim_paths(
 
         # Add the values starting from day 1,
         # skipping value times in the previous day
-        if configuration == "analysis_assim_hawaii":
+        if "hawaii" in configuration:
             for cycle_hr in cycle_z_hours:
                 for tm in t_minus:
                     for tm2 in [0, 15, 30, 45]:
@@ -688,7 +688,7 @@ def construct_assim_paths(
                     file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
                     component_paths.append(file_path)
 
-        elif configuration == "analysis_assim_hawaii":
+        elif "hawaii" in configuration:
             for cycle_hr2 in cycle_z_hours:
                 for tm in t_minus:
                     for tm2 in [0, 15, 30, 45]:
