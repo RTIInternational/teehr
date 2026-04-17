@@ -1,7 +1,13 @@
 """Test the Writer class."""
 
 import pyspark.sql as ps
-from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    StringType,
+    TimestampNTZType,
+    DoubleType,
+)
 import pytest
 import pandas as pd
 
@@ -54,6 +60,131 @@ def test_insert_write_mode(function_scope_evaluation_template):
 
     # insert mode does not deduplicate, so count should increase
     assert count_after_second == count_after_first + 1
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_write_to_custom_table_with_explicit_uniqueness(
+    function_scope_evaluation_template
+):
+    """Test write_to supports explicit uniqueness fields for custom tables."""
+    ev = function_scope_evaluation_template
+
+    ev.units.load_dataframe(
+        df=pd.DataFrame({
+            "name": ["m/s"],
+            "long_name": ["Meters per second"]
+        }),
+        write_mode="append",
+    )
+
+    ev.table("units").filter(
+        {"column": "name", "operator": "=", "value": "m/s"}
+    ).write_to(
+        table_name="custom_units",
+        write_mode="create_or_replace",
+    )
+
+    ev.units.load_dataframe(
+        df=pd.DataFrame({
+            "name": ["m/s"],
+            "long_name": ["Updated meters per second"]
+        }),
+        write_mode="upsert",
+    )
+
+    ev.table("units").filter(
+        {"column": "name", "operator": "=", "value": "m/s"}
+    ).write_to(
+        table_name="custom_units",
+        write_mode="upsert",
+        uniqueness_fields=["name"],
+    )
+
+    rows = ev.table("custom_units").to_pandas().sort_values("name")
+
+    assert len(rows) == 1
+    assert rows.iloc[0]["long_name"] == "Updated meters per second"
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_custom_table_upsert_uses_null_safe_uniqueness(
+    function_scope_evaluation_template
+):
+    """Test custom table upserts honor nullable uniqueness fields."""
+    ev = function_scope_evaluation_template
+
+    schema = StructType([
+        StructField("reference_time", TimestampNTZType(), False),
+        StructField("value_time", TimestampNTZType(), False),
+        StructField("primary_location_id", StringType(), False),
+        StructField("secondary_location_id", StringType(), False),
+        StructField("primary_value", DoubleType(), False),
+        StructField("secondary_value", DoubleType(), False),
+        StructField("configuration_name", StringType(), False),
+        StructField("unit_name", StringType(), False),
+        StructField("variable_name", StringType(), False),
+        StructField("member", StringType(), True),
+    ])
+    initial_df = ev.spark.createDataFrame(
+        [(
+            pd.Timestamp("2020-01-01 00:00:00").to_pydatetime(),
+            pd.Timestamp("2020-01-01 01:00:00").to_pydatetime(),
+            "gage-1",
+            "fcst-1",
+            1.0,
+            2.0,
+            "test_config",
+            "m^3/s",
+            "streamflow_hourly_inst",
+            None,
+        )],
+        schema=schema,
+    )
+    updated_df = ev.spark.createDataFrame(
+        [(
+            pd.Timestamp("2020-01-01 00:00:00").to_pydatetime(),
+            pd.Timestamp("2020-01-01 01:00:00").to_pydatetime(),
+            "gage-1",
+            "fcst-1",
+            1.0,
+            3.0,
+            "test_config",
+            "m^3/s",
+            "streamflow_hourly_inst",
+            None,
+        )],
+        schema=schema,
+    )
+
+    uniqueness_fields = [
+        "reference_time",
+        "value_time",
+        "primary_location_id",
+        "secondary_location_id",
+        "configuration_name",
+        "unit_name",
+        "variable_name",
+        "member",
+    ]
+
+    ev._write.to_warehouse(
+        source_data=initial_df,
+        table_name="custom_joined_forecasts",
+        write_mode="create_or_replace",
+    )
+
+    ev._write.to_warehouse(
+        source_data=updated_df,
+        table_name="custom_joined_forecasts",
+        write_mode="upsert",
+        uniqueness_fields=uniqueness_fields,
+        nullable_fields=["member"],
+    )
+
+    rows = ev.table("custom_joined_forecasts").to_pandas()
+
+    assert len(rows) == 1
+    assert rows.iloc[0]["secondary_value"] == 3.0
 
 
 @pytest.mark.function_scope_evaluation_template

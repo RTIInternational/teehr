@@ -370,7 +370,10 @@ class TeehrDataFrameBase(ABC):
     def write(
         self,
         table_name: str,
-        write_mode: str = "create_or_replace"
+        write_mode: str = "create_or_replace",
+        uniqueness_fields: list[str] | None = None,
+        nullable_fields: list[str] | None = None,
+        value_time_partition_filter: bool = True,
     ):
         """Write the DataFrame to an iceberg table.
 
@@ -392,6 +395,16 @@ class TeehrDataFrameBase(ABC):
             - ``"create_or_replace"``: Drop and recreate table. Loses history.
 
             Default is "create_or_replace".
+        uniqueness_fields : list[str], optional
+            Explicit uniqueness fields to use for custom-table append or
+            upsert writes. If omitted, uses the target table metadata.
+        nullable_fields : list[str], optional
+            Explicit nullable uniqueness fields to compare with null-safe
+            equality during append or upsert writes. If omitted, uses the
+            target table schema when available.
+        value_time_partition_filter : bool, optional
+            Whether to add a value_time range predicate for MERGE partition
+            pruning. Default is True.
 
         Returns
         -------
@@ -404,12 +417,21 @@ class TeehrDataFrameBase(ABC):
             DeprecationWarning,
             stacklevel=2
         )
-        return self.write_to(table_name=table_name, write_mode=write_mode)
+        return self.write_to(
+            table_name=table_name,
+            write_mode=write_mode,
+            uniqueness_fields=uniqueness_fields,
+            nullable_fields=nullable_fields,
+            value_time_partition_filter=value_time_partition_filter,
+        )
 
     def write_to(
         self,
         table_name: str,
-        write_mode: str = "create_or_replace"
+        write_mode: str = "create_or_replace",
+        uniqueness_fields: list[str] | None = None,
+        nullable_fields: list[str] | None = None,
+        value_time_partition_filter: bool = True,
     ):
         """Write the DataFrame to an iceberg table.
 
@@ -427,6 +449,16 @@ class TeehrDataFrameBase(ABC):
             - ``"create_or_replace"``: Drop and recreate table. Loses history.
 
             Default is "create_or_replace".
+        uniqueness_fields : list[str], optional
+            Explicit uniqueness fields to use for custom-table append or
+            upsert writes. If omitted, uses the target table metadata.
+        nullable_fields : list[str], optional
+            Explicit nullable uniqueness fields to compare with null-safe
+            equality during append or upsert writes. If omitted, uses the
+            target table schema when available.
+        value_time_partition_filter : bool, optional
+            Whether to add a value_time range predicate for MERGE partition
+            pruning. Default is True.
 
         Returns
         -------
@@ -452,6 +484,9 @@ class TeehrDataFrameBase(ABC):
         self._write.to_warehouse(
             source_data=self.to_sdf(),
             table_name=table_name,
-            write_mode=write_mode
+            write_mode=write_mode,
+            uniqueness_fields=uniqueness_fields,
+            nullable_fields=nullable_fields,
+            value_time_partition_filter=value_time_partition_filter,
         )
         return self

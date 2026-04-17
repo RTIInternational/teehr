@@ -328,6 +328,7 @@ class Write:
         table_name: str,
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
+        nullable_fields: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None,
         value_time_partition_filter: bool = True
@@ -361,6 +362,10 @@ class Write:
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
             Only used for ``"append"`` and ``"upsert"`` write modes.
+        nullable_fields : List[str], optional
+            List of fields that should use null-safe equality in MERGE ON
+            clauses. If None, nullable fields are inferred from the target
+            table schema when available.
         catalog_name : str, optional
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
@@ -395,13 +400,14 @@ class Write:
             uniqueness_fields = tbl.uniqueness_fields
 
         # Get nullable fields from the Pandera schema
-        nullable_fields = []
-        if tbl.schema_func is not None:
-            schema = tbl.schema_func(type="pyspark")
-            nullable_fields = [
-                col_name for col_name, col in schema.columns.items()
-                if col.nullable is True
-            ]
+        if nullable_fields is None:
+            nullable_fields = []
+            if tbl.schema_func is not None:
+                schema = tbl.schema_func(type="pyspark")
+                nullable_fields = [
+                    col_name for col_name, col in schema.columns.items()
+                    if col.nullable is True
+                ]
 
         source_view_name = "source_view"
         created_temp_view = False
