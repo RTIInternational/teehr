@@ -111,6 +111,7 @@ class Write:
         table_name: str,
         catalog_name: str,
         namespace_name: str,
+        partition_by: List[str] | None = None,
     ):
         """Drop and recreate the table with source data.
 
@@ -119,10 +120,19 @@ class Write:
         Sets both created_at and updated_at to current timestamp.
         """
         timestamp_view = self._add_timestamps_to_view(source_view)
-        sql_query = f"""
-            CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
-            AS SELECT * FROM {timestamp_view}
-        """  # noqa: E501
+        if partition_by:
+            partition_sql = ", ".join(partition_by)
+            sql_query = f"""
+                CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
+                USING iceberg
+                PARTITIONED BY ({partition_sql})
+                AS SELECT * FROM {timestamp_view}
+            """  # noqa: E501
+        else:
+            sql_query = f"""
+                CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
+                AS SELECT * FROM {timestamp_view}
+            """  # noqa: E501
         self._ev.sql(sql_query)
         self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
@@ -329,6 +339,7 @@ class Write:
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
         nullable_fields: List[str] | None = None,
+        partition_by: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None,
         value_time_partition_filter: bool = True
@@ -366,6 +377,10 @@ class Write:
             List of fields that should use null-safe equality in MERGE ON
             clauses. If None, nullable fields are inferred from the target
             table schema when available.
+        partition_by : List[str], optional
+            Partition expressions to use when creating a custom table with
+            ``write_mode="create_or_replace"``. Only supported for non-core
+            tables.
         catalog_name : str, optional
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
@@ -396,18 +411,44 @@ class Write:
 
         # Get table metadata for uniqueness and nullable fields
         tbl = self._ev.table(table_name=table_name)
+        default_uniqueness_fields = tbl.uniqueness_fields
+        default_nullable_fields = []
+        if tbl.schema_func is not None:
+            schema = tbl.schema_func(type="pyspark")
+            default_nullable_fields = [
+                col_name for col_name, col in schema.columns.items()
+                if col.nullable is True
+            ]
+
+        if tbl.is_core_table:
+            if partition_by is not None:
+                raise ValueError(
+                    "partition_by cannot be specified for core tables. "
+                    "Core table partitioning is defined by the table schema."
+                )
+
+            if (
+                uniqueness_fields is not None and
+                set(uniqueness_fields) != set(default_uniqueness_fields)
+            ):
+                raise ValueError(
+                    "uniqueness_fields cannot be overridden for core tables."
+                )
+
+            if (
+                nullable_fields is not None and
+                set(nullable_fields) != set(default_nullable_fields)
+            ):
+                raise ValueError(
+                    "nullable_fields cannot be overridden for core tables."
+                )
+
         if uniqueness_fields is None:
-            uniqueness_fields = tbl.uniqueness_fields
+            uniqueness_fields = default_uniqueness_fields
 
         # Get nullable fields from the Pandera schema
         if nullable_fields is None:
-            nullable_fields = []
-            if tbl.schema_func is not None:
-                schema = tbl.schema_func(type="pyspark")
-                nullable_fields = [
-                    col_name for col_name, col in schema.columns.items()
-                    if col.nullable is True
-                ]
+            nullable_fields = default_nullable_fields
 
         source_view_name = "source_view"
         created_temp_view = False
@@ -466,7 +507,8 @@ class Write:
                 source_view=source_view_name,
                 table_name=table_name,
                 catalog_name=catalog_name,
-                namespace_name=namespace_name
+                namespace_name=namespace_name,
+                partition_by=partition_by,
             )
         elif write_mode == "overwrite":
             self._overwrite(

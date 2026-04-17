@@ -373,6 +373,7 @@ class TeehrDataFrameBase(ABC):
         write_mode: str = "create_or_replace",
         uniqueness_fields: list[str] | None = None,
         nullable_fields: list[str] | None = None,
+        partition_by: list[str] | None = None,
         value_time_partition_filter: bool = True,
     ):
         """Write the DataFrame to an iceberg table.
@@ -402,6 +403,9 @@ class TeehrDataFrameBase(ABC):
             Explicit nullable uniqueness fields to compare with null-safe
             equality during append or upsert writes. If omitted, uses the
             target table schema when available.
+        partition_by : list[str], optional
+            Partition expressions to use when creating a custom table with
+            ``write_mode="create_or_replace"``.
         value_time_partition_filter : bool, optional
             Whether to add a value_time range predicate for MERGE partition
             pruning. Default is True.
@@ -422,6 +426,7 @@ class TeehrDataFrameBase(ABC):
             write_mode=write_mode,
             uniqueness_fields=uniqueness_fields,
             nullable_fields=nullable_fields,
+            partition_by=partition_by,
             value_time_partition_filter=value_time_partition_filter,
         )
 
@@ -431,6 +436,7 @@ class TeehrDataFrameBase(ABC):
         write_mode: str = "create_or_replace",
         uniqueness_fields: list[str] | None = None,
         nullable_fields: list[str] | None = None,
+        partition_by: list[str] | None = None,
         value_time_partition_filter: bool = True,
     ):
         """Write the DataFrame to an iceberg table.
@@ -456,6 +462,9 @@ class TeehrDataFrameBase(ABC):
             Explicit nullable uniqueness fields to compare with null-safe
             equality during append or upsert writes. If omitted, uses the
             target table schema when available.
+        partition_by : list[str], optional
+            Partition expressions to use when creating a custom table with
+            ``write_mode="create_or_replace"``.
         value_time_partition_filter : bool, optional
             Whether to add a value_time range predicate for MERGE partition
             pruning. Default is True.
@@ -487,6 +496,7 @@ class TeehrDataFrameBase(ABC):
             write_mode=write_mode,
             uniqueness_fields=uniqueness_fields,
             nullable_fields=nullable_fields,
+            partition_by=partition_by,
             value_time_partition_filter=value_time_partition_filter,
         )
         return self
