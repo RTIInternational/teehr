@@ -2,6 +2,7 @@
 from pathlib import Path
 from datetime import datetime
 
+from teehr.fetching.nwm.nwm_points import nwm_to_parquet
 from teehr import LocalReadWriteEvaluation
 import pandas as pd
 import numpy as np
@@ -224,3 +225,26 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
     assert np.isclose(ts_df.value.sum(), np.float32(0.0))
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 02:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 22:00:00")
+
+
+def test_fetching_nwm_operational_hawaii_points(tmpdir):
+    """Test the NWM operational point fetch and load for Hawaii."""
+    nwm_to_parquet(
+        location_ids=[800004830],
+        configuration="analysis_assim_hawaii_no_da",
+        output_type="channel_rt",
+        variable_name="streamflow",
+        start_date=datetime(2024, 2, 22),
+        end_date=datetime(2024, 2, 22),
+        ingest_days=1,
+        nwm_version="nwm30",
+        json_dir=Path(tmpdir, "nwm_jsons"),
+        output_parquet_dir=Path(tmpdir, "nwm_parquets"),
+        prioritize_analysis_value_time=False,
+        ending_z_hour=23,
+    )
+    df = pd.read_parquet(Path(tmpdir, "nwm_parquets"))
+
+    assert df.value_time.min() == pd.Timestamp("2024-02-21 21:15:00")
+    assert df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
+    assert len(df) == 104

@@ -199,7 +199,7 @@ NWM22_ANALYSIS_CONFIG = {
     },
     "analysis_assim_hawaii_no_da": {
         "num_lookback_hrs": 3,
-        "cycle_cycle_z_hourstimes": np.arange(0, 24, 1),
+        "cycle_z_hours": np.arange(0, 24, 1),
         "domain": "hawaii",
         "configuration_name_in_filepath": "analysis_assim_no_da",
     },
@@ -310,7 +310,7 @@ NWM30_ANALYSIS_CONFIG = {
     },
     "analysis_assim_hawaii_no_da": {
         "num_lookback_hrs": 3,
-        "cycle_cycle_z_hourstimes": np.arange(0, 24, 1),
+        "cycle_z_hours": np.arange(0, 24, 1),
         "domain": "hawaii",
         "configuration_name_in_filepath": "analysis_assim_no_da",
     },
