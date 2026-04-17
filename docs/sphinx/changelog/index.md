@@ -1,14 +1,13 @@
-Release Notes
-=============
+# Release Notes
 
-Bleeding Edge (main)
---------------------
+## Bleeding Edge (main)
+
 ### Breaking Changes
 - None
 
 ### Added
 - **Calculated Fields**
-  - Added ``AboveThresholdEventDetection`` and ``BelowThresholdEventDetection`` timeseries-aware
+  - Added `AboveThresholdEventDetection` and `BelowThresholdEventDetection` timeseries-aware
     calculated fields. These detect events based on a threshold read from a DataFrame column
     (e.g., an attribute field), supporting both numeric and string-typed fields.
 - **Write optimizations**
@@ -28,11 +27,10 @@ Bleeding Edge (main)
 - None
 
 
-0.6.1 - 2026-04-01
--------------------
+## 0.6.1 - 2026-04-01
 
 This release focuses on (1) making the public Evaluation API safer/clearer by moving
-lower-level components behind “private” attributes, (2) improving table loading/writing
+lower-level components behind "private" attributes, (2) improving table loading/writing
 ergonomics (including audit timestamps and safer writes), and (3) updating fetching
 capability (notably USGS via dataretrieval.waterdata and NWM temperature handling).
 
@@ -106,95 +104,91 @@ Iceberg tables and applying migrations.
 - `TeehrDataFrameBase.write()` is deprecated in favor of `write_to()` (will be removed in a future release).
 
 
-0.6.0 - 2026-03-19
--------------------
+## 0.6.0 - 2026-03-19
 
 This release introduces major architectural changes and new features. Several breaking changes
 require updates to existing code; see the **Breaking Changes** section below.
 
-A core change in this release is the integration of `Apache Iceberg <https://iceberg.apache.org/>`_
+A core change in this release is the integration of [Apache Iceberg](https://iceberg.apache.org/)
 as the underlying table format for TEEHR evaluations. Iceberg brings a rich set of capabilities
 to TEEHR, including ACID transactions, time travel, schema evolution, hidden
 partitioning, a full suite of write methods (append, upsert, insert, delete, etc.), and more.
 In addition to local warehouse support, users now have access to the
-**TEEHR-Cloud** data warehouse hosted on AWS S3 via the ``download`` methods, which provides CONUS-scale historical and
+**TEEHR-Cloud** data warehouse hosted on AWS S3 via the `download` methods, which provides CONUS-scale historical and
 real-time NWM simulations and forecasts ready for evaluation.
 
 
-Breaking Changes
-^^^^^^^^^^^^^^^^
-- **query() method renamed to aggregate()**: The ``query()`` method on metrics and
-  joined timeseries has been renamed to ``aggregate()`` to better reflect its purpose.
-  All user code and notebooks referencing ``.query()`` must be updated to ``.aggregate()``.
-- **Pandas DataFrame accessor removed**: The ``@pd.api.extensions.register_dataframe_accessor``
+### Breaking Changes
+- **query() method renamed to aggregate()**: The `query()` method on metrics and
+  joined timeseries has been renamed to `aggregate()` to better reflect its purpose.
+  All user code and notebooks referencing `.query()` must be updated to `.aggregate()`.
+- **Pandas DataFrame accessor removed**: The `@pd.api.extensions.register_dataframe_accessor`
   TEEHR accessor has been removed. Visualization and utility methods previously accessed via
   the accessor must now be called directly on the evaluation or table objects.
-- **SignatureMetrics renamed to Signatures**: Importing ``SignatureMetrics`` will
-  no longer work; use ``Signatures`` instead.
+- **SignatureMetrics renamed to Signatures**: Importing `SignatureMetrics` will
+  no longer work; use `Signatures` instead.
 - **clone_from_s3(), clone_template(), and list_s3_evaluations() removed**:
-  These methods have been removed from the ``Evaluation`` class. Data from the TEEHR-Cloud
-  data warehouse should now be accessed via the ``ev.download.*`` methods.
+  These methods have been removed from the `Evaluation` class. Data from the TEEHR-Cloud
+  data warehouse should now be accessed via the `ev.download.*` methods.
 
 
-Added
-^^^^^
-- **Views for computed DataFrames**: New ``View`` classes (``JoinedTimeseriesView``,
-  ``PrimaryTimeseriesView``, ``SecondaryTimeseriesView``, ``LocationAttributesView``) provide
+### Added
+- **Views for computed DataFrames**: New `View` classes (`JoinedTimeseriesView`,
+  `PrimaryTimeseriesView`, `SecondaryTimeseriesView`, `LocationAttributesView`) provide
   lazy, on-the-fly computed DataFrames that can be filtered, chained with
-  ``add_calculated_fields()`` and ``aggregate()``, and materialized to an Iceberg table via
-  ``write()``. Views are accessed via methods on the evaluation object (e.g.,
-  ``ev.joined_timeseries_view()``) and complement the existing persisted ``Table`` objects.
+  `add_calculated_fields()` and `aggregate()`, and materialized to an Iceberg table via
+  `write()`. Views are accessed via methods on the evaluation object (e.g.,
+  `ev.joined_timeseries_view()`) and complement the existing persisted `Table` objects.
 - **TEEHR API support**: New download methods backed by a TEEHR API, with support for
   fetching locations, timeseries, and other data from the TEEHR-Cloud data warehouse
-  via ``ev.download.*`` methods.
+  via `ev.download.*` methods.
 - **Automatic pagination for all download methods**: Download methods now automatically
-  handle pagination under the hood. A ``page_size`` argument is available for tuning.
+  handle pagination under the hood. A `page_size` argument is available for tuning.
   A configurable timeout (default 60 s) has been added to all download methods.
 - **RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes**: New evaluation
   classes for connecting to a remote TEEHR deployment without requiring a local evaluation
   directory.
-- **INSERT INTO and DELETE FROM write methods**: ``Write`` class now supports
-  ``insert_into()`` and ``delete_from()`` operations, and tables expose a ``delete()``
+- **INSERT INTO and DELETE FROM write methods**: `Write` class now supports
+  `insert_into()` and `delete_from()` operations, and tables expose a `delete()`
   method for row-level deletes.
 - **User-defined custom tables**: Users can now create and manage their own Iceberg tables
-  alongside the core TEEHR tables (e.g. ``primary_timeseries``, ``locations``, etc.) using
-  ``ev.table("my_table")``. Custom tables are backed by the same ``BaseTable`` interface,
+  alongside the core TEEHR tables (e.g. `primary_timeseries`, `locations`, etc.) using
+  `ev.table("my_table")`. Custom tables are backed by the same `BaseTable` interface,
   supporting the full read, filter, aggregate, add calculated fields, load, and write
   workflow. Core TEEHR tables continue to return their specialized table class; any other
-  name returns a generic ``BaseTable`` instance, giving users a flexible way to persist
+  name returns a generic `BaseTable` instance, giving users a flexible way to persist
   and query intermediate or derived datasets within the same Iceberg warehouse.
-- **Drop table method for user-created tables**: Tables now have a ``drop()`` / ``drop_table()``
+- **Drop table method for user-created tables**: Tables now have a `drop()` / `drop_table()`
   method so users can remove custom tables programmatically.
-- **add_attributes() on DataFrame results**: A generic ``add_attributes()`` method has
-  been added to ``TeehrDataFrameBase``, allowing attribute columns to be joined onto any
+- **add_attributes() on DataFrame results**: A generic `add_attributes()` method has
+  been added to `TeehrDataFrameBase`, allowing attribute columns to be joined onto any
   query result DataFrame.
 - **GenericSQL row-level calculated field**: Users can now supply arbitrary SQL
-  expressions as row-level calculated fields via the ``GenericSQL`` class.
-- **name field in geometry joins**: The ``name`` field is now included when joining
+  expressions as row-level calculated fields via the `GenericSQL` class.
+- **name field in geometry joins**: The `name` field is now included when joining
   geometry to timeseries tables.
 - **primary_location_id_prefix and secondary_location_id_prefix for crosswalk downloads**:
   These new parameters allow location ID prefix filtering when downloading location crosswalk data.
-- **ID list filtering for location downloads**: ``download.locations()`` now accepts a list of
+- **ID list filtering for location downloads**: `download.locations()` now accepts a list of
   location IDs for targeted data retrieval.
 - **Ability to generate and write partial joined timeseries**: Filters can be applied during
-  the ``create_joined_timeseries()`` step so only a subset of the joined data is written.
-- **Load functions added to BaseTable**: ``load_dataframe()``, ``load_csv()``,
-  ``load_parquet()``, and ``load_spatial()`` are now available on the base table class,
+  the `create_joined_timeseries()` step so only a subset of the joined data is written.
+- **Load functions added to BaseTable**: `load_dataframe()`, `load_csv()`,
+  `load_parquet()`, and `load_spatial()` are now available on the base table class,
   enabling consistent data ingestion across all table types.
-- **AWS profile support**: ``create_spark_session()`` now accepts an AWS profile name and
+- **AWS profile support**: `create_spark_session()` now accepts an AWS profile name and
   resolves credentials using the standard AWS credential priority chain.
 - **Spark decommissioning support**: The Spark session helper now gracefully decommissions
   executor nodes when a session is closed.
 - **Additional deterministic and probabilistic metrics**: New categorical metrics including
-  ``SuccessRatio``, ``FrequencyBiasIndex``, ``ProbabilityOfDetection``,
-  ``FalseAlarmRatio``, ``CriticalSuccessIndex``, and related metrics have been added.
+  `SuccessRatio`, `FrequencyBiasIndex`, `ProbabilityOfDetection`,
+  `FalseAlarmRatio`, `CriticalSuccessIndex`, and related metrics have been added.
 - **Brier Score and Brier Skill Score**: Probabilistic metrics for ensemble evaluation.
 - **ForecastLeadTimeBins** row-level calculated field for grouping forecasts by lead time.
 - **Improved Sphinx API documentation**: API docs have been reorganized and expanded.
 - **Updated Getting Started documentation**: The getting-started guide has been refreshed.
 
-Changed
-^^^^^^^
+### Changed
 - **Evaluation initialization revisited**: Initialization logic has been cleaned up; the
   template-based initialization approach has been replaced with a simpler, more explicit
   flow.
@@ -203,7 +197,7 @@ Changed
 - **Data validation fixed when adding domain data**: Validation now correctly catches
   invalid values when adding domain data to an evaluation.
 - **Table filter bug fixed**: Applying filters to table queries now works correctly.
-- **Foreign key enforcement bug fixed**: Fixes an edge case in ``load_dataframe()`` where
+- **Foreign key enforcement bug fixed**: Fixes an edge case in `load_dataframe()` where
   foreign key checks were not enforced properly.
 - **Pearson/R-squared updated to use epsilon for near-zero denominators**.
 - **Metrics refactored**: Reduces duplicate code across deterministic, probabilistic, and
@@ -214,54 +208,44 @@ Changed
 - **netcdf4 and PySpark pinned** to compatible versions for stability.
 - **Conversion workflow updated** for migrating v0.4/v0.5 evaluations to v0.6 format.
 
-0.5.3 - 2026-01-07
------------------------
+## 0.5.3 - 2026-01-07
 
-Changed
-^^^^^^^
+### Changed
 - Pins PySpark to 4.0.1 in pyproject.toml
-- Fixes bug using ``drop_overlapping_assimilation_values`` in NWM operational fetching methods.
-- Fixes a bug in ``load_dataframe()``
+- Fixes bug using `drop_overlapping_assimilation_values` in NWM operational fetching methods.
+- Fixes a bug in `load_dataframe()`
 - Fixes a bug in unpacking metric results
 - Updates the Getting Started sphinx documentation
 
-Added
-^^^^^
+### Added
 - Check for missing location IDs when cloning from s3
 - Row level calculated fields for forecast lead time bins
 - Brier Score and Brier Skill Score metrics
 
 
-0.5.2 - 2025-11-11
-------------------
+## 0.5.2 - 2025-11-11
 
-Changed
-^^^^^^^
+### Changed
 - Updates version number in pyproject.toml and init files
-- No changes in functionality from ``0.5.1dev10``
+- No changes in functionality from `0.5.1dev10`
 
 
-0.5.1dev10 - 2025-11-10
------------------------
+## 0.5.1dev10 - 2025-11-10
 
-Changed
-^^^^^^^
+### Changed
 - Rename SignatureMetrics to Signatures
 - Updates Spearman correlation to handle repeating values
 
-Added
-^^^^^
+### Added
 - Flow Duration Curve Slope
 - VariabilityRatio
 - Epsilon to handle division by zero
 - BelowPercentileEventDetection metric
 - Bootstrapping for signatures
 
-0.5.0 - 2025-08-27
--------------------
+## 0.5.0 - 2025-08-27
 
-Changed
-^^^^^^^
+### Changed
 - Many updates and new features are introduced in this release, including but not limited to:
   - Baseflow separation methods
   - Better handling of warnings
@@ -270,11 +254,9 @@ Changed
   - Documentation updates
 - For a full list see: https://github.com/RTIInternational/teehr/milestone/4?closed=1
 
-0.4.13 - 2025-06-09
--------------------
+## 0.4.13 - 2025-06-09
 
-Changed
-^^^^^^^
+### Changed
 - Updates logic around reading empty tables to allow for cloning empty timeseries tables from s3. Overrides the read method in the `joined_timeseries` table class.
 - Removes the `pa.Check.isin()` pandera validation checks and replaces with the manual "foreign key" enforcement method, `_enforce_foreign_keys()` to speed up validation.
 - Removes redundant dataframe validation during the write methods.
@@ -288,20 +270,16 @@ Changed
 - Sets `timeseries_type` to `secondary` when fetching operational NWM gridded data, unless the configuration_name contains "forcing_analysis_assim" in which case `timeseries_type` is set to `primary`.
 
 
-0.4.12 - 2025-05-22
--------------------
+## 0.4.12 - 2025-05-22
 
-Changed
-^^^^^^^
+### Changed
 - Adds `git` and `vim` to docker image for TEEHR-HUB
 - Moves `scoringrules` and `arch` imports into the function to speed up import time
 - Removes the repartitioning by `self.partition_by` of the dataframe in the `BaseTable` class when writing to parquet
 
-0.4.11 - 2025-05-19
--------------------
+## 0.4.11 - 2025-05-19
 
-Changed
-^^^^^^^
+### Changed
 - Fixes bug in _write_spark_df() method in the BaseTable class that caused writing larger dataframes to fail.
 - Parallelizes `convert_single_timeseries()` when a directory is passed to the `in_path` argument.
 - Fixes doc string in `generate_weights_file()`
@@ -309,11 +287,9 @@ Changed
 - Added option to specify the number of partitions when writing dataframes in the BaseTable class.
 - Added the option to skip the dropDuplicates() method when writing dataframes in the BaseTable class.
 
-0.4.10 - 2025-04-14
--------------------
+## 0.4.10 - 2025-04-14
 
-Added
-^^^^^
+### Added
 - Adds append and upsert functionality without duplicates to loading methods on tables:
     - locations
     - location crosswalk
@@ -335,47 +311,40 @@ Added
 - Removes `duckdb` for teehr env
 
 
-0.4.9 - 2025-03-26
-------------------
+## 0.4.9 - 2025-03-26
 
-Added
-^^^^^
+### Added
 - Adds pandera schema for the weights file and validates weights dataframe on read and write, coercing values into schema data types
-- Adds ``starting_z_hour`` and ``ending_z_hour`` arguments to operational NWM fetching methods (point, gridded)
+- Adds `starting_z_hour` and `ending_z_hour` arguments to operational NWM fetching methods (point, gridded)
 - Adds function to drop NaN values (from value field) when fetching NWM and USGS data
 - Adds a check so that if schema validation fails, the current file is skipped and fetching continues
 - Adds versions 1.2 and 2.0 to operational NWM fetching (version 2.2 (nwm22) is allowed to be used with a note that it is no different from 2.1)
 - Adds a test notebook for testing on remote teehr-hub kernel
 - Adds wrapper functions for deterministic and signature metrics
 
-
-Changed
-^^^^^^^
+### Changed
 - Fixes doc strings for fetch.nwm_retrospective_grids()
-- Removes ``add_configuration_name`` in fetching and automatically adds if it doesn't exist
+- Removes `add_configuration_name` in fetching and automatically adds if it doesn't exist
 - Updates dask version
 - Fixes a bug in parsing the z_hour and day from the remote json paths when an ensemble configuration is selected
-- Removes the imports in ``__init__.py`` that were for documentation purposes
+- Removes the imports in `__init__.py` that were for documentation purposes
 - Removes hydrotools as a dependency
 - Updates API documentation, adding evaluation.metrics.Metrics methods
-- Changes base docker image to ``base-notebook:2025.01.24``
+- Changes base docker image to `base-notebook:2025.01.24`
 
 
-0.4.8 - 2025-02-17
-------------------
+## 0.4.8 - 2025-02-17
 
-Added
-^^^^^
+### Added
 - Adds box zoom to location plots.
 - Adds User Guide page for fetching NWM point data.
 - Adds new row level calculated fields, DayOfYear, ThresholdValueExceeded, ForecastLeadTime.
 
 
-Changed
-^^^^^^^
-- Changes NWM fetching methods from ``nwm_forecast_<xxxx>`` to ``nwm_operational_<xxxx>``.
+### Changed
+- Changes NWM fetching methods from `nwm_forecast_<xxxx>` to `nwm_operational_<xxxx>`.
 
-- Set ``use_table_schema`` to False when cloning the ``joined_timeseries`` table from s3,
+- Set `use_table_schema` to False when cloning the `joined_timeseries` table from s3,
   so that extra fields will not be dropped. Note, this will raise an error if the table is
   empty or does not exist.
 
@@ -384,11 +353,9 @@ Changed
 - Removed 2 evaluations from s3 (HEFS, NWM fetching), using TEEHR data module instead.
 
 
-0.4.7 - 2025-01-08
-------------------
+## 0.4.7 - 2025-01-08
 
-Added
-^^^^^
+### Added
 * Adds RowLevelCalculatedFields and TimeseriesAwareCalculatedFields which are hopefully descriptive enough names.
 
 * Adds a User Guide page to describe what they are and how to use them.
@@ -407,9 +374,8 @@ Added
 
 * Adds ability to unpack metric dictionary results into separate columns (ie, bootstrap quantiles)
 
-Changed
-^^^^^^^
-* Splits metric models and functions into three categories: Deterministic, Probabilistic, Signature. This is a breaking change requiring import of specific metric classes (Deterministic, Probabilistic, Signature) rather than just ``Metrics``.
+### Changed
+* Splits metric models and functions into three categories: Deterministic, Probabilistic, Signature. This is a breaking change requiring import of specific metric classes (Deterministic, Probabilistic, Signature) rather than just `Metrics`.
 
   * Functions are moved to separate modules
 
@@ -420,97 +386,77 @@ Changed
 * Updates API docs, removes unused files and the autoapi directory.
 
 
-0.4.6 - 2024-12-17
-------------------
+## 0.4.6 - 2024-12-17
 
-Added
-^^^^^
+### Added
 * Adds `add_missing_columns` to the `_validate` method in the `BaseTable` class
   to allow for adding missing columns to the schema.
 
 * When upgrading from 0.4.4 or earlier, you may need to run the following to add
   the missing columns to the secondary_timeseries if you have existing datasets:
 
-.. code-block:: python
+```python
+sdf = ev.secondary_timeseries.to_sdf()
+validated_sdf = ev.secondary_timeseries._validate(sdf, add_missing_columns=True)
+ev.secondary_timeseries._write_spark_df(validated_sdf)
+```
 
-  sdf = ev.secondary_timeseries.to_sdf()
-  validated_sdf = ev.secondary_timeseries._validate(sdf, add_missing_columns=True)
-  ev.secondary_timeseries._write_spark_df(validated_sdf)
-
-Changed
-^^^^^^^
+### Changed
 * None
 
 
-0.4.5 - 2024-12-09
-------------------
+## 0.4.5 - 2024-12-09
 
-Added
-^^^^^
+### Added
 * Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
 * Adds location plotting to accessor.
 * Adds loading from FEWS XML files.
 * Adds `member` to secondary timeseries schema for ensembles.
 
-Changed
-^^^^^^^
+### Changed
 * Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
 
-0.4.4 - 2024-12-02
-------------------
+## 0.4.4 - 2024-12-02
 
-Added
-^^^^^
+### Added
 * Added ability to read an Evaluation dataset directly from an S3 bucket.
 * When path to an Evaluation dataset is an S3 bucket, the Evaluation is read-only.
 
-Changed
-^^^^^^^
+### Changed
 * Pretty significant refactor of the Table classes to make them more flexible and easier to use.
 * Added more robust Pandera validation to the Table classes.
 * Updated docs to reflect changes and added `read_from_s3` example.
 
 
-0.4.3 - 2024-10-19
-------------------
+## 0.4.3 - 2024-10-19
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Changed paths to the S3 bucket evaluations to reference "e*..." instead of "p*..." naming convention.
 
-0.4.2 - 2024-10-18
-------------------
+## 0.4.2 - 2024-10-18
 
-Added
-^^^^^
+### Added
 * A test-build-publish workflow to push to PyPI
 
-Changed
-^^^^^^^
+### Changed
 * None
 
-0.4.1 - 2024-10-15
-------------------
+## 0.4.1 - 2024-10-15
 
-Added
-^^^^^
+### Added
 * Updated docs to include pages for `grouping`, `filtering` and `Joining` in the User Guide.
 
-Changed
-^^^^^^^
+### Changed
 * Fixed some broken data download links in the User Guide.
 * Fixed the post-install script to install the AWS Spark Jars.
 * Fixed the API doc build.
 
-0.4.0 - 2024-10-13
-------------------
+## 0.4.0 - 2024-10-13
 
-Added
-^^^^^
+### Added
 * This is a major (although still less that version 1) release that includes a number of new features and changes.
 * Some of the more significant changes:
   - Added a new Evaluation class that is the primary interface for working with TEEHR data.
@@ -519,214 +465,169 @@ Added
   - Added data validation of values referenced from domain and location tables to the timeseries tables.
   - Updated docs to include new features and changes.
 
-Changed
-^^^^^^^
+### Changed
 * Many changes have been made between v0.3.28 and v0.4.0.
 
-0.3.28 - 2024-07-10
---------------------
+## 0.3.28 - 2024-07-10
 
-Added
-^^^^^
+### Added
 * pandas DataFrame accessor classes for metrics and timeseries queries, including some simple methods
   for plotting and summarizing data.
 * Added Bokeh as a dependency for visualization.
 
-Changed
-^^^^^^^
+### Changed
 * None
 
 
-0.3.27 - 2024-07-08
--------------------
+## 0.3.27 - 2024-07-08
 
-Added
-^^^^^
+### Added
 * Documentation updates primarly to Getting Started and User Guide sections.
 
-Changed
-^^^^^^^
+### Changed
 * None
 
 
-0.3.26 - 2024-06-27
---------------------
+## 0.3.26 - 2024-06-27
 
-Added
-^^^^^
+### Added
 * Dark theme logo for sphinx documentation.
 * Added the `pickleshare` package to dev dependency group to fix `ipython` directive in sphinx documentation.
 
-Changed
-^^^^^^^
+### Changed
 * Pinned `sphinx-autodoc` to v3.0.0 and `numpy` to v1.26.4 in `documentation-publish.yml` to fix the API documentation build.
 * Removed unused documentation dependencies from dev group.
 
 
-0.3.25 - 2024-06-06
---------------------
+## 0.3.25 - 2024-06-06
 
-Added
-^^^^^
+### Added
 * Added PySpark to TEEHR-HUB (including openjdk-17-jdk and jar files)
 
-Changed
-^^^^^^^
+### Changed
 * None
 
 
-0.3.24 - 2024-05-29
---------------------
+## 0.3.24 - 2024-05-29
 
-Added
-^^^^^
+### Added
 * Added metrics documentation to the Sphinx documentation.
 
-Changed
-^^^^^^^
+### Changed
 * None
 
 
-0.3.23 - 2024-05-28
---------------------
+## 0.3.23 - 2024-05-28
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Docstring updates in duckdb_database.py.
 * Changelog update for 0.3.22.
-* Updates ``insert_attributes()`` in ``duckdb_database.py`` to better handle None/Null attribute units.
-* Test updates in ``convert.py``.
+* Updates `insert_attributes()` in `duckdb_database.py` to better handle None/Null attribute units.
+* Test updates in `convert.py`.
 
 
-0.3.22 - 2024-05-22
---------------------
+## 0.3.22 - 2024-05-22
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Cleaned up the `DuckDB*` classes.  Don't think any public interfaces changed.
 * Import of `DuckDBDatabase`, `DuckDBDatabaseAPI`, and `DuckDBJoinedParquet`
   now use `from teehr.classes import DuckDBDatabase, DuckDBDatabaseAPI, DuckDBJoinedParquet`
 * the `calculate_field`` method was renamed to `insert_calculated_field``
 
 
-0.3.21 - 2024-05-21
---------------------
+## 0.3.21 - 2024-05-21
 
-Added
-^^^^^
-* Added the ``DuckDBJoinedParquet`` class for metric queries on pre-joined parquet files.
-* Added the ``DuckDBBase`` class for common methods between the ``DuckDBDatabase``, ``DuckDBAPI``,
-  and ``DuckDBJoinedParquet`` classes.
+### Added
+* Added the `DuckDBJoinedParquet` class for metric queries on pre-joined parquet files.
+* Added the `DuckDBBase` class for common methods between the `DuckDBDatabase`, `DuckDBAPI`,
+  and `DuckDBJoinedParquet` classes.
 
-Changed
-^^^^^^^
-* Renamed the ``database`` directory to ``classes``.
-* Renamed the ``teehr_dataset.py`` to ``teehr_duckdb.py``.
-* Renamed the ``TEEHRDatasetDB`` and ``TEEHRDatasetAPI`` classes to
-  ``DuckDBDatabase`` and ``DuckDBAPI`` respectively.
+### Changed
+* Renamed the `database` directory to `classes`.
+* Renamed the `teehr_dataset.py` to `teehr_duckdb.py`.
+* Renamed the `TEEHRDatasetDB` and `TEEHRDatasetAPI` classes to
+  `DuckDBDatabase` and `DuckDBAPI` respectively.
 * Removed `lead_time` and `absolute_value` from joined table
 
 
-0.3.20 - 2024-05-18
---------------------
+## 0.3.20 - 2024-05-18
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Update queries to accept a list of paths for example, `primary_filepath` and `secondary_filepath`
   Includes `get_metrics()`, `get_joined_timeseries()`, `get_timeseries()`, and `get_timeseries_chars()`
 
 
-0.3.19 - 2024-05-18
---------------------
+## 0.3.19 - 2024-05-18
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Update SQL queries to allow `reference_time` to be NULL.
 * Updated tests for NULL `reference_time`
 
 
-0.3.18 - 2024-05-10
---------------------
+## 0.3.18 - 2024-05-10
 
-Added
-^^^^^
-* Added documentation regarding best practices for specifying the ``chunk_by`` parameter when fetching NWM
+### Added
+* Added documentation regarding best practices for specifying the `chunk_by` parameter when fetching NWM
   retrospective and USGS data.
 
-Changed
-^^^^^^^
+### Changed
 * Fixed a bug in the NWM retrospective grid loading weighted average calculation.
 * Changed the method of fetching NWM gridded data to read only a subset of the grid (given by the row/col
   bounds from the weights file) into memory rather than the entire grid.
-* Removed 'day' and 'location_id' ``chunk_by`` options to reduce redundant data transfer costs.
+* Removed 'day' and 'location_id' `chunk_by` options to reduce redundant data transfer costs.
 
 
-0.3.17 - 2024-04-22
---------------------
+## 0.3.17 - 2024-04-22
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Dropped "Z" from the file name in the NWM loading functions, adding a note in the docstrings that all times are in UTC.
-* Changed data type of ``zonal_weights_filepath`` to ``Union[str, Path]`` in ``nwm_grids.py``.
-* Fixed ``SettingWithCopyWarning`` in NWM grid loading.
-* Fixed the ``end_date`` in NWM retrospective loading to include the entirety of the last day and not fail when
+* Changed data type of `zonal_weights_filepath` to `Union[str, Path]` in `nwm_grids.py`.
+* Fixed `SettingWithCopyWarning` in NWM grid loading.
+* Fixed the `end_date` in NWM retrospective loading to include the entirety of the last day and not fail when
   last available day is specfified.
 * Removed "elevation", "gage_id", "order" from NWM v3.0 retrospective point loading.
 
 
-0.3.16 - 2024-04-11
---------------------
+## 0.3.16 - 2024-04-11
 
-Added
-^^^^^
+### Added
 * Adds a few new metrics to the queries:
   * annual_peak_relative_bias
   * spearman_correlation
   * kling_gupta_efficiency_mod1
   * kling_gupta_efficiency_mod2
 
-Changed
-^^^^^^^
+### Changed
 * None
 
-0.3.15 - 2024-04-08
---------------------
+## 0.3.15 - 2024-04-08
 
-Added
-^^^^^
-* ``location_id_prefix`` as an optional argument to ``generate_weights_file()`` to allow for
+### Added
+* `location_id_prefix` as an optional argument to `generate_weights_file()` to allow for
   the prefixing of the location ID with a string.
 
-Changed
-^^^^^^^
+### Changed
 * Updated the NWM operational and retrospective grid loading functions so that the location ID
   as defined in the zonal weights file is used as the location ID in the output parquet files.
 
-0.3.14 - 2024-03-29
---------------------
+## 0.3.14 - 2024-03-29
 
-Added
-^^^^^
+### Added
 * relative_bias
 * multiplicative_bias
 * mean_squared_error
@@ -735,20 +636,16 @@ Added
 * r_squared
 * nash_sutcliffe_efficiency_normalized
 
-Changed
-^^^^^^^
+### Changed
 * mean_error (rename current bias to mean_error)
 * mean_absolute_error (rename current mean_error to mean_absolute_error)
 
-0.3.13 - 2024-03-22
---------------------
+## 0.3.13 - 2024-03-22
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Updated from Enum to StrEnum and added a fix for backwards incompatibility described
   here: https://tomwojcik.com/posts/2023-01-02/python-311-str-enum-breaking-change.  This
   is required to support both python 3.10 and python 3.11.
@@ -756,47 +653,36 @@ Changed
 * Made all packages that use YYYY.MM.DD versioning `>=` instead of `^` in `pyproject.toml`
 
 
-0.3.12 - 2024-03-22
---------------------
+## 0.3.12 - 2024-03-22
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
-* Changed the chunking method for USGS and NWM retrospective data loading to iterate over pandas ``period_range``
-  rather than using ``groupby`` or ``date_range`` to fix a bug when fetching data over multiple years.
+### Changed
+* Changed the chunking method for USGS and NWM retrospective data loading to iterate over pandas `period_range`
+  rather than using `groupby` or `date_range` to fix a bug when fetching data over multiple years.
 
-0.3.11 - 2024-03-19
---------------------
+## 0.3.11 - 2024-03-19
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Downgraded required Dask version to `dask = "^2023.8.1"` to match `pangeo/pangeo-notebook:2023.09.11`
 
-0.3.10 - 2024-03-07
---------------------
+## 0.3.10 - 2024-03-07
 
-Added
-^^^^^
+### Added
 * Added `test_zonal_mean_results.py`
 
-Changed
-^^^^^^^
+### Changed
 * Fixed the calculation of the zonal mean of pixel values in `compute_zonal_mean()` so it caculates
   the weighted average (divides by the sum of weight values).
 * Updated grid loading tests and data to reflect the fixed method.
 
-0.3.9 - 2024-02-15
---------------------
+## 0.3.9 - 2024-02-15
 
-Added
-^^^^^
+### Added
 * Adds sphinx documentation framework and initial docs.
 * The `documentation-publish.yml` workflow is set to build the docs and push to github pages
   on every tag.
@@ -804,8 +690,7 @@ Added
   trailing whitespaces, and the presence of large files.
 * Added documenation-related python dependencies to `[tool.poetry.group.dev.dependencies]`
 
-Changed
-^^^^^^^
+### Changed
 * Example notebooks have been moved to `docs/sphinx/user_guide/notebooks`.
 * The CHANGELOG.md is now the `index.rst` file in `docs/sphinx/changelog`.
 * The CONTRIBUTE.md and release_process.md files now part of the `index.rst`
@@ -814,84 +699,66 @@ Changed
   files in `docs/sphinx/getting_started`.
 
 
-0.3.8 - 2024-02-14
---------------------
+## 0.3.8 - 2024-02-14
 
-Added
-^^^^^
+### Added
 * Adds logging with a `NullHandler()` that can be implemented by the parent app using teehr.
 
 
-0.3.7 - 2024-02-09
---------------------
+## 0.3.7 - 2024-02-09
 
-Changed
-^^^^^^^
+### Changed
 * Upgraded pandas to ^2.2.0
 * Changed unit="H" in pandas.time_delta to unit="h"
 * Updated assert statements in `test_weight_generation.py`
 
-0.3.6 - 2024-02-07
---------------------
+## 0.3.6 - 2024-02-07
 
-Added
-^^^^^
+### Added
 * Adds an exception to catch an error when a corrupted file is encountered while building
   the Kerchunk reference file using `SingleHdf5ToZarr`.
 * The behavior determining whether to raise an exception is controlled by the
   `ignore_missing_file` flag.
 
 
-0.3.5 - 2023-12-18
---------------------
+## 0.3.5 - 2023-12-18
 
-Added
-^^^^^
+### Added
 * Adds additional chunking methods for USGS and NWM retrospective loading to allow
   week, month and year chunking.
 * Adds mean areal summaries for NWM retrospective gridded forcing variables
 * Adds NWM v3.0 to retrospective loading
 
-Changed
-^^^^^^^
+### Changed
 * Fixes USGS loading to include last date of range
 * Removes extra fields from v2.1 retro output
 
-0.3.4 - 2023-12-18
---------------------
+## 0.3.4 - 2023-12-18
 
-Added
-^^^^^
+### Added
 * Adds the `read_only` argument to the `query` method in the TEEHRDatasetDB class with default values
   specified in the query methods.
 
-Changed
-^^^^^^^
+### Changed
 * Establishes a read-only database connection as a class variable to the TEEHRDatasetAPI class so it can
   be re-used for each class instance.
 
-0.3.3 - 2023-12-13
---------------------
+## 0.3.3 - 2023-12-13
 
-Added
-^^^^^
+### Added
 * Adds `get_joined_timeseries` method to TEEHR Dataset classes.
 
-Changed
-^^^^^^^
+### Changed
 * Updated validation fields in the `TimeSeriesQuery` pydantic model to accept only selected fields
   rather than existing database fields.
 * Updated function argument typing in `queries/utils.py` to be more explicit
 
-0.3.2 - 2023-12-12
---------------------
+## 0.3.2 - 2023-12-12
 
-Added
-^^^^^
+### Added
 * None
 
-Changed
-^^^^^^^
+### Changed
 * Fixed the `bias` metric so that it is `sum(secondary_value - primary_value)/count(*)` instead of
   `sum(primary_value - secondary_value)/count(*)` which resulted in the wrong sign.
 * Changed `primary_max_value_time`, `secondary_max_value_time` and `max_value_timedelta`
@@ -903,164 +770,130 @@ Changed
 * Changes default list of `order_by` variables in `insert_joined_timeseries` to improve
   query performance
 
-0.3.1 - 2023-12-08
---------------------
+## 0.3.1 - 2023-12-08
 
-Added
-^^^^^
+### Added
 * Adds a boolean flag to parquet-based metric query control whether or not to de-duplicate.
 * Adds a test primary timeseries file including duplicate values for testing.
 
-Changed
-^^^^^^^
+### Changed
 * Refactored parquet-based `get_metrics` and `get_joined_timeseries` queries to that so that the de-duplication
   CTE is after the intial join CTE for improved performance.
 
 
-0.3.0 - 2023-12-08
---------------------
+## 0.3.0 - 2023-12-08
 
-Added
-^^^^^
+### Added
 * Adds a dataclass and database that allows preprocessing of joined timeseries and attributes as well as the addition of user defined functions.
 * Adds an initial web service API that serves out `timeseries` and `metrics` along with some other supporting data.
 * Adds an initial interactive web application using the web service API.
 
-Changed
-^^^^^^^
+### Changed
 * Switches to poetry to manage Python venv
 * Upgrades to Pydantic 2+
 * Upgrades to Pangeo image `pangeo/pangeo-notebook:2023.09.11`
 
 
-0.2.9 - 2023-12-08
---------------------
+## 0.2.9 - 2023-12-08
 
-Added
-^^^^^
+### Added
 * Three options related to kerchunk jsons
   * `local` - (default) previous behavior, manually creates the jsons based on GCS netcdf files using Kerchunk's `SingleHdf5ToZarr`. Any locally existing files will be used before creating new jsons from the remote store.
   * `remote` - use pre-created jsons, skipping any that do not exist within the specified time frame.  Jsons are read directly from s3 using fsspec
   * `auto` - use pre-created jsons, creating any that do not exist within the specified time frame
 * Adds `nwm_version` (nwm22 or nwm30) and `data_source` (GCS, NOMADS, DSTOR - currently on GCS implemented) as loading arguments
 
-Changed
-^^^^^^^
+### Changed
 * Combines loading modules into one directory `loading/nwm`
 * Updates to loading example notebooks
 * Updates to loading tests
 
-0.2.8 - 2023-11-14
---------------------
+## 0.2.8 - 2023-11-14
 
-Added
-^^^^^
+### Added
 - NWM v3.0 data loading and configuration models
 - Added check for duplicate rows in `get_metrics` and `get_joined_timeseries` queries (#69)
 - Added control for overwrite file behavior in loading (#77)
 - Significant refactor of the loading libraries
 - Added ability to select which retrospective version to download (v2.0 or v2.1) (#80)
 
-Changed
-^^^^^^^
+### Changed
 
 - Fixed NWM pydantic configurations models for v2.2
 - Refactored `models/loading` directory
 
-0.2.7 - 2023-09-14
---------------------
+## 0.2.7 - 2023-09-14
 
-Added
-^^^^^
+### Added
 - More testing to NWM point and grid loading functions
 
-0.2.6 - 2023-09-14
---------------------
+## 0.2.6 - 2023-09-14
 
-Changed
-^^^^^^^
+### Changed
 
 - Fixed some sloppy bugs in `nwm_grid_data.py`
 
-Added
-^^^^^
+### Added
 - `ValueError` handling when encountering a corrupt zarr json file
 
-0.2.5 - 2023-09-11
---------------------
+## 0.2.5 - 2023-09-11
 
-Changed
-^^^^^^^
+### Changed
 
 - None
 
-Added
-^^^^^
+### Added
 - Added ability to use holoviz export to TEEHR-HUB:
     - Installed firefox (and a bunch of dependencies) to the Docker container (using apt)
     - Installed selenium and the geckodriver using conda
 
-0.2.4 - 2023-08-30
---------------------
+## 0.2.4 - 2023-08-30
 
-Changed
-^^^^^^^
+### Changed
 
 - Behavior of loading when encountering missing files
 - Renamed field `zone` to `location_id` in `nwm_grid_data.py` and `generate_weights.py`
 
-Added
-^^^^^
+### Added
 - The boolean flag `ignore_missing_files` to point and grid loading to determine whether to fail or continue on missing NWM files
 - Added a check to skip locally existing zarr json files when loading NWM data
 
-0.2.3 - 2023-08-23
---------------------
+## 0.2.3 - 2023-08-23
 
-Changed
-^^^^^^^
+### Changed
 
 - Removed pyarrow from time calculations in `nwm_point_data.py` loading due to windows bug
 - Updated output file name in `nwm_point_data.py` to include forecast hour if `process_by_z_hour=False`
 
-0.2.2 - 2023-08-23
---------------------
+## 0.2.2 - 2023-08-23
 
-Added
-^^^^^
+### Added
 
 - nodejs to the jupyterhub build so the extensions will load (not 100% sure this was needed)
 
-Changed
-^^^^^^^
+### Changed
 
 - Updated TEEHR to v0.2.2, including TEEHR-HUB
 - Updated the TEEHR-HUB baseimage to `pangeo/pangeo-notebook:2023.07.05`
 
-0.2.1 - 2023-08-21
---------------------
+## 0.2.1 - 2023-08-21
 
-Added
-^^^^^
+### Added
 
 - Nothing
 
-Changed
-^^^^^^^
+### Changed
 
 - Updated TEEHR version in TEEHR-HUB to v0.2.1
 - Converts nwm feature id's to numpy array in loading
 
-0.2.0 - 2023-08-17
---------------------
+## 0.2.0 - 2023-08-17
 
-Added
-^^^^^
+### Added
 
 - This changelog
 
-Changed
-^^^^^^^
+### Changed
 
 - Loading directory refactor changed import paths to loading modules
 - Changed directory of `generate_weights.py` utility
@@ -1069,10 +902,8 @@ Changed
 - Use of the term `run` updated to `configuration` for NWM
 
 
-0.1.3 - 2023-06-17
---------------------
+## 0.1.3 - 2023-06-17
 
-Added
-^^^^^
+### Added
 
 - Initial release
