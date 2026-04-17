@@ -1,6 +1,6 @@
 # Release Notes
 
-## Bleeding Edge (main)
+## 0.6.2 - 2026-04-17
 
 ### Breaking Changes
 - None
@@ -13,12 +13,15 @@
 - **Write optimizations**
   - Added partition filters to the upsert and append methods in the Write class to enable partition
     pruning when writing large datasets. The filters are applied by default.
+  - Added `uniqueness_fields`, `partition_by`, and `write_ordered_by` as arguments to write methods for
+    non-core tables.
 
 ### Changed
-- None
+- Sets the default `spark.sql.shuffle.partitions` to 2 * num_cores in spark configuration.
 
 ### Fixed
-- None
+- Fixed bug when fetching NWM analysis data for Hawaii due to the 15-min time step
+- Fixed filenaming bug when fetching NWM data using CIROH-generated kerchunk json files
 
 ### Dependencies
 - None
