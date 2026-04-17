@@ -1,0 +1,57 @@
+﻿AttributeTable
+==============
+
+.. currentmodule:: teehr.evaluation.tables.attribute_table
+
+.. autoclass:: AttributeTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AttributeTable.add
+      ~AttributeTable.add_attributes
+      ~AttributeTable.add_calculated_fields
+      ~AttributeTable.add_geometry
+      ~AttributeTable.aggregate
+      ~AttributeTable.delete
+      ~AttributeTable.distinct_values
+      ~AttributeTable.drop
+      ~AttributeTable.filter
+      ~AttributeTable.load_csv
+      ~AttributeTable.load_dataframe
+      ~AttributeTable.load_parquet
+      ~AttributeTable.order_by
+      ~AttributeTable.to_geopandas
+      ~AttributeTable.to_pandas
+      ~AttributeTable.to_sdf
+      ~AttributeTable.validate
+      ~AttributeTable.write
+      ~AttributeTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AttributeTable.foreign_keys
+      ~AttributeTable.is_core_table
+      ~AttributeTable.primary_location_id_field
+      ~AttributeTable.secondary_location_id_field
+      ~AttributeTable.strict_validation
+      ~AttributeTable.table_name
+      ~AttributeTable.uniqueness_fields
+      ~AttributeTable.validate_filter_field_types
+   
+      ~AttributeTable.extraction_func
+      ~AttributeTable.schema_func
+   
+   

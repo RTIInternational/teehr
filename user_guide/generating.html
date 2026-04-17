@@ -1,0 +1,926 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Generating Data &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=1c28bd9a"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/generating';</script>
+    <script src="../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Visualization" href="visualization.html" />
+    <link rel="prev" title="Fetching and Downloading" href="fetching.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation - Home"/>
+    <img src="../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">The Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tables.html">Tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="views.html">Views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics/metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetching.html">Fetching and Downloading</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Generating Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Additional Resources</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tutorials/joining_timeseries.html">Joining Timeseries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_content/legacy_content.html">Legacy TEEHR Content</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Generating Data</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="generating-data">
+<span id="generating"></span><h1>Generating Data<a class="headerlink" href="#generating-data" title="Link to this heading">#</a></h1>
+<p>TEEHR provides generators for creating synthetic timeseries data, useful for
+benchmarking forecasts against baselines or computing climatological normals.</p>
+<section id="generator-categories">
+<h2>Generator Categories<a class="headerlink" href="#generator-categories" title="Link to this heading">#</a></h2>
+<p>TEEHR organizes generators into two categories:</p>
+<ul class="simple">
+<li><p><strong>Signature Timeseries Generators</strong>: Create climatology/normals timeseries from historical data</p></li>
+<li><p><strong>Benchmark Forecast Generators</strong>: Create reference forecasts for skill score comparisons</p></li>
+</ul>
+</section>
+<section id="signature-timeseries-normals">
+<h2>Signature Timeseries: Normals<a class="headerlink" href="#signature-timeseries-normals" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Normals</span></code> generator computes climatological averages from historical data,
+producing day-of-year or hour-of-year normals that can be used as baselines.</p>
+<section id="basic-usage">
+<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignatureTimeseriesGenerators</span> <span class="k">as</span> <span class="n">sts</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;/path/to/evaluation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Configure the normals generator</span>
+<span class="n">normals</span> <span class="o">=</span> <span class="n">sts</span><span class="o">.</span><span class="n">Normals</span><span class="p">()</span>
+<span class="n">normals</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="s2">&quot;day_of_year&quot;</span>  <span class="c1"># or &quot;hour_of_year&quot;</span>
+<span class="n">normals</span><span class="o">.</span><span class="n">summary_statistic</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>           <span class="c1"># or &quot;median&quot;, &quot;max&quot;, &quot;min&quot;</span>
+
+<span class="c1"># Generate normals and write to primary_timeseries</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">generate</span><span class="o">.</span><span class="n">signature_timeseries</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="n">normals</span><span class="p">,</span>
+    <span class="n">input_table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">,</span>
+    <span class="n">start_datetime</span><span class="o">=</span><span class="s2">&quot;2023-01-01T00:00:00&quot;</span><span class="p">,</span>
+    <span class="n">end_datetime</span><span class="o">=</span><span class="s2">&quot;2024-12-31T00:00:00&quot;</span><span class="p">,</span>
+    <span class="n">timestep</span><span class="o">=</span><span class="s2">&quot;1 hour&quot;</span><span class="p">,</span>
+    <span class="n">fillna</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">update_variable_table</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>  <span class="c1"># Writes to primary_timeseries by default</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.generate.GeneratedTimeseries.html#teehr.evaluation.generate.GeneratedTimeseries.signature_timeseries" title="teehr.evaluation.generate.GeneratedTimeseries.signature_timeseries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GeneratedTimeseries.signature_timeseries()</span></code></a></p>
+</section>
+<section id="configuration-options">
+<h3>Configuration Options<a class="headerlink" href="#configuration-options" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">temporal_resolution</span></code></p></td>
+<td><p>Time period for grouping: <code class="docutils literal notranslate"><span class="pre">&quot;day_of_year&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;hour_of_year&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">summary_statistic</span></code></p></td>
+<td><p>Aggregation function: <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;median&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;max&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="generate-method-parameters">
+<h3>Generate Method Parameters<a class="headerlink" href="#generate-method-parameters" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>The generator instance (e.g., <code class="docutils literal notranslate"><span class="pre">sts.Normals()</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">input_table_name</span></code></p></td>
+<td><p>Source table for historical data (typically <code class="docutils literal notranslate"><span class="pre">&quot;primary_timeseries&quot;</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start_datetime</span></code></p></td>
+<td><p>Start of output timeseries period</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">end_datetime</span></code></p></td>
+<td><p>End of output timeseries period</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timestep</span></code></p></td>
+<td><p>Output timestep (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">hour&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;6</span> <span class="pre">hours&quot;</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fillna</span></code></p></td>
+<td><p>Fill NaN values using forward/backward fill</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dropna</span></code></p></td>
+<td><p>Drop rows with NaN values</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">update_variable_table</span></code></p></td>
+<td><p>Automatically add new variable entries</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="example-daily-normals">
+<h3>Example: Daily Normals<a class="headerlink" href="#example-daily-normals" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignatureTimeseriesGenerators</span> <span class="k">as</span> <span class="n">sts</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;/path/to/evaluation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Add configuration for USGS observations</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">teehr</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;usgs_observations&quot;</span><span class="p">,</span>
+        <span class="n">timeseries_type</span><span class="o">=</span><span class="s2">&quot;primary&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;USGS streamflow observations&quot;</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Load historical USGS data</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">load_parquet</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;/path/to/historical_data.parquet&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate day-of-year mean normals</span>
+<span class="n">normals</span> <span class="o">=</span> <span class="n">sts</span><span class="o">.</span><span class="n">Normals</span><span class="p">()</span>
+<span class="n">normals</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="s2">&quot;day_of_year&quot;</span>
+<span class="n">normals</span><span class="o">.</span><span class="n">summary_statistic</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
+
+<span class="n">ev</span><span class="o">.</span><span class="n">generate</span><span class="o">.</span><span class="n">signature_timeseries</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="n">normals</span><span class="p">,</span>
+    <span class="n">input_table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">,</span>
+    <span class="n">start_datetime</span><span class="o">=</span><span class="s2">&quot;2023-01-01T00:00:00&quot;</span><span class="p">,</span>
+    <span class="n">end_datetime</span><span class="o">=</span><span class="s2">&quot;2023-12-31T23:00:00&quot;</span><span class="p">,</span>
+    <span class="n">timestep</span><span class="o">=</span><span class="s2">&quot;1 hour&quot;</span><span class="p">,</span>
+    <span class="n">update_variable_table</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+
+<span class="c1"># Query the generated normals</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="s2">&quot;variable_name LIKE &#39;</span><span class="si">%d</span><span class="s2">ay_of_year_mean%&#39;&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="benchmark-forecasts">
+<h2>Benchmark Forecasts<a class="headerlink" href="#benchmark-forecasts" title="Link to this heading">#</a></h2>
+<p>Benchmark forecast generators create baseline forecasts for computing skill scores.
+These are typically derived from observed climatology or persistence.</p>
+<section id="reference-forecast">
+<h3>Reference Forecast<a class="headerlink" href="#reference-forecast" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">ReferenceForecast</span></code> generator creates a benchmark forecast by assigning
+historical reference values (e.g., climatology) to forecast timesteps:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">BenchmarkForecastGenerators</span> <span class="k">as</span> <span class="n">bm</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;/path/to/evaluation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Configure reference forecast generator</span>
+<span class="n">ref_fcst</span> <span class="o">=</span> <span class="n">bm</span><span class="o">.</span><span class="n">ReferenceForecast</span><span class="p">()</span>
+
+<span class="c1"># Optional: aggregate reference timeseries</span>
+<span class="n">ref_fcst</span><span class="o">.</span><span class="n">aggregate_reference_timeseries</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">ref_fcst</span><span class="o">.</span><span class="n">aggregation_time_window</span> <span class="o">=</span> <span class="s2">&quot;6 hours&quot;</span>
+
+<span class="c1"># Add output configuration</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">teehr</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;benchmark_forecast_daily_normals&quot;</span><span class="p">,</span>
+        <span class="n">timeseries_type</span><span class="o">=</span><span class="s2">&quot;secondary&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Reference forecast based on USGS climatology&quot;</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate the benchmark forecast</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">generate</span><span class="o">.</span><span class="n">benchmark_forecast</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="n">ref_fcst</span><span class="p">,</span>
+    <span class="n">reference_table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">,</span>
+    <span class="n">template_table_name</span><span class="o">=</span><span class="s2">&quot;secondary_timeseries&quot;</span><span class="p">,</span>
+    <span class="n">reference_table_filters</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;configuration_name = &#39;usgs_climatology&#39;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name = &#39;streamflow_hourly_climatology&#39;&quot;</span>
+    <span class="p">],</span>
+    <span class="n">template_table_filters</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;configuration_name = &#39;MEFP&#39;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;member = &#39;1993&#39;&quot;</span>
+    <span class="p">],</span>
+    <span class="n">output_configuration_name</span><span class="o">=</span><span class="s2">&quot;benchmark_forecast_daily_normals&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">destination_table</span><span class="o">=</span><span class="s2">&quot;secondary_timeseries&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See also: <a class="reference internal" href="../api/generated/teehr.evaluation.generate.GeneratedTimeseries.html#teehr.evaluation.generate.GeneratedTimeseries.benchmark_forecast" title="teehr.evaluation.generate.GeneratedTimeseries.benchmark_forecast"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GeneratedTimeseries.benchmark_forecast()</span></code></a></p>
+</section>
+<section id="benchmark-forecast-parameters">
+<h3>Benchmark Forecast Parameters<a class="headerlink" href="#benchmark-forecast-parameters" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>The generator instance (e.g., <code class="docutils literal notranslate"><span class="pre">bm.ReferenceForecast()</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reference_table_name</span></code></p></td>
+<td><p>Table containing reference/climatology data</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">template_table_name</span></code></p></td>
+<td><p>Table containing forecast structure to replicate</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reference_table_filters</span></code></p></td>
+<td><p>Filters to select specific reference data</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">template_table_filters</span></code></p></td>
+<td><p>Filters to select forecast template</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">output_configuration_name</span></code></p></td>
+<td><p>Configuration name for generated benchmarks</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="persistence-forecast">
+<h3>Persistence Forecast<a class="headerlink" href="#persistence-forecast" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Persistence</span></code> generator creates forecasts that assume conditions persist
+unchanged from the initial time (t=0):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">BenchmarkForecastGenerators</span> <span class="k">as</span> <span class="n">bm</span>
+
+<span class="n">persistence</span> <span class="o">=</span> <span class="n">bm</span><span class="o">.</span><span class="n">Persistence</span><span class="p">()</span>
+
+<span class="c1"># Note: Full implementation pending</span>
+<span class="c1"># This will assign t=0 values to all forecast lead times</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="complete-workflow">
+<h2>Complete Workflow<a class="headerlink" href="#complete-workflow" title="Link to this heading">#</a></h2>
+<p>A typical workflow for generating benchmark forecasts:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignatureTimeseriesGenerators</span> <span class="k">as</span> <span class="n">sts</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">BenchmarkForecastGenerators</span> <span class="k">as</span> <span class="n">bm</span>
+
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="s2">&quot;/path/to/evaluation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Step 1: Load locations and crosswalks</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">load_spatial</span><span class="p">(</span><span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;locations.parquet&quot;</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span><span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;crosswalk.csv&quot;</span><span class="p">)</span>
+
+<span class="c1"># Step 2: Load primary observations</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">teehr</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;usgs_observations&quot;</span><span class="p">,</span>
+        <span class="n">timeseries_type</span><span class="o">=</span><span class="s2">&quot;primary&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;USGS streamflow observations&quot;</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">load_parquet</span><span class="p">(</span><span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;usgs_obs.parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># Step 3: Generate climatological normals</span>
+<span class="n">normals</span> <span class="o">=</span> <span class="n">sts</span><span class="o">.</span><span class="n">Normals</span><span class="p">()</span>
+<span class="n">normals</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="s2">&quot;day_of_year&quot;</span>
+<span class="n">normals</span><span class="o">.</span><span class="n">summary_statistic</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
+
+<span class="n">ev</span><span class="o">.</span><span class="n">generate</span><span class="o">.</span><span class="n">signature_timeseries</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="n">normals</span><span class="p">,</span>
+    <span class="n">input_table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">,</span>
+    <span class="n">start_datetime</span><span class="o">=</span><span class="s2">&quot;2020-01-01T00:00:00&quot;</span><span class="p">,</span>
+    <span class="n">end_datetime</span><span class="o">=</span><span class="s2">&quot;2023-12-31T23:00:00&quot;</span><span class="p">,</span>
+    <span class="n">timestep</span><span class="o">=</span><span class="s2">&quot;1 hour&quot;</span><span class="p">,</span>
+    <span class="n">update_variable_table</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+
+<span class="c1"># Step 4: Load template forecast data</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">teehr</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;nwm_forecast&quot;</span><span class="p">,</span>
+        <span class="n">timeseries_type</span><span class="o">=</span><span class="s2">&quot;secondary&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;NWM Medium Range Forecast&quot;</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">load_parquet</span><span class="p">(</span><span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;nwm_forecast.parquet&quot;</span><span class="p">)</span>
+
+<span class="c1"># Step 5: Generate benchmark forecast from normals</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">teehr</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;benchmark_climatology&quot;</span><span class="p">,</span>
+        <span class="n">timeseries_type</span><span class="o">=</span><span class="s2">&quot;secondary&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Benchmark forecast from daily normals&quot;</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">ref_fcst</span> <span class="o">=</span> <span class="n">bm</span><span class="o">.</span><span class="n">ReferenceForecast</span><span class="p">()</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">generate</span><span class="o">.</span><span class="n">benchmark_forecast</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="n">ref_fcst</span><span class="p">,</span>
+    <span class="n">reference_table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">,</span>
+    <span class="n">template_table_name</span><span class="o">=</span><span class="s2">&quot;secondary_timeseries&quot;</span><span class="p">,</span>
+    <span class="n">reference_table_filters</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;variable_name LIKE &#39;</span><span class="si">%d</span><span class="s2">ay_of_year_mean%&#39;&quot;</span>
+    <span class="p">],</span>
+    <span class="n">template_table_filters</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;configuration_name = &#39;nwm_forecast&#39;&quot;</span>
+    <span class="p">],</span>
+    <span class="n">output_configuration_name</span><span class="o">=</span><span class="s2">&quot;benchmark_climatology&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">destination_table</span><span class="o">=</span><span class="s2">&quot;secondary_timeseries&quot;</span><span class="p">)</span>
+
+<span class="c1"># Step 6: Create joined view and compute skill scores</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicMetrics</span>
+
+<span class="n">metrics_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">(),</span>
+        <span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">NashSutcliffeEfficiency</span><span class="p">(),</span>
+    <span class="p">],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">],</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+
+<span class="c1"># Compare NWM forecast skill vs. benchmark climatology</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">metrics_df</span><span class="p">)</span>
+
+<span class="n">ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="fetching.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Fetching and Downloading</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="visualization.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Visualization</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generator-categories">Generator Categories</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#signature-timeseries-normals">Signature Timeseries: Normals</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-options">Configuration Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-method-parameters">Generate Method Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-daily-normals">Example: Daily Normals</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-forecasts">Benchmark Forecasts</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-forecast">Reference Forecast</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-forecast-parameters">Benchmark Forecast Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#persistence-forecast">Persistence Forecast</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-workflow">Complete Workflow</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_guide/generating.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

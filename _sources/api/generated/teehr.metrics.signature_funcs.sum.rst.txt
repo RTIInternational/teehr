@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.sum
+==================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: sum
