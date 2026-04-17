@@ -374,6 +374,7 @@ class TeehrDataFrameBase(ABC):
         uniqueness_fields: list[str] | None = None,
         nullable_fields: list[str] | None = None,
         partition_by: list[str] | None = None,
+        write_ordered_by: list[str] | None = None,
         value_time_partition_filter: bool = True,
     ):
         """Write the DataFrame to an iceberg table.
@@ -406,6 +407,10 @@ class TeehrDataFrameBase(ABC):
         partition_by : list[str], optional
             Partition expressions to use when creating a custom table with
             ``write_mode="create_or_replace"``.
+        write_ordered_by : list[str], optional
+            Field names to use for Iceberg table write order via
+            ``ALTER TABLE ... WRITE ORDERED BY``. Each field is written as
+            ``ASC NULLS LAST``.
         value_time_partition_filter : bool, optional
             Whether to add a value_time range predicate for MERGE partition
             pruning. Default is True.
@@ -427,6 +432,7 @@ class TeehrDataFrameBase(ABC):
             uniqueness_fields=uniqueness_fields,
             nullable_fields=nullable_fields,
             partition_by=partition_by,
+            write_ordered_by=write_ordered_by,
             value_time_partition_filter=value_time_partition_filter,
         )
 
@@ -437,6 +443,7 @@ class TeehrDataFrameBase(ABC):
         uniqueness_fields: list[str] | None = None,
         nullable_fields: list[str] | None = None,
         partition_by: list[str] | None = None,
+        write_ordered_by: list[str] | None = None,
         value_time_partition_filter: bool = True,
     ):
         """Write the DataFrame to an iceberg table.
@@ -465,6 +472,10 @@ class TeehrDataFrameBase(ABC):
         partition_by : list[str], optional
             Partition expressions to use when creating a custom table with
             ``write_mode="create_or_replace"``.
+        write_ordered_by : list[str], optional
+            Field names to use for Iceberg table write order via
+            ``ALTER TABLE ... WRITE ORDERED BY``. Each field is written as
+            ``ASC NULLS LAST``.
         value_time_partition_filter : bool, optional
             Whether to add a value_time range predicate for MERGE partition
             pruning. Default is True.
@@ -497,6 +508,7 @@ class TeehrDataFrameBase(ABC):
             uniqueness_fields=uniqueness_fields,
             nullable_fields=nullable_fields,
             partition_by=partition_by,
+            write_ordered_by=write_ordered_by,
             value_time_partition_filter=value_time_partition_filter,
         )
         return self

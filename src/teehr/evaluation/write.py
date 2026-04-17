@@ -136,6 +136,26 @@ class Write:
         self._ev.sql(sql_query)
         self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
+    def _set_write_ordered_by(
+        self,
+        table_name: str,
+        catalog_name: str,
+        namespace_name: str,
+        write_ordered_by: List[str] | None,
+    ):
+        """Set Iceberg table write order for a custom table."""
+        if not write_ordered_by:
+            return
+
+        order_sql = ", ".join(
+            f"{field_name} ASC NULLS LAST"
+            for field_name in write_ordered_by
+        )
+        self._ev.sql(f"""
+            ALTER TABLE {catalog_name}.{namespace_name}.{table_name}
+            WRITE ORDERED BY {order_sql}
+        """)
+
     def _build_on_clause(
         self,
         uniqueness_fields: List[str],
@@ -340,6 +360,7 @@ class Write:
         uniqueness_fields: List[str] | None = None,
         nullable_fields: List[str] | None = None,
         partition_by: List[str] | None = None,
+        write_ordered_by: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None,
         value_time_partition_filter: bool = True
@@ -381,6 +402,10 @@ class Write:
             Partition expressions to use when creating a custom table with
             ``write_mode="create_or_replace"``. Only supported for non-core
             tables.
+        write_ordered_by : List[str], optional
+            Field names to use for Iceberg table write order via
+            ``ALTER TABLE ... WRITE ORDERED BY``. Each field is written as
+            ``ASC NULLS LAST``. Only supported for non-core tables.
         catalog_name : str, optional
             The catalog name to write to, by default None, which means the
             catalog_name of the active catalog is used.
@@ -427,6 +452,12 @@ class Write:
                     "Core table partitioning is defined by the table schema."
                 )
 
+            if write_ordered_by is not None:
+                raise ValueError(
+                    "write_ordered_by cannot be specified for core tables. "
+                    "Core table write order is defined by the table schema."
+                )
+
             if (
                 uniqueness_fields is not None and
                 set(uniqueness_fields) != set(default_uniqueness_fields)
@@ -466,6 +497,14 @@ class Write:
         tbl_columns = self._ev.spark.table(source_view_name).columns
         if any(item in DATATYPE_WRITE_TRANSFORMS for item in tbl_columns):
             self._apply_datatype_transform(source_view_name)
+
+        if write_mode != "create_or_replace" and write_ordered_by:
+            self._set_write_ordered_by(
+                table_name=table_name,
+                catalog_name=catalog_name,
+                namespace_name=namespace_name,
+                write_ordered_by=write_ordered_by,
+            )
 
         if write_mode == "insert":
             self._insert(
@@ -509,6 +548,12 @@ class Write:
                 catalog_name=catalog_name,
                 namespace_name=namespace_name,
                 partition_by=partition_by,
+            )
+            self._set_write_ordered_by(
+                table_name=table_name,
+                catalog_name=catalog_name,
+                namespace_name=namespace_name,
+                write_ordered_by=write_ordered_by,
             )
         elif write_mode == "overwrite":
             self._overwrite(

@@ -224,6 +224,41 @@ def test_write_to_custom_table_with_partition_by(
 
 
 @pytest.mark.function_scope_evaluation_template
+def test_write_to_custom_table_with_write_ordered_by(
+    function_scope_evaluation_template
+):
+    """Test write_to supports write_ordered_by for custom tables."""
+    ev = function_scope_evaluation_template
+
+    ev.units.load_dataframe(
+        df=pd.DataFrame({
+            "name": ["ordered_unit"],
+            "long_name": ["Ordered unit"],
+        }),
+        write_mode="append",
+    )
+
+    ev.table("units").filter(
+        {"column": "name", "operator": "=", "value": "ordered_unit"}
+    ).write_to(
+        table_name="custom_ordered_units",
+        write_mode="create_or_replace",
+        write_ordered_by=["name"],
+    )
+
+    qualified_table_name = (
+        f"{ev.active_catalog.catalog_name}."
+        f"{ev.active_catalog.namespace_name}.custom_ordered_units"
+    )
+    create_statement = "\n".join(
+        row.createtab_stmt
+        for row in ev.spark.sql(f"SHOW CREATE TABLE {qualified_table_name}").collect()
+    )
+
+    assert "'sort-order' = 'name ASC NULLS LAST'" in create_statement
+
+
+@pytest.mark.function_scope_evaluation_template
 def test_core_table_writer_rejects_override_metadata(
     function_scope_evaluation_template
 ):
@@ -256,6 +291,14 @@ def test_core_table_writer_rejects_override_metadata(
             table_name="units",
             write_mode="create_or_replace",
             partition_by=["name"],
+        )
+
+    with pytest.raises(ValueError, match="write_ordered_by"):
+        ev._write.to_warehouse(
+            source_data=df,
+            table_name="units",
+            write_mode="create_or_replace",
+            write_ordered_by=["name"],
         )
 
 
