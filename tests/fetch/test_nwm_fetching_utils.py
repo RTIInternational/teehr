@@ -418,6 +418,7 @@ def test_nwm_configuration_metadata():
     assert config_meta["description"] == "Alaska NWM medium range, GFS forcing"
 
 
+@pytest.mark.skip(reason="This must be run manually since it requires an isolated spark session")
 def test_reading_nwm_operational_from_gcs():
     """Test reading NWM operational forcing data from GCS with sedona."""
     spark = create_spark_session(
