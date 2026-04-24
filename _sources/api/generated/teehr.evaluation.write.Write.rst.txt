@@ -1,0 +1,25 @@
+﻿Write
+=====
+
+.. currentmodule:: teehr.evaluation.write
+
+.. autoclass:: Write
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Write.delete_from
+      ~Write.to_cache
+      ~Write.to_warehouse
+   
+   
+
+   
+   
+   

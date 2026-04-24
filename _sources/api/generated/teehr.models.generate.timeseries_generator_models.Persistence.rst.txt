@@ -1,0 +1,38 @@
+﻿Persistence
+===========
+
+.. currentmodule:: teehr.models.generate.timeseries_generator_models
+
+.. autoclass:: Persistence
+   :members:
+   :special-members: __call__, __add__, __mul__
+   :no-inherited-members:
+   :exclude-members: model_config
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Persistence.model_computed_fields
+      ~Persistence.model_config
+      ~Persistence.model_extra
+      ~Persistence.model_fields
+      ~Persistence.model_fields_set
+      ~Persistence.df
+      ~Persistence.aggregate_reference_timesteps
+      ~Persistence.aggregation_time_window
+   
+   
+   

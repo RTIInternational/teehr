@@ -1,0 +1,40 @@
+﻿Download
+========
+
+.. currentmodule:: teehr.evaluation.download
+
+.. autoclass:: Download
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Download.attributes
+      ~Download.configurations
+      ~Download.configure
+      ~Download.evaluation_subset
+      ~Download.location_attributes
+      ~Download.location_crosswalks
+      ~Download.locations
+      ~Download.primary_timeseries
+      ~Download.secondary_timeseries
+      ~Download.units
+      ~Download.variables
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Download.DEFAULT_TIMEOUT
+   
+   
+   

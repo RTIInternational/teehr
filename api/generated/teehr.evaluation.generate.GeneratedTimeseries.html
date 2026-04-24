@@ -1,0 +1,868 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>GeneratedTimeseries &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=1c28bd9a"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/teehr.evaluation.generate.GeneratedTimeseries';</script>
+    <script src="../../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Normals" href="teehr.models.generate.timeseries_generator_models.Normals.html" />
+    <link rel="prev" title="Operators" href="teehr.Operators.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ev_index.html">Evaluation Dataset</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.LocalReadWriteEvaluation.html">LocalReadWriteEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.RemoteReadOnlyEvaluation.html">RemoteReadOnlyEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.RemoteReadWriteEvaluation.html">RemoteReadWriteEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.base_table.BaseTable.html">BaseTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.domain_table.DomainTable.html">DomainTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.unit_table.UnitTable.html">UnitTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.variable_table.VariableTable.html">VariableTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.attribute_table.AttributeTable.html">AttributeTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.configuration_table.ConfigurationTable.html">ConfigurationTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_table.LocationTable.html">LocationTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.html">LocationAttributeTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.html">LocationCrosswalkTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.timeseries_table.TimeseriesTable.html">TimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html">PrimaryTimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.html">SecondaryTimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.base_view.View.html">View</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.joined_timeseries_view.JoinedTimeseriesView.html">JoinedTimeseriesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.location_attributes_view.LocationAttributesView.html">LocationAttributesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.primary_timeseries_view.PrimaryTimeseriesView.html">PrimaryTimeseriesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.secondary_timeseries_view.SecondaryTimeseriesView.html">SecondaryTimeseriesView</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../io_index.html">Data I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.fetch.Fetch.html">Fetch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.read.Read.html">Read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.write.Write.html">Write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.load.Load.html">Load</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.extract.Extract.html">Extract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.validate.Validate.html">Validate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.download.Download.html">Download</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../m_index.html">Metrics and Analysis</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.metrics.Metrics.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html">RowLevelCalculatedFields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html">TimeseriesAwareCalculatedFields</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.deterministic_funcs.html">deterministic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.annual_peak_relative_bias.html">teehr.metrics.deterministic_funcs.annual_peak_relative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.confusion_matrix.html">teehr.metrics.deterministic_funcs.confusion_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.critical_success_index.html">teehr.metrics.deterministic_funcs.critical_success_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.false_alarm_ratio.html">teehr.metrics.deterministic_funcs.false_alarm_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.frequency_bias_index.html">teehr.metrics.deterministic_funcs.frequency_bias_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod1.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod2.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.max_value_delta.html">teehr.metrics.deterministic_funcs.max_value_delta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.max_value_timedelta.html">teehr.metrics.deterministic_funcs.max_value_timedelta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_absolute_error.html">teehr.metrics.deterministic_funcs.mean_absolute_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_absolute_relative_error.html">teehr.metrics.deterministic_funcs.mean_absolute_relative_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_error.html">teehr.metrics.deterministic_funcs.mean_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_squared_error.html">teehr.metrics.deterministic_funcs.mean_squared_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.multiplicative_bias.html">teehr.metrics.deterministic_funcs.multiplicative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency.html">teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency_normalized.html">teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency_normalized</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.pearson_correlation.html">teehr.metrics.deterministic_funcs.pearson_correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.probability_of_detection.html">teehr.metrics.deterministic_funcs.probability_of_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.probability_of_false_detection.html">teehr.metrics.deterministic_funcs.probability_of_false_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.r_squared.html">teehr.metrics.deterministic_funcs.r_squared</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.relative_bias.html">teehr.metrics.deterministic_funcs.relative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.root_mean_squared_error.html">teehr.metrics.deterministic_funcs.root_mean_squared_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.root_mean_standard_deviation_ratio.html">teehr.metrics.deterministic_funcs.root_mean_standard_deviation_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.spearman_correlation.html">teehr.metrics.deterministic_funcs.spearman_correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.success_ratio.html">teehr.metrics.deterministic_funcs.success_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.variability_ratio.html">teehr.metrics.deterministic_funcs.variability_ratio</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.signature_funcs.html">signature_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.average.html">teehr.metrics.signature_funcs.average</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.count.html">teehr.metrics.signature_funcs.count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.flow_duration_curve_slope.html">teehr.metrics.signature_funcs.flow_duration_curve_slope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.max_value_time.html">teehr.metrics.signature_funcs.max_value_time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.maximum.html">teehr.metrics.signature_funcs.maximum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.minimum.html">teehr.metrics.signature_funcs.minimum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.sum.html">teehr.metrics.signature_funcs.sum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.variance.html">teehr.metrics.signature_funcs.variance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.html">probabilistic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.ensemble_brier_score.html">teehr.metrics.probabilistic_funcs.ensemble_brier_score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.ensemble_crps.html">teehr.metrics.probabilistic_funcs.ensemble_crps</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.html">bootstrap_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_circularblock_func.html">teehr.metrics.bootstrap_funcs.create_circularblock_func</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_gumboot_func.html">teehr.metrics.bootstrap_funcs.create_gumboot_func</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_stationary_func.html">teehr.metrics.bootstrap_funcs.create_stationary_func</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.DeterministicMetrics.html">DeterministicMetrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Signatures.html">Signatures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.ProbabilisticMetrics.html">ProbabilisticMetrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Bootstrappers.html">Bootstrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Operators.html">Operators</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">GeneratedTimeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.Normals.html">Normals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.ReferenceForecast.html">ReferenceForecast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.Persistence.html">Persistence</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../m_index.html" class="nav-link">Metrics and Analysis</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">GeneratedTimeseries</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="generatedtimeseries">
+<h1>GeneratedTimeseries<a class="headerlink" href="#generatedtimeseries" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.evaluation.generate.GeneratedTimeseries">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GeneratedTimeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/generate.html#GeneratedTimeseries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.evaluation.generate.GeneratedTimeseries" title="Link to this definition">#</a></dt>
+<dd><p>Component class for generating synthetic data.</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.generate.GeneratedTimeseries.benchmark_forecast" title="teehr.evaluation.generate.GeneratedTimeseries.benchmark_forecast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">benchmark_forecast</span></code></a></p></td>
+<td><p>Generate a benchmark forecast from two timeseries.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.generate.GeneratedTimeseries.signature_timeseries" title="teehr.evaluation.generate.GeneratedTimeseries.signature_timeseries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">signature_timeseries</span></code></a></p></td>
+<td><p>Generate synthetic summary from a single timeseries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.generate.GeneratedTimeseries.to_pandas" title="teehr.evaluation.generate.GeneratedTimeseries.to_pandas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_pandas</span></code></a></p></td>
+<td><p>Return Pandas DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.generate.GeneratedTimeseries.to_sdf" title="teehr.evaluation.generate.GeneratedTimeseries.to_sdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_sdf</span></code></a></p></td>
+<td><p>Return PySpark DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.generate.GeneratedTimeseries.write" title="teehr.evaluation.generate.GeneratedTimeseries.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a></p></td>
+<td><p>Write the generated DataFrame to a specified table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.generate.GeneratedTimeseries.benchmark_forecast">
+<span class="sig-name descname"><span class="pre">benchmark_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BenchmarkGeneratorBaseModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_configuration_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_table_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_table_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/generate.html#GeneratedTimeseries.benchmark_forecast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.evaluation.generate.GeneratedTimeseries.benchmark_forecast" title="Link to this definition">#</a></dt>
+<dd><p>Generate a benchmark forecast from two timeseries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">BenchmarkGeneratorBaseModel</span></code>) – The method to use for generating the benchmark forecast.</p></li>
+<li><p><strong>reference_table_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the reference table to query the timeseries from.</p></li>
+<li><p><strong>template_table_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the template table to query the timeseries from.</p></li>
+<li><p><strong>output_configuration_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The configuration name for the generated benchmark forecast.</p></li>
+<li><p><strong>reference_table_filters</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[</span></code>) –     str, dict, TableFilter, List[Union[str, dict, TableFilter]]
+], optional
+The reference table filter(s) defining the timeseries
+containing the values to assign to the template timeseries.</p></li>
+<li><p><strong>template_table_filters</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[</span></code>) –     str, dict, TableFilter, List[Union[str, dict, TableFilter]]
+], optional
+The template table filter(s) that defines the timeseries
+containing the forecast structure
+(lead time, time interval, issuance frequency, etc) to use for
+the benchmark.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#teehr.evaluation.generate.GeneratedTimeseries" title="teehr.evaluation.generate.GeneratedTimeseries"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneratedTimeseries</span></code></a> – The generated timeseries class object.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>Generate a Climatology benchmark forecast using a previously generated
+climatology timeseries as the reference and the secondary_timeseries
+as the template forecast.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">BenchmarkForecastGenerators</span> <span class="k">as</span> <span class="n">bmf</span>
+</pre></div>
+</div>
+<p>Define the benchmark forecast method</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ref_fcst</span> <span class="o">=</span> <span class="n">bmf</span><span class="o">.</span><span class="n">ReferenceForecast</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ref_fcst</span><span class="o">.</span><span class="n">aggregate_reference_timeseries</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>Specify the tables and optional filters that define the reference
+and template timeseries.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">reference_table_name</span> <span class="o">=</span> <span class="s2">&quot;primary_timeseries&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reference_filters</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;variable_name = &#39;streamflow_hour_of_year_mean&#39;&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;unit_name = &#39;ft^3/s&#39;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">template_table_name</span> <span class="o">=</span> <span class="s2">&quot;secondary_timeseries&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">template_filters</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;variable_name = &#39;streamflow_hourly_inst&#39;&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;unit_name = &#39;ft^3/s&#39;&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;member = &#39;1993&#39;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Generate the benchmark forecast timeseries and write to secondary_timeseries,
+with the configuration name ‘benchmark_forecast_hourly_normals’.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ev</span><span class="o">.</span><span class="n">generate</span><span class="o">.</span><span class="n">benchmark_forecast</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">method</span><span class="o">=</span><span class="n">ref_fcst</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">reference_table_name</span><span class="o">=</span><span class="n">reference_table_name</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">reference_table_filters</span><span class="o">=</span><span class="n">reference_filters</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">template_table_name</span><span class="o">=</span><span class="n">template_table_name</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">template_table_filters</span><span class="o">=</span><span class="n">template_filters</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">output_configuration_name</span><span class="o">=</span><span class="s2">&quot;benchmark_forecast_hourly_normals&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">destination_table</span><span class="o">=</span><span class="s2">&quot;secondary_timeseries&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.generate.GeneratedTimeseries.signature_timeseries">
+<span class="sig-name descname"><span class="pre">signature_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SignatureGeneratorBaseModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_datetime</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_datetime</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_table_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestep</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">timedelta</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1</span> <span class="pre">hour'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_variable_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/generate.html#GeneratedTimeseries.signature_timeseries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.evaluation.generate.GeneratedTimeseries.signature_timeseries" title="Link to this definition">#</a></dt>
+<dd><p>Generate synthetic summary from a single timeseries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">TimeseriesGeneratorBaseModel</span></code>) – The method to use for generating the timeseries.</p></li>
+<li><p><strong>input_table_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the input table to query the timeseries from.</p></li>
+<li><p><strong>start_datetime</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime]</span></code>) – The start datetime for the generated timeseries.
+If provided as a str, the format must be supported by PySpark’s
+<code class="docutils literal notranslate"><span class="pre">to_timestamp</span></code> function, such as “yyyy-MM-dd HH:mm:ss”.</p></li>
+<li><p><strong>end_datetime</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime]</span></code>) – The end datetime for the generated timeseries.
+If provided as a str, the format must be supported by PySpark’s
+<code class="docutils literal notranslate"><span class="pre">to_timestamp</span></code> function, such as “yyyy-MM-dd HH:mm:ss”.</p></li>
+<li><p><strong>input_table_filters</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[</span></code>) –     str, dict, TableFilter, List[Union[str, dict, TableFilter]]
+], optional
+The input table filter(s) that define a timeseries
+that will be used as the input_dataframe.</p></li>
+<li><p><strong>timestep</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">timedelta]</span></code>, <em>optional</em>) – The timestep for the generated timeseries. Defaults to “1 hour”.</p></li>
+<li><p><strong>update_variable_table</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>) – Whether to update the variable table. Defaults to True.</p></li>
+<li><p><strong>fillna</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>) – Whether to forward and back-fill NaN values. Defaults to False.</p></li>
+<li><p><strong>dropna</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>) – Whether to drop rows with NaN values. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#teehr.evaluation.generate.GeneratedTimeseries" title="teehr.evaluation.generate.GeneratedTimeseries"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeneratedTimeseries</span></code></a> – The generated timeseries class object.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This method operates on a single timeseries
+(e.g., Climatology, Normals, Detrending, etc.)</p>
+<p>The output variable name is derived automatically based on the input
+variable name, and added to the Evaluation if it does not exist.</p>
+<p>The variable naming convention follows the pattern:
+&lt;variable&gt;_&lt;temporal_resolution&gt;_&lt;summary_statistic&gt;</p>
+<p class="rubric">Example</p>
+<p>Generate a daily climatology timeseries from the primary_timeseries.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">SignatureTimeseriesGenerators</span> <span class="k">as</span> <span class="n">sts</span>
+</pre></div>
+</div>
+<p>Define the signature timeseries method</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ts_normals</span> <span class="o">=</span> <span class="n">sts</span><span class="o">.</span><span class="n">Normals</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ts_normals</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="s2">&quot;day_of_year&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ts_normals</span><span class="o">.</span><span class="n">summary_statistic</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
+</pre></div>
+</div>
+<p>Generate the signature timeseries, operating on the primary_timeseries.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ev</span><span class="o">.</span><span class="n">generate</span><span class="o">.</span><span class="n">signature_timeseries</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">method</span><span class="o">=</span><span class="n">ts_normals</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">input_table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">start_datetime</span><span class="o">=</span><span class="s2">&quot;1924-11-19 12:00:00&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">end_datetime</span><span class="o">=</span><span class="s2">&quot;2024-11-21 13:00:00&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.generate.GeneratedTimeseries.to_pandas">
+<span class="sig-name descname"><span class="pre">to_pandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.generate.GeneratedTimeseries.to_pandas" title="Link to this definition">#</a></dt>
+<dd><p>Return Pandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.generate.GeneratedTimeseries.to_sdf">
+<span class="sig-name descname"><span class="pre">to_sdf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.generate.GeneratedTimeseries.to_sdf" title="Link to this definition">#</a></dt>
+<dd><p>Return PySpark DataFrame.</p>
+<p>The PySpark DataFrame can be further processed using PySpark. Note,
+PySpark DataFrames are lazy and will not be executed until an action
+is called.  For example, calling <cite>show()</cite>, <cite>collect()</cite> or toPandas().
+This can be useful for further processing or analysis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.generate.GeneratedTimeseries.write">
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">destination_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'primary_timeseries'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'append'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.generate.GeneratedTimeseries.write" title="Link to this definition">#</a></dt>
+<dd><p>Write the generated DataFrame to a specified table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>destination_table</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the destination table to write to.</p></li>
+<li><p><strong>write_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The write mode for the DataFrame (e.g., “append”, “overwrite”).</p></li>
+<li><p><strong>drop_duplicates</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span> <span class="pre">(default</span></code>: <code class="xref py py-class docutils literal notranslate"><span class="pre">True)</span></code>) – Whether to drop duplicate rows during validation before writing
+to the destination table.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="teehr.Operators.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Operators</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="teehr.models.generate.timeseries_generator_models.Normals.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Normals</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.generate.GeneratedTimeseries"><code class="docutils literal notranslate"><span class="pre">GeneratedTimeseries</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.generate.GeneratedTimeseries.benchmark_forecast"><code class="docutils literal notranslate"><span class="pre">GeneratedTimeseries.benchmark_forecast()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.generate.GeneratedTimeseries.signature_timeseries"><code class="docutils literal notranslate"><span class="pre">GeneratedTimeseries.signature_timeseries()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.generate.GeneratedTimeseries.to_pandas"><code class="docutils literal notranslate"><span class="pre">GeneratedTimeseries.to_pandas()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.generate.GeneratedTimeseries.to_sdf"><code class="docutils literal notranslate"><span class="pre">GeneratedTimeseries.to_sdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.generate.GeneratedTimeseries.write"><code class="docutils literal notranslate"><span class="pre">GeneratedTimeseries.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/generated/teehr.evaluation.generate.GeneratedTimeseries.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

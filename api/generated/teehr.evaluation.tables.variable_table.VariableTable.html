@@ -1,0 +1,1402 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>VariableTable &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=1c28bd9a"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/teehr.evaluation.tables.variable_table.VariableTable';</script>
+    <script src="../../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="AttributeTable" href="teehr.evaluation.tables.attribute_table.AttributeTable.html" />
+    <link rel="prev" title="UnitTable" href="teehr.evaluation.tables.unit_table.UnitTable.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.6.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.6.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../example_notebooks/index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../ev_index.html">Evaluation Dataset</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="teehr.Evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.LocalReadWriteEvaluation.html">LocalReadWriteEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.RemoteReadOnlyEvaluation.html">RemoteReadOnlyEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.RemoteReadWriteEvaluation.html">RemoteReadWriteEvaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.base_table.BaseTable.html">BaseTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.domain_table.DomainTable.html">DomainTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.unit_table.UnitTable.html">UnitTable</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">VariableTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.attribute_table.AttributeTable.html">AttributeTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.configuration_table.ConfigurationTable.html">ConfigurationTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_table.LocationTable.html">LocationTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.html">LocationAttributeTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.html">LocationCrosswalkTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.timeseries_table.TimeseriesTable.html">TimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html">PrimaryTimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.html">SecondaryTimeseriesTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.base_view.View.html">View</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.joined_timeseries_view.JoinedTimeseriesView.html">JoinedTimeseriesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.location_attributes_view.LocationAttributesView.html">LocationAttributesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.primary_timeseries_view.PrimaryTimeseriesView.html">PrimaryTimeseriesView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.views.secondary_timeseries_view.SecondaryTimeseriesView.html">SecondaryTimeseriesView</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../io_index.html">Data I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.fetch.Fetch.html">Fetch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.read.Read.html">Read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.write.Write.html">Write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.load.Load.html">Load</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.extract.Extract.html">Extract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.validate.Validate.html">Validate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.download.Download.html">Download</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../m_index.html">Metrics and Analysis</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.metrics.Metrics.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html">RowLevelCalculatedFields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html">TimeseriesAwareCalculatedFields</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.deterministic_funcs.html">deterministic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.annual_peak_relative_bias.html">teehr.metrics.deterministic_funcs.annual_peak_relative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.confusion_matrix.html">teehr.metrics.deterministic_funcs.confusion_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.critical_success_index.html">teehr.metrics.deterministic_funcs.critical_success_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.false_alarm_ratio.html">teehr.metrics.deterministic_funcs.false_alarm_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.frequency_bias_index.html">teehr.metrics.deterministic_funcs.frequency_bias_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod1.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod2.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.max_value_delta.html">teehr.metrics.deterministic_funcs.max_value_delta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.max_value_timedelta.html">teehr.metrics.deterministic_funcs.max_value_timedelta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_absolute_error.html">teehr.metrics.deterministic_funcs.mean_absolute_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_absolute_relative_error.html">teehr.metrics.deterministic_funcs.mean_absolute_relative_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_error.html">teehr.metrics.deterministic_funcs.mean_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_squared_error.html">teehr.metrics.deterministic_funcs.mean_squared_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.multiplicative_bias.html">teehr.metrics.deterministic_funcs.multiplicative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency.html">teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency_normalized.html">teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency_normalized</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.pearson_correlation.html">teehr.metrics.deterministic_funcs.pearson_correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.probability_of_detection.html">teehr.metrics.deterministic_funcs.probability_of_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.probability_of_false_detection.html">teehr.metrics.deterministic_funcs.probability_of_false_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.r_squared.html">teehr.metrics.deterministic_funcs.r_squared</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.relative_bias.html">teehr.metrics.deterministic_funcs.relative_bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.root_mean_squared_error.html">teehr.metrics.deterministic_funcs.root_mean_squared_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.root_mean_standard_deviation_ratio.html">teehr.metrics.deterministic_funcs.root_mean_standard_deviation_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.spearman_correlation.html">teehr.metrics.deterministic_funcs.spearman_correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.success_ratio.html">teehr.metrics.deterministic_funcs.success_ratio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.deterministic_funcs.variability_ratio.html">teehr.metrics.deterministic_funcs.variability_ratio</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.signature_funcs.html">signature_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.average.html">teehr.metrics.signature_funcs.average</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.count.html">teehr.metrics.signature_funcs.count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.flow_duration_curve_slope.html">teehr.metrics.signature_funcs.flow_duration_curve_slope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.max_value_time.html">teehr.metrics.signature_funcs.max_value_time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.maximum.html">teehr.metrics.signature_funcs.maximum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.minimum.html">teehr.metrics.signature_funcs.minimum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.sum.html">teehr.metrics.signature_funcs.sum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.signature_funcs.variance.html">teehr.metrics.signature_funcs.variance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.html">probabilistic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.ensemble_brier_score.html">teehr.metrics.probabilistic_funcs.ensemble_brier_score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.ensemble_crps.html">teehr.metrics.probabilistic_funcs.ensemble_crps</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.html">bootstrap_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_circularblock_func.html">teehr.metrics.bootstrap_funcs.create_circularblock_func</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_gumboot_func.html">teehr.metrics.bootstrap_funcs.create_gumboot_func</a></li>
+<li class="toctree-l3"><a class="reference internal" href="teehr.metrics.bootstrap_funcs.create_stationary_func.html">teehr.metrics.bootstrap_funcs.create_stationary_func</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.DeterministicMetrics.html">DeterministicMetrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Signatures.html">Signatures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.ProbabilisticMetrics.html">ProbabilisticMetrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Bootstrappers.html">Bootstrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.Operators.html">Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.evaluation.generate.GeneratedTimeseries.html">GeneratedTimeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.Normals.html">Normals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.ReferenceForecast.html">ReferenceForecast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.models.generate.timeseries_generator_models.Persistence.html">Persistence</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../ev_index.html" class="nav-link">Evaluation Dataset</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">VariableTable</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="variabletable">
+<h1>VariableTable<a class="headerlink" href="#variabletable" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">VariableTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'variables'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catalog_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/tables/variable_table.html#VariableTable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable" title="Link to this definition">#</a></dt>
+<dd><p>Access methods to variables table.</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.add" title="teehr.evaluation.tables.variable_table.VariableTable.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code></a></p></td>
+<td><p>Add a variable to the evaluation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.add_attributes" title="teehr.evaluation.tables.variable_table.VariableTable.add_attributes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_attributes</span></code></a></p></td>
+<td><p>Add location attributes to the DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.add_calculated_fields" title="teehr.evaluation.tables.variable_table.VariableTable.add_calculated_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_calculated_fields</span></code></a></p></td>
+<td><p>Add calculated fields to the DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.add_geometry" title="teehr.evaluation.tables.variable_table.VariableTable.add_geometry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_geometry</span></code></a></p></td>
+<td><p>Add geometry to the DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.aggregate" title="teehr.evaluation.tables.variable_table.VariableTable.aggregate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">aggregate</span></code></a></p></td>
+<td><p>Aggregate data with grouping and metrics.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.delete" title="teehr.evaluation.tables.variable_table.VariableTable.delete"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete</span></code></a></p></td>
+<td><p>Delete rows from this table based on filter conditions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.distinct_values" title="teehr.evaluation.tables.variable_table.VariableTable.distinct_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distinct_values</span></code></a></p></td>
+<td><p>Return distinct values for a column.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.drop" title="teehr.evaluation.tables.variable_table.VariableTable.drop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code></a></p></td>
+<td><p>Drop this table from the catalog.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.filter" title="teehr.evaluation.tables.variable_table.VariableTable.filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter</span></code></a></p></td>
+<td><p>Apply filters to the DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.load_csv" title="teehr.evaluation.tables.variable_table.VariableTable.load_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_csv</span></code></a></p></td>
+<td><p>Import location attributes from CSV file format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.load_dataframe" title="teehr.evaluation.tables.variable_table.VariableTable.load_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_dataframe</span></code></a></p></td>
+<td><p>Import data from an in-memory dataframe.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.load_parquet" title="teehr.evaluation.tables.variable_table.VariableTable.load_parquet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_parquet</span></code></a></p></td>
+<td><p>Import location attributes from parquet file format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.order_by" title="teehr.evaluation.tables.variable_table.VariableTable.order_by"><code class="xref py py-obj docutils literal notranslate"><span class="pre">order_by</span></code></a></p></td>
+<td><p>Apply ordering to the DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.to_geopandas" title="teehr.evaluation.tables.variable_table.VariableTable.to_geopandas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_geopandas</span></code></a></p></td>
+<td><p>Return GeoPandas DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.to_pandas" title="teehr.evaluation.tables.variable_table.VariableTable.to_pandas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_pandas</span></code></a></p></td>
+<td><p>Return Pandas DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.to_sdf" title="teehr.evaluation.tables.variable_table.VariableTable.to_sdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_sdf</span></code></a></p></td>
+<td><p>Return the PySpark DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.validate" title="teehr.evaluation.tables.variable_table.VariableTable.validate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate</span></code></a></p></td>
+<td><p>Validate the dataset table against the schema.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.write" title="teehr.evaluation.tables.variable_table.VariableTable.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a></p></td>
+<td><p>Write the DataFrame to an iceberg table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.write_to" title="teehr.evaluation.tables.variable_table.VariableTable.write_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_to</span></code></a></p></td>
+<td><p>Write the DataFrame to an iceberg table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Attributes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">foreign_keys</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.is_core_table" title="teehr.evaluation.tables.variable_table.VariableTable.is_core_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_core_table</span></code></a></p></td>
+<td><p>Return True if this table is a core (built-in) TEEHR table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">primary_location_id_field</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">secondary_location_id_field</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">strict_validation</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">table_name</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">uniqueness_fields</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_filter_field_types</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.extraction_func" title="teehr.evaluation.tables.variable_table.VariableTable.extraction_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extraction_func</span></code></a>(in_filepath[, ...])</p></td>
+<td><p>Convert a single file to a pandas DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.schema_func" title="teehr.evaluation.tables.variable_table.VariableTable.schema_func"><code class="xref py py-obj docutils literal notranslate"><span class="pre">schema_func</span></code></a>([type])</p></td>
+<td><p>Return the schema for variable data.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Variable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Variable</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/tables/variable_table.html#VariableTable.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.add" title="Link to this definition">#</a></dt>
+<dd><p>Add a variable to the evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>variable</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[Variable</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List[Variable]]</span></code>) – The variable domain to add.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">Variable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;streamflow_hourly_inst&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">long_name</span><span class="o">=</span><span class="s2">&quot;Instantaneous streamflow&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ev</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.add_attributes">
+<span class="sig-name descname"><span class="pre">add_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location_id_col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.add_attributes" title="Link to this definition">#</a></dt>
+<dd><p>Add location attributes to the DataFrame.</p>
+<p>Joins pivoted location attributes to the DataFrame. The join column
+is auto-detected from common location ID field names (‘location_id’,
+‘primary_location_id’) unless specified.</p>
+<p>This is especially useful when called <em>after</em> a <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> with
+GROUP BY and aggregation metrics, so that attributes do not need
+to be included in the <code class="docutils literal notranslate"><span class="pre">group_by</span></code> clause in order to pass through
+to the result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attr_list</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List[str]</span></code>, <em>optional</em>) – Specific attributes to add. If None, all attributes are added.</p></li>
+<li><p><strong>location_id_col</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The column name in the DataFrame to join on. If None, checks
+for ‘location_id’ then ‘primary_location_id’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">self</span></code> – Returns self for method chaining.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Add all attributes:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">accessor</span><span class="o">.</span><span class="n">add_attributes</span><span class="p">()</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Add specific attributes:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">accessor</span><span class="o">.</span><span class="n">add_attributes</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">attr_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">,</span> <span class="s2">&quot;ecoregion&quot;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Specify join column explicitly:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">accessor</span><span class="o">.</span><span class="n">add_attributes</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">location_id_col</span><span class="o">=</span><span class="s2">&quot;primary_location_id&quot;</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Add attributes after metric aggregation — avoids including them
+in <code class="docutils literal notranslate"><span class="pre">group_by</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">KGE</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
+<span class="gp">... </span>    <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">KGE</span><span class="p">()]</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span>    <span class="o">.</span><span class="n">add_attributes</span><span class="p">(</span><span class="n">attr_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">,</span> <span class="s2">&quot;ecoregion&quot;</span><span class="p">])</span>
+<span class="gp">... </span>    <span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.add_calculated_fields">
+<span class="sig-name descname"><span class="pre">add_calculated_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CalculatedFieldBaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">CalculatedFieldBaseModel</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.add_calculated_fields" title="Link to this definition">#</a></dt>
+<dd><p>Add calculated fields to the DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cfs</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[CalculatedFieldBaseModel</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List[...]]</span></code>) – The calculated fields to add.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">self</span></code> – Returns self for method chaining.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RowLevelCalculatedFields</span> <span class="k">as</span> <span class="n">rcf</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">accessor</span><span class="o">.</span><span class="n">add_calculated_fields</span><span class="p">([</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">rcf</span><span class="o">.</span><span class="n">Month</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">])</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.add_geometry">
+<span class="sig-name descname"><span class="pre">add_geometry</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.add_geometry" title="Link to this definition">#</a></dt>
+<dd><p>Add geometry to the DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.aggregate">
+<span class="sig-name descname"><span class="pre">aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">MetricsBasemodel</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.aggregate" title="Link to this definition">#</a></dt>
+<dd><p>Aggregate data with grouping and metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group_by</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List[str]]</span></code>) – Fields to group by for metric calculation.</p></li>
+<li><p><strong>metrics</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List[MetricsBasemodel]</span></code>) – Metrics to calculate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">self</span></code> – Returns self for method chaining.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">accessor</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">KGE</span><span class="p">()],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Chain with filter and order_by:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicMetrics</span> <span class="k">as</span> <span class="n">dm</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">accessor</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;primary_location_id LIKE &#39;usgs%&#39;&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">dm</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">(),</span> <span class="n">dm</span><span class="o">.</span><span class="n">RelativeBias</span><span class="p">()]</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">.</span><span class="n">order_by</span><span class="p">([</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.delete" title="Link to this definition">#</a></dt>
+<dd><p>Delete rows from this table based on filter conditions.</p>
+<p>Delegates to
+<a class="reference internal" href="teehr.evaluation.write.Write.html#teehr.evaluation.write.Write.delete_from" title="teehr.evaluation.write.Write.delete_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Write.delete_from()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filters</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TableFilter</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List[...]]</span></code>, <em>optional</em>) – Filter conditions specifying which rows to delete.
+Supports SQL strings, dictionaries, or
+<code class="xref py py-class docutils literal notranslate"><span class="pre">TableFilter</span></code> objects.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, all rows in the table will be deleted.</p></li>
+<li><p><strong>dry_run</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, returns a Spark DataFrame of rows that would be
+deleted without performing the actual deletion. Default is
+<code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ps.DataFrame</span></code> – If <code class="docutils literal notranslate"><span class="pre">dry_run=False</span></code>, returns the number of rows deleted (int).
+If <code class="docutils literal notranslate"><span class="pre">dry_run=True</span></code>, returns a Spark DataFrame of rows that
+would be deleted.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Preview rows that would be deleted (dry run):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sdf</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;location_id = &#39;usgs-01234567&#39;&quot;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">dry_run</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rows to delete: </span><span class="si">{</span><span class="n">sdf</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Delete rows and get the count:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">count</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;location_id = &#39;usgs-01234567&#39;&quot;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deleted </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> rows.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Delete all rows from this table:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">count</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.distinct_values">
+<span class="sig-name descname"><span class="pre">distinct_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location_prefixes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.distinct_values" title="Link to this definition">#</a></dt>
+<dd><p>Return distinct values for a column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>column</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The column to get distinct values for.</p></li>
+<li><p><strong>location_prefixes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – Whether to return location prefixes. If True, only the unique
+prefixes of the locations will be returned.
+Default: False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List[str]</span></code> – The distinct values for the column.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Get distinct location IDs from the primary timeseries table:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">distinct_values</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">column</span><span class="o">=</span><span class="s1">&#39;location_id&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">location_prefixes</span><span class="o">=</span><span class="kc">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get distinct location prefixes from the joined timeseries table:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;joined_timeseries&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">distinct_values</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">column</span><span class="o">=</span><span class="s1">&#39;primary_location_id&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">location_prefixes</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.drop">
+<span class="sig-name descname"><span class="pre">drop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.drop" title="Link to this definition">#</a></dt>
+<dd><p>Drop this table from the catalog.</p>
+<p>Only non-core tables (user-created tables, materialized views, saved
+query results) can be dropped. Attempting to drop a core table
+(e.g., primary_timeseries, locations, units) will raise a ValueError.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the table is a core TEEHR table.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Write and then drop a user-created table:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;my_results&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;my_results&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.extraction_func">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extraction_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.extraction_func" title="Link to this definition">#</a></dt>
+<dd><p>Convert a single file to a pandas DataFrame.</p>
+<p>Supports parquet, csv, and netcdf file formats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_filepath</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path]</span></code>) – The input file path.</p></li>
+<li><p><strong>field_mapping</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <em>optional</em>) – A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}. The default is None.</p></li>
+<li><p><strong>table_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – Name used for logging purposes. The default is “data”.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments are passed to
+pd.read_csv(), pd.read_parquet(), or xr.open_dataset().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> – The converted DataFrame with renamed columns if field_mapping provided.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the file type is not supported.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.filter">
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TableFilter</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.filter" title="Link to this definition">#</a></dt>
+<dd><p>Apply filters to the DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filters</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TableFilter</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List[...]]</span></code>) – The filters to apply. Can be SQL strings, dictionaries,
+or TableFilter objects.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">self</span></code> – Returns self for method chaining.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Filters as dictionary:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">accessor</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">filters</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;2022-01-01&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Filters as string:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">accessor</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;value_time &gt; &#39;2022-01-01&#39;&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.is_core_table">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_core_table</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.is_core_table" title="Link to this definition">#</a></dt>
+<dd><p>Return True if this table is a core (built-in) TEEHR table.</p>
+<p>Core tables (e.g., primary_timeseries, locations, units) are part of
+the standard TEEHR schema and cannot be dropped. User-created tables
+(e.g., materialized views or saved query results) are not core tables
+and can be dropped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code> – True if the table is a core TEEHR table, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.load_csv">
+<span class="sig-name descname"><span class="pre">load_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catalog_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extraction_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'append'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.load_csv" title="Link to this definition">#</a></dt>
+<dd><p>Import location attributes from CSV file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str]</span></code>) – The input file or directory path.
+CSV file format.</p></li>
+<li><p><strong>namespace_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The namespace name to write to, by default None, which means the
+namespace_name of the active catalog is used.</p></li>
+<li><p><strong>catalog_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The catalog name to write to, by default None, which means the
+catalog_name of the active catalog is used.</p></li>
+<li><p><strong>extraction_function</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code>, <em>optional</em>) – A custom function to extract and transform the data from the input
+files to the TEEHR data model. If None (default), uses the table’s
+default extraction function.</p></li>
+<li><p><strong>pattern</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The glob pattern to use when searching for files in a directory.
+Default is ‘<a href="#id1"><span class="problematic" id="id2">**</span></a>/<a href="#id3"><span class="problematic" id="id4">*</span></a>.csv’ to search for all CSV files recursively.</p></li>
+<li><p><strong>field_mapping</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <em>optional</em>) – A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p></li>
+<li><p><strong>write_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span> <span class="pre">(default</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code><code class="xref py py-class docutils literal notranslate"><span class="pre">)</span></code>) – The write mode for the table. Options include:</p>
+<ul>
+<li><p>“insert”: Insert new data without checking for duplicates.</p></li>
+<li><p>“append”: Insert new data, skipping rows that already exist.</p></li>
+<li><p>“upsert”: Update existing data, insert new data.</p></li>
+<li><p>“overwrite”: Update table with new snapshot version preserving
+historical versions.</p></li>
+<li><p>“create_or_replace”: Drop and recreate the table with new data.</p></li>
+</ul>
+</li>
+<li><p><strong>drop_duplicates</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span> <span class="pre">(default</span></code>: <code class="xref py py-class docutils literal notranslate"><span class="pre">True)</span></code>) – Whether to drop duplicates from the DataFrame during validation.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments are passed to pd.read_csv()
+or pd.read_parquet().</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The TEEHR Location Crosswalk table schema includes fields:</p>
+<ul class="simple">
+<li><p>primary_location_id</p></li>
+<li><p>secondary_location_id</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.load_dataframe">
+<span class="sig-name descname"><span class="pre">load_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catalog_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'append'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.load_dataframe" title="Link to this definition">#</a></dt>
+<dd><p>Import data from an in-memory dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[pd.DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ps.DataFrame]</span></code>) – DataFrame to load into the table.</p></li>
+<li><p><strong>namespace_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The namespace name to write to, by default None, which means the
+namespace_name of the active catalog is used.</p></li>
+<li><p><strong>catalog_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The catalog name to write to, by default None, which means the
+catalog_name of the active catalog is used.</p></li>
+<li><p><strong>field_mapping</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <em>optional</em>) – A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p></li>
+<li><p><strong>constant_field_values</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <em>optional</em>) – A dictionary mapping field names to constant values.
+Format: {field_name: value}.</p></li>
+<li><p><strong>write_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span> <span class="pre">(default</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code><code class="xref py py-class docutils literal notranslate"><span class="pre">)</span></code>) – The write mode for the table. Options:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;insert&quot;</span></code>: Insert all rows directly without duplicate checking.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code>: Insert new rows; skip rows matching uniqueness fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;upsert&quot;</span></code>: Insert new rows; update existing rows matching
+uniqueness fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;overwrite&quot;</span></code>: Replace all data, preserving table history.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;create_or_replace&quot;</span></code>: Drop and recreate table. Loses history.</p></li>
+</ul>
+</li>
+<li><p><strong>drop_duplicates</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span> <span class="pre">(default</span></code>: <code class="xref py py-class docutils literal notranslate"><span class="pre">True)</span></code>) – Whether to drop duplicates from the DataFrame during validation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.load_parquet">
+<span class="sig-name descname"><span class="pre">load_parquet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catalog_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extraction_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'append'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.load_parquet" title="Link to this definition">#</a></dt>
+<dd><p>Import location attributes from parquet file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str]</span></code>) – The input file or directory path.
+Parquet file format.</p></li>
+<li><p><strong>namespace_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The namespace name to write to, by default None, which means the
+namespace_name of the active catalog is used.</p></li>
+<li><p><strong>catalog_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The catalog name to write to, by default None, which means the
+catalog_name of the active catalog is used.</p></li>
+<li><p><strong>extraction_function</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code>, <em>optional</em>) – A custom function to extract and transform the data from the input
+files to the TEEHR data model. If None (default), uses the table’s
+default extraction function.</p></li>
+<li><p><strong>pattern</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The glob pattern to use when searching for files in a directory.
+Default is ‘<a href="#id5"><span class="problematic" id="id6">**</span></a>/<a href="#id7"><span class="problematic" id="id8">*</span></a>.parquet’ to search for all parquet files recursively.</p></li>
+<li><p><strong>field_mapping</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <em>optional</em>) – A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p></li>
+<li><p><strong>write_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span> <span class="pre">(default</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code><code class="xref py py-class docutils literal notranslate"><span class="pre">)</span></code>) – The write mode for the table. Options include:</p>
+<ul>
+<li><p>“insert”: Insert new data without checking for duplicates.</p></li>
+<li><p>“append”: Insert new data, skipping rows that already exist.</p></li>
+<li><p>“upsert”: Update existing data, insert new data.</p></li>
+<li><p>“overwrite”: Update table with new snapshot version preserving
+historical versions.</p></li>
+<li><p>“create_or_replace”: Drop and recreate the table with new data.</p></li>
+</ul>
+</li>
+<li><p><strong>drop_duplicates</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span> <span class="pre">(default</span></code>: <code class="xref py py-class docutils literal notranslate"><span class="pre">True)</span></code>) – Whether to drop duplicates from the DataFrame during validation.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments are passed to pd.read_csv()
+or pd.read_parquet().</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The TEEHR Location Crosswalk table schema includes fields:</p>
+<ul class="simple">
+<li><p>primary_location_id</p></li>
+<li><p>secondary_location_id</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.order_by">
+<span class="sig-name descname"><span class="pre">order_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">StrEnum</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">StrEnum</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.order_by" title="Link to this definition">#</a></dt>
+<dd><p>Apply ordering to the DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fields</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List[...]]</span></code>) – The fields to order by.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">self</span></code> – Returns self for method chaining.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">accessor</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;value_time&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.schema_func">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">schema_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pyspark'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrameSchema</span></span></span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.schema_func" title="Link to this definition">#</a></dt>
+<dd><p>Return the schema for variable data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.to_geopandas">
+<span class="sig-name descname"><span class="pre">to_geopandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.to_geopandas" title="Link to this definition">#</a></dt>
+<dd><p>Return GeoPandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.to_pandas">
+<span class="sig-name descname"><span class="pre">to_pandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.to_pandas" title="Link to this definition">#</a></dt>
+<dd><p>Return Pandas DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> – The data as a Pandas DataFrame.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.to_sdf">
+<span class="sig-name descname"><span class="pre">to_sdf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.to_sdf" title="Link to this definition">#</a></dt>
+<dd><p>Return the PySpark DataFrame.</p>
+<p>The PySpark DataFrame can be further processed using PySpark. Note,
+PySpark DataFrames are lazy and will not be executed until an action
+is called (e.g., show(), collect(), toPandas()).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ps.DataFrame</span></code> – The Spark DataFrame.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.validate">
+<span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drop_duplicates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.validate" title="Link to this definition">#</a></dt>
+<dd><p>Validate the dataset table against the schema.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>drop_duplicates</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>) – Whether to drop duplicates based on the uniqueness fields.
+Default is True.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Validate a table:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ev</span><span class="o">.</span><span class="n">table</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;primary_timeseries&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.write">
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'create_or_replace'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniqueness_fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nullable_fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_ordered_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_time_partition_filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.write" title="Link to this definition">#</a></dt>
+<dd><p>Write the DataFrame to an iceberg table.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version Use: </span><a class="reference internal" href="#teehr.evaluation.tables.variable_table.VariableTable.write_to" title="teehr.evaluation.tables.variable_table.VariableTable.write_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write_to()</span></code></a> instead. This method will be removed in a
+future release.</p>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul>
+<li><p><strong>table_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the table to write to.</p></li>
+<li><p><strong>write_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The write mode. Options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;insert&quot;</span></code>: Insert all rows directly without duplicate checking.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code>: Insert new rows; skip rows matching uniqueness fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;upsert&quot;</span></code>: Insert new rows; update existing rows matching uniqueness fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;overwrite&quot;</span></code>: Replace all data, preserving table history.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;create_or_replace&quot;</span></code>: Drop and recreate table. Loses history.</p></li>
+</ul>
+<p>Default is “create_or_replace”.</p>
+</li>
+<li><p><strong>uniqueness_fields</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list[str]</span></code>, <em>optional</em>) – Explicit uniqueness fields to use for custom-table append or
+upsert writes. If omitted, uses the target table metadata.</p></li>
+<li><p><strong>nullable_fields</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list[str]</span></code>, <em>optional</em>) – Explicit nullable uniqueness fields to compare with null-safe
+equality during append or upsert writes. If omitted, uses the
+target table schema when available.</p></li>
+<li><p><strong>partition_by</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list[str]</span></code>, <em>optional</em>) – Partition expressions to use when creating a custom table with
+<code class="docutils literal notranslate"><span class="pre">write_mode=&quot;create_or_replace&quot;</span></code>.</p></li>
+<li><p><strong>write_ordered_by</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list[str]</span></code>, <em>optional</em>) – Field names to use for Iceberg table write order via
+<code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">TABLE</span> <span class="pre">...</span> <span class="pre">WRITE</span> <span class="pre">ORDERED</span> <span class="pre">BY</span></code>. Each field is written as
+<code class="docutils literal notranslate"><span class="pre">ASC</span> <span class="pre">NULLS</span> <span class="pre">LAST</span></code>.</p></li>
+<li><p><strong>value_time_partition_filter</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>) – Whether to add a value_time range predicate for MERGE partition
+pruning. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">self</span></code> – Returns self for method chaining.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.evaluation.tables.variable_table.VariableTable.write_to">
+<span class="sig-name descname"><span class="pre">write_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'create_or_replace'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniqueness_fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nullable_fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_ordered_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_time_partition_filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.evaluation.tables.variable_table.VariableTable.write_to" title="Link to this definition">#</a></dt>
+<dd><p>Write the DataFrame to an iceberg table.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul>
+<li><p><strong>table_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the table to write to.</p></li>
+<li><p><strong>write_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The write mode. Options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;insert&quot;</span></code>: Insert all rows directly without duplicate checking.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;append&quot;</span></code>: Insert new rows; skip rows matching uniqueness fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;upsert&quot;</span></code>: Insert new rows; update existing rows matching uniqueness fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;overwrite&quot;</span></code>: Replace all data, preserving table history.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;create_or_replace&quot;</span></code>: Drop and recreate table. Loses history.</p></li>
+</ul>
+<p>Default is “create_or_replace”.</p>
+</li>
+<li><p><strong>uniqueness_fields</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list[str]</span></code>, <em>optional</em>) – Explicit uniqueness fields to use for custom-table append or
+upsert writes. If omitted, uses the target table metadata.</p></li>
+<li><p><strong>nullable_fields</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list[str]</span></code>, <em>optional</em>) – Explicit nullable uniqueness fields to compare with null-safe
+equality during append or upsert writes. If omitted, uses the
+target table schema when available.</p></li>
+<li><p><strong>partition_by</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list[str]</span></code>, <em>optional</em>) – Partition expressions to use when creating a custom table with
+<code class="docutils literal notranslate"><span class="pre">write_mode=&quot;create_or_replace&quot;</span></code>.</p></li>
+<li><p><strong>write_ordered_by</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list[str]</span></code>, <em>optional</em>) – Field names to use for Iceberg table write order via
+<code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">TABLE</span> <span class="pre">...</span> <span class="pre">WRITE</span> <span class="pre">ORDERED</span> <span class="pre">BY</span></code>. Each field is written as
+<code class="docutils literal notranslate"><span class="pre">ASC</span> <span class="pre">NULLS</span> <span class="pre">LAST</span></code>.</p></li>
+<li><p><strong>value_time_partition_filter</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>) – Whether to add a value_time range predicate for MERGE partition
+pruning. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">self</span></code> – Returns self for method chaining.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">accessor</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">KGE</span><span class="p">()],</span>
+<span class="gp">... </span>    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">write_to</span><span class="p">(</span><span class="s2">&quot;location_metrics&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="teehr.evaluation.tables.unit_table.UnitTable.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">UnitTable</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="teehr.evaluation.tables.attribute_table.AttributeTable.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">AttributeTable</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable"><code class="docutils literal notranslate"><span class="pre">VariableTable</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.add"><code class="docutils literal notranslate"><span class="pre">VariableTable.add()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.add_attributes"><code class="docutils literal notranslate"><span class="pre">VariableTable.add_attributes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.add_calculated_fields"><code class="docutils literal notranslate"><span class="pre">VariableTable.add_calculated_fields()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.add_geometry"><code class="docutils literal notranslate"><span class="pre">VariableTable.add_geometry()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.aggregate"><code class="docutils literal notranslate"><span class="pre">VariableTable.aggregate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.delete"><code class="docutils literal notranslate"><span class="pre">VariableTable.delete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.distinct_values"><code class="docutils literal notranslate"><span class="pre">VariableTable.distinct_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.drop"><code class="docutils literal notranslate"><span class="pre">VariableTable.drop()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.extraction_func"><code class="docutils literal notranslate"><span class="pre">VariableTable.extraction_func()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.filter"><code class="docutils literal notranslate"><span class="pre">VariableTable.filter()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.is_core_table"><code class="docutils literal notranslate"><span class="pre">VariableTable.is_core_table</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.load_csv"><code class="docutils literal notranslate"><span class="pre">VariableTable.load_csv()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.load_dataframe"><code class="docutils literal notranslate"><span class="pre">VariableTable.load_dataframe()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.load_parquet"><code class="docutils literal notranslate"><span class="pre">VariableTable.load_parquet()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.order_by"><code class="docutils literal notranslate"><span class="pre">VariableTable.order_by()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.schema_func"><code class="docutils literal notranslate"><span class="pre">VariableTable.schema_func()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.to_geopandas"><code class="docutils literal notranslate"><span class="pre">VariableTable.to_geopandas()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.to_pandas"><code class="docutils literal notranslate"><span class="pre">VariableTable.to_pandas()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.to_sdf"><code class="docutils literal notranslate"><span class="pre">VariableTable.to_sdf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.validate"><code class="docutils literal notranslate"><span class="pre">VariableTable.validate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.write"><code class="docutils literal notranslate"><span class="pre">VariableTable.write()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.evaluation.tables.variable_table.VariableTable.write_to"><code class="docutils literal notranslate"><span class="pre">VariableTable.write_to()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/generated/teehr.evaluation.tables.variable_table.VariableTable.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.6.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
