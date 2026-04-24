@@ -21,6 +21,7 @@ from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
+from teehr.evaluation.evaluation import create_spark_session
 
 TIMEFORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -417,6 +418,29 @@ def test_nwm_configuration_metadata():
     assert config_meta["description"] == "Alaska NWM medium range, GFS forcing"
 
 
+@pytest.mark.skip(reason="This must be run manually since it requires an isolated spark session")
+def test_reading_nwm_operational_from_gcs():
+    """Test reading NWM operational forcing data from GCS with sedona."""
+    spark = create_spark_session(
+        app_name="test_nwm_operational_from_gcs",
+        enable_gcs=True
+    )
+    filepaths = [
+        "gs://national-water-model/nwm.20260404/forcing_analysis_assim/nwm.t00z.analysis_assim.forcing.tm00.conus.nc"
+    ]
+    nc_sdf = (
+        spark
+        .read
+        .format("binaryFile")
+        .load(filepaths)
+        .selectExpr("RS_FromNetCDF(content, 'RAINRATE', 'x', 'y') as raster", "path as filepath")
+    )
+    # Check that some data was returned
+    assert nc_sdf.count() == 1
+    assert "raster" in nc_sdf.columns
+    assert "filepath" in nc_sdf.columns
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
         test_parsing_remote_json_paths(tempdir)
@@ -436,3 +460,4 @@ if __name__ == "__main__":
     test_create_periods_based_on_year()
     test_start_end_z_hours()
     test_nwm_configuration_metadata()
+    test_reading_nwm_operational_from_gcs()

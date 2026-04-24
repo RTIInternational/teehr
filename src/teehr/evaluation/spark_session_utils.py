@@ -51,6 +51,10 @@ def create_spark_session(
     aws_session_token: str = None,
     aws_region: str = const.AWS_REGION,
     aws_profile: str = None,
+    # GCS credential parameters
+    enable_gcs: bool = False,
+    gcs_project_id: str = None,
+    gcs_service_account_key_file: str = None,
     # Simple extensibility parameters
     add_packages: List[str] = None,
     update_configs: Dict[str, str] = None,
@@ -106,6 +110,18 @@ def create_spark_session(
     aws_profile : str
         AWS profile name to use from ~/.aws/credentials. Only reads credentials
         file if this parameter is explicitly provided. Default is None.
+    enable_gcs : bool
+        Whether to add GCS (Google Cloud Storage) connector support.
+        Default is False.
+    gcs_project_id : str
+        GCS project ID. Used for billing and quota tracking. When accessing
+        public buckets without credentials, set to "anonymous" or any
+        non-empty string. Default is None (will be set to "anonymous" when
+        enable_gcs is True and no service account key is provided).
+    gcs_service_account_key_file : str
+        Path to a GCS service account JSON key file. When provided,
+        authenticated access is used. When None, unauthenticated
+        (public-bucket) access is used. Default is None.
     add_packages : List[str]
         Provided Spark packages will be added if they do not already exist.
         Default is None.
@@ -161,6 +177,14 @@ def create_spark_session(
         aws_region=aws_region,
         aws_profile=aws_profile,
     )
+
+    # Set GCS configuration if available
+    if enable_gcs:
+        _set_gcs_configuration(
+            conf=conf,
+            gcs_project_id=gcs_project_id,
+            gcs_service_account_key_file=gcs_service_account_key_file,
+        )
 
     # Set catalog metadata in Spark configuration
     _set_catalog_metadata(
@@ -477,6 +501,78 @@ def _set_aws_credentials_in_spark(
         "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
     )
     return
+
+def _set_gcs_configuration(
+    conf: SparkConf,
+    gcs_project_id: str = None,
+    gcs_service_account_key_file: str = None,
+):
+    """Configure Spark for Google Cloud Storage (GCS) access.
+
+    Parameters
+    ----------
+    conf : SparkConf
+        The Spark configuration object to update.
+    gcs_project_id : str
+        GCS project ID for billing/quota. Defaults to "anonymous" when
+        no service account key is provided (public bucket access).
+    gcs_service_account_key_file : str
+        Path to a GCS service account JSON key file. When None,
+        unauthenticated access is used (suitable for public buckets).
+    """
+    GCS_CONNECTOR_VERSION = "hadoop3-2.2.32"
+    gcs_package = f"com.google.cloud.bigdataoss:gcs-connector:{GCS_CONNECTOR_VERSION}"
+
+    # Add the GCS connector package
+    current_packages = conf.get("spark.jars.packages").split(",")
+    if gcs_package not in current_packages:
+        current_packages.append(gcs_package)
+    conf.set("spark.jars.packages", ",".join(current_packages))
+
+    # Register GCS filesystem implementations
+    conf.set(
+        "spark.hadoop.fs.gs.impl",
+        "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
+    )
+    conf.set(
+        "spark.hadoop.fs.AbstractFileSystem.gs.impl",
+        "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS"
+    )
+
+    if gcs_service_account_key_file:
+        key_path = Path(gcs_service_account_key_file)
+        if not key_path.exists():
+            raise FileNotFoundError(
+                f"GCS service account key file not found: {gcs_service_account_key_file}"
+            )
+        logger.info(f"🔑 Using GCS service account key: {gcs_service_account_key_file}")
+        conf.set("spark.hadoop.google.cloud.auth.service.account.enable", "true")
+        conf.set(
+            "spark.hadoop.google.cloud.auth.service.account.keyfile",
+            str(key_path)
+        )
+        if gcs_project_id:
+            conf.set("spark.hadoop.fs.gs.project.id", gcs_project_id)
+    else:
+        # Unauthenticated access for public GCS buckets
+        logger.info("🔑 Using unauthenticated GCS access (public buckets)")
+        # Set both old-style (fs.gs.*) and new-style (google.cloud.*) auth
+        # properties so the connector picks up UNAUTHENTICATED regardless of
+        # which configuration namespace it checks first.
+        conf.set("spark.hadoop.fs.gs.auth.type", "UNAUTHENTICATED")
+        conf.set("spark.hadoop.google.cloud.auth.type", "UNAUTHENTICATED")
+        # Explicitly disable service account auth to prevent the connector from
+        # attempting to contact the GCE metadata server (http://metadata.google.internal/)
+        # for credentials.  Without this, the connector may hang on machines
+        # that are not running on GCP.
+        conf.set("spark.hadoop.google.cloud.auth.service.account.enable", "false")
+        # Enable null (anonymous) credentials — required for the connector to
+        # accept a configuration with no active credential source.
+        conf.set("spark.hadoop.fs.gs.auth.null.enable", "true")
+        conf.set(
+            "spark.hadoop.fs.gs.project.id",
+            gcs_project_id if gcs_project_id else "anonymous"
+        )
 
 
 def _set_catalog_metadata(
