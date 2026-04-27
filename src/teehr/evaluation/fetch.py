@@ -925,16 +925,18 @@ class Fetch:
             prefix=nwm_version
         )
 
-        ev_variable_name = format_nwm_variable_name(variable_name)
-        ev_config = format_nwm_configuration_metadata(
-            nwm_config_name=nwm_configuration,
-            nwm_version=nwm_version
-        )
-
         if "hawaii" in nwm_configuration:
             variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
         else:
             variable_mapper = NWM_VARIABLE_MAPPER
+
+        ev_variable_name = variable_mapper[VARIABLE_NAME].get(
+            variable_name, variable_name
+        )
+        ev_config = format_nwm_configuration_metadata(
+            nwm_config_name=nwm_configuration,
+            nwm_version=nwm_version
+        )
 
         # Clear out cache
         remove_dir_if_exists(self.nwm_cache_dir)
@@ -1221,7 +1223,14 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
-        ev_variable_name = format_nwm_variable_name(variable_name)
+        if "hawaii" in nwm_configuration:
+            variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
+        else:
+            variable_mapper = NWM_VARIABLE_MAPPER
+
+        ev_variable_name = variable_mapper[VARIABLE_NAME].get(
+            variable_name, variable_name
+        )
         ev_config = format_nwm_configuration_metadata(
             nwm_config_name=nwm_configuration,
             nwm_version=nwm_version
@@ -1258,11 +1267,6 @@ class Fetch:
                 ev_weights_cache_dir,
                 f"{ev_config['name']}_pixel_weights.parquet"
             )
-
-        if "hawaii" in nwm_configuration:
-            variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
-        else:
-            variable_mapper = NWM_VARIABLE_MAPPER
 
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
