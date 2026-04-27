@@ -24,7 +24,8 @@ from teehr.fetching.const import (
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME,
-    MEMBER
+    MEMBER,
+    NWM_UNIT_MAPPER
 )
 
 
@@ -37,7 +38,7 @@ def file_chunk_loop(
     schema: pa.Schema,
     ignore_missing_file: bool,
     nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
 ):
     """Fetch NWM values and convert to tabular format for a single json."""
     ds = get_dataset(
@@ -56,10 +57,10 @@ def file_chunk_loop(
         teehr_units = nwm_units
         teehr_variable_name = variable_name
     else:
-        teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, nwm_units)
+        teehr_units = NWM_UNIT_MAPPER[UNIT_NAME].get(nwm_units, nwm_units)
         teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
-            variable_name, variable_name
-        )
+            variable_name
+        ).get("name")
 
     ref_time = pd.to_datetime(row.day) \
         + pd.to_timedelta(int(row.z_hour[1:3]), unit="h")
@@ -102,7 +103,7 @@ def process_chunk_of_files(
     ignore_missing_file: bool,
     overwrite_output: bool,
     nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, str]],
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool
 ):
@@ -189,7 +190,7 @@ def fetch_and_format_nwm_points(
     ignore_missing_file: bool,
     overwrite_output: bool,
     nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, str]],
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool
 ):

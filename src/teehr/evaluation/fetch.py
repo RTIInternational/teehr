@@ -14,7 +14,7 @@ from teehr.fetching.nwm.nwm_grids import nwm_grids_to_parquet
 from teehr.fetching.nwm.retrospective_points import nwm_retro_to_parquet
 from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
 from teehr.fetching.utils import (
-    format_nwm_variable_name,
+    get_nwm_variable_mapper,
     format_nwm_configuration_metadata
 )
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
@@ -33,12 +33,11 @@ from teehr.models.fetching.utils import (
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
     USGS_VARIABLE_MAPPER,
-    VARIABLE_NAME,
-    NWM_VARIABLE_MAPPER,
-    NWM_HAWAII_VARIABLE_MAPPER
+    VARIABLE_NAME
 )
 from teehr.models.pydantic_table_models import (
-    Configuration
+    Configuration,
+    Variable
 )
 
 logger = logging.getLogger(__name__)
@@ -435,7 +434,8 @@ class Fetch:
         :func:`teehr.fetching.nwm.retrospective_points.nwm_retro_to_parquet`
         """ # noqa
         ev_configuration_name = f"{nwm_version}_retrospective"
-        ev_variable_name = format_nwm_variable_name(variable_name)
+        variable_mapper = get_nwm_variable_mapper("conus")
+        ev_variable_name = variable_mapper[VARIABLE_NAME].get(variable_name).get("name")
 
         logger.info("Getting secondary location IDs.")
         location_ids = self._get_secondary_location_ids(
@@ -459,7 +459,7 @@ class Fetch:
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
-            variable_mapper=NWM_VARIABLE_MAPPER,
+            variable_mapper=variable_mapper,
             timeseries_type=timeseries_type
         )
 
@@ -635,7 +635,8 @@ class Fetch:
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
         ev_configuration_name = f"{nwm_version}_retrospective"
-        ev_variable_name = format_nwm_variable_name(variable_name)
+        variable_mapper = get_nwm_variable_mapper("conus")
+        ev_variable_name = variable_mapper[VARIABLE_NAME].get(variable_name).get("name")
 
         # Clear out cache
         remove_dir_if_exists(self.nwm_cache_dir)
@@ -680,7 +681,7 @@ class Fetch:
             overwrite_output=overwrite_output,
             domain=domain,
             location_id_prefix=location_id_prefix,
-            variable_mapper=NWM_VARIABLE_MAPPER,
+            variable_mapper=variable_mapper,
             timeseries_type=timeseries_type,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
@@ -925,14 +926,9 @@ class Fetch:
             prefix=nwm_version
         )
 
-        if "hawaii" in nwm_configuration:
-            variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
-        else:
-            variable_mapper = NWM_VARIABLE_MAPPER
-
-        ev_variable_name = variable_mapper[VARIABLE_NAME].get(
-            variable_name, variable_name
-        )
+        domain = "hawaii" if "hawaii" in nwm_configuration else "conus"
+        variable_mapper = get_nwm_variable_mapper(domain)
+        ev_variable_name = variable_mapper[VARIABLE_NAME].get(variable_name).get("name")
         ev_config = format_nwm_configuration_metadata(
             nwm_config_name=nwm_configuration,
             nwm_version=nwm_version
@@ -981,6 +977,22 @@ class Fetch:
                     name=ev_config["name"],
                     timeseries_type=timeseries_type,
                     description=ev_config["description"]
+                )
+            )
+        # Add variable name to TEEHR if it doesn't already exist
+        ev_variable_long_name = variable_mapper[VARIABLE_NAME].get(variable_name).get("long_name")
+        variable_name_exists = not self._ev.variables.filter(
+            {
+                "column": "name",
+                "operator": "=",
+                "value": ev_variable_name
+            }
+        ).to_sdf().rdd.isEmpty()
+        if not variable_name_exists:
+            self._ev.variables.add(
+                Variable(
+                    name=ev_variable_name,
+                    long_name=ev_variable_long_name,
                 )
             )
         # For backwards compatibility
@@ -1223,14 +1235,10 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
-        if "hawaii" in nwm_configuration:
-            variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
-        else:
-            variable_mapper = NWM_VARIABLE_MAPPER
-
+        variable_mapper = get_nwm_variable_mapper("conus")
         ev_variable_name = variable_mapper[VARIABLE_NAME].get(
-            variable_name, variable_name
-        )
+            variable_name
+        ).get("name")
         ev_config = format_nwm_configuration_metadata(
             nwm_config_name=nwm_configuration,
             nwm_version=nwm_version

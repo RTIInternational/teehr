@@ -80,30 +80,28 @@ NWM_CONFIGURATION_DESCRIPTIONS = {
     "forcing_short_range_puertorico": "PRVI NAM-NEST mean areal forcing for NWM short range",
 }
 
-NWM_HAWAII_VARIABLE_MAPPER = {
-    VARIABLE_NAME: {
-        "streamflow": "streamflow_15min_inst",
-        "RAINRATE": "rainfall_hourly_rate",
-        "T2D": "temperature_hourly_mean"
-    },
+NWM_UNIT_MAPPER = {
     UNIT_NAME: {
         "m3 s-1": "m^3/s",
         "mm s^-1": "mm/s",  # NWM 3.0 forcing
         "mm s-1": "mm/s",   # NWM 2.2 forcing
-    },
+    }
+}
+
+NWM_HAWAII_VARIABLE_MAPPER = {
+    VARIABLE_NAME: {
+        "streamflow": {"name": "streamflow_15min_inst", "long_name": "15-minute Instantaneous Streamflow"},
+        "RAINRATE": {"name": "rainfall_hourly_rate", "long_name": "Hourly Rainfall Rate"},
+        "T2D": {"name": "temperature_hourly_mean", "long_name": "Hourly Mean Temperature"}
+    }
 }
 
 NWM_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
-        "streamflow": "streamflow_hourly_inst",
-        "RAINRATE": "rainfall_hourly_rate",
-        "T2D": "temperature_hourly_mean"
-    },
-    UNIT_NAME: {
-        "m3 s-1": "m^3/s",
-        "mm s^-1": "mm/s",  # NWM 3.0 forcing
-        "mm s-1": "mm/s",   # NWM 2.2 forcing
-    },
+        "streamflow": {"name": "streamflow_hourly_inst", "long_name": "Hourly Instantaneous Streamflow"},
+        "RAINRATE": {"name": "rainfall_hourly_rate", "long_name": "Hourly Rainfall Rate"},
+        "T2D": {"name": "temperature_hourly_mean", "long_name": "Hourly Mean Temperature"}
+    }
 }
 
 NWM12_ANALYSIS_CONFIG = {

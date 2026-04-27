@@ -55,7 +55,7 @@ def nwm_to_parquet(
     stepsize: Optional[int] = 100,
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
-    variable_mapper: Dict[str, Dict[str, str]] = None,
+    variable_mapper: Optional[Dict[str, Dict[str, Dict[str, str]]]] = None,
     timeseries_type: TimeseriesTypeEnum = "secondary",
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
@@ -141,13 +141,13 @@ def nwm_to_parquet(
     overwrite_output : Optional[bool]
         Flag specifying whether or not to overwrite output files if they
         already exist.  True = overwrite; False = fail.
-    variable_mapper : Optional[Dict[str, Dict[str, str]]]
-        A dictionary of dictionaries to map NWM variable and unit names to new names.
+    variable_mapper : Optional[Dict[str, Dict[str, Dict[str, str]]]]
+        A dictionary of dictionaries to map NWM variable names to new names.
         If None, no mapping is applied and the original NWM variable names
         are used in the output.
-        For example, to map "streamflow" to "discharge", and "mm s^-1" to "mm/s" use:
-        variable_mapper = {"variable_name": {"streamflow": "discharge"},
-        "unit_name": {"mm s^-1": "mm/s"}}
+        For example, to map "streamflow" to "discharge" use:
+        variable_mapper = {"variable_name": {"streamflow": {"name": "discharge",
+        "long_name": "Discharge"}}}
     timeseries_type : Optional[str]
         Whether to consider as the "primary" or "secondary" timeseries.
         Default is "secondary".

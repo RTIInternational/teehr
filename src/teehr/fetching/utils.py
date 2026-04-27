@@ -30,13 +30,13 @@ from teehr.models.fetching.utils import (
 )
 from teehr.fetching.const import (
     NWM_BUCKET,
+    NWM_HAWAII_VARIABLE_MAPPER,
     NWM_S3_JSON_PATH,
     NWM30_START_DATE,
     NWM21_START_DATE,
     NWM20_START_DATE,
     NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
-    VARIABLE_NAME,
     NWM_CONFIGURATION_DESCRIPTIONS,
     UNIT_NAME
 )
@@ -194,11 +194,14 @@ def format_nwm_configuration_metadata(
     }
 
 
-def format_nwm_variable_name(variable_name: str) -> str:
-    """Format the NWM variable name for the Evaluation."""
-    logger.info(f"Getting schema variable name for {variable_name}.")
-    return NWM_VARIABLE_MAPPER[VARIABLE_NAME]. \
-        get(variable_name, variable_name)
+def get_nwm_variable_mapper(domain: str) -> Dict[str, str]:
+    """Return the NWM variable mapper for the given domain."""
+    logger.info(f"Getting schema variable mapper for domain: {domain}.")
+    if "hawaii" in domain:
+        variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
+    else:
+        variable_mapper = NWM_VARIABLE_MAPPER
+    return variable_mapper
 
 
 def validate_operational_start_end_date(

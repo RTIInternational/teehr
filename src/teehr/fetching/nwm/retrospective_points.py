@@ -48,7 +48,8 @@ from teehr.fetching.const import (
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME,
-    MEMBER
+    MEMBER,
+    NWM_UNIT_MAPPER
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
@@ -111,7 +112,7 @@ def validate_retrospective_start_end_date(
 def da_to_df(
         nwm_version: SupportedNWMRetroVersionsEnum,
         da: xr.DataArray,
-        variable_mapper: Dict[str, Dict[str, str]]
+        variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
 ) -> pd.DataFrame:
     """Format NWM retrospective data to TEEHR format."""
     logger.debug("Converting DataArray to a formatted DataFrame.")
@@ -122,11 +123,10 @@ def da_to_df(
         df[UNIT_NAME] = da.units
         df[VARIABLE_NAME] = da.name.value
     else:
-        # TODO: Make sure the mapping values are valid?
-        df[UNIT_NAME] = variable_mapper[UNIT_NAME].get(da.units, da.units)
+        df[UNIT_NAME] = NWM_UNIT_MAPPER[UNIT_NAME].get(da.units, da.units)
         df[VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].get(
-            da.name, da.name
-        )
+            da.name
+        ).get("name")
     df[CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
     df[REFERENCE_TIME] = np.nan
     df[MEMBER] = None
@@ -184,7 +184,7 @@ def nwm_retro_to_parquet(
     chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-    variable_mapper: Dict[str, Dict[str, str]] = None,
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]] = None,
     timeseries_type: TimeseriesTypeEnum = "secondary"
 ):
     """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
