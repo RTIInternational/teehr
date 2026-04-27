@@ -80,6 +80,19 @@ NWM_CONFIGURATION_DESCRIPTIONS = {
     "forcing_short_range_puertorico": "PRVI NAM-NEST mean areal forcing for NWM short range",
 }
 
+NWM_HAWAII_VARIABLE_MAPPER = {
+    VARIABLE_NAME: {
+        "streamflow": "streamflow_15min_inst",
+        "RAINRATE": "rainfall_hourly_rate",
+        "T2D": "temperature_hourly_mean"
+    },
+    UNIT_NAME: {
+        "m3 s-1": "m^3/s",
+        "mm s^-1": "mm/s",  # NWM 3.0 forcing
+        "mm s-1": "mm/s",   # NWM 2.2 forcing
+    },
+}
+
 NWM_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
         "streamflow": "streamflow_hourly_inst",

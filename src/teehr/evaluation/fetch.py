@@ -34,7 +34,8 @@ from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
     USGS_VARIABLE_MAPPER,
     VARIABLE_NAME,
-    NWM_VARIABLE_MAPPER
+    NWM_VARIABLE_MAPPER,
+    NWM_HAWAII_VARIABLE_MAPPER
 )
 from teehr.models.pydantic_table_models import (
     Configuration
@@ -930,6 +931,11 @@ class Fetch:
             nwm_version=nwm_version
         )
 
+        if "hawaii" in nwm_configuration:
+            variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
+        else:
+            variable_mapper = NWM_VARIABLE_MAPPER
+
         # Clear out cache
         remove_dir_if_exists(self.nwm_cache_dir)
 
@@ -956,7 +962,7 @@ class Fetch:
             stepsize=stepsize,
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
-            variable_mapper=NWM_VARIABLE_MAPPER,
+            variable_mapper=variable_mapper,
             timeseries_type=timeseries_type,
             starting_z_hour=starting_z_hour,
             ending_z_hour=ending_z_hour,
@@ -1253,6 +1259,11 @@ class Fetch:
                 f"{ev_config['name']}_pixel_weights.parquet"
             )
 
+        if "hawaii" in nwm_configuration:
+            variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
+        else:
+            variable_mapper = NWM_VARIABLE_MAPPER
+
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
@@ -1275,7 +1286,7 @@ class Fetch:
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix,
-            variable_mapper=NWM_VARIABLE_MAPPER,
+            variable_mapper=variable_mapper,
             starting_z_hour=starting_z_hour,
             ending_z_hour=ending_z_hour,
             unique_zone_id="id",
