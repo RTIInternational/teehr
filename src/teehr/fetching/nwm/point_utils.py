@@ -24,8 +24,7 @@ from teehr.fetching.const import (
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME,
-    MEMBER,
-    NWM_VARIABLE_MAPPER
+    MEMBER
 )
 
 

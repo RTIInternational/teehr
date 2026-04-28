@@ -142,10 +142,10 @@ def process_nwm30_retro_group(
         chunk_df.loc[:, UNIT_NAME] = nwm_units
         chunk_df.loc[:, VARIABLE_NAME] = variable_name
     else:
-        chunk_df.loc[:, UNIT_NAME] = NWM_VARIABLE_MAPPER[UNIT_NAME].\
+        chunk_df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
             get(nwm_units, {}).get("name", nwm_units)
         chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name).get("name")
+            get(variable_name, {}).get("name", variable_name)
 
     chunk_df.loc[:, REFERENCE_TIME] = np.nan
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
@@ -229,7 +229,7 @@ def process_single_nwm21_retro_grid_file(
         df.loc[:, UNIT_NAME] = nwm_units
         df.loc[:, VARIABLE_NAME] = variable_name
     else:
-        df.loc[:, UNIT_NAME] = NWM_VARIABLE_MAPPER[UNIT_NAME].\
+        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
             get(nwm_units, {}).get("name", nwm_units)
         df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
             get(variable_name, {}).get("name", variable_name)
