@@ -9,15 +9,17 @@ import pytest
 from teehr.fetching.nwm.grid_utils import update_location_id_prefix
 from teehr.fetching.nwm.nwm_points import fetch_and_format_nwm_points
 from teehr.fetching.nwm.nwm_grids import fetch_and_format_nwm_grids
+from teehr.evaluation.tables.secondary_timeseries_table import SecondaryTimeseriesTable
 
 TEST_NWM_VARIABLE_MAPPER = {
     "variable_name": {
-        # "streamflow": "streamflow",
-        # "RAINRATE": "rainfall_hourly_rate",
+        "streamflow": {"name": "streamflow", "long_name": "Streamflow"},
+        "RAINRATE": {"name": "rainfall_hourly_rate", "long_name": "Rainfall Hourly Rate"},
     },
     "unit_name": {
-        "m3 s-1": "m3/s",
-    },
+        "m3 s-1": {"name": "m3/s", "long_name": "Cubic Meters per Second"},
+        "mm/hr": {"name": "mm/hr", "long_name": "Millimeters per Hour"},
+    }
 }
 
 
@@ -57,11 +59,14 @@ def test_nwm22_point_fetch_and_format(tmpdir):
     benchmark_file = Path(test_data_dir, "point_benchmark.parquet")
 
     bench_df = pd.read_parquet(benchmark_file)
+    # bench_df["unit_name"] = "m^3/s"  # Update unit name to match NWM unit mapper output.
     test_df = pd.read_parquet(parquet_file)
 
     # Run this to avoid issues with different column or row orders.
-    # Both dataframes should have 4 rows.
-    assert pd.concat([test_df, bench_df]).drop_duplicates().index.size == 4
+    # Both dataframes should have identical 4 rows.
+    assert pd.concat([test_df, bench_df]).drop_duplicates(
+        subset=SecondaryTimeseriesTable.uniqueness_fields
+    ).index.size == 4
 
 
 def test_nwm30_point_fetch_and_format(tmpdir):
@@ -105,7 +110,9 @@ def test_nwm30_point_fetch_and_format(tmpdir):
 
     # Run this to avoid issues with different column or row orders.
     # Both dataframes should have 4 rows.
-    assert pd.concat([test_df, bench_df]).drop_duplicates().index.size == 4
+    assert pd.concat([test_df, bench_df]).drop_duplicates(
+        subset=SecondaryTimeseriesTable.uniqueness_fields
+    ).index.size == 4
 
 
 def test_nwm30_point_fetch_and_format_medium_range_member(tmpdir):

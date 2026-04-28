@@ -49,7 +49,7 @@ from teehr.fetching.const import (
     VARIABLE_NAME,
     CONFIGURATION_NAME,
     MEMBER,
-    NWM_UNIT_MAPPER
+    NWM_VARIABLE_MAPPER
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
@@ -123,7 +123,7 @@ def da_to_df(
         df[UNIT_NAME] = da.units
         df[VARIABLE_NAME] = da.name.value
     else:
-        df[UNIT_NAME] = NWM_UNIT_MAPPER[UNIT_NAME].get(da.units, da.units)
+        df[UNIT_NAME] = NWM_VARIABLE_MAPPER[UNIT_NAME].get(da.units, {}).get("name", da.units)
         df[VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].get(
             da.name
         ).get("name")

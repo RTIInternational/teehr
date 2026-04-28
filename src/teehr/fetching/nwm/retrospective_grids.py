@@ -49,7 +49,7 @@ from teehr.fetching.const import (
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME,
-    NWM_UNIT_MAPPER
+    NWM_VARIABLE_MAPPER
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
@@ -142,8 +142,8 @@ def process_nwm30_retro_group(
         chunk_df.loc[:, UNIT_NAME] = nwm_units
         chunk_df.loc[:, VARIABLE_NAME] = variable_name
     else:
-        chunk_df.loc[:, UNIT_NAME] = NWM_UNIT_MAPPER[UNIT_NAME].\
-            get(nwm_units, nwm_units)
+        chunk_df.loc[:, UNIT_NAME] = NWM_VARIABLE_MAPPER[UNIT_NAME].\
+            get(nwm_units, {}).get("name", nwm_units)
         chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
             get(variable_name).get("name")
 
@@ -229,8 +229,8 @@ def process_single_nwm21_retro_grid_file(
         df.loc[:, UNIT_NAME] = nwm_units
         df.loc[:, VARIABLE_NAME] = variable_name
     else:
-        df.loc[:, UNIT_NAME] = NWM_UNIT_MAPPER[UNIT_NAME].\
-            get(nwm_units, nwm_units)
+        df.loc[:, UNIT_NAME] = NWM_VARIABLE_MAPPER[UNIT_NAME].\
+            get(nwm_units, {}).get("name", nwm_units)
         df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
             get(variable_name).get("name")
 

@@ -25,7 +25,7 @@ from teehr.fetching.const import (
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME,
-    NWM_UNIT_MAPPER
+    NWM_VARIABLE_MAPPER
 )
 
 logger = logging.getLogger(__name__)
@@ -161,8 +161,8 @@ def process_single_nwm_grid_file(
         df.loc[:, UNIT_NAME] = nwm_units
         df.loc[:, VARIABLE_NAME] = variable_name
     else:
-        df.loc[:, UNIT_NAME] = NWM_UNIT_MAPPER[UNIT_NAME].\
-            get(nwm_units, nwm_units)
+        df.loc[:, UNIT_NAME] = NWM_VARIABLE_MAPPER[UNIT_NAME].\
+            get(nwm_units, {}).get("name", nwm_units)
         df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
             get(variable_name).get("name")
 

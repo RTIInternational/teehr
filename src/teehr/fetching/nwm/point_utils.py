@@ -25,7 +25,7 @@ from teehr.fetching.const import (
     VARIABLE_NAME,
     CONFIGURATION_NAME,
     MEMBER,
-    NWM_UNIT_MAPPER
+    NWM_VARIABLE_MAPPER
 )
 
 
@@ -50,17 +50,16 @@ def file_chunk_loop(
         return None
     ds = ds.sel(feature_id=location_ids)
     vals = ds[variable_name].astype("float32").values
-
     nwm_units = ds[variable_name].units
 
-    if not variable_mapper:
-        teehr_units = nwm_units
+    if variable_mapper is None:
         teehr_variable_name = variable_name
+        teehr_units = nwm_units
     else:
-        teehr_units = NWM_UNIT_MAPPER[UNIT_NAME].get(nwm_units, nwm_units)
         teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
-            variable_name
-        ).get("name")
+            variable_name, {}
+        ).get("name", variable_name)
+        teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, {}).get("name", nwm_units)
 
     ref_time = pd.to_datetime(row.day) \
         + pd.to_timedelta(int(row.z_hour[1:3]), unit="h")
