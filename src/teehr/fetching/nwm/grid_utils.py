@@ -157,11 +157,11 @@ def process_single_nwm_grid_file(
     # Calculate mean areal value of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    if not variable_mapper:
+    if variable_mapper is None:
         df.loc[:, UNIT_NAME] = nwm_units
         df.loc[:, VARIABLE_NAME] = variable_name
     else:
-        df.loc[:, UNIT_NAME] = NWM_VARIABLE_MAPPER[UNIT_NAME].\
+        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
             get(nwm_units, {}).get("name", nwm_units)
         df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
             get(variable_name).get("name")

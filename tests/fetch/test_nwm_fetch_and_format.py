@@ -19,6 +19,7 @@ TEST_NWM_VARIABLE_MAPPER = {
     "unit_name": {
         "m3 s-1": {"name": "m3/s", "long_name": "Cubic Meters per Second"},
         "mm/hr": {"name": "mm/hr", "long_name": "Millimeters per Hour"},
+        "mm/s": {"name": "mm s^-1", "long_name": "Millimeters per Second"},
     }
 }
 
