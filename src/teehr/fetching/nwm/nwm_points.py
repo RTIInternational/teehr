@@ -142,12 +142,18 @@ def nwm_to_parquet(
         Flag specifying whether or not to overwrite output files if they
         already exist.  True = overwrite; False = fail.
     variable_mapper : Optional[Dict[str, Dict[str, Dict[str, str]]]]
-        A dictionary of dictionaries to map NWM variable names to new names.
-        If None, no mapping is applied and the original NWM variable names
-        are used in the output.
-        For example, to map "streamflow" to "discharge" use:
-        variable_mapper = {"variable_name": {"streamflow": {"name": "discharge",
-        "long_name": "Discharge"}}}
+        A dictionary of dictionaries to map NWM variable names and/or unit
+        names to new names. Supports two top-level keys: ``"variable_name"``
+        and ``"unit_name"``. If None, no mapping is applied and the original
+        NWM variable and unit names are used in the output.
+        For example, to map the variable name "streamflow" to "discharge" and
+        the unit "m3 s-1" to "m^3/s" use:
+        variable_mapper = {
+            "variable_name": {"streamflow": {"name": "discharge",
+                "long_name": "Discharge"}},
+            "unit_name": {"m3 s-1": {"name": "m^3/s",
+                "long_name": "Cubic Meters per Second"}}
+        }
     timeseries_type : Optional[str]
         Whether to consider as the "primary" or "secondary" timeseries.
         Default is "secondary".

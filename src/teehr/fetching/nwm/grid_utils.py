@@ -24,8 +24,7 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME,
-    NWM_VARIABLE_MAPPER
+    CONFIGURATION_NAME
 )
 
 logger = logging.getLogger(__name__)
