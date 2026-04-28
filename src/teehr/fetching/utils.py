@@ -194,7 +194,7 @@ def format_nwm_configuration_metadata(
     }
 
 
-def get_nwm_variable_mapper(nwm_configuration: str) -> Dict[str, str]:
+def get_nwm_variable_mapper(nwm_configuration: str) -> Dict[str, Dict[str, Dict[str, str]]]:
     """Return the NWM variable mapper for the given NWM configuration."""
     logger.info(f"Getting schema variable mapper for NWM configuration: {nwm_configuration}.")
     if "hawaii" in nwm_configuration:
