@@ -232,7 +232,7 @@ def process_single_nwm21_retro_grid_file(
         df.loc[:, UNIT_NAME] = NWM_VARIABLE_MAPPER[UNIT_NAME].\
             get(nwm_units, {}).get("name", nwm_units)
         df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name).get("name")
+            get(variable_name, {}).get("name", variable_name)
 
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = np.nan
