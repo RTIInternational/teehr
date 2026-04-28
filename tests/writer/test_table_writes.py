@@ -224,6 +224,89 @@ def test_write_to_custom_table_with_partition_by(
 
 
 @pytest.mark.function_scope_evaluation_template
+def test_build_partition_filters_string_and_timestamp(
+    function_scope_evaluation_template,
+):
+    """Builds IN and min/max filters from table partition definitions."""
+    ev = function_scope_evaluation_template
+
+    base_df = pd.DataFrame(
+        {
+            "partition_key": ["alpha", "alpha", "beta"],
+            "value_time": [
+                pd.Timestamp("2020-01-01 00:00:00"),
+                pd.Timestamp("2020-01-01 01:00:00"),
+                pd.Timestamp("2020-01-01 02:00:00"),
+            ],
+            "value": [1.0, 2.0, 3.0],
+        }
+    )
+    ev._write.to_warehouse(
+        source_data=base_df,
+        table_name="custom_partition_filters",
+        write_mode="create_or_replace",
+        partition_by=["partition_key", "value_time"],
+    )
+
+    source_df = pd.DataFrame(
+        {
+            "partition_key": ["alpha", "alpha"],
+            "value_time": [
+                pd.Timestamp("2020-01-01 00:00:00"),
+                pd.Timestamp("2020-01-01 01:00:00"),
+            ],
+            "value": [10.0, 11.0],
+        }
+    )
+    source_view = "partition_filter_source_view"
+    ev.spark.createDataFrame(source_df).createOrReplaceTempView(source_view)
+
+    filter_sql = ev._write._build_partition_filters(
+        source_view=source_view,
+        table_name="custom_partition_filters",
+        catalog_name=ev.active_catalog.catalog_name,
+        namespace_name=ev.active_catalog.namespace_name,
+        use_partition_filters=True,
+    )
+
+    ev.sql(f"DROP VIEW IF EXISTS {source_view}")
+
+    assert "t.partition_key IN ('alpha')" in filter_sql
+    assert "t.value_time >= TIMESTAMP '2020-01-01 00:00:00'" in filter_sql
+    assert "t.value_time <= TIMESTAMP '2020-01-01 01:00:00'" in filter_sql
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_build_partition_filters_returns_empty_for_unpartitioned_table(
+    function_scope_evaluation_template,
+):
+    """Returns no pruning filter when target table has no partition spec."""
+    ev = function_scope_evaluation_template
+
+    source_view = "unpartitioned_partition_filter_source_view"
+    ev.spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "name": ["tmp_unit"],
+                "long_name": ["Temporary Unit"],
+            }
+        )
+    ).createOrReplaceTempView(source_view)
+
+    filter_sql = ev._write._build_partition_filters(
+        source_view=source_view,
+        table_name="units",
+        catalog_name=ev.active_catalog.catalog_name,
+        namespace_name=ev.active_catalog.namespace_name,
+        use_partition_filters=True,
+    )
+
+    ev.sql(f"DROP VIEW IF EXISTS {source_view}")
+
+    assert filter_sql == ""
+
+
+@pytest.mark.function_scope_evaluation_template
 def test_write_to_custom_table_with_write_ordered_by(
     function_scope_evaluation_template
 ):

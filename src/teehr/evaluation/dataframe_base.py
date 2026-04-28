@@ -375,7 +375,7 @@ class TeehrDataFrameBase(ABC):
         nullable_fields: list[str] | None = None,
         partition_by: list[str] | None = None,
         write_ordered_by: list[str] | None = None,
-        value_time_partition_filter: bool = True,
+        use_partition_filters: bool = True,
     ):
         """Write the DataFrame to an iceberg table.
 
@@ -411,8 +411,8 @@ class TeehrDataFrameBase(ABC):
             Field names to use for Iceberg table write order via
             ``ALTER TABLE ... WRITE ORDERED BY``. Each field is written as
             ``ASC NULLS LAST``.
-        value_time_partition_filter : bool, optional
-            Whether to add a value_time range predicate for MERGE partition
+        use_partition_filters : bool, optional
+            Whether to add partition-based predicates for MERGE partition
             pruning. Default is True.
 
         Returns
@@ -433,7 +433,7 @@ class TeehrDataFrameBase(ABC):
             nullable_fields=nullable_fields,
             partition_by=partition_by,
             write_ordered_by=write_ordered_by,
-            value_time_partition_filter=value_time_partition_filter,
+            use_partition_filters=use_partition_filters,
         )
 
     def write_to(
@@ -444,7 +444,7 @@ class TeehrDataFrameBase(ABC):
         nullable_fields: list[str] | None = None,
         partition_by: list[str] | None = None,
         write_ordered_by: list[str] | None = None,
-        value_time_partition_filter: bool = True,
+        use_partition_filters: bool = True,
     ):
         """Write the DataFrame to an iceberg table.
 
@@ -476,8 +476,8 @@ class TeehrDataFrameBase(ABC):
             Field names to use for Iceberg table write order via
             ``ALTER TABLE ... WRITE ORDERED BY``. Each field is written as
             ``ASC NULLS LAST``.
-        value_time_partition_filter : bool, optional
-            Whether to add a value_time range predicate for MERGE partition
+        use_partition_filters : bool, optional
+            Whether to add partition-based predicates for MERGE partition
             pruning. Default is True.
 
         Returns
@@ -509,6 +509,6 @@ class TeehrDataFrameBase(ABC):
             nullable_fields=nullable_fields,
             partition_by=partition_by,
             write_ordered_by=write_ordered_by,
-            value_time_partition_filter=value_time_partition_filter,
+            use_partition_filters=use_partition_filters,
         )
         return self

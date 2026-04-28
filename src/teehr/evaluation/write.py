@@ -1,11 +1,14 @@
 """Writer class for TEEHR evaluations."""
 import logging
 import time
+import re
+from datetime import date, datetime
 from typing import List, Union
 from pathlib import Path
 
 import pyspark.sql as ps
 import pandas as pd
+import pyspark.sql.types as pst
 from pyarrow import Schema as ArrowSchema
 import geopandas as gpd
 import pyarrow as pw
@@ -176,48 +179,254 @@ class Write:
                 parts.append(f"t.{fld} = s.{fld}")
         return " AND ".join(parts)
 
-    def _build_time_range_filter(
+    def _build_partition_filters(
         self,
         source_view: str,
-        uniqueness_fields: List[str],
-        value_time_partition_filter: bool = True
+        table_name: str,
+        catalog_name: str,
+        namespace_name: str,
+        use_partition_filters: bool = True
     ) -> str:
-        """Build time-range filter for partition pruning if value_time is present.
+        """Build partition filters for MERGE pruning using table partitions.
 
-        This filter allows Iceberg to prune partitions during MERGE operations.
-        Pre-computes min/max values as literals since subqueries aren't allowed
-        in MERGE conditions.
+        Reads partition expressions from the target table definition and builds
+        literal predicates for supported field types:
+
+        - timestamp/date/numeric: min/max bounds
+        - string/char/varchar: IN list of distinct source values
+
+        The resulting predicates are appended to the MERGE ON clause to help
+        Iceberg prune target partitions.
 
         Parameters
         ----------
         source_view : str
-            Name of the source view to get min/max values from.
-        uniqueness_fields : List[str]
-            List of uniqueness fields to check for value_time.
-        value_time_partition_filter : bool, optional
-            Whether to include the time-range filter. Default True.
+            Name of the source view used to compute literal bounds/values.
+        table_name : str
+            Name of the target table.
+        catalog_name : str
+            Target catalog name.
+        namespace_name : str
+            Target namespace name.
+        use_partition_filters : bool, optional
+            Whether to include partition-based filters. Default True.
         """
-        if not value_time_partition_filter:
+        if not use_partition_filters:
             return ""
 
-        if "value_time" not in uniqueness_fields:
+        full_table_name = f"{catalog_name}.{namespace_name}.{table_name}"
+
+        partition_fields = self._get_partition_fields(full_table_name)
+        if not partition_fields:
             return ""
 
-        # Pre-compute min/max value_time as literals (subqueries not allowed in MERGE)
-        bounds = self._ev.spark.sql(f"""
-            SELECT MIN(value_time) as min_time, MAX(value_time) as max_time
-            FROM {source_view}
-        """).collect()[0]
+        source_schema = self._ev.spark.table(source_view).schema
+        target_schema = self._ev.spark.table(full_table_name).schema
 
-        min_time = bounds["min_time"]
-        max_time = bounds["max_time"]
+        source_type_by_name = {
+            fld.name: fld.dataType for fld in source_schema.fields
+        }
+        target_type_by_name = {
+            fld.name: fld.dataType for fld in target_schema.fields
+        }
 
-        if min_time is None or max_time is None:
+        filter_parts = []
+        for field_name in partition_fields:
+            data_type = source_type_by_name.get(field_name)
+            if data_type is None:
+                data_type = target_type_by_name.get(field_name)
+            if data_type is None:
+                continue
+
+            if self._is_string_type(data_type):
+                distinct_vals = self._ev.spark.sql(f"""
+                    SELECT DISTINCT {field_name} AS partition_value
+                    FROM {source_view}
+                    WHERE {field_name} IS NOT NULL
+                """).collect()
+                raw_values = [row["partition_value"] for row in distinct_vals]
+                if not raw_values:
+                    continue
+                values_sql = ", ".join(
+                    self._sql_literal(val, data_type)
+                    for val in raw_values
+                )
+                filter_parts.append(f"t.{field_name} IN ({values_sql})")
+                continue
+
+            if self._is_numeric_or_temporal_type(data_type):
+                bounds = self._ev.spark.sql(f"""
+                    SELECT MIN({field_name}) AS min_value,
+                           MAX({field_name}) AS max_value
+                    FROM {source_view}
+                """).collect()[0]
+                min_value = bounds["min_value"]
+                max_value = bounds["max_value"]
+
+                if min_value is None or max_value is None:
+                    continue
+
+                min_sql = self._sql_literal(min_value, data_type)
+                max_sql = self._sql_literal(max_value, data_type)
+                filter_parts.append(
+                    f"t.{field_name} >= {min_sql} AND t.{field_name} <= {max_sql}"
+                )
+
+        if not filter_parts:
             return ""
 
-        return f"""
-            AND t.value_time >= TIMESTAMP '{min_time}'
-            AND t.value_time <= TIMESTAMP '{max_time}'"""
+        return "\n            AND " + "\n            AND ".join(filter_parts)
+
+    def _get_partition_fields(self, full_table_name: str) -> List[str]:
+        """Get base partition fields from SHOW CREATE TABLE output.
+
+        Supports direct column partition expressions and common Iceberg
+        transforms (years/months/days/hours/bucket/truncate).
+        """
+        create_rows = self._ev.spark.sql(
+            f"SHOW CREATE TABLE {full_table_name}"
+        ).collect()
+        create_statement = "\n".join(
+            row.createtab_stmt for row in create_rows
+        )
+
+        match = re.search(
+            r"PARTITIONED\s+BY\s*\((.*?)\)",
+            create_statement,
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+        if match is None:
+            return []
+
+        partition_exprs = self._split_sql_expressions(match.group(1))
+        partition_fields: List[str] = []
+        for expr in partition_exprs:
+            field_name = self._extract_partition_field(expr)
+            if field_name is not None:
+                partition_fields.append(field_name)
+
+        return partition_fields
+
+    def _split_sql_expressions(self, expr_sql: str) -> List[str]:
+        """Split a SQL expression list on top-level commas."""
+        parts = []
+        current = []
+        depth = 0
+
+        for ch in expr_sql:
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth = max(0, depth - 1)
+
+            if ch == "," and depth == 0:
+                part = "".join(current).strip()
+                if part:
+                    parts.append(part)
+                current = []
+                continue
+
+            current.append(ch)
+
+        tail = "".join(current).strip()
+        if tail:
+            parts.append(tail)
+
+        return parts
+
+    def _extract_partition_field(self, partition_expr: str) -> str | None:
+        """Extract base field name from a partition expression."""
+        expr = partition_expr.strip()
+        direct_match = re.fullmatch(r"`?([A-Za-z_][A-Za-z0-9_]*)`?", expr)
+        if direct_match:
+            return direct_match.group(1)
+
+        transform_match = re.fullmatch(
+            (
+                r"(?:years|months|days|hours|bucket|truncate)"
+                r"\s*\((.*)\)"
+            ),
+            expr,
+            flags=re.IGNORECASE,
+        )
+        if transform_match is None:
+            return None
+
+        args = self._split_sql_expressions(transform_match.group(1))
+        if not args:
+            return None
+
+        candidate = args[-1].strip()
+        candidate_match = re.fullmatch(
+            r"`?([A-Za-z_][A-Za-z0-9_]*)`?",
+            candidate,
+        )
+        if candidate_match:
+            return candidate_match.group(1)
+
+        return None
+
+    @staticmethod
+    def _is_string_type(data_type: pst.DataType) -> bool:
+        """Return True for string-like Spark types.
+
+        String partition fields can appear either as Spark ``StringType`` or
+        SQL ``char``/``varchar`` forms in table metadata.
+        """
+        if isinstance(data_type, pst.StringType):
+            return True
+
+        type_name = data_type.simpleString().lower()
+        return (
+            "char" in type_name or
+            "varchar" in type_name
+        )
+
+    @staticmethod
+    def _is_numeric_or_temporal_type(data_type: pst.DataType) -> bool:
+        """Return True for supported numeric/date-time Spark types.
+
+        These types are checked via concrete Spark classes because they are
+        consistently represented in Spark schemas.
+        """
+        return isinstance(
+            data_type,
+            (
+                pst.ByteType,
+                pst.ShortType,
+                pst.IntegerType,
+                pst.LongType,
+                pst.FloatType,
+                pst.DoubleType,
+                pst.DecimalType,
+                pst.DateType,
+                pst.TimestampType,
+                pst.TimestampNTZType,
+            ),
+        )
+
+    @staticmethod
+    def _sql_literal(value, data_type: pst.DataType) -> str:
+        """Render a Spark SQL literal for a Python value and Spark type."""
+        type_name = data_type.simpleString().lower()
+        if isinstance(data_type, pst.StringType) or "char" in type_name or "varchar" in type_name:
+            escaped = str(value).replace("'", "''")
+            return f"'{escaped}'"
+
+        if isinstance(data_type, pst.DateType):
+            if isinstance(value, datetime):
+                value = value.date()
+            return f"DATE '{value.isoformat()}'"
+
+        if isinstance(data_type, (pst.TimestampType, pst.TimestampNTZType)):
+            if hasattr(value, "to_pydatetime"):
+                value = value.to_pydatetime()
+            if isinstance(value, date) and not isinstance(value, datetime):
+                value = datetime.combine(value, datetime.min.time())
+            ts_value = value.strftime("%Y-%m-%d %H:%M:%S")
+            return f"TIMESTAMP '{ts_value}'"
+
+        return str(value)
 
     def _upsert(
         self,
@@ -227,7 +436,7 @@ class Write:
         catalog_name: str,
         namespace_name: str,
         nullable_fields: List[str] = None,
-        value_time_partition_filter: bool = True
+        use_partition_filters: bool = True
     ):
         """Upsert the DataFrame to the specified target in the catalog.
 
@@ -240,9 +449,13 @@ class Write:
         # Build ON clause with optimized operators
         on_sql = self._build_on_clause(uniqueness_fields, nullable_fields)
 
-        # Add time-range filter for partition pruning
-        time_filter = self._build_time_range_filter(
-            source_view, uniqueness_fields, value_time_partition_filter
+        # Add partition-aware filter for MERGE partition pruning
+        partition_filter = self._build_partition_filters(
+            source_view,
+            table_name,
+            catalog_name,
+            namespace_name,
+            use_partition_filters,
         )
 
         # Add timestamps to source view for new inserts
@@ -264,7 +477,7 @@ class Write:
         sql_query = f"""
             MERGE INTO {catalog_name}.{namespace_name}.{table_name} t
             USING {timestamp_view} s
-            ON {on_sql}{time_filter}
+            ON {on_sql}{partition_filter}
             WHEN MATCHED THEN UPDATE SET {update_set_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
@@ -279,7 +492,7 @@ class Write:
         catalog_name: str,
         namespace_name: str,
         nullable_fields: List[str] = None,
-        value_time_partition_filter: bool = True
+        use_partition_filters: bool = True
     ):
         """Append the DataFrame to the specified target in the catalog.
 
@@ -292,9 +505,13 @@ class Write:
         # Build ON clause with optimized operators
         on_sql = self._build_on_clause(uniqueness_fields, nullable_fields)
 
-        # Add time-range filter for partition pruning
-        time_filter = self._build_time_range_filter(
-            source_view, uniqueness_fields, value_time_partition_filter
+        # Add partition-aware filter for MERGE partition pruning
+        partition_filter = self._build_partition_filters(
+            source_view,
+            table_name,
+            catalog_name,
+            namespace_name,
+            use_partition_filters,
         )
 
         # Add timestamps to source view for new inserts
@@ -303,7 +520,7 @@ class Write:
         sql_query = f"""
             MERGE INTO {catalog_name}.{namespace_name}.{table_name} t
             USING {timestamp_view} s
-            ON {on_sql}{time_filter}
+            ON {on_sql}{partition_filter}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
         self._ev.sql(sql_query)
@@ -363,7 +580,7 @@ class Write:
         write_ordered_by: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None,
-        value_time_partition_filter: bool = True
+        use_partition_filters: bool = True
     ):
         """Write the DataFrame to the specified target in the catalog.
 
@@ -412,10 +629,10 @@ class Write:
         namespace_name : str, optional
             The namespace name to write to, by default None, which means the
             namespace_name of the active catalog is used.
-        value_time_partition_filter : bool, optional
-            Whether to add time-range filter for partition pruning in MERGE
-            operations. When True, adds WHERE clause to limit target table
-            scan to partitions matching source data's value_time range.
+        use_partition_filters : bool, optional
+            Whether to add partition filters for pruning in MERGE operations.
+            When True, adds literal predicates based on target partition
+            fields and source data values/ranges.
             Default is ``True``.
         """
         start_time = time.time()
@@ -525,7 +742,7 @@ class Write:
                 catalog_name=catalog_name,
                 namespace_name=namespace_name,
                 nullable_fields=nullable_fields,
-                value_time_partition_filter=value_time_partition_filter
+                use_partition_filters=use_partition_filters
             )
         elif write_mode == "upsert":
             if uniqueness_fields is None:
@@ -539,7 +756,7 @@ class Write:
                 catalog_name=catalog_name,
                 namespace_name=namespace_name,
                 nullable_fields=nullable_fields,
-                value_time_partition_filter=value_time_partition_filter
+                use_partition_filters=use_partition_filters
             )
         elif write_mode == "create_or_replace":
             self._create_or_replace(
