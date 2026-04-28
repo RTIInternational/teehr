@@ -194,10 +194,10 @@ def format_nwm_configuration_metadata(
     }
 
 
-def get_nwm_variable_mapper(domain: str) -> Dict[str, str]:
-    """Return the NWM variable mapper for the given domain."""
-    logger.info(f"Getting schema variable mapper for domain: {domain}.")
-    if "hawaii" in domain:
+def get_nwm_variable_mapper(nwm_configuration: str) -> Dict[str, str]:
+    """Return the NWM variable mapper for the given NWM configuration."""
+    logger.info(f"Getting schema variable mapper for NWM configuration: {nwm_configuration}.")
+    if "hawaii" in nwm_configuration:
         variable_mapper = NWM_HAWAII_VARIABLE_MAPPER
     else:
         variable_mapper = NWM_VARIABLE_MAPPER

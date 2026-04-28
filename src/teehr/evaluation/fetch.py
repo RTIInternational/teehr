@@ -926,8 +926,7 @@ class Fetch:
             prefix=nwm_version
         )
 
-        domain = "hawaii" if "hawaii" in nwm_configuration else "conus"
-        variable_mapper = get_nwm_variable_mapper(domain)
+        variable_mapper = get_nwm_variable_mapper(nwm_configuration)
         ev_variable_name = variable_mapper[VARIABLE_NAME].get(variable_name).get("name")
         ev_config = format_nwm_configuration_metadata(
             nwm_config_name=nwm_configuration,
