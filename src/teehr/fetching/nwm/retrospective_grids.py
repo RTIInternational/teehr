@@ -48,7 +48,8 @@ from teehr.fetching.const import (
     REFERENCE_TIME,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    NWM_VARIABLE_MAPPER
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
@@ -104,7 +105,7 @@ def process_nwm30_retro_group(
     variable_name: str,
     nwm_version: str,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
 ):
     """Compute the weighted average for a chunk of NWM v3.0 data.
 
@@ -139,12 +140,12 @@ def process_nwm30_retro_group(
     chunk_df = pd.concat(hourly_dfs)
     if not variable_mapper:
         chunk_df.loc[:, UNIT_NAME] = nwm_units
-        chunk_df.loc[:, VARIABLE_NAME] = variable_name.value
+        chunk_df.loc[:, VARIABLE_NAME] = variable_name
     else:
         chunk_df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, nwm_units)
+            get(nwm_units, {}).get("name", nwm_units)
         chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, variable_name)
+            get(variable_name, {}).get("name", variable_name)
 
     chunk_df.loc[:, REFERENCE_TIME] = np.nan
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
@@ -186,7 +187,7 @@ def process_single_nwm21_retro_grid_file(
     ignore_missing_file: bool,
     nwm_version: str,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
 ):
     """Compute the zonal mean for a single json reference file.
 
@@ -226,12 +227,12 @@ def process_single_nwm21_retro_grid_file(
 
     if not variable_mapper:
         df.loc[:, UNIT_NAME] = nwm_units
-        df.loc[:, VARIABLE_NAME] = variable_name.value
+        df.loc[:, VARIABLE_NAME] = variable_name
     else:
         df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, nwm_units)
+            get(nwm_units, {}).get("name", nwm_units)
         df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, variable_name)
+            get(variable_name, {}).get("name", variable_name)
 
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = np.nan
@@ -255,7 +256,7 @@ def nwm_retro_grids_to_parquet(
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
     location_id_prefix: Optional[Union[str, None]] = None,
-    variable_mapper: Dict[str, Dict[str, str]] = None,
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]] = None,
     timeseries_type: TimeseriesTypeEnum = "primary",
     calculate_zonal_weights: bool = False,
     zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
@@ -302,9 +303,8 @@ def nwm_retro_grids_to_parquet(
         Only used when NWM version equals v3.0.
     location_id_prefix : Union[str, None]
         Optional location ID prefix to add (prepend) or replace.
-    variable_mapper : Dict[str, Dict[str, str]]
-        Dictionary mapping NWM variable and unit names to TEEHR variable
-        and unit names.
+    variable_mapper : Dict[str, Dict[str, Dict[str, str]]]
+        Dictionary mapping NWM variable names to TEEHR variable names.
     calculate_zonal_weights : bool
         Flag to calculate zonal weights.
     zone_polygons : Union[Path, str, InstanceOf[GeoDataFrame]]

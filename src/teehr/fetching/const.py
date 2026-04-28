@@ -16,7 +16,6 @@ USGS_NODATA_VALUES = [-999999, -999, -9999, -99999]
 USGS_CONFIGURATION_NAME = "usgs_observations"
 
 NWM_BUCKET = "national-water-model"
-NWM22_UNIT_LOOKUP = {"m3 s-1": "m^3/s"}
 
 NWM30_START_DATE = datetime(2023, 9, 19, 0)
 NWM21_START_DATE = datetime(2021, 4, 20, 0)  # v2.1 and 2.2 are the same
@@ -80,17 +79,30 @@ NWM_CONFIGURATION_DESCRIPTIONS = {
     "forcing_short_range_puertorico": "PRVI NAM-NEST mean areal forcing for NWM short range",
 }
 
-NWM_VARIABLE_MAPPER = {
+NWM_HAWAII_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
-        "streamflow": "streamflow_hourly_inst",
-        "RAINRATE": "rainfall_hourly_rate",
-        "T2D": "temperature_hourly_mean"
+        "streamflow": {"name": "streamflow_15min_inst", "long_name": "15-minute Instantaneous Streamflow"},
+        "RAINRATE": {"name": "rainfall_hourly_rate", "long_name": "Hourly Rainfall Rate"},
+        "T2D": {"name": "temperature_hourly_mean", "long_name": "Hourly Mean Temperature"}
     },
     UNIT_NAME: {
-        "m3 s-1": "m^3/s",
-        "mm s^-1": "mm/s",  # NWM 3.0 forcing
-        "mm s-1": "mm/s",   # NWM 2.2 forcing
+        "m3 s-1": {"name": "m^3/s", "long_name": "Cubic Meters per Second"},
+        "mm s^-1": {"name": "mm/s", "long_name": "Millimeters per Second"},  # NWM 3.0 forcing
+        "mm s-1": {"name": "mm/s", "long_name": "Millimeters per Second"},   # NWM 2.2 forcing
+    }
+}
+
+NWM_VARIABLE_MAPPER = {
+    VARIABLE_NAME: {
+        "streamflow": {"name": "streamflow_hourly_inst", "long_name": "Hourly Instantaneous Streamflow"},
+        "RAINRATE": {"name": "rainfall_hourly_rate", "long_name": "Hourly Rainfall Rate"},
+        "T2D": {"name": "temperature_hourly_mean", "long_name": "Hourly Mean Temperature"}
     },
+    UNIT_NAME: {
+        "m3 s-1": {"name": "m^3/s", "long_name": "Cubic Meters per Second"},
+        "mm s^-1": {"name": "mm/s", "long_name": "Millimeters per Second"},  # NWM 3.0 forcing
+        "mm s-1": {"name": "mm/s", "long_name": "Millimeters per Second"},   # NWM 2.2 forcing
+    }
 }
 
 NWM12_ANALYSIS_CONFIG = {

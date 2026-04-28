@@ -118,7 +118,7 @@ def process_single_nwm_grid_file(
     weights_filepath: str,
     ignore_missing_file: bool,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
 ) -> pd.DataFrame:
     """Fetch data for a single reference file and compute weighted average."""
     ds = get_dataset(
@@ -156,14 +156,14 @@ def process_single_nwm_grid_file(
     # Calculate mean areal value of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    if not variable_mapper:
+    if variable_mapper is None:
         df.loc[:, UNIT_NAME] = nwm_units
         df.loc[:, VARIABLE_NAME] = variable_name
     else:
         df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, nwm_units)
+            get(nwm_units, {}).get("name", nwm_units)
         df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, variable_name)
+            get(variable_name).get("name")
 
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = ref_time
@@ -185,7 +185,7 @@ def fetch_and_format_nwm_grids(
     ignore_missing_file: bool,
     overwrite_output: bool,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]],
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
     convert_k_to_c: bool = True
@@ -244,9 +244,7 @@ def fetch_and_format_nwm_grids(
         yrmoday = df.day.iloc[0]
         z_hour = df.z_hour.iloc[0][1:3]
         ref_time_str = f"{yrmoday}T{z_hour}"
-        parquet_filepath = Path(
-            Path(output_parquet_dir), f"{ref_time_str}.parquet"
-        )
+        parquet_filepath = Path(output_parquet_dir, f"{ref_time_str}.parquet")
         z_hour_df.sort_values([LOCATION_ID, VALUE_TIME], inplace=True)
 
         if convert_k_to_c and variable_name == "T2D":
