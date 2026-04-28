@@ -434,7 +434,7 @@ class Fetch:
         :func:`teehr.fetching.nwm.retrospective_points.nwm_retro_to_parquet`
         """ # noqa
         ev_configuration_name = f"{nwm_version}_retrospective"
-        variable_mapper = get_nwm_variable_mapper("conus")
+        variable_mapper = get_nwm_variable_mapper("nwm_retrospective")
         ev_variable_name = variable_mapper[VARIABLE_NAME].get(variable_name).get("name")
 
         logger.info("Getting secondary location IDs.")
@@ -635,7 +635,7 @@ class Fetch:
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
         ev_configuration_name = f"{nwm_version}_retrospective"
-        variable_mapper = get_nwm_variable_mapper("conus")
+        variable_mapper = get_nwm_variable_mapper("nwm_retrospective")
         ev_variable_name = variable_mapper[VARIABLE_NAME].get(variable_name).get("name")
 
         # Clear out cache
@@ -1234,7 +1234,7 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
-        variable_mapper = get_nwm_variable_mapper("conus")
+        variable_mapper = get_nwm_variable_mapper("nwm_grid_operational")
         ev_variable_name = variable_mapper[VARIABLE_NAME].get(
             variable_name
         ).get("name")
