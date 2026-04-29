@@ -187,7 +187,11 @@ def calculate_metric_skill_score(
     return sdf
 
 
-def unpack_sdf_dict_columns(sdf, column_name: str, dot_replacement: str = "_"):
+def unpack_sdf_dict_columns(
+    sdf: ps.DataFrame,
+    column_name: str,
+    dot_replacement: str = "_"
+) -> ps.DataFrame:
     """Expand a MapType column into one column per key.
     Uses keys from the first row (assumes key set is consistent) and sanitizes dots in output names.
     """
