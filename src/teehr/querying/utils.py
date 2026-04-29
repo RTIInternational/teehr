@@ -203,12 +203,47 @@ def unpack_sdf_dict_columns(
         # k might be non-string; preserve uniqueness but remove '.' which breaks resolution
         return str(k).replace(".", dot_replacement)
 
-    value_cols = [
-        F.col(column_name).getItem(k).alias(safe_name(k))
-        for k in key_list
-    ]
-
     base_cols = [c for c in sdf.columns if c != column_name]
+
+    alias_to_keys = {}
+    for key in key_list:
+        alias = safe_name(key)
+        alias_to_keys.setdefault(alias, []).append(key)
+
+    duplicate_aliases = {
+        alias: keys for alias, keys in alias_to_keys.items() if len(keys) > 1
+    }
+    base_col_collisions = {
+        alias: keys for alias, keys in alias_to_keys.items() if alias in base_cols
+    }
+
+    if duplicate_aliases or base_col_collisions:
+        problems = []
+        if duplicate_aliases:
+            problems.append(
+                "sanitized map keys are not unique: "
+                + ", ".join(
+                    f"{alias!r} <- {[str(k) for k in keys]!r}"
+                    for alias, keys in sorted(duplicate_aliases.items())
+                )
+            )
+        if base_col_collisions:
+            problems.append(
+                "sanitized map keys collide with existing columns: "
+                + ", ".join(
+                    f"{alias!r} from {[str(k) for k in keys]!r}"
+                    for alias, keys in sorted(base_col_collisions.items())
+                )
+            )
+        raise ValueError(
+            f"Cannot unpack column {column_name!r} because "
+            + "; ".join(problems)
+        )
+
+    value_cols = [
+        F.col(column_name).getItem(k).alias(alias)
+        for k, alias in ((key, safe_name(key)) for key in key_list)
+    ]
     return sdf.select(*base_cols, *value_cols)
 
 
