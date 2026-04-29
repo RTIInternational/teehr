@@ -27,6 +27,9 @@ AUDIT_COLUMNS = ["created_at", "updated_at"]
 class Write:
     """Class to handle writing to the warehouse."""
 
+    # Skip string IN(...) pruning when distinct partition values exceed this.
+    STRING_PARTITION_FILTER_MAX_DISTINCT = 1000
+
     def __init__(self, ev=None):
         """Initialize the Writer with an Evaluation instance.
 
@@ -193,7 +196,7 @@ class Write:
         literal predicates for supported field types:
 
         - timestamp/date/numeric: min/max bounds
-        - string/char/varchar: IN list of distinct source values
+        - string/char/varchar: IN list of distinct source values (capped)
 
         The resulting predicates are appended to the MERGE ON clause to help
         Iceberg prune target partitions.
@@ -239,11 +242,33 @@ class Write:
                 continue
 
             if self._is_string_type(data_type):
+                max_distinct = self.STRING_PARTITION_FILTER_MAX_DISTINCT
+                if max_distinct is not None and max_distinct <= 0:
+                    continue
+
+                value_limit = (
+                    max_distinct + 1 if max_distinct is not None else None
+                )
+                limit_clause = f"LIMIT {value_limit}" if value_limit is not None else ""
                 distinct_vals = self._ev.spark.sql(f"""
                     SELECT DISTINCT {field_name} AS partition_value
                     FROM {source_view}
                     WHERE {field_name} IS NOT NULL
+                    {limit_clause}
                 """).collect()
+
+                if (
+                    max_distinct is not None and
+                    len(distinct_vals) > max_distinct
+                ):
+                    logger.warning(
+                        "Skipping string partition filter for field '%s': "
+                        "distinct values exceed cap (%s).",
+                        field_name,
+                        max_distinct,
+                    )
+                    continue
+
                 raw_values = [row["partition_value"] for row in distinct_vals]
                 if not raw_values:
                     continue
@@ -290,15 +315,11 @@ class Write:
             row.createtab_stmt for row in create_rows
         )
 
-        match = re.search(
-            r"PARTITIONED\s+BY\s*\((.*?)\)",
-            create_statement,
-            flags=re.IGNORECASE | re.DOTALL,
-        )
-        if match is None:
+        partition_spec_sql = self._extract_partition_spec_sql(create_statement)
+        if partition_spec_sql is None:
             return []
 
-        partition_exprs = self._split_sql_expressions(match.group(1))
+        partition_exprs = self._split_sql_expressions(partition_spec_sql)
         partition_fields: List[str] = []
         for expr in partition_exprs:
             field_name = self._extract_partition_field(expr)
@@ -306,6 +327,29 @@ class Write:
                 partition_fields.append(field_name)
 
         return partition_fields
+
+    def _extract_partition_spec_sql(self, create_statement: str) -> str | None:
+        """Extract PARTITIONED BY(...) content with balanced parentheses."""
+        start_match = re.search(
+            r"PARTITIONED\s+BY\s*\(",
+            create_statement,
+            flags=re.IGNORECASE,
+        )
+        if start_match is None:
+            return None
+
+        open_idx = start_match.end() - 1
+        depth = 0
+        for idx in range(open_idx, len(create_statement)):
+            ch = create_statement[idx]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    return create_statement[open_idx + 1:idx]
+
+        return None
 
     def _split_sql_expressions(self, expr_sql: str) -> List[str]:
         """Split a SQL expression list on top-level commas."""
@@ -356,13 +400,13 @@ class Write:
         if not args:
             return None
 
-        candidate = args[-1].strip()
-        candidate_match = re.fullmatch(
-            r"`?([A-Za-z_][A-Za-z0-9_]*)`?",
-            candidate,
-        )
-        if candidate_match:
-            return candidate_match.group(1)
+        for candidate in reversed(args):
+            candidate_match = re.fullmatch(
+                r"`?([A-Za-z_][A-Za-z0-9_]*)`?",
+                candidate.strip(),
+            )
+            if candidate_match:
+                return candidate_match.group(1)
 
         return None
 
@@ -423,7 +467,7 @@ class Write:
                 value = value.to_pydatetime()
             if isinstance(value, date) and not isinstance(value, datetime):
                 value = datetime.combine(value, datetime.min.time())
-            ts_value = value.strftime("%Y-%m-%d %H:%M:%S")
+            ts_value = value.isoformat(sep=" ", timespec="microseconds")
             return f"TIMESTAMP '{ts_value}'"
 
         return str(value)
