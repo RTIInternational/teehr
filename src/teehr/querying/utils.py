@@ -187,19 +187,25 @@ def calculate_metric_skill_score(
     return sdf
 
 
-def unpack_sdf_dict_columns(sdf: DataFrame, column_name: str) -> DataFrame:
-    """Explode a column of dictionaries into new columns named key_item."""
-    first_row = sdf.select(column_name).first()
-    keys = sdf.sparkSession.createDataFrame([first_row]).select(
-        F.explode(F.map_keys(F.col(column_name)))
-        ).distinct()
-    key_list = list(map(lambda row: row[0], keys.collect()))
-    key_cols = list(
-        map(lambda f: F.col(column_name).getItem(f).alias(str(f)), key_list)
-    )
-    df_cols = list(sdf.columns)
-    df_cols.remove(column_name)
-    return sdf.select(*df_cols, *key_cols)
+def unpack_sdf_dict_columns(sdf, column_name: str, dot_replacement: str = "_"):
+    """Expand a MapType column into one column per key.
+    Uses keys from the first row (assumes key set is consistent) and sanitizes dots in output names.
+    """
+    first = sdf.select(column_name).first()
+    m = first[column_name] if first is not None else None
+    key_list = list(m.keys()) if m else []
+
+    def safe_name(k) -> str:
+        # k might be non-string; preserve uniqueness but remove '.' which breaks resolution
+        return str(k).replace(".", dot_replacement)
+
+    value_cols = [
+        F.col(column_name).getItem(k).alias(safe_name(k))
+        for k in key_list
+    ]
+
+    base_cols = [c for c in sdf.columns if c != column_name]
+    return sdf.select(*base_cols, *value_cols)
 
 
 def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
