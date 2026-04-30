@@ -68,4 +68,4 @@ INSERT INTO variables VALUES
     ("streamflow", "Hourly Instantaneous Streamflow"),
     ("streamflow_hourly_inst", "Hourly Instantaneous Streamflow"),
     ("streamflow_daily_mean", "Daily Mean Streamflow"),
-    ("rainfall_hourly_rate", "Hourly Rainfall Rate");
+    ("rainfall_hourly_mean", "Hourly Mean Rainfall Rate");
