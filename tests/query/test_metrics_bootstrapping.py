@@ -52,7 +52,7 @@ def test_bootstrapping_signatures(session_scope_test_warehouse):
     assert isinstance(sig_metrics_df, pd.DataFrame)
     assert sig_metrics_df.index.size == 3
     assert sig_metrics_df.columns.size == 4
-    assert np.isclose(sig_metrics_df["flow_duration_curve_slope_0.5"].sum(), -172.21364)
+    assert np.isclose(sig_metrics_df["flow_duration_curve_slope_0_5"].sum(), -172.21364)
 
 
 @pytest.mark.session_scope_test_warehouse
@@ -87,9 +87,9 @@ def test_unpacking_bootstrap_results(session_scope_test_warehouse):
     cols = metrics_df.columns
     benchmark_cols = [
         "primary_location_id",
-        "kling_gupta_efficiency_0.95",
-        "kling_gupta_efficiency_0.5",
-        "kling_gupta_efficiency_0.05"
+        "kling_gupta_efficiency_0_95",
+        "kling_gupta_efficiency_0_5",
+        "kling_gupta_efficiency_0_05"
     ]
 
     assert sorted(cols) == sorted(benchmark_cols)
@@ -425,9 +425,9 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
     cols = metrics_df.columns
     benchmark_cols = [
         "primary_location_id",
-        "flow_duration_curve_slope_0.95",
-        "flow_duration_curve_slope_0.5",
-        "flow_duration_curve_slope_0.05"
+        "flow_duration_curve_slope_0_95",
+        "flow_duration_curve_slope_0_5",
+        "flow_duration_curve_slope_0_05"
     ]
 
     assert (sorted(cols) == sorted(benchmark_cols))
