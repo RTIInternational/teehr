@@ -356,6 +356,12 @@ NWM30_ANALYSIS_CONFIG = {
         "domain": "alaska",
         "configuration_name_in_filepath": "analysis_assim",
     },
+    "forcing_analysis_assim_extend_alaska": {
+        "num_lookback_hrs": 32,
+        "cycle_z_hours": [20],
+        "domain": "alaska",
+        "configuration_name_in_filepath": "analysis_assim_extend",
+    },
     "forcing_analysis_assim_hawaii": {
         "num_lookback_hrs": 3,
         "cycle_z_hours": np.arange(0, 24, 1),

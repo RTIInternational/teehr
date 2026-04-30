@@ -202,6 +202,30 @@ def test_building_nwm30_gcs_paths():
     )
 
 
+def test_building_nwm30_gcs_paths_alaska():
+    """Test building NWM30 GCS paths."""
+    gcs_component_paths = build_remote_nwm_filelist(
+        configuration="forcing_analysis_assim_extend_alaska",
+        output_type="forcing",
+        start_dt=parse("2023-11-28"),
+        end_dt=parse("2023-11-29"),
+        analysis_config_dict=NWM30_ANALYSIS_CONFIG,
+        t_minus_hours=[8],
+        ignore_missing_file=False,
+        prioritize_analysis_value_time=False,
+        drop_overlapping_assimilation_values=True
+    )
+    assert len(gcs_component_paths) == 2
+    assert (
+        gcs_component_paths[0] == \
+            'gcs://national-water-model/nwm.20231128/forcing_analysis_assim_extend_alaska/nwm.t20z.analysis_assim_extend.forcing.tm08.alaska.nc' # noqa
+    )
+    assert (
+        gcs_component_paths[-1] == \
+            'gcs://national-water-model/nwm.20231129/forcing_analysis_assim_extend_alaska/nwm.t20z.analysis_assim_extend.forcing.tm08.alaska.nc' # noqa
+    )
+
+
 def test_building_nwm22_gcs_paths():
     """Test building NWM22 GCS paths."""
     gcs_component_paths = build_remote_nwm_filelist(
