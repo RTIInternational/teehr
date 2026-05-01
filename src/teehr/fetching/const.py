@@ -82,7 +82,7 @@ NWM_CONFIGURATION_DESCRIPTIONS = {
 NWM_HAWAII_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
         "streamflow": {"name": "streamflow_15min_inst", "long_name": "15-minute Instantaneous Streamflow"},
-        "RAINRATE": {"name": "rainfall_hourly_rate", "long_name": "Hourly Rainfall Rate"},
+        "RAINRATE": {"name": "rainfall_hourly_mean", "long_name": "Hourly Mean Rainfall Rate"},
         "T2D": {"name": "temperature_hourly_mean", "long_name": "Hourly Mean Temperature"}
     },
     UNIT_NAME: {
@@ -95,7 +95,7 @@ NWM_HAWAII_VARIABLE_MAPPER = {
 NWM_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
         "streamflow": {"name": "streamflow_hourly_inst", "long_name": "Hourly Instantaneous Streamflow"},
-        "RAINRATE": {"name": "rainfall_hourly_rate", "long_name": "Hourly Rainfall Rate"},
+        "RAINRATE": {"name": "rainfall_hourly_mean", "long_name": "Hourly Mean Rainfall Rate"},
         "T2D": {"name": "temperature_hourly_mean", "long_name": "Hourly Mean Temperature"}
     },
     UNIT_NAME: {

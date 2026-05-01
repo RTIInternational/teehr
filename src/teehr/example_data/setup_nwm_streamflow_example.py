@@ -26,7 +26,7 @@ def setup_nwm_example(tmpdir):
     ev.configurations.add(
         teehr.Configuration(
             name="nwm30_medium_range",
-            type="secondary",
+            timeseries_type="secondary",
             description="NWM Medium Range Streamflow Ensemble"
         )
     )
@@ -34,7 +34,7 @@ def setup_nwm_example(tmpdir):
     ev.configurations.add(
         teehr.Configuration(
             name="usgs_observations",
-            type="primary",
+            timeseries_type="primary",
             description="USGS Observations"
         )
     )
