@@ -512,3 +512,72 @@ class TeehrDataFrameBase(ABC):
             use_partition_filters=use_partition_filters,
         )
         return self
+
+    def _with_sdf(
+        self,
+        sdf: ps.DataFrame,
+        has_geometry: bool | None = None,
+    ):
+        """Return a new accessor instance wrapping the provided DataFrame."""
+        new_table = self.__class__(self._ev)
+        new_table._sdf = sdf
+        new_table._has_geometry = self._has_geometry if has_geometry is None else has_geometry
+        return new_table
+
+    def __getattr__(self, name):
+        """Proxy attribute access to the underlying Spark DataFrame.
+
+        Allows calling PySpark DataFrame methods directly on the TEEHR
+        object. If the proxied method returns a new Spark DataFrame, it is
+        wrapped in a new instance of this class to preserve method chaining.
+
+        Parameters
+        ----------
+        name : str
+            The attribute or method name to look up on the Spark DataFrame.
+
+        Returns
+        -------
+        Any
+            The attribute value or a wrapper function. If the underlying
+            Spark method returns a DataFrame, a new instance of this class
+            wrapping that DataFrame is returned.
+
+        Raises
+        ------
+        AttributeError
+            If the underlying ``_sdf`` has not been loaded (is None).
+        """
+        try:
+            sdf = object.__getattribute__(self, '_sdf')
+        except AttributeError:
+            sdf = None
+        if sdf is None:
+            raise AttributeError(
+                f"Table not loaded (sdf is None). Cannot proxy '{name}' to DataFrame."
+            )
+
+        try:
+            ev = object.__getattribute__(self, '_ev')
+            proxy_enabled = getattr(ev, 'enable_spark_proxy', False)
+        except AttributeError:
+            proxy_enabled = False
+
+        if not proxy_enabled:
+            raise AttributeError(
+                f"'{name}' is not a TEEHR method. "
+                f"Use .to_sdf() for direct Spark DataFrame access, "
+                f"or set enable_spark_proxy=True on your Evaluation to enable "
+                f"transparent proxying of PySpark DataFrame methods."
+            )
+
+        attr = getattr(sdf, name)
+        if callable(attr):
+            def wrapper(*args, **kwargs):
+                result = attr(*args, **kwargs)
+                if isinstance(result, ps.DataFrame):
+                    return self._with_sdf(result)
+                return result
+            return wrapper
+        return attr
+
