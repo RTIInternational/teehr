@@ -172,7 +172,7 @@ class BaseTable(TeehrDataFrameBase):
         """
         if validate is None:
             validate = self.validate_filter_field_types or False
-        super()._apply_filters(filters, validate=validate)
+        return super()._apply_filters(filters, validate=validate)
 
     def validate(self, drop_duplicates: bool = True):
         """Validate the dataset table against the schema.

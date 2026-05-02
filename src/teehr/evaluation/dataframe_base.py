@@ -516,6 +516,10 @@ class TeehrDataFrameBase(ABC):
         """Return a new accessor instance wrapping the provided DataFrame."""
         new_table = self.__class__(self._ev)
         new_table._sdf = sdf
+        # View subclasses lazily recompute in to_sdf() unless marked computed.
+        # When cloning with an already-transformed DataFrame, preserve it.
+        if hasattr(new_table, "_computed"):
+            new_table._computed = True
         new_table._has_geometry = self._has_geometry if has_geometry is None else has_geometry
         return new_table
 
