@@ -90,9 +90,7 @@ class TeehrDataFrameBase(ABC):
         """Add geometry to the DataFrame by joining with the locations table."""
         sdf = self.to_sdf()
         gdf = join_geometry(sdf, self._ev.locations.to_sdf())
-        self._sdf = gdf
-        self._has_geometry = True
-        return self
+        return self._with_sdf(gdf, has_geometry=True)
 
     def add_attributes(
         self,
@@ -120,8 +118,8 @@ class TeehrDataFrameBase(ABC):
 
         Returns
         -------
-        self
-            Returns self for method chaining.
+        TeehrDataFrameBase
+            A new accessor instance with attributes joined.
 
         Examples
         --------
@@ -161,11 +159,11 @@ class TeehrDataFrameBase(ABC):
             logger.warning(
                 "No location attributes found. Skipping adding attributes."
             )
-            return self
+            return self._with_sdf(self.to_sdf())
 
         sdf = self.to_sdf()
-        self._sdf = join_attributes(sdf, attrs_sdf, location_id_col)
-        return self
+        joined_sdf = join_attributes(sdf, attrs_sdf, location_id_col)
+        return self._with_sdf(joined_sdf)
 
     def _apply_filters(
         self,
@@ -196,7 +194,7 @@ class TeehrDataFrameBase(ABC):
         )
         for f in validated_filters:
             sdf = sdf.filter(f)
-        self._sdf = sdf
+        return sdf
 
     def filter(
         self,
@@ -215,8 +213,8 @@ class TeehrDataFrameBase(ABC):
 
         Returns
         -------
-        self
-            Returns self for method chaining.
+        TeehrDataFrameBase
+            A new accessor instance with filters applied.
 
         Examples
         --------
@@ -243,11 +241,11 @@ class TeehrDataFrameBase(ABC):
                 "No filters provided to filter method. "
                 "Returning unfiltered data."
             )
-            return self
+            return self._with_sdf(self.to_sdf())
 
         logger.info(f"Setting filter {filters}.")
-        self._apply_filters(filters)
-        return self
+        filtered_sdf = self._apply_filters(filters)
+        return self._with_sdf(filtered_sdf)
 
     def order_by(
         self,
@@ -262,16 +260,16 @@ class TeehrDataFrameBase(ABC):
 
         Returns
         -------
-        self
-            Returns self for method chaining.
+        TeehrDataFrameBase
+            A new accessor instance with ordering applied.
 
         Examples
         --------
         >>> df = accessor.order_by("value_time").to_pandas()
         """
         logger.info(f"Setting order_by {fields}.")
-        self._sdf = order_df(self.to_sdf(), fields)
-        return self
+        ordered_sdf = order_df(self.to_sdf(), fields)
+        return self._with_sdf(ordered_sdf)
 
     def aggregate(
         self,
@@ -289,8 +287,8 @@ class TeehrDataFrameBase(ABC):
 
         Returns
         -------
-        self
-            Returns self for method chaining.
+        TeehrDataFrameBase
+            A new accessor instance with aggregation results.
 
         Examples
         --------
@@ -324,13 +322,12 @@ class TeehrDataFrameBase(ABC):
             gp=gp,
             include_metrics=metrics,
         )
-        self._sdf = post_process_metric_results(
+        metrics_sdf = post_process_metric_results(
             metrics_sdf=sdf,
             include_metrics=metrics,
             group_by=group_by
         )
-
-        return self
+        return self._with_sdf(metrics_sdf)
 
     def add_calculated_fields(
         self,
@@ -345,8 +342,8 @@ class TeehrDataFrameBase(ABC):
 
         Returns
         -------
-        self
-            Returns self for method chaining.
+        TeehrDataFrameBase
+            A new accessor instance with calculated fields added.
 
         Examples
         --------
@@ -363,9 +360,7 @@ class TeehrDataFrameBase(ABC):
         sdf = self.to_sdf()
         for cf in cfs:
             sdf = cf.apply_to(sdf)
-        self._sdf = sdf
-
-        return self
+        return self._with_sdf(sdf)
 
     def write(
         self,
