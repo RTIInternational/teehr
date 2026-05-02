@@ -700,13 +700,16 @@ def max_value_timedelta(model: MetricsBasemodel) -> Callable:
 # Categorical Metrics
 def _validate_threshold_field(threshold_series: pd.Series) -> float:
     """Validate threshold input field."""
+    # Threshold values may arrive as strings from some sources; coerce to
+    # numeric once here so all threshold-based metrics compare consistently.
+    threshold_series = pd.to_numeric(threshold_series, errors="raise")
     unique_thresholds = threshold_series.unique()
     if len(unique_thresholds) != 1:
         raise ValueError(
             "Threshold field must contain a single unique value for each"
             " population grouping."
         )
-    threshold = unique_thresholds[0]
+    threshold = float(unique_thresholds[0])
     return threshold
 
 
