@@ -9,13 +9,12 @@ from teehr.querying.utils import (
     join_attributes,
     join_geometry,
     order_df,
-    group_df,
     post_process_metric_results
 )
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.filters import TableFilter
 from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.querying.metric_format import apply_aggregation_metrics
+from teehr.querying.metrics_spark_native import aggregate_metrics_with_engine
 import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
@@ -274,7 +273,8 @@ class TeehrDataFrameBase(ABC):
     def aggregate(
         self,
         group_by: Union[str, List[str]],
-        metrics: List[MetricsBasemodel]
+        metrics: List[MetricsBasemodel],
+        engine: str = "auto",
     ):
         """Aggregate data with grouping and metrics.
 
@@ -284,6 +284,9 @@ class TeehrDataFrameBase(ABC):
             Fields to group by for metric calculation.
         metrics : List[MetricsBasemodel]
             Metrics to calculate.
+        engine : str, optional
+            Aggregation engine to use. Options are ``"auto"``,
+            ``"python"``, or ``"spark"``. Default is ``"auto"``.
 
         Returns
         -------
@@ -315,12 +318,15 @@ class TeehrDataFrameBase(ABC):
         """
         logger.info("Performing the aggregation.")
 
-        logger.debug(f"Grouping by '{group_by}' and applying metrics.")
-        gp = group_df(self.to_sdf(), group_by)
-
-        sdf = apply_aggregation_metrics(
-            gp=gp,
-            include_metrics=metrics,
+        logger.debug(
+            f"Grouping by '{group_by}' and applying metrics with "
+            f"engine='{engine}'."
+        )
+        sdf = aggregate_metrics_with_engine(
+            sdf=self.to_sdf(),
+            group_by=group_by,
+            metrics=metrics,
+            engine=engine,
         )
         metrics_sdf = post_process_metric_results(
             metrics_sdf=sdf,
@@ -579,4 +585,3 @@ class TeehrDataFrameBase(ABC):
                 return result
             return wrapper
         return attr
-

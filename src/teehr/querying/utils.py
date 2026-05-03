@@ -87,6 +87,10 @@ def post_process_metric_results(
             )
 
         if model.unpack_results:
+            # Shared-bootstrap expansion may have already unpacked this metric's
+            # MapType column into individual quantile columns. Skip if gone.
+            if model.output_field_name not in metrics_sdf.columns:
+                continue
             metrics_sdf = model.unpack_function(
                 metrics_sdf,
                 model.output_field_name

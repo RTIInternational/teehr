@@ -6,7 +6,8 @@ Metrics
 
 TEEHR provides comprehensive metrics for evaluating hydrologic model performance.
 The :meth:`aggregate() <teehr.evaluation.tables.base_table.BaseTable.aggregate>` method on tables and views computes metrics across grouped data,
-with support for bootstrapping, transforms, and multiple metric categories.
+with support for bootstrapping, transforms, multiple metric categories, and a choice of
+aggregation engine (Spark-native or Python/pandas-UDF).
 
 Using the Aggregate Method
 ==========================
@@ -32,7 +33,7 @@ specified metrics grouped by selected fields:
     ).to_pandas()
 
 Aggregate Parameters
-----------------
+--------------------
 
 .. list-table::
    :header-rows: 1
@@ -44,6 +45,79 @@ Aggregate Parameters
      - List of metric instances to compute
    * - ``group_by``
      - List of fields to group by before computing metrics
+   * - ``engine``
+     - Aggregation engine: ``"auto"`` (default), ``"spark"``, or ``"python"``
+
+
+Choosing an Engine
+------------------
+
+The ``engine`` parameter controls how metrics are computed under the hood.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 85
+
+   * - Engine
+     - Behaviour
+   * - ``"auto"`` *(default)*
+     - Routes each metric to the fastest available path.  Metrics that have a
+       Spark-native implementation run without pandas UDFs; remaining metrics
+       fall back to the Python/pandas-UDF path.  Results are joined before
+       being returned.
+   * - ``"spark"``
+     - Forces the Spark-native path for every metric.  Raises
+       ``ValueError`` if any requested metric is not supported natively
+       (e.g. ``SpearmanCorrelation``, or any metric with a transform or
+       bootstrap configured).  Produces a physical plan with no
+       ``AggregateInPandas`` nodes, which can significantly improve
+       performance on large datasets.
+   * - ``"python"``
+     - Forces the Python/pandas-UDF path for every metric.  Behaves
+       identically to the pre-engine-parameter behavior.
+
+**Metrics supported on the Spark-native path** (no transform, no bootstrap):
+
+*Signature metrics:* Count, Minimum, Maximum, Average, Sum, Variance, MaxValueTime
+
+*Deterministic metrics:* MeanError, RelativeBias, MultiplicativeBias,
+MeanSquareError, RootMeanSquareError, MeanAbsoluteError,
+MeanAbsoluteRelativeError, PearsonCorrelation, Rsquared,
+NashSutcliffeEfficiency, NormalizedNashSutcliffeEfficiency,
+VariabilityRatio, RootMeanStandardDeviationRatio,
+KlingGuptaEfficiency, KlingGuptaEfficiencyMod1, KlingGuptaEfficiencyMod2,
+RelativeMean, RelativeMedian, RelativeMinimum, RelativeMaximum,
+RelativeStandardDeviation
+
+.. note::
+
+   Metrics that use a ``transform`` (e.g. ``transform="log"``) or a
+   ``bootstrap`` configuration are always routed to the Python path,
+   even in ``engine="auto"`` mode.
+
+.. code-block:: python
+
+    from teehr import DeterministicMetrics
+
+    # Explicitly use Spark-native path for a pure-native query
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=[
+            DeterministicMetrics.KlingGuptaEfficiency(),
+            DeterministicMetrics.NashSutcliffeEfficiency(),
+            DeterministicMetrics.RelativeBias(),
+        ],
+        group_by=["primary_location_id"],
+        engine="spark",
+    ).to_pandas()
+
+    # Auto mode – mix native and python metrics transparently
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=[
+            DeterministicMetrics.MeanError(),           # spark-native
+            DeterministicMetrics.SpearmanCorrelation(), # python path
+        ],
+        group_by=["primary_location_id"],
+    ).to_pandas()
 
 Group By Fields
 ---------------
