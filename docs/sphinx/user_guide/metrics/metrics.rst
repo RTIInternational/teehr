@@ -269,6 +269,31 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - :math:`\frac{\mu_{sec}}{\mu_{prim}}`
      - :class:`Multiplicative Bias <teehr.DeterministicMetrics.MultiplicativeBias>`
    * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Mean
+     - :math:`RelMean`
+     - :math:`\frac{mean(sec)}{mean(prim)}`
+     - :class:`Relative Mean <teehr.DeterministicMetrics.RelativeMean>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Median
+     - :math:`RelMedian`
+     - :math:`\frac{median(sec)}{median(prim)}`
+     - :class:`Relative Median <teehr.DeterministicMetrics.RelativeMedian>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Minimum
+     - :math:`RelMin`
+     - :math:`\frac{min(sec)}{min(prim)}`
+     - :class:`Relative Minimum <teehr.DeterministicMetrics.RelativeMinimum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Maximum
+     - :math:`RelMax`
+     - :math:`\frac{max(sec)}{max(prim)}`
+     - :class:`Relative Maximum <teehr.DeterministicMetrics.RelativeMaximum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Standard Deviation
+     - :math:`RelStd`
+     - :math:`\frac{std(sec)}{std(prim)}`
+     - :class:`Relative Standard Deviation <teehr.DeterministicMetrics.RelativeStandardDeviation>`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Square Error
      - :math:`MSE`
      - :math:`\frac{\sum(sec-prim)^2}{count}`
