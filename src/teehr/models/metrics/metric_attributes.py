@@ -9,7 +9,6 @@ ME_ATTRS = {
     "value_range": None,
     "optimal_value": 0.0,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 RBIAS_ATTRS = {
@@ -18,7 +17,6 @@ RBIAS_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -29,6 +27,50 @@ MULTBIAS_ATTRS = {
     "value_range": None,
     "optimal_value": 1.0,
     "requires_threshold_field": False,
+}
+
+RELMEAN_ATTRS = {
+    "short_name": "RelMean",
+    "display_name": "Relative Mean",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+RELMEDIAN_ATTRS = {
+    "short_name": "RelMedian",
+    "display_name": "Relative Median",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+RELMIN_ATTRS = {
+    "short_name": "RelMin",
+    "display_name": "Relative Minimum",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+RELMAX_ATTRS = {
+    "short_name": "RelMax",
+    "display_name": "Relative Maximum",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+RELSTD_ATTRS = {
+    "short_name": "RelStd",
+    "display_name": "Relative Standard Deviation",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": 1.0,
     "requires_threshold_field": False,
 }
 
@@ -39,7 +81,6 @@ MSE_ATTRS = {
     "value_range": None,
     "optimal_value": 0.0,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 RMSE_ATTRS = {
@@ -48,7 +89,6 @@ RMSE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -59,7 +99,6 @@ MAE_ATTRS = {
     "value_range": None,
     "optimal_value": 0.0,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 RMAE_ATTRS = {
@@ -68,7 +107,6 @@ RMAE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -88,16 +126,6 @@ VR_ATTRS = {
     "value_range": [0.0, None],
     "optimal_value": 1.0,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
-}
-
-VR_ATTRS = {
-    "short_name": "VR",
-    "display_name": "Variance Ratio",
-    "category": mc.Deterministic,
-    "value_range": [0.0, None],
-    "optimal_value": 1.0,
-    "requires_threshold_field": False,
 }
 
 R2_ATTRS = {
@@ -106,7 +134,6 @@ R2_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -117,7 +144,6 @@ NSE_ATTRS = {
     "value_range": [None, 1.0],
     "optimal_value": 1.0,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 NNSE_ATTRS = {
@@ -126,7 +152,6 @@ NNSE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -137,7 +162,6 @@ KGE_ATTRS = {
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 KGE1_ATTRS = {
@@ -146,7 +170,6 @@ KGE1_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -157,7 +180,6 @@ KGE2_ATTRS = {
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 COUNT_ATTRS = {
@@ -166,7 +188,6 @@ COUNT_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -177,7 +198,6 @@ MINIMUM_ATTRS = {
     "value_range": None,
     "optimal_value": None,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 MAXIMUM_ATTRS = {
@@ -186,7 +206,6 @@ MAXIMUM_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -197,7 +216,6 @@ AVERAGE_ATTRS = {
     "value_range": None,
     "optimal_value": None,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 SUM_ATTRS = {
@@ -206,7 +224,6 @@ SUM_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -217,7 +234,6 @@ VARIANCE_ATTRS = {
     "value_range": None,
     "optimal_value": None,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 MAX_VALUE_DELTA_ATTRS = {
@@ -227,7 +243,6 @@ MAX_VALUE_DELTA_ATTRS = {
     "value_range": None,
     "optimal_value": None,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 MAX_VAL_TIME_ATTRS = {
@@ -236,7 +251,6 @@ MAX_VAL_TIME_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -248,8 +262,6 @@ MAX_VALUE_TIMEDELTA_ATTRS = {
     "optimal_value": None,
     "units": "seconds",
     "requires_threshold_field": False,
-    "units": "seconds",
-    "requires_threshold_field": False,
 }
 
 ANNUAL_PEAK_RBIAS_ATTRS = {
@@ -258,7 +270,6 @@ ANNUAL_PEAK_RBIAS_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": None,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 
@@ -269,7 +280,6 @@ SPEARMAN_R_ATTRS = {
     "value_range": [-1.0, 1.0],
     "optimal_value": 1.0,
     "requires_threshold_field": False,
-    "requires_threshold_field": False,
 }
 
 RSR_ATTRS = {
@@ -278,7 +288,6 @@ RSR_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, None],
     "optimal_value": 0.0,
-    "requires_threshold_field": False,
     "requires_threshold_field": False,
 }
 

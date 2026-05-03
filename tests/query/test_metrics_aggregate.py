@@ -6,7 +6,6 @@ import geopandas as gpd
 from pathlib import Path
 import numpy as np
 import pytest
-import warnings
 
 from teehr.models.filters import TableFilter
 from teehr import TimeseriesAwareCalculatedFields as tcf
@@ -52,7 +51,12 @@ def test_executing_deterministic_metrics(module_scope_test_warehouse):
     assert metrics_df.equals(metrics_df2)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 20
+    assert metrics_df.columns.size == 25
+    assert "relative_mean" in metrics_df.columns
+    assert "relative_median" in metrics_df.columns
+    assert "relative_minimum" in metrics_df.columns
+    assert "relative_maximum" in metrics_df.columns
+    assert "relative_standard_deviation" in metrics_df.columns
 
     # Test all the conditional metrics.
     include_conditional_metrics = [
@@ -166,6 +170,50 @@ def test_metric_chaining(module_scope_test_warehouse):
     assert all(
         metrics_df.columns == ["primary_location_id", "primary_average"]
     )
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_metric_explicit_field_names(module_scope_test_warehouse):
+    """Test explicit field-name configuration on metric models."""
+    ev = module_scope_test_warehouse
+
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id", "month"],
+        metrics=[
+            DeterministicMetrics.KlingGuptaEfficiency(
+                primary_field_name="primary_value",
+                secondary_field_name="secondary_value",
+            ),
+            DeterministicMetrics.MaxValueTimeDelta(
+                primary_field_name="primary_value",
+                secondary_field_name="secondary_value",
+                value_time_field_name="value_time",
+            ),
+        ],
+    ).order_by(["primary_location_id", "month"]).to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert "kling_gupta_efficiency" in metrics_df.columns
+    assert "max_value_time_delta" in metrics_df.columns
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_metric_legacy_input_field_override(module_scope_test_warehouse):
+    """Test legacy input_field_names override remains supported."""
+    ev = module_scope_test_warehouse
+
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        group_by=["primary_location_id"],
+        metrics=[
+            Signatures.Average(
+                input_field_names="secondary_value",
+                output_field_name="secondary_average",
+            )
+        ],
+    ).order_by("primary_location_id").to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert "secondary_average" in metrics_df.columns
 
 
 @pytest.mark.function_scope_large_ensemble_warehouse
