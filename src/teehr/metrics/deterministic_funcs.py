@@ -228,6 +228,91 @@ def multiplicative_bias(model: MetricsBasemodel) -> Callable:
     return multiplicative_bias_inner
 
 
+def relative_mean(model: MetricsBasemodel) -> Callable:
+    """Create the Relative Mean metric function.
+
+    :math:`RelMean=\frac{\mu_{sec}}{\mu_{prim}}`
+    """  # noqa
+    logger.debug("Building the relative_mean metric function")
+
+    def relative_mean_inner(p: pd.Series, s: pd.Series) -> float:
+        """Relative mean ratio."""
+        p, s = _transform(p, s, model)
+        if model.add_epsilon:
+            return np.mean(s) / (np.mean(p) + EPSILON)
+        return np.mean(s) / np.mean(p)
+
+    return relative_mean_inner
+
+
+def relative_median(model: MetricsBasemodel) -> Callable:
+    """Create the Relative Median metric function.
+
+    :math:`RelMedian=\frac{median(sec)}{median(prim)}`
+    """  # noqa
+    logger.debug("Building the relative_median metric function")
+
+    def relative_median_inner(p: pd.Series, s: pd.Series) -> float:
+        """Relative median ratio."""
+        p, s = _transform(p, s, model)
+        if model.add_epsilon:
+            return np.median(s) / (np.median(p) + EPSILON)
+        return np.median(s) / np.median(p)
+
+    return relative_median_inner
+
+
+def relative_minimum(model: MetricsBasemodel) -> Callable:
+    """Create the Relative Minimum metric function.
+
+    :math:`RelMin=\frac{min(sec)}{min(prim)}`
+    """  # noqa
+    logger.debug("Building the relative_minimum metric function")
+
+    def relative_minimum_inner(p: pd.Series, s: pd.Series) -> float:
+        """Relative minimum ratio."""
+        p, s = _transform(p, s, model)
+        if model.add_epsilon:
+            return np.min(s) / (np.min(p) + EPSILON)
+        return np.min(s) / np.min(p)
+
+    return relative_minimum_inner
+
+
+def relative_maximum(model: MetricsBasemodel) -> Callable:
+    """Create the Relative Maximum metric function.
+
+    :math:`RelMax=\frac{max(sec)}{max(prim)}`
+    """  # noqa
+    logger.debug("Building the relative_maximum metric function")
+
+    def relative_maximum_inner(p: pd.Series, s: pd.Series) -> float:
+        """Relative maximum ratio."""
+        p, s = _transform(p, s, model)
+        if model.add_epsilon:
+            return np.max(s) / (np.max(p) + EPSILON)
+        return np.max(s) / np.max(p)
+
+    return relative_maximum_inner
+
+
+def relative_standard_deviation(model: MetricsBasemodel) -> Callable:
+    """Create the Relative Standard Deviation metric function.
+
+    :math:`RelStd=\frac{std(sec)}{std(prim)}`
+    """  # noqa
+    logger.debug("Building the relative_standard_deviation metric function")
+
+    def relative_standard_deviation_inner(p: pd.Series, s: pd.Series) -> float:
+        """Relative standard deviation ratio."""
+        p, s = _transform(p, s, model)
+        if model.add_epsilon:
+            return np.std(s) / (np.std(p) + EPSILON)
+        return np.std(s) / np.std(p)
+
+    return relative_standard_deviation_inner
+
+
 def pearson_correlation(model: MetricsBasemodel) -> Callable:
     """Create the Pearson Correlation Coefficient metric function.
 
@@ -700,13 +785,16 @@ def max_value_timedelta(model: MetricsBasemodel) -> Callable:
 # Categorical Metrics
 def _validate_threshold_field(threshold_series: pd.Series) -> float:
     """Validate threshold input field."""
+    # Threshold values may arrive as strings from some sources; coerce to
+    # numeric once here so all threshold-based metrics compare consistently.
+    threshold_series = pd.to_numeric(threshold_series, errors="raise")
     unique_thresholds = threshold_series.unique()
     if len(unique_thresholds) != 1:
         raise ValueError(
             "Threshold field must contain a single unique value for each"
             " population grouping."
         )
-    threshold = unique_thresholds[0]
+    threshold = float(unique_thresholds[0])
     return threshold
 
 

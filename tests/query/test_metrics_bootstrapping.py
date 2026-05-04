@@ -5,6 +5,7 @@ import pandas as pd
 from pathlib import Path
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
+import pyspark.sql.functions as F
 import pytest
 
 from teehr.models.filters import TableFilter
@@ -155,6 +156,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
     manual_results = np.sort(results.ravel()).astype(np.float32)
 
     assert (teehr_results == manual_results).all()
+
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
@@ -431,3 +433,209 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
     ]
 
     assert (sorted(cols) == sorted(benchmark_cols))
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_circularblock_bootstrapping_threshold_metric(function_scope_test_warehouse):
+    """Test CircularBlock bootstrapping for threshold-based deterministic metrics."""
+    ev = function_scope_test_warehouse
+
+    # Build a numeric threshold field for stable threshold metric evaluation.
+    sdf = ev.table("joined_timeseries").to_sdf().withColumn(
+        "threshold_numeric", F.lit(500.0)
+    )
+    ev._write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace",
+    )
+
+    boot = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=None,
+        reps=200,
+    )
+    pod = DeterministicMetrics.ProbabilityOfDetection(
+        threshold_field_name="threshold_numeric"
+    )
+    pod.bootstrap = boot
+
+    df = ev.table("joined_timeseries").to_pandas()
+    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    p = df_gage_a.primary_value
+    s = df_gage_a.secondary_value
+    t = df_gage_a.threshold_numeric
+
+    bs = CircularBlockBootstrap(
+        pod.bootstrap.block_size,
+        p,
+        s,
+        t,
+        seed=pod.bootstrap.seed,
+        random_state=pod.bootstrap.random_state,
+    )
+    results = bs.apply(
+        pod.func(pod),
+        pod.bootstrap.reps,
+    )
+
+    filters = [
+        TableFilter(
+            column="primary_location_id",
+            operator=ops.eq,
+            value="gage-A",
+        )
+    ]
+
+    metrics_df = ev.table("joined_timeseries").filter(
+        filters=filters,
+    ).aggregate(
+        metrics=[pod],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+    teehr_results = np.sort(
+        np.array(metrics_df.probability_of_detection.values[0])
+    )
+    manual_results = np.sort(results.ravel()).astype(np.float32)
+
+    assert (teehr_results == manual_results).all()
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_stationary_bootstrapping_threshold_metric(function_scope_test_warehouse):
+    """Test Stationary bootstrapping for threshold-based deterministic metrics."""
+    ev = function_scope_test_warehouse
+
+    # Build a numeric threshold field for stable threshold metric evaluation.
+    sdf = ev.table("joined_timeseries").to_sdf().withColumn(
+        "threshold_numeric", F.lit(500.0)
+    )
+    ev._write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace",
+    )
+
+    boot = Bootstrappers.Stationary(
+        seed=40,
+        block_size=100,
+        quantiles=None,
+        reps=200,
+    )
+    pod = DeterministicMetrics.ProbabilityOfDetection(
+        threshold_field_name="threshold_numeric"
+    )
+    pod.bootstrap = boot
+
+    df = ev.table("joined_timeseries").to_pandas()
+    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    p = df_gage_a.primary_value
+    s = df_gage_a.secondary_value
+    t = df_gage_a.threshold_numeric
+
+    bs = StationaryBootstrap(
+        pod.bootstrap.block_size,
+        p,
+        s,
+        t,
+        seed=pod.bootstrap.seed,
+        random_state=pod.bootstrap.random_state,
+    )
+    results = bs.apply(
+        pod.func(pod),
+        pod.bootstrap.reps,
+    )
+
+    filters = [
+        TableFilter(
+            column="primary_location_id",
+            operator=ops.eq,
+            value="gage-A",
+        )
+    ]
+
+    metrics_df = ev.table("joined_timeseries").filter(
+        filters=filters,
+    ).aggregate(
+        metrics=[pod],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+    teehr_results = np.sort(
+        np.array(metrics_df.probability_of_detection.values[0])
+    )
+    manual_results = np.sort(results.ravel()).astype(np.float32)
+
+    assert (teehr_results == manual_results).all()
+
+
+@pytest.mark.function_scope_test_warehouse
+def test_gumboot_bootstrapping_threshold_metric(function_scope_test_warehouse):
+    """Test Gumboot bootstrapping for threshold-based deterministic metrics."""
+    ev = function_scope_test_warehouse
+
+    # Build a numeric threshold field for stable threshold metric evaluation.
+    sdf = ev.table("joined_timeseries").to_sdf().withColumn(
+        "threshold_numeric", F.lit(500.0)
+    )
+    ev._write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace",
+    )
+
+    boot = Bootstrappers.Gumboot(
+        seed=40,
+        quantiles=None,
+        reps=200,
+        boot_year_file=BOOT_YEAR_FILE,
+    )
+    pod = DeterministicMetrics.ProbabilityOfDetection(
+        threshold_field_name="threshold_numeric"
+    )
+    pod.bootstrap = boot
+
+    df = ev.table("joined_timeseries").to_pandas()
+    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    p = df_gage_a.primary_value
+    s = df_gage_a.secondary_value
+    t = df_gage_a.threshold_numeric
+    vt = df_gage_a.value_time
+
+    bs = GumbootBootstrap(
+        p,
+        s,
+        t,
+        value_time=vt,
+        seed=pod.bootstrap.seed,
+        water_year_month=pod.bootstrap.water_year_month,
+        boot_year_file=pod.bootstrap.boot_year_file,
+    )
+    results = bs.apply(
+        pod.func(pod),
+        pod.bootstrap.reps,
+    )
+
+    filters = [
+        TableFilter(
+            column="primary_location_id",
+            operator=ops.eq,
+            value="gage-A",
+        )
+    ]
+
+    metrics_df = ev.table("joined_timeseries").filter(
+        filters=filters,
+    ).aggregate(
+        metrics=[pod],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+    teehr_results = np.sort(
+        np.array(metrics_df.probability_of_detection.values[0])
+    )
+    manual_results = np.sort(results.ravel()).astype(np.float32)
+
+    assert (teehr_results == manual_results).all()

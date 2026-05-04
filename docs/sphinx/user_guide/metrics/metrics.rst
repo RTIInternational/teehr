@@ -269,6 +269,31 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - :math:`\frac{\mu_{sec}}{\mu_{prim}}`
      - :class:`Multiplicative Bias <teehr.DeterministicMetrics.MultiplicativeBias>`
    * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Mean
+     - :math:`RelMean`
+     - :math:`\frac{mean(sec)}{mean(prim)}`
+     - :class:`Relative Mean <teehr.DeterministicMetrics.RelativeMean>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Median
+     - :math:`RelMedian`
+     - :math:`\frac{median(sec)}{median(prim)}`
+     - :class:`Relative Median <teehr.DeterministicMetrics.RelativeMedian>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Minimum
+     - :math:`RelMin`
+     - :math:`\frac{min(sec)}{min(prim)}`
+     - :class:`Relative Minimum <teehr.DeterministicMetrics.RelativeMinimum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Maximum
+     - :math:`RelMax`
+     - :math:`\frac{max(sec)}{max(prim)}`
+     - :class:`Relative Maximum <teehr.DeterministicMetrics.RelativeMaximum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Standard Deviation
+     - :math:`RelStd`
+     - :math:`\frac{std(sec)}{std(prim)}`
+     - :class:`Relative Standard Deviation <teehr.DeterministicMetrics.RelativeStandardDeviation>`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Square Error
      - :math:`MSE`
      - :math:`\frac{\sum(sec-prim)^2}{count}`
@@ -292,12 +317,17 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - Pearson Correlation Coefficient
      - :math:`r`
      - :math:`r(sec, prim)`
-     - :class:`Pearson Correlation Coefficient <teehr.DeterministicMetrics.PearsonCorrelationCoefficient>`
+     - :class:`Pearson Correlation Coefficient <teehr.DeterministicMetrics.PearsonCorrelation>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Variability Ratio
+     - :math:`VR`
+     - :math:`\frac{\sigma_{sec}}{\sigma_{prim}}`
+     - :class:`Variability Ratio <teehr.DeterministicMetrics.VariabilityRatio>`
    * - :material-regular:`check;1.5em;sd-text-success`
      - Coefficient of Determination
      - :math:`r^2`
      - :math:`r(sec, prim)^2`
-     - :class:`Coefficient of Determination <teehr.DeterministicMetrics.RSquared>`
+     - :class:`Coefficient of Determination <teehr.DeterministicMetrics.Rsquared>`
    * - :material-regular:`check;1.5em;sd-text-success`
      - Nash-Sutcliffe Efficiency
      - :math:`NSE`
@@ -333,6 +363,21 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - :math:`r_s`
      - :math:`1-\frac{6*\sum|rank_{prim}-rank_{sec}|^2}{count(count^2-1)}`
      - :class:`Spearman Rank Correlation Coefficient <teehr.DeterministicMetrics.SpearmanCorrelation>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Max Value Delta
+     - :math:`Max\ Val\ Delta`
+     - :math:`max(sec) - max(prim)`
+     - :class:`Max Value Delta <teehr.DeterministicMetrics.MaxValueDelta>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Root Mean Standard Deviation Ratio
+     - :math:`RSR`
+     - :math:`\frac{RMSE}{\sigma_{prim}}`
+     - :class:`Root Mean Standard Deviation Ratio <teehr.DeterministicMetrics.RootMeanStandardDeviationRatio>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Max Value Time Delta
+     - :math:`Max\ Val\ Time\ Delta`
+     - :math:`time(max(sec)) - time(max(prim))`
+     - :class:`Max Value Time Delta <teehr.DeterministicMetrics.MaxValueTimeDelta>`
    * - `Coming Soon`
      - Flow Duration Curve Slope Error
      - :math:`Slope\ FDC\ Error`
@@ -348,30 +393,31 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - :math:`Peak\ Time\ Error`
      - :math:`\frac{\sum(peak\ time_{sec}-peak\ time_{prim})}{count}`
      - `N/A`
-     - `N/A`
    * - `Coming Soon`
      - Baseflow Index Error
      - :math:`BFI\ Error`
      - :math:`\frac{\frac{\mu(baseflow_{sec})}{\mu(sec)}-\frac{\mu(baseflow_{prim})}{\mu(prim)}}{\frac{\mu(baseflow_{prim})}{\mu(prim)}}`
-     - `N/A`
      - `N/A`
    * - `Coming Soon`
      - Rising Limb Density Error
      - :math:`RLD\ Error`
      - :math:`\frac{count(rising\ limb\ events_{sec})}{count(rising\ limb\ timesteps_{sec})}-\frac{count(rising\ limb\ events_{prim})}{count(rising\ limb\ timesteps_{prim})}`
      - `N/A`
-     - `N/A`
    * - `Coming Soon`
      - Mean Square Error Skill Score (generalized reference)
      - :math:`MSESS`
      - :math:`1-\frac{\sum(prim-sec)^2}{\sum(prim-reference)^2}`
-     - `N/A`
      - `N/A`
    * - `Coming Soon`
      - Runoff Ratio Error
      - :math:`RR\ Error`
      - :math:`abs\left\|\frac{\mu(volume_{sec})}{\mu(precip\ volume)}-\frac{\mu(volume_{prim})}{\mu(precip\ volume)}\right\|`
      - `N/A`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Confusion Matrix
+     - :math:`CM`
+     - :math:`TP,\ TN,\ FP,\ FN`
+     - :class:`Confusion Matrix <teehr.DeterministicMetrics.ConfusionMatrix>`
    * - :material-regular:`check;1.5em;sd-text-success`
      - False Alarm Ratio
      - :math:`FAR`
@@ -392,6 +438,16 @@ Deterministic metrics compare two timeseries, typically primary ("observed") vs.
      - :math:`CSI`
      - :math:`\frac{n_{TP}}{n_{TP}+n_{FN}+n_{FP}}`
      - :class:`Critical Success Index <teehr.DeterministicMetrics.CriticalSuccessIndex>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Success Ratio
+     - :math:`SR`
+     - :math:`\frac{n_{TP}+n_{TN}}{n_{TP}+n_{FP}+n_{FN}+n_{TN}}`
+     - :class:`Success Ratio <teehr.DeterministicMetrics.SuccessRatio>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Frequency Bias Index
+     - :math:`FBI`
+     - :math:`\frac{n_{TP}+n_{FP}}{n_{TP}+n_{FN}}`
+     - :class:`Frequency Bias Index <teehr.DeterministicMetrics.FrequencyBiasIndex>`
 
 
 Probabilistic Metrics

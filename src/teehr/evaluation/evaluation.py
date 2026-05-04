@@ -72,7 +72,8 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
     def __init__(
         self,
         dir_path: Union[str, Path],
-        spark: SparkSession = None
+        spark: SparkSession = None,
+        enable_spark_proxy: bool = False,
     ):
         """
         Initialize the Evaluation class.
@@ -83,8 +84,15 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
             The directory path to use for the local catalog.
         spark : SparkSession, optional
             The SparkSession object, by default None
+        enable_spark_proxy : bool, optional
+            Whether to enable transparent proxying of unknown attribute
+            access to the underlying Spark DataFrame. When False (default),
+            unsupported attributes raise an ``AttributeError`` directing
+            users to ``.to_sdf()``. Set to True to allow direct PySpark
+            DataFrame method calls on TEEHR accessor objects.
         """
         self.read_only_remote = True
+        self.enable_spark_proxy = enable_spark_proxy
         self.dir_path = Path(dir_path)
         self.cache_dir = None
 
@@ -717,7 +725,8 @@ class LocalReadWriteEvaluation(BaseEvaluation):
         create_dir: bool = False,
         check_evaluation_version: bool = True,
         spark: SparkSession = None,
-        namespace_name: str = LOCAL_NAMESPACE_NAME
+        namespace_name: str = LOCAL_NAMESPACE_NAME,
+        enable_spark_proxy: bool = False,
     ):
         """Initialize the Evaluation class.
 
@@ -739,10 +748,14 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             session will be created.
         namespace_name : str, optional
             The namespace name to use for the local catalog. Default is LOCAL_NAMESPACE_NAME ("teehr").
+        enable_spark_proxy : bool, optional
+            Whether to enable transparent proxying of unknown attribute
+            access to the underlying Spark DataFrame. Default is False.
         """
         super().__init__(
             spark=spark,
-            dir_path=Path(dir_path)
+            dir_path=Path(dir_path),
+            enable_spark_proxy=enable_spark_proxy,
         )
 
         local_catalog_name = self.spark.conf.get("local_catalog_name")
@@ -926,7 +939,8 @@ class Evaluation(LocalReadWriteEvaluation):
         create_dir: bool = False,
         check_evaluation_version: bool = True,
         spark: SparkSession = None,
-        namespace_name: str = LOCAL_NAMESPACE_NAME
+        namespace_name: str = LOCAL_NAMESPACE_NAME,
+        enable_spark_proxy: bool = False,
     ):
         """Initialize the Evaluation class.
 
@@ -948,13 +962,17 @@ class Evaluation(LocalReadWriteEvaluation):
             session will be created.
         namespace_name : str, optional
             The namespace name to use for the local catalog. Default is LOCAL_NAMESPACE_NAME ("teehr").
+        enable_spark_proxy : bool, optional
+            Whether to enable transparent proxying of unknown attribute
+            access to the underlying Spark DataFrame. Default is False.
         """
         super().__init__(
             spark=spark,
             dir_path=dir_path,
             create_dir=create_dir,
             check_evaluation_version=check_evaluation_version,
-            namespace_name=namespace_name
+            namespace_name=namespace_name,
+            enable_spark_proxy=enable_spark_proxy,
         )
 
 
@@ -977,6 +995,7 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
         self,
         spark: SparkSession = None,
         temp_dir_path: Union[str, Path] = None,
+        enable_spark_proxy: bool = False,
     ):
         """
         Initialize the RemoteReadOnlyEvaluation class.
@@ -990,6 +1009,9 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
             The directory path to use for the temporary local catalog.
             If not provided, a temporary directory will be created in the
             default location. If it does not exist, it will be created.
+        enable_spark_proxy : bool, optional
+            Whether to enable transparent proxying of unknown attribute
+            access to the underlying Spark DataFrame. Default is False.
         """
         # Create a temporary directory for the cache.
         if temp_dir_path is not None:
@@ -1005,7 +1027,8 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
         # Initialize the parent Evaluation class
         super().__init__(
             spark=spark,
-            dir_path=temp_path
+            dir_path=temp_path,
+            enable_spark_proxy=enable_spark_proxy,
         )
 
         # Set up cache directory for temporary files
@@ -1087,6 +1110,7 @@ class RemoteReadWriteEvaluation(RemoteReadOnlyEvaluation):
         self,
         spark: SparkSession = None,
         temp_dir_path: Union[str, Path] = None,
+        enable_spark_proxy: bool = False,
     ):
         """
         Initialize the RemoteReadWriteEvaluation class.
@@ -1100,9 +1124,13 @@ class RemoteReadWriteEvaluation(RemoteReadOnlyEvaluation):
             The directory path to use for the temporary local catalog.
             If not provided, a temporary directory will be created in the
             default location. If it does not exist, it will be created.
+        enable_spark_proxy : bool, optional
+            Whether to enable transparent proxying of unknown attribute
+            access to the underlying Spark DataFrame. Default is False.
         """
         super().__init__(
             spark=spark,
-            temp_dir_path=temp_dir_path
+            temp_dir_path=temp_dir_path,
+            enable_spark_proxy=enable_spark_proxy,
         )
         self.read_only_remote = False

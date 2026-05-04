@@ -83,6 +83,14 @@ Parameters
     An existing SparkSession to use. If not provided, TEEHR creates a new
     session with default configuration.
 
+``enable_spark_proxy`` : bool, default False
+    When ``True``, unknown attribute access on TEEHR accessor objects is
+    transparently forwarded to the underlying PySpark DataFrame, allowing
+    power users to call PySpark DataFrame methods directly (e.g.
+    ``ev.primary_timeseries.select("value_time")``). When ``False`` (the
+    default), such access raises an ``AttributeError`` with a message
+    directing users to ``.to_sdf()`` for direct Spark access.
+
 
 Directory Structure
 -------------------

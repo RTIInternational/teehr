@@ -77,7 +77,7 @@ class MaxValueTime(SignatureBasemodel):
     default_output_field_name: ClassVar[str] = "max_value_time"
     default_func = sig_funcs.max_value_time
     default_attrs: ClassVar[Dict] = tma.MAX_VAL_TIME_ATTRS
-    default_input_field_names: ClassVar[List[str]] = ["primary_value", "value_time"]
+    default_value_time_field_name: ClassVar[str] = "value_time"
 
     return_type: str = Field(default="timestamp", frozen=True)
 

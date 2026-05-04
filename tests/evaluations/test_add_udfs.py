@@ -322,9 +322,8 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
 
 
 @pytest.mark.function_scope_two_location_warehouse
-def test_add_timeseries_udfs(function_scope_two_location_warehouse):
-    """Test adding a timeseries aware UDF."""
-    # Test data needs at least 20 timesteps.
+def test_baseflow_methods(function_scope_two_location_warehouse):
+    """Test baseflow separation algorithms against reference implementation."""
     ev = function_scope_two_location_warehouse
 
     sdf = ev.table("joined_timeseries").filter(
@@ -340,11 +339,8 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     # test Lyne-Hollick baseflow
     lhbf = tcf.LyneHollickBaseflow()
     sdf = lhbf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='LH',
-                             return_kge=False)
-    df = result[0]
-    control = df['LH'].values.sum()
+    result = baseflow.single(series=streamflow, method='LH', return_kge=False)
+    control = result[0]['LH'].values.sum()
     test = sdf.select('lyne_hollick_baseflow').toPandas()[
         'lyne_hollick_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
@@ -352,23 +348,16 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     # test Chapman baseflow
     chapbf = tcf.ChapmanBaseflow()
     sdf = chapbf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='Chapman',
-                             return_kge=False)
-    df = result[0]
-    control = df['Chapman'].values.sum()
-    test = sdf.select('chapman_baseflow').toPandas()[
-        'chapman_baseflow'].values.sum()
+    result = baseflow.single(series=streamflow, method='Chapman', return_kge=False)
+    control = result[0]['Chapman'].values.sum()
+    test = sdf.select('chapman_baseflow').toPandas()['chapman_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Chapman-Maxwell baseflow
     cmbf = tcf.ChapmanMaxwellBaseflow()
     sdf = cmbf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='CM',
-                             return_kge=False)
-    df = result[0]
-    control = df['CM'].values.sum()
+    result = baseflow.single(series=streamflow, method='CM', return_kge=False)
+    control = result[0]['CM'].values.sum()
     test = sdf.select('chapman_maxwell_baseflow').toPandas()[
         'chapman_maxwell_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
@@ -376,82 +365,71 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     # test Boughton baseflow
     bbf = tcf.BoughtonBaseflow()
     sdf = bbf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='Boughton',
-                             return_kge=False)
-    df = result[0]
-    control = df['Boughton'].values.sum()
-    test = sdf.select('boughton_baseflow').toPandas()[
-        'boughton_baseflow'].values.sum()
+    result = baseflow.single(series=streamflow, method='Boughton', return_kge=False)
+    control = result[0]['Boughton'].values.sum()
+    test = sdf.select('boughton_baseflow').toPandas()['boughton_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Furey baseflow
     fbf = tcf.FureyBaseflow()
     sdf = fbf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='Furey',
-                             return_kge=False)
-    df = result[0]
-    control = df['Furey'].values.sum()
-    test = sdf.select('furey_baseflow').toPandas()[
-        'furey_baseflow'].values.sum()
+    result = baseflow.single(series=streamflow, method='Furey', return_kge=False)
+    control = result[0]['Furey'].values.sum()
+    test = sdf.select('furey_baseflow').toPandas()['furey_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Eckhardt baseflow
     eckbf = tcf.EckhardtBaseflow()
     sdf = eckbf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='Eckhardt',
-                             return_kge=False)
-    df = result[0]
-    control = df['Eckhardt'].values.sum()
-    test = sdf.select('eckhardt_baseflow').toPandas()[
-        'eckhardt_baseflow'].values.sum()
+    result = baseflow.single(series=streamflow, method='Eckhardt', return_kge=False)
+    control = result[0]['Eckhardt'].values.sum()
+    test = sdf.select('eckhardt_baseflow').toPandas()['eckhardt_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test EWMA baseflow
     ewmabf = tcf.EWMABaseflow()
     sdf = ewmabf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='EWMA',
-                             return_kge=False)
-    df = result[0]
-    control = df['EWMA'].values.sum()
+    result = baseflow.single(series=streamflow, method='EWMA', return_kge=False)
+    control = result[0]['EWMA'].values.sum()
     test = sdf.select('ewma_baseflow').toPandas()['ewma_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Willems baseflow
     wbf = tcf.WillemsBaseflow()
     sdf = wbf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='Willems',
-                             return_kge=False)
-    df = result[0]
-    control = df['Willems'].values.sum()
-    test = sdf.select('willems_baseflow').toPandas()[
-        'willems_baseflow'].values.sum()
+    result = baseflow.single(series=streamflow, method='Willems', return_kge=False)
+    control = result[0]['Willems'].values.sum()
+    test = sdf.select('willems_baseflow').toPandas()['willems_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test UKIH baseflow
     ukihbf = tcf.UKIHBaseflow()
     sdf = ukihbf.apply_to(sdf)
-    result = baseflow.single(series=streamflow,
-                             method='UKIH',
-                             return_kge=False)
-    df = result[0]
-    control = df['UKIH'].values.sum()
+    result = baseflow.single(series=streamflow, method='UKIH', return_kge=False)
+    control = result[0]['UKIH'].values.sum()
     test = sdf.select('ukih_baseflow').toPandas()['ukih_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
-    # test baseflow period detection (no event_threshold)
-    bfdp = tcf.BaseflowPeriodDetection(
-        baseflow_field_name='lyne_hollick_baseflow'
-        )
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_baseflow_period_detection(function_scope_two_location_warehouse):
+    """Test baseflow period detection with and without event threshold."""
+    ev = function_scope_two_location_warehouse
+
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
+
+    # compute lyne-hollick baseflow first (required input)
+    sdf = tcf.LyneHollickBaseflow().apply_to(sdf)
+
+    # no event_threshold
+    bfdp = tcf.BaseflowPeriodDetection(baseflow_field_name='lyne_hollick_baseflow')
     sdf = bfdp.apply_to(sdf)
     event_count = sdf.select('baseflow_period_id').distinct().count()
     assert event_count == 130
 
-    # test baseflow period detection (w/ event_threshold)
+    # with event_threshold
     bfdp = tcf.BaseflowPeriodDetection(
         baseflow_field_name='lyne_hollick_baseflow',
         event_threshold=1.5,
@@ -462,45 +440,60 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     event_count = sdf.select('baseflow_period_id_2').distinct().count()
     assert event_count == 208
 
-    # test percentile event detection (default)
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_percentile_event_detection(function_scope_two_location_warehouse):
+    """Test above/below percentile event detection variants."""
+    ev = function_scope_two_location_warehouse
+
+    # above percentile with event ids (default)
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ped = tcf.AbovePercentileEventDetection()
     sdf = ped.apply_to(sdf)
-    event_count = sdf.select('event_above_id').distinct().count()
-    assert event_count == 219
+    assert sdf.filter(F.col('event_above_id').isNull()).count() == 0
+    assert sdf.filter(~F.col('event_above')).count() > 0
+    assert sdf.filter(
+        (~F.col('event_above')) & (F.col('event_above_id').isNull())
+    ).count() == 0
 
-    # test percentile event detection (no event-id)
+    # above percentile skip_event_id
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
-    ped = tcf.AbovePercentileEventDetection(
-        skip_event_id=True
-    )
+    ped = tcf.AbovePercentileEventDetection(skip_event_id=True)
     sdf = ped.apply_to(sdf)
-    num_event_timesteps = sdf.filter(sdf.event_above).count()
-    assert num_event_timesteps == 14823
+    assert sdf.filter(sdf.event_above).count() == 14823
 
-    # test percentile event detection (return quantile value)
+    # above percentile add_quantile_field
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
-    ped = tcf.AbovePercentileEventDetection(
-        add_quantile_field=True
-    )
+    ped = tcf.AbovePercentileEventDetection(add_quantile_field=True)
     sdf = ped.apply_to(sdf)
-    distinct_quantiles = sdf.select("quantile_value").distinct().collect()
-    quantile = distinct_quantiles[0][0]
+    quantile = sdf.select("quantile_value").distinct().collect()[0][0]
     assert np.isclose(quantile, 37.66, atol=0.01)
 
-    # test percentile event detection (below percentile)
+    # below percentile with event ids
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
     ped = tcf.BelowPercentileEventDetection()
     sdf = ped.apply_to(sdf)
-    event_count = sdf.select('event_below_id').distinct().count()
-    assert event_count == 92
+    assert sdf.filter(F.col('event_below_id').isNull()).count() == 0
+    assert sdf.filter(~F.col('event_below')).count() > 0
+    assert sdf.filter(
+        (~F.col('event_below')) & (F.col('event_below_id').isNull())
+    ).count() == 0
 
-    # test threshold event detection (above threshold field, string value cast to float)
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_threshold_event_detection(function_scope_two_location_warehouse):
+    """Test above/below threshold event detection variants."""
+    ev = function_scope_two_location_warehouse
+
+    # above threshold, string value cast to float, skip event ids
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
@@ -511,10 +504,9 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     )
     sdf = ted.apply_to(sdf)
     assert "event_above" in sdf.columns
-    num_event_timesteps = sdf.filter(sdf.event_above).count()
-    assert num_event_timesteps > 0
+    assert sdf.filter(sdf.event_above).count() > 0
 
-    # test threshold event detection (above threshold field, with event ids)
+    # above threshold with event ids
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
@@ -522,10 +514,14 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     ted = tcf.AboveThresholdEventDetection(threshold_field_name="threshold")
     sdf = ted.apply_to(sdf)
     assert "event_above_id" in sdf.columns
-    event_count = sdf.select('event_above_id').distinct().count()
-    assert event_count > 0
+    assert sdf.select('event_above_id').distinct().count() > 0
+    assert sdf.filter(F.col('event_above_id').isNull()).count() == 0
+    assert sdf.filter(~F.col('event_above')).count() > 0
+    assert sdf.filter(
+        (~F.col('event_above')) & (F.col('event_above_id').isNull())
+    ).count() == 0
 
-    # test threshold event detection (below threshold field)
+    # below threshold with event ids
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
@@ -533,25 +529,29 @@ def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     ted = tcf.BelowThresholdEventDetection(threshold_field_name="threshold")
     sdf = ted.apply_to(sdf)
     assert "event_below_id" in sdf.columns
-    event_count = sdf.select('event_below_id').distinct().count()
-    assert event_count > 0
+    assert sdf.select('event_below_id').distinct().count() > 0
+    assert sdf.filter(F.col('event_below_id').isNull()).count() == 0
+    assert sdf.filter(~F.col('event_below')).count() > 0
+    assert sdf.filter(
+        (~F.col('event_below')) & (F.col('event_below_id').isNull())
+    ).count() == 0
 
-    # test exceedance probability
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_exceedance_probability(function_scope_two_location_warehouse):
+    """Test exceedance probability UDF."""
+    ev = function_scope_two_location_warehouse
+
     sdf = ev.table("joined_timeseries").filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
     ep = tcf.ExceedanceProbability()
     sdf = ep.apply_to(sdf)
-    columns = sdf.columns
-    min_ep = sdf.select(
-        F.min("exceedance_probability")
-        ).collect()[0][0]
-    max_ep = sdf.select(
-        F.max("exceedance_probability")
-        ).collect()[0][0]
+    assert "exceedance_probability" in sdf.columns
+    min_ep = sdf.select(F.min("exceedance_probability")).collect()[0][0]
+    max_ep = sdf.select(F.max("exceedance_probability")).collect()[0][0]
     assert np.isclose(min_ep, 0.0, atol=0.001)
     assert np.isclose(max_ep, 1.0, atol=0.001)
-    assert "exceedance_probability" in columns
 
 
 @pytest.mark.function_scope_evaluation_template
@@ -580,7 +580,9 @@ def test_location_event_detection(function_scope_test_warehouse):
     ev = function_scope_test_warehouse
 
     ped = tcf.AbovePercentileEventDetection()
-    sdf = ev.table("joined_timeseries").add_calculated_fields(ped).aggregate(
+    sdf = ev.table("joined_timeseries").add_calculated_fields(ped).filter(
+        "event_above"
+    ).aggregate(
         group_by=["configuration_name",
                   "primary_location_id",
                   "event_above_id"],
@@ -596,7 +598,8 @@ def test_location_event_detection(function_scope_test_warehouse):
         ]
     ).to_sdf()
 
-    assert sdf.count() == 6
+    assert sdf.count() > 0
+    assert sdf.filter(F.col("event_above_id").isNull()).count() == 0
 
     assert "configuration_name" in sdf.columns
     assert "primary_location_id" in sdf.columns

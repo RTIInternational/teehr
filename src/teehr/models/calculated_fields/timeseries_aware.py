@@ -192,11 +192,9 @@ class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
             # Create a new column for continuous segments
             pdf['segment'] = (pdf[input_field] != pdf[input_field].shift()).cumsum()
 
-            # Filter only the segments where values are over the 90th percentile
-            segments = pdf[pdf[input_field]]
-
-            # Group by segment and create startdate-enddate string
-            segment_ranges = segments.groupby('segment').agg(
+            # Group by segment and create startdate-enddate string for all
+            # contiguous periods (both True and False event states).
+            segment_ranges = pdf.groupby('segment').agg(
                 startdate=(time_field, 'min'),
                 enddate=(time_field, 'max')
             ).reset_index()
@@ -206,7 +204,7 @@ class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
 
             # Create the startdate-enddate string column
             pdf[output_field] = pdf.apply(
-                lambda row: f"{row['startdate']}-{row['enddate']}" if pd.notnull(row['startdate']) else None,
+                lambda row: f"{row['startdate']}-{row['enddate']}",
                 axis=1
             )
 
@@ -430,11 +428,9 @@ class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
             # Create a new column for continuous segments
             pdf['segment'] = (pdf[input_field] != pdf[input_field].shift()).cumsum()
 
-            # Filter only the segments where values are over the 90th percentile
-            segments = pdf[pdf[input_field]]
-
-            # Group by segment and create startdate-enddate string
-            segment_ranges = segments.groupby('segment').agg(
+            # Group by segment and create startdate-enddate string for all
+            # contiguous periods (both True and False event states).
+            segment_ranges = pdf.groupby('segment').agg(
                 startdate=(time_field, 'min'),
                 enddate=(time_field, 'max')
             ).reset_index()
@@ -444,7 +440,7 @@ class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
 
             # Create the startdate-enddate string column
             pdf[output_field] = pdf.apply(
-                lambda row: f"{row['startdate']}-{row['enddate']}" if pd.notnull(row['startdate']) else None,
+                lambda row: f"{row['startdate']}-{row['enddate']}",
                 axis=1
             )
 
@@ -621,11 +617,9 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
             # Create a new column for continuous segments
             pdf['segment'] = (pdf[input_field] != pdf[input_field].shift()).cumsum()
 
-            # Filter only the segments where values are over the threshold
-            segments = pdf[pdf[input_field]]
-
-            # Group by segment and create startdate-enddate string
-            segment_ranges = segments.groupby('segment').agg(
+            # Group by segment and create startdate-enddate string for all
+            # contiguous periods (both True and False event states).
+            segment_ranges = pdf.groupby('segment').agg(
                 startdate=(time_field, 'min'),
                 enddate=(time_field, 'max')
             ).reset_index()
@@ -635,7 +629,7 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
 
             # Create the startdate-enddate string column
             pdf[output_field] = pdf.apply(
-                lambda row: f"{row['startdate']}-{row['enddate']}" if pd.notnull(row['startdate']) else None,
+                lambda row: f"{row['startdate']}-{row['enddate']}",
                 axis=1
             )
 
@@ -804,11 +798,9 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
             # Create a new column for continuous segments
             pdf['segment'] = (pdf[input_field] != pdf[input_field].shift()).cumsum()
 
-            # Filter only the segments where values are below the threshold
-            segments = pdf[pdf[input_field]]
-
-            # Group by segment and create startdate-enddate string
-            segment_ranges = segments.groupby('segment').agg(
+            # Group by segment and create startdate-enddate string for all
+            # contiguous periods (both True and False event states).
+            segment_ranges = pdf.groupby('segment').agg(
                 startdate=(time_field, 'min'),
                 enddate=(time_field, 'max')
             ).reset_index()
@@ -818,7 +810,7 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
 
             # Create the startdate-enddate string column
             pdf[output_field] = pdf.apply(
-                lambda row: f"{row['startdate']}-{row['enddate']}" if pd.notnull(row['startdate']) else None,
+                lambda row: f"{row['startdate']}-{row['enddate']}",
                 axis=1
             )
 

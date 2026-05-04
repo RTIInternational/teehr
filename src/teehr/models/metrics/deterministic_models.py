@@ -43,6 +43,46 @@ class MultiplicativeBias(DeterministicBasemodel):
     default_attrs = tma.MULTBIAS_ATTRS
 
 
+class RelativeMean(DeterministicBasemodel):
+    """Relative Mean: mean of secondary values divided by mean of primary."""
+
+    default_output_field_name = "relative_mean"
+    default_func = metric_funcs.relative_mean
+    default_attrs = tma.RELMEAN_ATTRS
+
+
+class RelativeMedian(DeterministicBasemodel):
+    """Relative Median: median of secondary values divided by median of primary."""
+
+    default_output_field_name = "relative_median"
+    default_func = metric_funcs.relative_median
+    default_attrs = tma.RELMEDIAN_ATTRS
+
+
+class RelativeMinimum(DeterministicBasemodel):
+    """Relative Minimum: minimum of secondary values divided by minimum of primary."""
+
+    default_output_field_name = "relative_minimum"
+    default_func = metric_funcs.relative_minimum
+    default_attrs = tma.RELMIN_ATTRS
+
+
+class RelativeMaximum(DeterministicBasemodel):
+    """Relative Maximum: maximum of secondary values divided by maximum of primary."""
+
+    default_output_field_name = "relative_maximum"
+    default_func = metric_funcs.relative_maximum
+    default_attrs = tma.RELMAX_ATTRS
+
+
+class RelativeStandardDeviation(DeterministicBasemodel):
+    """Relative Standard Deviation: std of secondary values divided by std of primary."""
+
+    default_output_field_name = "relative_standard_deviation"
+    default_func = metric_funcs.relative_standard_deviation
+    default_attrs = tma.RELSTD_ATTRS
+
+
 class MeanSquareError(DeterministicBasemodel):
     """Mean Square Error: average of squared differences."""
 
@@ -219,7 +259,7 @@ class MaxValueTimeDelta(DeterministicBasemodel):
     default_output_field_name = "max_value_time_delta"
     default_func = metric_funcs.max_value_timedelta
     default_attrs = tma.MAX_VALUE_TIMEDELTA_ATTRS
-    default_input_field_names = ["primary_value", "secondary_value", "value_time"]
+    default_value_time_field_name = "value_time"
 
 
 class AnnualPeakRelativeBias(DeterministicBasemodel):
@@ -228,7 +268,7 @@ class AnnualPeakRelativeBias(DeterministicBasemodel):
     default_output_field_name = "annual_peak_flow_bias"
     default_func = metric_funcs.annual_peak_relative_bias
     default_attrs = tma.ANNUAL_PEAK_RBIAS_ATTRS
-    default_input_field_names = ["primary_value", "secondary_value", "value_time"]
+    default_value_time_field_name = "value_time"
 
 
 # =============================================================================
@@ -355,6 +395,8 @@ class DeterministicMetrics:
 
     **Bias Metrics:**
     - RelativeBias, MultiplicativeBias, AnnualPeakRelativeBias
+    - RelativeMean, RelativeMedian, RelativeMinimum, RelativeMaximum
+    - RelativeStandardDeviation
 
     **Correlation Metrics:**
     - PearsonCorrelation, SpearmanCorrelation, Rsquared
@@ -389,6 +431,11 @@ class DeterministicMetrics:
     RelativeBias = RelativeBias
     MultiplicativeBias = MultiplicativeBias
     AnnualPeakRelativeBias = AnnualPeakRelativeBias
+    RelativeMean = RelativeMean
+    RelativeMedian = RelativeMedian
+    RelativeMinimum = RelativeMinimum
+    RelativeMaximum = RelativeMaximum
+    RelativeStandardDeviation = RelativeStandardDeviation
 
     # Correlation metrics
     PearsonCorrelation = PearsonCorrelation

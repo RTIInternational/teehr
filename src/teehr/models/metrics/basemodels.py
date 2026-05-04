@@ -39,17 +39,28 @@ class ProbabilisticBasemodel(MetricsBasemodel):
         The backend to use, by default "numba". Can be ("numba" or "numpy").
     summary_func : Callable
         The function to apply to the results, by default None.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value", "member"].
+    primary_field_name : Union[str, StrEnum]
+        Field name for the observed/primary value column.
+    secondary_field_name : Union[str, StrEnum]
+        Field name for the forecast/secondary value column.
+    member_field_name : Union[str, StrEnum]
+        Field name for the ensemble member column.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]], None]
+        Optional legacy override for positional metric inputs.
     """
 
     transform: Any = Field(default=None)  # TransformEnum, set below after enum defined
     backend: str = Field(default="numba")
     summary_func: Union[Callable, None] = Field(default=None)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value", "member"]
-    )
+    primary_field_name: Union[str, StrEnum] = Field(default="primary_value")
+    secondary_field_name: Union[str, StrEnum] = Field(default="secondary_value")
+    member_field_name: Union[str, StrEnum] = Field(default="member")
+    input_field_names: Union[
+        str,
+        StrEnum,
+        List[Union[str, StrEnum]],
+        None,
+    ] = Field(default=None)
 
     @model_validator(mode="before")
     def update_return_type(cls, values):
@@ -59,6 +70,35 @@ class ProbabilisticBasemodel(MetricsBasemodel):
         elif values.get("summary_func") is not None:
             values["return_type"] = "float"
         return values
+
+    @model_validator(mode="after")
+    def build_input_field_names(self):
+        """Compose input_field_names from explicit field names by default."""
+        if self.input_field_names is None:
+            self.input_field_names = [
+                self.primary_field_name,
+                self.secondary_field_name,
+                self.member_field_name,
+            ]
+        return self
+
+    def get_input_field_names(self) -> List[Union[str, StrEnum]]:
+        """Return concrete ordered input field names for downstream calls."""
+        if self.input_field_names is None:
+            names: List[Union[str, StrEnum]] = [
+                self.primary_field_name,
+                self.secondary_field_name,
+                self.member_field_name,
+            ]
+        elif isinstance(self.input_field_names, list):
+            names = list(self.input_field_names)
+        else:
+            names = [self.input_field_names]
+
+        # keep order, drop duplicates
+        deduped = list(dict.fromkeys(names))
+        self.input_field_names = deduped
+        return deduped
 
 
 class BootstrapBasemodel(PydanticBaseModel):
@@ -124,8 +164,12 @@ class DeterministicBasemodel(MetricsBasemodel):
         Default function to compute this metric.
     default_attrs : Dict
         Default static attributes for this metric.
-    default_input_field_names : List[str]
-        Default input field names (override for signatures).
+    default_primary_field_name : str
+        Default primary field name.
+    default_secondary_field_name : Union[str, None]
+        Default secondary field name.
+    default_value_time_field_name : Union[str, None]
+        Default value_time field name when required.
     """
 
     # Common fields with defaults - users can override at instantiation
@@ -136,7 +180,16 @@ class DeterministicBasemodel(MetricsBasemodel):
     # Metric-specific fields - subclasses define defaults via class variables
     output_field_name: str = Field(default=None)
     func: Callable = Field(default=None)
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(default=None)
+    primary_field_name: Union[str, StrEnum, None] = Field(default=None)
+    secondary_field_name: Union[str, StrEnum, None] = Field(default=None)
+    value_time_field_name: Union[str, StrEnum, None] = Field(default=None)
+    threshold_field_name: Union[str, StrEnum, None] = Field(default=None)
+    input_field_names: Union[
+        str,
+        StrEnum,
+        List[Union[str, StrEnum]],
+        None,
+    ] = Field(default=None)
     attrs: Dict = Field(default=None)
 
     # Base class defaults
@@ -147,7 +200,9 @@ class DeterministicBasemodel(MetricsBasemodel):
     default_output_field_name: ClassVar[str] = None
     default_func: ClassVar[Callable] = None
     default_attrs: ClassVar[Dict] = None
-    default_input_field_names: ClassVar[List[str]] = ["primary_value", "secondary_value"]
+    default_primary_field_name: ClassVar[Union[str, None]] = "primary_value"
+    default_secondary_field_name: ClassVar[Union[str, None]] = "secondary_value"
+    default_value_time_field_name: ClassVar[Union[str, None]] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -159,9 +214,58 @@ class DeterministicBasemodel(MetricsBasemodel):
             values["func"] = cls.default_func
         if values.get("attrs") is None and cls.default_attrs:
             values["attrs"] = cls.default_attrs
-        if values.get("input_field_names") is None and cls.default_input_field_names:
-            values["input_field_names"] = list(cls.default_input_field_names)
+        if values.get("primary_field_name") is None:
+            values["primary_field_name"] = cls.default_primary_field_name
+        if values.get("secondary_field_name") is None:
+            values["secondary_field_name"] = cls.default_secondary_field_name
+        if values.get("value_time_field_name") is None:
+            values["value_time_field_name"] = cls.default_value_time_field_name
         return values
+
+    @model_validator(mode="after")
+    def build_input_field_names(self):
+        """Compose input_field_names from explicit field names by default."""
+        if self.input_field_names is None:
+            fields = []
+            for fld in [
+                self.primary_field_name,
+                self.secondary_field_name,
+                self.value_time_field_name,
+            ]:
+                if fld is not None:
+                    fields.append(fld)
+
+            if self.attrs is not None and self.attrs.get("requires_threshold_field", False):
+                if self.threshold_field_name is not None and self.threshold_field_name not in fields:
+                    fields.append(self.threshold_field_name)
+
+            self.input_field_names = fields
+        return self
+
+    def get_input_field_names(self) -> List[Union[str, StrEnum]]:
+        """Return concrete ordered input field names for downstream calls."""
+        if self.input_field_names is None:
+            names: List[Union[str, StrEnum]] = []
+            for fld in [
+                self.primary_field_name,
+                self.secondary_field_name,
+                self.value_time_field_name,
+            ]:
+                if fld is not None:
+                    names.append(fld)
+        elif isinstance(self.input_field_names, list):
+            names = list(self.input_field_names)
+        else:
+            names = [self.input_field_names]
+
+        if self.attrs is not None and self.attrs.get("requires_threshold_field", False):
+            if self.threshold_field_name is not None and self.threshold_field_name not in names:
+                names.append(self.threshold_field_name)
+
+        # keep order, drop duplicates
+        deduped = list(dict.fromkeys(names))
+        self.input_field_names = deduped
+        return deduped
 
 
 class SignatureBasemodel(DeterministicBasemodel):
@@ -170,7 +274,8 @@ class SignatureBasemodel(DeterministicBasemodel):
     Signatures operate on a single field (primary_value by default).
     """
 
-    default_input_field_names: ClassVar[List[str]] = ["primary_value"]
+    default_primary_field_name: ClassVar[Union[str, None]] = "primary_value"
+    default_secondary_field_name: ClassVar[Union[str, None]] = None
 
 
 class ThresholdBasemodel(DeterministicBasemodel):
@@ -180,7 +285,7 @@ class ThresholdBasemodel(DeterministicBasemodel):
     false alarm ratio, probability of detection).
     """
 
-    threshold_field_name: str = Field(default=None)
+    pass
 
 
 # Enums
