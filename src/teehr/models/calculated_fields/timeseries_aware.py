@@ -9,12 +9,12 @@ from scipy.stats import rankdata
 from teehr.models.calculated_fields.base import CalculatedFieldABC, CalculatedFieldBaseModel
 
 UNIQUENESS_FIELDS = [
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+    'reference_time',
+    'primary_location_id',
+    'configuration_name',
+    'variable_name',
+    'unit_name'
+]
 
 
 class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):

@@ -15,6 +15,9 @@ from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.filters import TableFilter
 from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.querying.metrics_spark_native import aggregate_metrics_with_engine
+from teehr.querying.calculated_fields_spark_native import (
+    apply_calculated_fields_with_engine,
+)
 import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
@@ -337,7 +340,8 @@ class TeehrDataFrameBase(ABC):
 
     def add_calculated_fields(
         self,
-        cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
+        cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]],
+        engine: str = "auto",
     ):
         """Add calculated fields to the DataFrame.
 
@@ -345,6 +349,9 @@ class TeehrDataFrameBase(ABC):
         ----------
         cfs : Union[CalculatedFieldBaseModel, List[...]]
             The calculated fields to add.
+        engine : str, optional
+            Execution engine for calculated fields. Options are ``"auto"``,
+            ``"python"``, or ``"spark"``. Default is ``"auto"``.
 
         Returns
         -------
@@ -363,9 +370,11 @@ class TeehrDataFrameBase(ABC):
         if not isinstance(cfs, list):
             cfs = [cfs]
 
-        sdf = self.to_sdf()
-        for cf in cfs:
-            sdf = cf.apply_to(sdf)
+        sdf = apply_calculated_fields_with_engine(
+            sdf=self.to_sdf(),
+            cfs=cfs,
+            engine=engine,
+        )
         return self._with_sdf(sdf)
 
     def write(

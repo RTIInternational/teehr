@@ -1,5 +1,4 @@
 """Classes representing UDFs."""
-import calendar
 from typing import Union
 from pydantic import Field
 import pandas as pd
@@ -35,13 +34,9 @@ class Month(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.IntegerType())
-        def func(col: pd.Series) -> pd.Series:
-            return col.dt.month
-
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.input_field_name)
+            F.month(F.col(self.input_field_name))
         )
         return sdf
 
@@ -69,13 +64,9 @@ class Year(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.IntegerType())
-        def func(col: pd.Series) -> pd.Series:
-            return col.dt.year
-
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.input_field_name)
+            F.year(F.col(self.input_field_name))
         )
         return sdf
 
@@ -105,13 +96,12 @@ class WaterYear(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.IntegerType())
-        def func(col: pd.Series) -> pd.Series:
-            return col.dt.year + (col.dt.month >= 10).astype(int)
-
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.input_field_name)
+            (
+                F.year(F.col(self.input_field_name))
+                + F.when(F.month(F.col(self.input_field_name)) >= 10, F.lit(1)).otherwise(F.lit(0))
+            ).cast("int")
         )
         return sdf
 
@@ -145,13 +135,12 @@ class NormalizedFlow(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.FloatType())
-        def func(value: pd.Series, area: pd.Series) -> pd.Series:
-            return value.astype(float) / area.astype(float)
-
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.primary_value_field_name, self.drainage_area_field_name)
+            F.try_divide(
+                F.col(self.primary_value_field_name).cast("double"),
+                F.col(self.drainage_area_field_name).cast("double"),
+            ).cast("float")
         )
         return sdf
 
@@ -199,19 +188,19 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.StringType())
-        def func(value_time: pd.Series) -> pd.Series:
-            return value_time.dt.month.apply(
-                lambda x: next(
-                    (season for season,
-                     months in self.season_months.items() if x in months),
-                    None
-                )
-            )
+        month_col = F.month(F.col(self.value_time_field_name))
+        expr = None
+        for season, months in self.season_months.items():
+            cond = month_col.isin([int(m) for m in months])
+            expr = F.when(cond, F.lit(season)) if expr is None else expr.when(cond, F.lit(season))
+        if expr is None:
+            expr = F.lit(None).cast("string")
+        else:
+            expr = expr.otherwise(F.lit(None).cast("string"))
 
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.value_time_field_name)
+            expr
         )
         return sdf
 
@@ -245,16 +234,9 @@ class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.DayTimeIntervalType())
-        def func(value_time: pd.Series,
-                 reference_time: pd.Series
-                 ) -> pd.Series:
-            difference = value_time - reference_time
-            return difference
-
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.value_time_field_name, self.reference_time_field_name)
+            F.col(self.value_time_field_name) - F.col(self.reference_time_field_name)
         )
         return sdf
 
@@ -744,17 +726,13 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.BooleanType())
-        def func(input_value: pd.Series,
-                 threshold_value: pd.Series
-                 ) -> pd.Series:
-            mask = input_value.astype(float) > threshold_value.astype(float)
-            return mask
-
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.input_field_name,
-                 self.threshold_field_name)
+            F.coalesce(
+                F.col(self.input_field_name).cast("double")
+                > F.col(self.threshold_field_name).cast("double"),
+                F.lit(False),
+            ).cast("boolean")
         )
         return sdf
 
@@ -788,17 +766,13 @@ class ThresholdValueNotExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.BooleanType())
-        def func(input_value: pd.Series,
-                 threshold_value: pd.Series
-                 ) -> pd.Series:
-            mask = input_value.astype(float) <= threshold_value.astype(float)
-            return mask
-
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.input_field_name,
-                 self.threshold_field_name)
+            F.coalesce(
+                F.col(self.input_field_name).cast("double")
+                <= F.col(self.threshold_field_name).cast("double"),
+                F.lit(False),
+            ).cast("boolean")
         )
         return sdf
 
@@ -831,24 +805,26 @@ class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.IntegerType())
-        def func(col: pd.Series) -> pd.Series:
-            def adjust_day_of_year(date):
-                if calendar.isleap(date.year):
-                    if date.month == 2 and date.day == 29:
-                        return 59  # Assign to Feb.28 during leap years
-                    elif date.month > 2:
-                        return date.dayofyear - 1
-                    else:
-                        return date.dayofyear
-                else:
-                    return date.dayofyear
+        dt_col = F.col(self.input_field_name)
+        year_col = F.year(dt_col)
+        month_col = F.month(dt_col)
+        day_col = F.dayofmonth(dt_col)
+        doy_col = F.dayofyear(dt_col)
 
-            return col.apply(adjust_day_of_year)
+        is_leap = (
+            ((year_col % 4) == 0)
+            & (((year_col % 100) != 0) | ((year_col % 400) == 0))
+        )
+
+        adjusted = (
+            F.when(is_leap & (month_col == 2) & (day_col == 29), F.lit(59))
+            .when(is_leap & (month_col > 2), doy_col - F.lit(1))
+            .otherwise(doy_col)
+        )
 
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.input_field_name)
+            adjusted.cast("int")
         )
         return sdf
 
@@ -876,25 +852,30 @@ class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.IntegerType())
-        def func(col: pd.Series) -> pd.Series:
-            def adjust_hour_of_year(date):
-                if calendar.isleap(date.year):
-                    if date.month == 2 and date.day == 29:
-                        # Assign to Feb.28 during leap years
-                        return 58 * 24 + date.hour
-                    elif date.month > 2:
-                        return (date.dayofyear - 2) * 24 + date.hour
-                    else:
-                        return (date.dayofyear - 1) * 24 + date.hour
-                else:
-                    return (date.dayofyear - 1) * 24 + date.hour
+        dt_col = F.col(self.input_field_name)
+        year_col = F.year(dt_col)
+        month_col = F.month(dt_col)
+        day_col = F.dayofmonth(dt_col)
+        doy_col = F.dayofyear(dt_col)
+        hour_col = F.hour(dt_col)
 
-            return col.apply(adjust_hour_of_year)
+        is_leap = (
+            ((year_col % 4) == 0)
+            & (((year_col % 100) != 0) | ((year_col % 400) == 0))
+        )
+
+        adjusted = (
+            F.when(
+                is_leap & (month_col == 2) & (day_col == 29),
+                F.lit(58 * 24) + hour_col,
+            )
+            .when(is_leap & (month_col > 2), (doy_col - F.lit(2)) * F.lit(24) + hour_col)
+            .otherwise((doy_col - F.lit(1)) * F.lit(24) + hour_col)
+        )
 
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.input_field_name)
+            adjusted.cast("int")
         )
         return sdf
 
