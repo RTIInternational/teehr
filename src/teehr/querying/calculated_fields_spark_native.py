@@ -13,6 +13,11 @@ from pyspark.sql import DataFrame
 from pyspark.sql import Window
 import pyspark.sql.functions as F
 
+from teehr.querying.calculated_fields_adapters import (
+    CalculatedFieldAdapter,
+    batched_adapter,
+    single_field_adapter,
+)
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.calculated_fields.row_level import (
     Month,
@@ -57,6 +62,18 @@ ROW_LEVEL_NATIVE_CF_TYPES = (
     DayOfYear,
     HourOfYear,
 )
+
+
+def _supports_percentile(cf: CalculatedFieldBaseModel) -> bool:
+    return isinstance(cf, PERCENTILE_CF_TYPES)
+
+
+def _supports_threshold(cf: CalculatedFieldBaseModel) -> bool:
+    return isinstance(cf, THRESHOLD_CF_TYPES)
+
+
+def _supports_row_level(cf: CalculatedFieldBaseModel) -> bool:
+    return isinstance(cf, ROW_LEVEL_NATIVE_CF_TYPES)
 
 
 def supports_spark_native_cf(cf: CalculatedFieldBaseModel) -> bool:
@@ -245,6 +262,55 @@ def _consume_compatible_batch(
     return batch, idx
 
 
+def _consume_percentile_batch(
+    cfs: list[CalculatedFieldBaseModel],
+    start: int,
+) -> tuple[list[CalculatedFieldBaseModel], int]:
+    return _consume_compatible_batch(
+        cfs,
+        start,
+        PERCENTILE_CF_TYPES,
+        _percentile_group_key,
+    )
+
+
+def _consume_threshold_batch(
+    cfs: list[CalculatedFieldBaseModel],
+    start: int,
+) -> tuple[list[CalculatedFieldBaseModel], int]:
+    return _consume_compatible_batch(
+        cfs,
+        start,
+        THRESHOLD_CF_TYPES,
+        _threshold_group_key,
+    )
+
+
+def _apply_with_model(sdf: DataFrame, cf: CalculatedFieldBaseModel) -> DataFrame:
+    return cf.apply_to(sdf)
+
+
+SPARK_EXECUTION_ADAPTERS: tuple[CalculatedFieldAdapter, ...] = (
+    batched_adapter(
+        name="spark-percentile-batch",
+        supports=_supports_percentile,
+        consume_batch=_consume_percentile_batch,
+        apply_batch=_apply_percentile_batch,
+    ),
+    batched_adapter(
+        name="spark-threshold-batch",
+        supports=_supports_threshold,
+        consume_batch=_consume_threshold_batch,
+        apply_batch=_apply_threshold_batch,
+    ),
+    single_field_adapter(
+        name="spark-row-level",
+        supports=_supports_row_level,
+        apply_field=_apply_with_model,
+    ),
+)
+
+
 def apply_calculated_fields_with_engine(
     sdf: DataFrame,
     cfs: Iterable[CalculatedFieldBaseModel],
@@ -274,31 +340,11 @@ def apply_calculated_fields_with_engine(
     while idx < len(cfs):
         cf = cfs[idx]
 
-        if isinstance(cf, PERCENTILE_CF_TYPES):
-            batch, next_idx = _consume_compatible_batch(
-                cfs,
-                idx,
-                PERCENTILE_CF_TYPES,
-                _percentile_group_key,
-            )
-            sdf = _apply_percentile_batch(sdf, batch)
+        adapter = next((a for a in SPARK_EXECUTION_ADAPTERS if a.supports(cf)), None)
+        if adapter is not None:
+            batch, next_idx = adapter.consume_batch(cfs, idx)
+            sdf = adapter.apply_batch(sdf, batch)
             idx = next_idx
-            continue
-
-        if isinstance(cf, THRESHOLD_CF_TYPES):
-            batch, next_idx = _consume_compatible_batch(
-                cfs,
-                idx,
-                THRESHOLD_CF_TYPES,
-                _threshold_group_key,
-            )
-            sdf = _apply_threshold_batch(sdf, batch)
-            idx = next_idx
-            continue
-
-        if isinstance(cf, ROW_LEVEL_NATIVE_CF_TYPES):
-            sdf = cf.apply_to(sdf)
-            idx += 1
             continue
 
         if engine == "spark":

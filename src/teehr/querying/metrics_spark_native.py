@@ -8,6 +8,10 @@ import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.querying.metrics_adapters import (
+    MetricExecutionAdapter,
+    contiguous_batch_adapter,
+)
 from teehr.querying.metric_format import apply_aggregation_metrics
 from teehr.querying.utils import group_df, parse_fields_to_list, validate_fields_exist
 
@@ -340,6 +344,75 @@ def _compute_deterministic_metrics(
     return stats_df.select(*group_by_cols, *metric_exprs)
 
 
+def _apply_signature_batch(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metrics: List[MetricsBasemodel],
+) -> DataFrame | None:
+    return _compute_signature_metrics(sdf, group_by_cols, metrics)
+
+
+def _apply_deterministic_batch(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metrics: List[MetricsBasemodel],
+) -> DataFrame | None:
+    return _compute_deterministic_metrics(sdf, group_by_cols, metrics)
+
+
+SPARK_METRIC_ADAPTERS: tuple[MetricExecutionAdapter, ...] = (
+    contiguous_batch_adapter(
+        name="spark-signature-batch",
+        supports=_is_signature_metric,
+        apply_batch=_apply_signature_batch,
+    ),
+    contiguous_batch_adapter(
+        name="spark-deterministic-batch",
+        supports=_is_deterministic_metric,
+        apply_batch=_apply_deterministic_batch,
+    ),
+)
+
+
+def _compute_spark_native_with_adapters(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metrics: List[MetricsBasemodel],
+) -> DataFrame:
+    # Preserve previous deterministic behavior: all deterministic metrics in one
+    # spark-native query must reference the same primary/secondary field pair.
+    deterministic = [m for m in metrics if _is_deterministic_metric(m)]
+    if deterministic:
+        _deterministic_fields(deterministic)
+
+    metric_frames: List[DataFrame] = []
+    idx = 0
+    while idx < len(metrics):
+        metric = metrics[idx]
+        adapter = next((a for a in SPARK_METRIC_ADAPTERS if a.supports(metric)), None)
+        if adapter is None:
+            raise ValueError(
+                "No Spark metric adapter found for metric: "
+                f"{metric.__class__.__name__}."
+            )
+
+        batch, next_idx = adapter.consume_batch(metrics, idx)
+        frame = adapter.apply_batch(sdf, group_by_cols, batch)
+        if frame is not None:
+            metric_frames.append(frame)
+        idx = next_idx
+
+    if not metric_frames:
+        raise ValueError("No spark-native metrics were provided.")
+
+    result_df = metric_frames[0]
+    for frame in metric_frames[1:]:
+        result_df = result_df.join(frame, on=group_by_cols, how="outer")
+
+    ordered_cols = list(dict.fromkeys(group_by_cols + [m.output_field_name for m in metrics]))
+    return result_df.select(*ordered_cols)
+
+
 def compute_spark_native_metrics(
     sdf: DataFrame,
     group_by,
@@ -349,24 +422,7 @@ def compute_spark_native_metrics(
     group_by_cols = parse_fields_to_list(group_by)
     if not isinstance(metrics, list):
         metrics = [metrics]
-
-    signature_metrics = [m for m in metrics if _is_signature_metric(m)]
-    deterministic_metrics = [m for m in metrics if _is_deterministic_metric(m)]
-
-    sig_df = _compute_signature_metrics(sdf, group_by_cols, signature_metrics)
-    det_df = _compute_deterministic_metrics(sdf, group_by_cols, deterministic_metrics)
-
-    if sig_df is None and det_df is None:
-        raise ValueError("No spark-native metrics were provided.")
-    if sig_df is None:
-        result_df = det_df
-    elif det_df is None:
-        result_df = sig_df
-    else:
-        result_df = sig_df.join(det_df, on=group_by_cols, how="outer")
-
-    ordered_cols = list(dict.fromkeys(group_by_cols + [m.output_field_name for m in metrics]))
-    return result_df.select(*ordered_cols)
+    return _compute_spark_native_with_adapters(sdf, group_by_cols, metrics)
 
 
 def _ordered_output_columns(
