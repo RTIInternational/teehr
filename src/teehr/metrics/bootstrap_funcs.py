@@ -30,8 +30,13 @@ def _optimal_block_size(data: np.ndarray, method: str) -> int:
     result = optimal_block_length(data)
     if method == "circular":
         candidates = ("b_cb", "circular")
-    else:
+    elif method == "stationary":
         candidates = ("b_sb", "stationary")
+    else:
+        raise ValueError(
+            f"Unsupported method={method!r}. Expected one of "
+            "'circular' or 'stationary'."
+        )
 
     col = next((c for c in candidates if c in result.columns), None)
     if col is None:
