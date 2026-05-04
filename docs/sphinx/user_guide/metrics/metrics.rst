@@ -124,8 +124,8 @@ the primary metric input series.
     # Configure bootstrap
     boot = Bootstrappers.CircularBlock(
         reps=1000,
-      # block_size=None -> auto estimate using optimal_block_length (b_cb)
-      block_size=None,
+        # block_size=None -> auto estimate using optimal_block_length (b_cb)
+        block_size=None,
         seed=42,
         quantiles=[0.05, 0.5, 0.95]
     )
