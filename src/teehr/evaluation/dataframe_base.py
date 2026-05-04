@@ -545,12 +545,10 @@ class TeehrDataFrameBase(ABC):
         Raises
         ------
         AttributeError
-            If the underlying ``_sdf`` has not been loaded (is None).
+            If the underlying ``_sdf`` could not be obtained (e.g., View
+            computation failed or ``to_sdf()`` returned None).
         """
-        try:
-            sdf = object.__getattribute__(self, '_sdf')
-        except AttributeError:
-            sdf = None
+        sdf = self.to_sdf()
         if sdf is None:
             raise AttributeError(
                 f"Table not loaded (sdf is None). Cannot proxy '{name}' to DataFrame."
