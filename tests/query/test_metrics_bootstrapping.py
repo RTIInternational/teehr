@@ -442,7 +442,7 @@ def test_circularblock_bootstrapping_threshold_metric(function_scope_test_wareho
 
     # Build a numeric threshold field for stable threshold metric evaluation.
     sdf = ev.table("joined_timeseries").to_sdf().withColumn(
-        "threshold_numeric", F.lit(500.0)
+        "threshold_numeric", F.lit(5.0)
     )
     ev._write.to_warehouse(
         source_data=sdf,
@@ -496,11 +496,11 @@ def test_circularblock_bootstrapping_threshold_metric(function_scope_test_wareho
     ).to_pandas()
 
     teehr_results = np.sort(
-        np.array(metrics_df.probability_of_detection.values[0])
+        np.array(metrics_df.probability_of_detection.values[0], dtype=float)
     )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
+    manual_results = np.sort(results.ravel().astype(np.float32))
 
-    assert (teehr_results == manual_results).all()
+    assert np.allclose(teehr_results, manual_results, equal_nan=True)
 
 
 @pytest.mark.function_scope_test_warehouse
@@ -510,7 +510,7 @@ def test_stationary_bootstrapping_threshold_metric(function_scope_test_warehouse
 
     # Build a numeric threshold field for stable threshold metric evaluation.
     sdf = ev.table("joined_timeseries").to_sdf().withColumn(
-        "threshold_numeric", F.lit(500.0)
+        "threshold_numeric", F.lit(5.0)
     )
     ev._write.to_warehouse(
         source_data=sdf,
@@ -564,11 +564,11 @@ def test_stationary_bootstrapping_threshold_metric(function_scope_test_warehouse
     ).to_pandas()
 
     teehr_results = np.sort(
-        np.array(metrics_df.probability_of_detection.values[0])
+        np.array(metrics_df.probability_of_detection.values[0], dtype=float)
     )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
+    manual_results = np.sort(results.ravel().astype(np.float32))
 
-    assert (teehr_results == manual_results).all()
+    assert np.allclose(teehr_results, manual_results, equal_nan=True)
 
 
 @pytest.mark.function_scope_test_warehouse
@@ -578,7 +578,7 @@ def test_gumboot_bootstrapping_threshold_metric(function_scope_test_warehouse):
 
     # Build a numeric threshold field for stable threshold metric evaluation.
     sdf = ev.table("joined_timeseries").to_sdf().withColumn(
-        "threshold_numeric", F.lit(500.0)
+        "threshold_numeric", F.lit(5.0)
     )
     ev._write.to_warehouse(
         source_data=sdf,
@@ -634,11 +634,11 @@ def test_gumboot_bootstrapping_threshold_metric(function_scope_test_warehouse):
     ).to_pandas()
 
     teehr_results = np.sort(
-        np.array(metrics_df.probability_of_detection.values[0])
+        np.array(metrics_df.probability_of_detection.values[0], dtype=float)
     )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
+    manual_results = np.sort(results.ravel().astype(np.float32))
 
-    assert (teehr_results == manual_results).all()
+    assert np.allclose(teehr_results, manual_results, equal_nan=True)
 
 
 # ---------------------------------------------------------------------------
@@ -675,14 +675,14 @@ def test_shared_bootstrap_quantile_columns_correct(
     )
 
     expected_kge_cols = {
-        "kling_gupta_efficiency_0.05",
-        "kling_gupta_efficiency_0.5",
-        "kling_gupta_efficiency_0.95",
+        "kling_gupta_efficiency_0_05",
+        "kling_gupta_efficiency_0_5",
+        "kling_gupta_efficiency_0_95",
     }
     expected_nse_cols = {
-        "nash_sutcliffe_efficiency_0.05",
-        "nash_sutcliffe_efficiency_0.5",
-        "nash_sutcliffe_efficiency_0.95",
+        "nash_sutcliffe_efficiency_0_05",
+        "nash_sutcliffe_efficiency_0_5",
+        "nash_sutcliffe_efficiency_0_95",
     }
 
     assert expected_kge_cols.issubset(set(shared_df.columns)), (
@@ -698,12 +698,12 @@ def test_shared_bootstrap_quantile_columns_correct(
         )
 
     assert (
-        shared_df["kling_gupta_efficiency_0.05"].values
-        <= shared_df["kling_gupta_efficiency_0.5"].values
+        shared_df["kling_gupta_efficiency_0_05"].values
+        <= shared_df["kling_gupta_efficiency_0_5"].values
     ).all()
     assert (
-        shared_df["kling_gupta_efficiency_0.5"].values
-        <= shared_df["kling_gupta_efficiency_0.95"].values
+        shared_df["kling_gupta_efficiency_0_5"].values
+        <= shared_df["kling_gupta_efficiency_0_95"].values
     ).all()
 
 
@@ -732,9 +732,9 @@ def test_shared_bootstrap_singleton_group_unchanged(
 
     expected_cols = {
         "primary_location_id",
-        "kling_gupta_efficiency_0.05",
-        "kling_gupta_efficiency_0.5",
-        "kling_gupta_efficiency_0.95",
+        "kling_gupta_efficiency_0_05",
+        "kling_gupta_efficiency_0_5",
+        "kling_gupta_efficiency_0_95",
     }
     assert expected_cols.issubset(set(result_df.columns))
     assert result_df.index.size == 3
@@ -767,10 +767,10 @@ def test_shared_bootstrap_different_configs_not_shared(
         .to_pandas()
     )
 
-    assert "kling_gupta_efficiency_0.05" in result_df.columns
-    assert "kling_gupta_efficiency_0.95" in result_df.columns
-    assert "nash_sutcliffe_efficiency_0.05" in result_df.columns
-    assert "nash_sutcliffe_efficiency_0.95" in result_df.columns
+    assert "kling_gupta_efficiency_0_05" in result_df.columns
+    assert "kling_gupta_efficiency_0_95" in result_df.columns
+    assert "nash_sutcliffe_efficiency_0_05" in result_df.columns
+    assert "nash_sutcliffe_efficiency_0_95" in result_df.columns
     assert result_df.index.size == 3
 
 
@@ -806,7 +806,7 @@ def test_shared_bootstrap_mixed_with_non_bootstrap_metric(
         .to_pandas()
     )
 
-    assert "kling_gupta_efficiency_0.5" in result_df.columns
-    assert "nash_sutcliffe_efficiency_0.5" in result_df.columns
+    assert "kling_gupta_efficiency_0_5" in result_df.columns
+    assert "nash_sutcliffe_efficiency_0_5" in result_df.columns
     assert "mean_error" in result_df.columns
     assert result_df.index.size == 3

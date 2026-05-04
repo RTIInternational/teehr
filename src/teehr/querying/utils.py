@@ -99,6 +99,11 @@ def post_process_metric_results(
     return metrics_sdf
 
 
+def sanitize_map_key_name(key, dot_replacement: str = "_") -> str:
+    """Sanitize a map key into a Spark-safe output column name."""
+    return str(key).replace(".", dot_replacement)
+
+
 def calculate_metric_skill_score(
     metrics_sdf: ps.DataFrame,
     metric_field: str,
@@ -205,7 +210,7 @@ def unpack_sdf_dict_columns(
 
     def safe_name(k) -> str:
         # k might be non-string; preserve uniqueness but remove '.' which breaks resolution
-        return str(k).replace(".", dot_replacement)
+        return sanitize_map_key_name(k, dot_replacement=dot_replacement)
 
     base_cols = [c for c in sdf.columns if c != column_name]
 

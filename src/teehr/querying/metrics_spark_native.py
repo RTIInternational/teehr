@@ -369,6 +369,49 @@ def compute_spark_native_metrics(
     return result_df.select(*ordered_cols)
 
 
+def _ordered_output_columns(
+    df: DataFrame,
+    group_by_cols: List[str],
+    metrics: List[MetricsBasemodel],
+) -> List[str]:
+    """Build a stable output column list for mixed engine results.
+
+    Bootstrap metrics with unpacked quantiles may not retain the base
+    ``output_field_name`` column. In those cases, include available quantile
+    columns instead.
+    """
+    available = set(df.columns)
+    ordered_cols: List[str] = list(group_by_cols)
+
+    for metric in metrics:
+        base = metric.output_field_name
+        if base in available:
+            ordered_cols.append(base)
+            continue
+
+        # Unpacked bootstrap columns (e.g., metric_0_5 or metric_0.5)
+        quantiles = getattr(getattr(metric, "bootstrap", None), "quantiles", None)
+        if getattr(metric, "unpack_results", False) and quantiles is not None:
+            for q in quantiles:
+                candidates = [
+                    f"{base}_{q}",
+                    f"{base}_{str(q).replace('.', '_')}",
+                ]
+                for col in candidates:
+                    if col in available and col not in ordered_cols:
+                        ordered_cols.append(col)
+            continue
+
+        # Last-resort fallback for pre-expanded columns.
+        prefix = f"{base}_"
+        matches = sorted(c for c in df.columns if c.startswith(prefix))
+        for col in matches:
+            if col not in ordered_cols:
+                ordered_cols.append(col)
+
+    return ordered_cols
+
+
 def aggregate_metrics_with_engine(
     sdf: DataFrame,
     group_by,
@@ -413,5 +456,5 @@ def aggregate_metrics_with_engine(
     python_df = apply_aggregation_metrics(gp=python_gp, include_metrics=python_metrics)
 
     combined_df = spark_df.join(python_df, on=group_by_cols, how="outer")
-    ordered_cols = list(dict.fromkeys(group_by_cols + [m.output_field_name for m in metrics]))
+    ordered_cols = _ordered_output_columns(combined_df, group_by_cols, metrics)
     return combined_df.select(*ordered_cols)

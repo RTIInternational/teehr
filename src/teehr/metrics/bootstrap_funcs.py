@@ -146,7 +146,9 @@ def create_shared_bootstrap_func(
 
         # Each draw: evaluate ALL metric functions and return a list.
         def combined_func(*draw_args):
-            return [fn(*draw_args) for fn in metric_funcs]
+            # arch.bootstrap.apply expects a scalar or NumPy array output.
+            # Returning a Python list/tuple can trigger shape inference issues.
+            return np.asarray([fn(*draw_args) for fn in metric_funcs], dtype=float)
 
         # results shape: (reps, N_metrics)
         results = bs.apply(combined_func, ref_boot.reps)
