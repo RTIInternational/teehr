@@ -19,7 +19,7 @@ from teehr.fetching.utils import (
     get_end_date_from_ingest_days,
     log_temperature_conversion_message
 )
-from teehr.models.fetching.utils import (
+from teehr.fetching.models.utils import (
     SupportedNWMOperationalVersionsEnum,
     SupportedNWMDataSourcesEnum,
     SupportedKerchunkMethod,
@@ -273,19 +273,19 @@ def nwm_grids_to_parquet(
 
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
-        from teehr.models.fetching.nwm12_grid import GridConfigurationModel
+        from teehr.fetching.models.nwm12_grid import GridConfigurationModel
         analysis_config_dict = NWM12_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
-        from teehr.models.fetching.nwm20_grid import GridConfigurationModel
+        from teehr.fetching.models.nwm20_grid import GridConfigurationModel
         analysis_config_dict = NWM20_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
-        from teehr.models.fetching.nwm22_grid import GridConfigurationModel
+        from teehr.fetching.models.nwm22_grid import GridConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
-        from teehr.models.fetching.nwm22_grid import GridConfigurationModel
+        from teehr.fetching.models.nwm22_grid import GridConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
-        from teehr.models.fetching.nwm30_grid import GridConfigurationModel
+        from teehr.fetching.models.nwm30_grid import GridConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
         raise ValueError(

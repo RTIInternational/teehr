@@ -1,0 +1,1 @@
+"""Generate model definitions."""

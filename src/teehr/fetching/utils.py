@@ -20,11 +20,11 @@ import pyarrow as pa
 import pandera
 
 from teehr.evaluation.write import Write as writer
-from teehr.models.fetching.utils import (
+from teehr.fetching.models.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
-from teehr.models.fetching.utils import (
+from teehr.fetching.models.utils import (
     SupportedNWMOperationalVersionsEnum,
     NWMChunkByEnum
 )

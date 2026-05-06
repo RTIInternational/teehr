@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import pyspark.sql.functions as F
 
 from teehr.models.filters import TableFilter
-from teehr.models.generate.base import (
+from teehr.generate.models.base import (
     SignatureGeneratorBaseModel,
     BenchmarkGeneratorBaseModel
 )

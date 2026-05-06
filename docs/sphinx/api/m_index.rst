@@ -74,7 +74,7 @@ Generated Timeseries
 
 Generated Timeseries Models
 ---------------------------
-.. currentmodule:: teehr.models.generate.timeseries_generator_models
+.. currentmodule:: teehr.generate.models.timeseries_generator_models
 
 .. autosummary::
    :template: custom-class-template-no-inheritance.rst

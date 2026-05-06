@@ -25,7 +25,7 @@ from teehr.models.pydantic_table_models import (  # noqa
 
 from teehr.calculated_fields.models.row_level import RowLevelCalculatedFields # noqa
 from teehr.calculated_fields.models.timeseries_aware import TimeseriesAwareCalculatedFields # noqa
-from teehr.models.generate.timeseries_generator_models import (  # noqa
+from teehr.generate.models.timeseries_generator_models import (  # noqa
     SignatureTimeseriesGenerators,
     BenchmarkForecastGenerators
 )

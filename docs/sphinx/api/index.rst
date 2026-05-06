@@ -103,6 +103,6 @@ Migration note:
 Generated Timeseries
 ^^^^^^^^^^^^^^^^^^^^
 * :class:`Generated Timeseries <teehr.evaluation.generate.GeneratedTimeseries>`
-* :class:`Streamflow Normals <teehr.models.generate.timeseries_generator_models.Normals>`
-* :class:`Reference Forecast Model <teehr.models.generate.timeseries_generator_models.ReferenceForecast>`
-* :class:`Persistence Forecast Model <teehr.models.generate.timeseries_generator_models.Persistence>`
+* :class:`Streamflow Normals <teehr.generate.models.timeseries_generator_models.Normals>`
+* :class:`Reference Forecast Model <teehr.generate.models.timeseries_generator_models.ReferenceForecast>`
+* :class:`Persistence Forecast Model <teehr.generate.models.timeseries_generator_models.Persistence>`

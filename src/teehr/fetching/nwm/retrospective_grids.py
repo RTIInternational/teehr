@@ -51,13 +51,13 @@ from teehr.fetching.const import (
     CONFIGURATION_NAME,
     NWM_VARIABLE_MAPPER
 )
-from teehr.models.fetching.utils import (
+from teehr.fetching.models.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum,
     TimeseriesTypeEnum
 )
-from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
+from teehr.fetching.models.nwm22_grid import ForcingVariablesEnum
 from teehr.fetching.nwm.grid_utils import (
     update_location_id_prefix,
     compute_weighted_average,
