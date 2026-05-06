@@ -221,6 +221,7 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
             'created_at',
             'updated_at'
             ])
+    assert ts_df.variable_name.iloc[0] == "rainrate_hourly_mean"
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert np.isclose(ts_df.value.sum(), np.float32(0.0))
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 02:00:00")
