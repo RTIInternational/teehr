@@ -11,7 +11,7 @@ from typing import Callable
 
 from pyspark.sql import DataFrame
 
-from teehr.calculated_fields.base_models import CalculatedFieldBaseModel
+from teehr.calculated_fields.models.base import CalculatedFieldBaseModel
 
 
 Batch = list[CalculatedFieldBaseModel]

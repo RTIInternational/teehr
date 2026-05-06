@@ -9,7 +9,7 @@ import pyspark.sql.functions as F
 import pytest
 
 from teehr.models.filters import TableFilter
-from teehr.metrics.bootstrap_models import Bootstrappers
+from teehr.metrics.models.bootstrap import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
 

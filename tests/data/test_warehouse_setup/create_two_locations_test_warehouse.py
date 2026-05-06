@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 import teehr
-import teehr.calculated_fields.row_level_models as rcf
+import teehr.calculated_fields.models.row_level as rcf
 
 
 def _create_warehouse(dir_path):

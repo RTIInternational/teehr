@@ -11,9 +11,9 @@ from teehr.querying.utils import (
     order_df,
     post_process_metric_results
 )
-from teehr.calculated_fields.base_models import CalculatedFieldBaseModel
+from teehr.calculated_fields.models.base import CalculatedFieldBaseModel
 from teehr.models.filters import TableFilter
-from teehr.metrics.base_models import MetricsBasemodel
+from teehr.metrics.models.base import MetricsBasemodel
 from teehr.metrics.engine import aggregate_metrics_with_engine
 from teehr.calculated_fields.engine import (
     apply_calculated_fields_with_engine,

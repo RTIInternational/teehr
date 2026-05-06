@@ -8,7 +8,7 @@ from pyspark.sql import types as T
 
 from pydantic import Field
 import teehr.metrics.metric_attributes as tma
-from teehr.metrics.base_models import (
+from teehr.metrics.models.base import (
     DeterministicBasemodel,
     ThresholdBasemodel,
 )

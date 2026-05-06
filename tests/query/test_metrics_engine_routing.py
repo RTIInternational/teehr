@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from teehr import DeterministicMetrics, Signatures
-from teehr.metrics.deterministic_models import VariabilityRatio
+from teehr.metrics.models.deterministic import VariabilityRatio
 
 EPSILON = 1e-6
 

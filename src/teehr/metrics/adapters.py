@@ -11,7 +11,7 @@ from typing import Callable
 
 from pyspark.sql import DataFrame
 
-from teehr.metrics.base_models import MetricsBasemodel
+from teehr.metrics.models.base import MetricsBasemodel
 
 
 MetricBatch = list[MetricsBasemodel]

@@ -9,8 +9,6 @@ from __future__ import annotations
 from typing import Iterable
 
 from pyspark.sql import DataFrame
-from pyspark.sql import Window
-import pyspark.sql.functions as F
 
 from teehr.calculated_fields.adapters import (
     CalculatedFieldAdapter,
@@ -21,7 +19,14 @@ from teehr.calculated_fields.timeseries_aware_pandas import (
     apply_percentile_event_detection_pandas,
     apply_threshold_event_detection_pandas,
 )
-from teehr.calculated_fields.row_level_pandas_spark import (
+from teehr.calculated_fields.timeseries_aware_spark import (
+    apply_baseflow_period_spark,
+    apply_exceedance_probability_spark,
+    apply_lead_time_bins_spark,
+    apply_percentile_batch_spark,
+    apply_threshold_batch_spark,
+)
+from teehr.calculated_fields.row_level_pandas import (
     apply_day_of_year_pandas,
     apply_hour_of_year_pandas,
     apply_month_pandas,
@@ -32,8 +37,8 @@ from teehr.calculated_fields.row_level_pandas_spark import (
     apply_water_year_pandas,
     apply_year_pandas,
 )
-from teehr.calculated_fields.base_models import CalculatedFieldBaseModel
-from teehr.calculated_fields.row_level_models import (
+from teehr.calculated_fields.models.base import CalculatedFieldBaseModel
+from teehr.calculated_fields.models.row_level import (
     Month,
     Year,
     WaterYear,
@@ -46,7 +51,7 @@ from teehr.calculated_fields.row_level_models import (
     DayOfYear,
     HourOfYear,
 )
-from teehr.calculated_fields.timeseries_aware_models import (
+from teehr.calculated_fields.models.timeseries_aware import (
     UNIQUENESS_FIELDS,
     AbovePercentileEventDetection,
     BelowPercentileEventDetection,
@@ -147,135 +152,26 @@ def _threshold_group_key(cf: CalculatedFieldBaseModel) -> tuple:
     )
 
 
-def _add_event_ids(
-    sdf: DataFrame,
-    group_cols: list[str],
-    time_col: str,
-    event_col: str,
-    output_event_id_col: str,
-) -> DataFrame:
-    """Add contiguous event segment IDs in ``start-end`` timestamp string format."""
-    seg_col = f"__seg_{output_event_id_col}"
-    start_col = f"__start_{output_event_id_col}"
-    end_col = f"__end_{output_event_id_col}"
-
-    order_window = Window.partitionBy(*group_cols).orderBy(F.col(time_col))
-
-    prev_event = F.lag(F.col(event_col)).over(order_window)
-    segment_change = F.when(
-        prev_event.isNull() | (F.col(event_col) != prev_event),
-        F.lit(1),
-    ).otherwise(F.lit(0))
-
-    sdf = sdf.withColumn(seg_col, F.sum(segment_change).over(order_window))
-
-    bounds = sdf.groupBy(*group_cols, seg_col).agg(
-        F.min(F.col(time_col)).alias(start_col),
-        F.max(F.col(time_col)).alias(end_col),
-    )
-
-    sdf = sdf.join(bounds, on=[*group_cols, seg_col], how="left")
-    sdf = sdf.withColumn(
-        output_event_id_col,
-        F.concat(
-            F.col(start_col).cast("string"),
-            F.lit("-"),
-            F.col(end_col).cast("string"),
-        ),
-    )
-    return sdf.drop(seg_col, start_col, end_col)
-
-
 def _apply_percentile_batch(
     sdf: DataFrame,
     cfs: list[CalculatedFieldBaseModel],
 ) -> DataFrame:
-    """Apply one Spark-native percentile detection batch for compatible fields."""
-    first = cfs[0]
-    group_cols = _normalize_fields(first.uniqueness_fields)
-    value_col = first.value_field_name
-    time_col = first.value_time_field_name
-
-    quantiles = sorted({float(cf.quantile) for cf in cfs})
-    q_index = {q: idx for idx, q in enumerate(quantiles)}
-
-    thresholds = sdf.groupBy(*group_cols).agg(
-        F.percentile_approx(
-            F.col(value_col).cast("double"),
-            F.array(*[F.lit(q) for q in quantiles]),
-            F.lit(10000),
-        ).alias("__percentiles")
+    return apply_percentile_batch_spark(
+        sdf=sdf,
+        cfs=cfs,
+        default_uniqueness_fields=UNIQUENESS_FIELDS,
     )
-
-    sdf = sdf.join(thresholds, on=group_cols, how="left")
-
-    for cf in cfs:
-        idx = q_index[float(cf.quantile)]
-        threshold_expr = F.col("__percentiles").getItem(idx)
-
-        if isinstance(cf, AbovePercentileEventDetection):
-            comp = F.col(value_col).cast("double") > threshold_expr
-        else:
-            comp = F.col(value_col).cast("double") < threshold_expr
-
-        sdf = sdf.withColumn(
-            cf.output_event_field_name,
-            F.coalesce(comp, F.lit(False)).cast("boolean"),
-        )
-
-        if getattr(cf, "add_quantile_field", False):
-            sdf = sdf.withColumn(
-                cf.output_quantile_field_name,
-                threshold_expr.cast("double"),
-            )
-
-        if not getattr(cf, "skip_event_id", False):
-            sdf = _add_event_ids(
-                sdf=sdf,
-                group_cols=group_cols,
-                time_col=time_col,
-                event_col=cf.output_event_field_name,
-                output_event_id_col=cf.output_event_id_field_name,
-            )
-
-    return sdf.drop("__percentiles")
 
 
 def _apply_threshold_batch(
     sdf: DataFrame,
     cfs: list[CalculatedFieldBaseModel],
 ) -> DataFrame:
-    """Apply one Spark-native threshold detection batch for compatible fields."""
-    first = cfs[0]
-    group_cols = _normalize_fields(first.uniqueness_fields)
-    value_col = first.value_field_name
-    time_col = first.value_time_field_name
-    threshold_col = first.threshold_field_name
-
-    threshold_cast_col = "__threshold_cast"
-    sdf = sdf.withColumn(threshold_cast_col, F.col(threshold_col).cast("double"))
-
-    for cf in cfs:
-        if isinstance(cf, AboveThresholdEventDetection):
-            comp = F.col(value_col).cast("double") > F.col(threshold_cast_col)
-        else:
-            comp = F.col(value_col).cast("double") < F.col(threshold_cast_col)
-
-        sdf = sdf.withColumn(
-            cf.output_event_field_name,
-            F.coalesce(comp, F.lit(False)).cast("boolean"),
-        )
-
-        if not getattr(cf, "skip_event_id", False):
-            sdf = _add_event_ids(
-                sdf=sdf,
-                group_cols=group_cols,
-                time_col=time_col,
-                event_col=cf.output_event_field_name,
-                output_event_id_col=cf.output_event_id_field_name,
-            )
-
-    return sdf.drop(threshold_cast_col)
+    return apply_threshold_batch_spark(
+        sdf=sdf,
+        cfs=cfs,
+        default_uniqueness_fields=UNIQUENESS_FIELDS,
+    )
 
 
 def _consume_compatible_batch(
@@ -392,213 +288,30 @@ def _apply_row_level_python(sdf: DataFrame, cf: CalculatedFieldBaseModel) -> Dat
     return _apply_with_model(sdf, cf)
 
 
-def _seconds_to_iso_expr(sec_col: F.Column) -> F.Column:
-    """Convert a seconds Column to an ISO 8601 duration string Column.
-
-    Replicates the output of ``_timedelta_to_iso_duration`` for Spark-native
-    execution so that bin IDs produced by the Spark and pandas paths match.
-    """
-    sec = sec_col.cast("long")
-    d = (sec / F.lit(86400)).cast("long")
-    rem1 = sec - d * F.lit(86400)
-    h = (rem1 / F.lit(3600)).cast("long")
-    rem2 = rem1 - h * F.lit(3600)
-    m = (rem2 / F.lit(60)).cast("long")
-    s = rem2 - m * F.lit(60)
-
-    # When the duration spans at least one day, always emit the hours component
-    # (matching _timedelta_to_iso_duration which leaves "T0H" in that case).
-    t_with_days = F.when(
-        (m == 0) & (s == 0), F.concat(F.lit("T"), h.cast("string"), F.lit("H"))
-    ).when(
-        s == 0,
-        F.concat(F.lit("T"), h.cast("string"), F.lit("H"), m.cast("string"), F.lit("M")),
-    ).otherwise(
-        F.concat(
-            F.lit("T"), h.cast("string"), F.lit("H"),
-            m.cast("string"), F.lit("M"),
-            s.cast("string"), F.lit("S"),
-        )
-    )
-
-    # Without days: only include non-zero components; zero total → "T0S".
-    t_no_days = F.when(
-        (h == 0) & (m == 0) & (s == 0), F.lit("T0S")
-    ).when(
-        (m == 0) & (s == 0), F.concat(F.lit("T"), h.cast("string"), F.lit("H"))
-    ).when(
-        s == 0,
-        F.concat(F.lit("T"), h.cast("string"), F.lit("H"), m.cast("string"), F.lit("M")),
-    ).otherwise(
-        F.concat(
-            F.lit("T"), h.cast("string"), F.lit("H"),
-            m.cast("string"), F.lit("M"),
-            s.cast("string"), F.lit("S"),
-        )
-    )
-
-    return F.when(
-        d > 0,
-        F.concat(F.lit("P"), d.cast("string"), F.lit("D"), t_with_days),
-    ).otherwise(
-        F.concat(F.lit("P"), t_no_days)
-    )
-
-
 def _apply_exceedance_probability_spark(
     sdf: DataFrame, cf: CalculatedFieldBaseModel
 ) -> DataFrame:
-    """Compute ExceedanceProbability via window RANK / (COUNT + 1)."""
-    group_cols = _normalize_fields(cf.uniqueness_fields)
-    value_col = cf.value_field_name
-
-    rank_window = Window.partitionBy(*group_cols).orderBy(
-        F.col(value_col).cast("double").desc()
+    return apply_exceedance_probability_spark(
+        sdf=sdf,
+        cf=cf,
+        default_uniqueness_fields=UNIQUENESS_FIELDS,
     )
-    count_window = Window.partitionBy(*group_cols)
-
-    rank = F.rank().over(rank_window).cast("double")
-    n = F.count(F.lit(1)).over(count_window).cast("double")
-    ep = rank / (n + F.lit(1.0))
-
-    if cf.as_percentile:
-        ep = ep * F.lit(100.0)
-
-    return sdf.withColumn(cf.output_field_name, ep)
 
 
 def _apply_baseflow_period_spark(
     sdf: DataFrame, cf: CalculatedFieldBaseModel
 ) -> DataFrame:
-    """Compute BaseflowPeriodDetection via row-level arithmetic + _add_event_ids."""
-    if cf.baseflow_field_name is None:
-        raise ValueError(
-            "BaseflowPeriodDetection requires baseflow_field_name to be specified."
-        )
-
-    group_cols = _normalize_fields(cf.uniqueness_fields)
-    streamflow = F.col(cf.value_field_name).cast("double")
-    baseflow = F.col(cf.baseflow_field_name).cast("double")
-    quickflow_adj = (streamflow - baseflow) * F.lit(float(cf.event_threshold))
-
-    sdf = sdf.withColumn(
-        cf.output_baseflow_period_field_name,
-        F.coalesce(baseflow > quickflow_adj, F.lit(False)).cast("boolean"),
-    )
-
-    # Compute event IDs for all rows using the shared helper, then null-out
-    # rows where the period flag is False (matching the pandas path behaviour).
-    _tmp = f"__bfp_id_{cf.output_baseflow_period_id_field_name}"
-    sdf = _add_event_ids(
+    return apply_baseflow_period_spark(
         sdf=sdf,
-        group_cols=group_cols,
-        time_col=cf.value_time_field_name,
-        event_col=cf.output_baseflow_period_field_name,
-        output_event_id_col=_tmp,
+        cf=cf,
+        default_uniqueness_fields=UNIQUENESS_FIELDS,
     )
-    sdf = sdf.withColumn(
-        cf.output_baseflow_period_id_field_name,
-        F.when(F.col(cf.output_baseflow_period_field_name), F.col(_tmp)).otherwise(
-            F.lit(None)
-        ),
-    ).drop(_tmp)
-
-    return sdf
 
 
 def _apply_lead_time_bins_spark(
     sdf: DataFrame, cf: CalculatedFieldBaseModel
 ) -> DataFrame:
-    """Compute ForecastLeadTimeBins via Spark-native arithmetic / when-otherwise."""
-    import pandas as pd
-    from teehr.calculated_fields.row_level_pandas_spark import (
-        validate_forecast_lead_time_bin_size,
-        _timedelta_to_iso_duration,
-        apply_forecast_lead_time,
-    )
-
-    if cf.lead_time_field_name not in sdf.columns:
-        sdf = apply_forecast_lead_time(
-            sdf,
-            value_time_field_name=cf.value_time_field_name,
-            reference_time_field_name=cf.reference_time_field_name,
-            output_field_name=cf.lead_time_field_name,
-        )
-
-    normalized = validate_forecast_lead_time_bin_size(cf.bin_size)
-
-    # Derive lead time in integer seconds from raw timestamps (type-safe vs
-    # Spark's DayTimeIntervalType).
-    lead_sec = (
-        F.unix_timestamp(F.col(cf.value_time_field_name))
-        - F.unix_timestamp(F.col(cf.reference_time_field_name))
-    ).cast("long")
-
-    if isinstance(normalized, pd.Timedelta):
-        # Uniform binning: floor(lead / bin_size) gives bin number; build ISO
-        # duration strings from bin start/end arithmetic.
-        bin_size_sec = F.lit(int(normalized.total_seconds()))
-        bin_num = (lead_sec / bin_size_sec).cast("long")
-        start_sec = bin_num * bin_size_sec
-        end_sec = (bin_num + F.lit(1)) * bin_size_sec
-        bin_id_expr = F.concat(
-            _seconds_to_iso_expr(start_sec),
-            F.lit("_"),
-            _seconds_to_iso_expr(end_sec),
-        )
-    else:
-        # Variable binning: pre-compute bin IDs in the driver, then build a
-        # when/otherwise chain. An overflow bin is added when the data contains
-        # lead times beyond the last declared boundary (requires one collect).
-        max_row = sdf.agg(F.max(lead_sec).alias("_max_ls")).collect()[0]
-        max_lead_sec = max_row["_max_ls"]
-
-        bins_to_use = []
-        for start_td, end_td, bin_id in normalized:
-            final_id = (
-                bin_id
-                if bin_id is not None
-                else f"{_timedelta_to_iso_duration(start_td)}_{_timedelta_to_iso_duration(end_td)}"
-            )
-            bins_to_use.append(
-                (int(start_td.total_seconds()), int(end_td.total_seconds()), final_id)
-            )
-
-        last_end_sec = bins_to_use[-1][1]
-        if max_lead_sec is not None and max_lead_sec >= last_end_sec:
-            overflow_start = last_end_sec
-            overflow_end = int(max_lead_sec)
-            if normalized[-1][2] is None:
-                overflow_id = (
-                    f"{_timedelta_to_iso_duration(pd.Timedelta(seconds=overflow_start))}_"
-                    f"{_timedelta_to_iso_duration(pd.Timedelta(seconds=overflow_end))}"
-                )
-            else:
-                overflow_id = "overflow"
-            bins_to_use.append((overflow_start, overflow_end, overflow_id))
-
-        # Build the when/otherwise chain (first matching condition wins).
-        first_start_s, first_end_s, first_bid = bins_to_use[0]
-        first_cond = (
-            lead_sec >= F.lit(first_start_s)
-            if len(bins_to_use) == 1
-            else (lead_sec >= F.lit(first_start_s)) & (lead_sec < F.lit(first_end_s))
-        )
-        bin_id_expr = F.when(first_cond, F.lit(first_bid))
-
-        for i in range(1, len(bins_to_use)):
-            start_s, end_s, bid = bins_to_use[i]
-            is_last = i == len(bins_to_use) - 1
-            cond = (
-                lead_sec >= F.lit(start_s)
-                if is_last
-                else (lead_sec >= F.lit(start_s)) & (lead_sec < F.lit(end_s))
-            )
-            bin_id_expr = bin_id_expr.when(cond, F.lit(bid))
-
-        bin_id_expr = bin_id_expr.otherwise(F.lit(None).cast("string"))
-
-    return sdf.withColumn(cf.output_field_name, bin_id_expr)
+    return apply_lead_time_bins_spark(sdf=sdf, cf=cf)
 
 
 def _apply_percentile_batch_python(

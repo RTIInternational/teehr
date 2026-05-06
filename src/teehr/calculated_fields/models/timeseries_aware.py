@@ -2,7 +2,7 @@
 from typing import List, Union
 from pydantic import Field
 import pyspark.sql as ps
-from teehr.calculated_fields.base_models import CalculatedFieldABC, CalculatedFieldBaseModel
+from teehr.calculated_fields.models.base import CalculatedFieldABC, CalculatedFieldBaseModel
 from teehr.calculated_fields.timeseries_aware_pandas import (
     apply_baseflow_separation_pandas,
     apply_baseflow_period_detection_pandas,

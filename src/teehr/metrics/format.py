@@ -8,7 +8,7 @@ import pyspark.sql.types as T
 from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
 
-from teehr.metrics.base_models import MetricsBasemodel
+from teehr.metrics.models.base import MetricsBasemodel
 from teehr.metrics.bootstrap_funcs import (
     partition_metrics_by_bootstrap,
     create_shared_bootstrap_func,

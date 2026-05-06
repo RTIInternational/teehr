@@ -80,8 +80,8 @@ Tools for calculating metrics and generating synthetic timeseries.
 Metrics
 ^^^^^^^
 * :class:`The Metrics Class <teehr.evaluation.metrics.Metrics>` *(deprecated - use query() on tables/views)*
-* :class:`Row-Level Calculated Fields <teehr.calculated_fields.row_level_models.RowLevelCalculatedFields>`
-* :class:`Timeseries-Aware Calculated Fields <teehr.calculated_fields.timeseries_aware_models.TimeseriesAwareCalculatedFields>`
+* :class:`Row-Level Calculated Fields <teehr.calculated_fields.models.row_level.RowLevelCalculatedFields>`
+* :class:`Timeseries-Aware Calculated Fields <teehr.calculated_fields.models.timeseries_aware.TimeseriesAwareCalculatedFields>`
 * :mod:`Deterministic Functions <teehr.metrics.deterministic_funcs>`
 * :mod:`Signature Functions <teehr.metrics.signature_funcs>`
 * :mod:`Probabilistic Functions <teehr.metrics.probabilistic_funcs>`

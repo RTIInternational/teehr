@@ -95,6 +95,18 @@ RelativeStandardDeviation
    ``bootstrap`` configuration are always routed to the Python path,
    even in ``engine="auto"`` mode.
 
+.. note::
+
+  Spark-native quantile-derived metrics may use Spark approximate quantile
+  algorithms rather than exact order statistics. In the current Spark-native
+  metric set, this mainly affects metrics that depend on medians, such as
+  ``RelativeMedian``. The approximation is computed from a distributed summary
+  of the full group, not from a simple random sample, so it is usually a good
+  tradeoff for large datasets. The main practical effect is that values very
+  close to the cutoff can shift slightly relative to an exact pandas result.
+  If exact quantile behavior is important for your analysis, use
+  ``engine="python"``.
+
 .. code-block:: python
 
     from teehr import DeterministicMetrics
@@ -126,7 +138,7 @@ The ``group_by`` parameter controls how metrics are aggregated. Common groupings
 
 .. code-block:: python
 
-    import teehr.calculated_fields.row_level_models as rcf
+    import teehr.calculated_fields.models.row_level as rcf
 
     # Group by location only
     jt.aggregate(metrics=[...], group_by=["primary_location_id"])
@@ -171,7 +183,7 @@ Apply mathematical transformations before computing metrics:
 
 .. code-block:: python
 
-    from teehr.metrics.base_models import TransformEnum
+    from teehr.metrics.models.base import TransformEnum
 
     # Log-transformed RMSE
     rmse = DeterministicMetrics.RootMeanSquareError()
@@ -188,7 +200,7 @@ Compute confidence intervals using bootstrap resampling:
 
 .. code-block:: python
 
-    from teehr.metrics.bootstrap_models import Bootstrappers
+    from teehr.metrics.models.bootstrap import Bootstrappers
 
     # Configure bootstrap
     boot = Bootstrappers.CircularBlock(
@@ -220,7 +232,7 @@ Complete Example
 
     import teehr
     from teehr.metrics import DeterministicMetrics, Signatures
-    import teehr.calculated_fields.row_level_models as rcf
+    import teehr.calculated_fields.models.row_level as rcf
 
     ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
