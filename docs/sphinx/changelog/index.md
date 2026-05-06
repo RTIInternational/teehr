@@ -10,6 +10,9 @@
     DataFrame accessors, allowing Spark DataFrame methods to be called directly on the accessor.
 - **Relative metrics**
   - Added additional `relative_*` metrics (e.g., relative bias, relative RMSE).
+- **Bootstrapping**
+  - Added automatic `optimal_block_length` calculation for block bootstrap methods, removing the
+    need to manually specify block length.
 - **Write optimizations**
   - Added automatic partition pruning when writing data, improving write performance on large datasets.
 - **Cloud storage**
