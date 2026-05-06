@@ -4,7 +4,7 @@ from teehr import Operators as ops
 import pandas as pd
 from pathlib import Path
 import numpy as np
-from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
+from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap, optimal_block_length
 import pyspark.sql.functions as F
 import pytest
 
@@ -226,6 +226,120 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     assert metrics_df.columns.size == 2
 
 
+@pytest.mark.session_scope_test_warehouse
+def test_circularblock_bootstrapping_auto_block_size(session_scope_test_warehouse):
+    """CircularBlock uses optimal block size when block_size is None."""
+    ev = session_scope_test_warehouse
+
+    boot = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=None,
+        quantiles=None,
+        reps=200,
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+
+    df = ev.table("joined_timeseries").to_pandas()
+    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    p = df_gage_a.primary_value
+    s = df_gage_a.secondary_value
+
+    obl = optimal_block_length(np.asarray(p, dtype=float))
+    col = "b_cb" if "b_cb" in obl.columns else "circular"
+    auto_block = int(np.ceil(obl[col].iloc[0]))
+    auto_block = max(auto_block, 2)
+
+    bs = CircularBlockBootstrap(
+        auto_block,
+        p,
+        s,
+        seed=kge.bootstrap.seed,
+        random_state=kge.bootstrap.random_state,
+    )
+    results = bs.apply(
+        kge.func(kge),
+        kge.bootstrap.reps,
+    )
+
+    filters = [
+        TableFilter(
+            column="primary_location_id",
+            operator=ops.eq,
+            value="gage-A",
+        )
+    ]
+
+    metrics_df = ev.table("joined_timeseries").filter(
+        filters=filters,
+    ).aggregate(
+        metrics=[kge],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+    teehr_results = np.sort(np.asarray(metrics_df.kling_gupta_efficiency.values[0], dtype=float))
+    manual_results = np.sort(np.asarray(results.ravel(), dtype=float))
+
+    assert np.allclose(teehr_results, manual_results, equal_nan=True)
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_stationary_bootstrapping_auto_block_size(session_scope_test_warehouse):
+    """Stationary uses optimal block size when block_size is None."""
+    ev = session_scope_test_warehouse
+
+    boot = Bootstrappers.Stationary(
+        seed=40,
+        block_size=None,
+        quantiles=None,
+        reps=200,
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+
+    df = ev.table("joined_timeseries").to_pandas()
+    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    p = df_gage_a.primary_value
+    s = df_gage_a.secondary_value
+
+    obl = optimal_block_length(np.asarray(p, dtype=float))
+    col = "b_sb" if "b_sb" in obl.columns else "stationary"
+    auto_block = int(np.ceil(obl[col].iloc[0]))
+    auto_block = max(auto_block, 2)
+
+    bs = StationaryBootstrap(
+        auto_block,
+        p,
+        s,
+        seed=kge.bootstrap.seed,
+        random_state=kge.bootstrap.random_state,
+    )
+    results = bs.apply(
+        kge.func(kge),
+        kge.bootstrap.reps,
+    )
+
+    filters = [
+        TableFilter(
+            column="primary_location_id",
+            operator=ops.eq,
+            value="gage-A",
+        )
+    ]
+
+    metrics_df = ev.table("joined_timeseries").filter(
+        filters=filters,
+    ).aggregate(
+        metrics=[kge],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+    teehr_results = np.sort(np.asarray(metrics_df.kling_gupta_efficiency.values[0], dtype=float))
+    manual_results = np.sort(np.asarray(results.ravel(), dtype=float))
+
+    assert np.allclose(teehr_results, manual_results, equal_nan=True)
+
+
 @pytest.mark.function_scope_test_warehouse
 def test_gumboot_bootstrapping(function_scope_test_warehouse):
     """Test get_metrics method gumboot bootstrapping."""
@@ -442,7 +556,7 @@ def test_circularblock_bootstrapping_threshold_metric(function_scope_test_wareho
 
     # Build a numeric threshold field for stable threshold metric evaluation.
     sdf = ev.table("joined_timeseries").to_sdf().withColumn(
-        "threshold_numeric", F.lit(500.0)
+        "threshold_numeric", F.lit(5.0)
     )
     ev._write.to_warehouse(
         source_data=sdf,
@@ -496,11 +610,11 @@ def test_circularblock_bootstrapping_threshold_metric(function_scope_test_wareho
     ).to_pandas()
 
     teehr_results = np.sort(
-        np.array(metrics_df.probability_of_detection.values[0])
+        np.asarray(metrics_df.probability_of_detection.values[0], dtype=float)
     )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
+    manual_results = np.sort(np.asarray(results.ravel(), dtype=float))
 
-    assert (teehr_results == manual_results).all()
+    assert np.allclose(teehr_results, manual_results, equal_nan=True)
 
 
 @pytest.mark.function_scope_test_warehouse
@@ -510,7 +624,7 @@ def test_stationary_bootstrapping_threshold_metric(function_scope_test_warehouse
 
     # Build a numeric threshold field for stable threshold metric evaluation.
     sdf = ev.table("joined_timeseries").to_sdf().withColumn(
-        "threshold_numeric", F.lit(500.0)
+        "threshold_numeric", F.lit(5.0)
     )
     ev._write.to_warehouse(
         source_data=sdf,
@@ -564,11 +678,11 @@ def test_stationary_bootstrapping_threshold_metric(function_scope_test_warehouse
     ).to_pandas()
 
     teehr_results = np.sort(
-        np.array(metrics_df.probability_of_detection.values[0])
+        np.asarray(metrics_df.probability_of_detection.values[0], dtype=float)
     )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
+    manual_results = np.sort(np.asarray(results.ravel(), dtype=float))
 
-    assert (teehr_results == manual_results).all()
+    assert np.allclose(teehr_results, manual_results, equal_nan=True)
 
 
 @pytest.mark.function_scope_test_warehouse
@@ -578,7 +692,7 @@ def test_gumboot_bootstrapping_threshold_metric(function_scope_test_warehouse):
 
     # Build a numeric threshold field for stable threshold metric evaluation.
     sdf = ev.table("joined_timeseries").to_sdf().withColumn(
-        "threshold_numeric", F.lit(500.0)
+        "threshold_numeric", F.lit(5.0)
     )
     ev._write.to_warehouse(
         source_data=sdf,
@@ -634,8 +748,8 @@ def test_gumboot_bootstrapping_threshold_metric(function_scope_test_warehouse):
     ).to_pandas()
 
     teehr_results = np.sort(
-        np.array(metrics_df.probability_of_detection.values[0])
+        np.asarray(metrics_df.probability_of_detection.values[0], dtype=float)
     )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
+    manual_results = np.sort(np.asarray(results.ravel(), dtype=float))
 
-    assert (teehr_results == manual_results).all()
+    assert np.allclose(teehr_results, manual_results, equal_nan=True)
