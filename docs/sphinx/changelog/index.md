@@ -1,6 +1,42 @@
 # Release Notes
 ## 0.6.3 - 2026-05-06
 
+### Breaking Changes
+- None
+
+### Added
+- **Spark DataFrame Proxy**
+  - Added `enable_spark_proxy` opt-in that exposes a `__getattr__` Spark DataFrame proxy on
+    DataFrame accessors, allowing Spark DataFrame methods to be called directly on the accessor.
+- **Relative metrics**
+  - Added additional `relative_*` metrics (e.g., relative bias, relative RMSE).
+- **Write optimizations**
+  - Added automatic partition pruning when writing data, improving write performance on large datasets.
+- **Cloud storage**
+  - Added GCS (Google Cloud Storage) access configuration to Spark settings.
+- **Analysis configuration**
+  - Added a missing NWM analysis configuration type and corresponding test.
+
+### Changed
+- Accessor transformation methods are now immutable — they return new instances rather than
+  mutating state, making chained operations safer and more predictable.
+- Event detection now assigns an event ID to non-event rows as well, for consistency.
+- Updated docs to correct and expand the metrics table (missing/incorrect names fixed).
+- Consolidated the NWM unit mapper and updated variable/unit mappings for NWM fetching configurations.
+
+### Fixed
+- Fixed variable names and descriptions in the variable domain table for consistency (including
+  the rainfall variable name); added a migration to apply the rename.
+- Fixed `unpack` utility to correctly handle field names that contain dots.
+- Fixed variable name and unit mapping for NWM Hawaii fetching configurations.
+
+### Dependencies
+- None
+
+### Deprecated
+- None
+
+
 ## 0.6.2 - 2026-04-17
 
 ### Breaking Changes
