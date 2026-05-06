@@ -234,11 +234,11 @@ Row-Level Calculated Fields
 These fields operate on individual rows without aggregation or consideration of other rows.  They
 are useful for extracting components from timestamps, normalizing values.
 
-See also: :class:`RowLevelCalculatedFields <teehr.models.calculated_fields.row_level.RowLevelCalculatedFields>`
+See also: :class:`RowLevelCalculatedFields <teehr.calculated_fields.row_level_models.RowLevelCalculatedFields>`
 
 .. code-block:: python
 
-    import teehr.models.calculated_fields.row_level as rcf
+    import teehr.calculated_fields.row_level_models as rcf
 
     # Add month and water year from timestamps
     jt = ev.joined_timeseries_view().add_calculated_fields([
@@ -257,27 +257,27 @@ Available row-level fields:
 
    * - Field
      - Description
-   * - :class:`Month <teehr.models.calculated_fields.row_level.Month>`
+    * - :class:`Month <teehr.calculated_fields.row_level_models.Month>`
      - Extracts month (1-12) from timestamp
-   * - :class:`Year <teehr.models.calculated_fields.row_level.Year>`
+    * - :class:`Year <teehr.calculated_fields.row_level_models.Year>`
      - Extracts calendar year from timestamp
-   * - :class:`WaterYear <teehr.models.calculated_fields.row_level.WaterYear>`
+    * - :class:`WaterYear <teehr.calculated_fields.row_level_models.WaterYear>`
      - Computes water year (year + 1 if month >= October)
-   * - :class:`DayOfYear <teehr.models.calculated_fields.row_level.DayOfYear>`
+    * - :class:`DayOfYear <teehr.calculated_fields.row_level_models.DayOfYear>`
      - Day of year (1-366)
-   * - :class:`HourOfYear <teehr.models.calculated_fields.row_level.HourOfYear>`
+    * - :class:`HourOfYear <teehr.calculated_fields.row_level_models.HourOfYear>`
      - Hour of year (0-8784)
-   * - :class:`Seasons <teehr.models.calculated_fields.row_level.Seasons>`
+    * - :class:`Seasons <teehr.calculated_fields.row_level_models.Seasons>`
      - Maps months to seasons (winter, spring, summer, fall)
-   * - :class:`NormalizedFlow <teehr.models.calculated_fields.row_level.NormalizedFlow>`
+    * - :class:`NormalizedFlow <teehr.calculated_fields.row_level_models.NormalizedFlow>`
      - Divides flow by drainage area
-   * - :class:`ForecastLeadTime <teehr.models.calculated_fields.row_level.ForecastLeadTime>`
+    * - :class:`ForecastLeadTime <teehr.calculated_fields.row_level_models.ForecastLeadTime>`
      - Computes lead time from reference_time to value_time
-   * - :class:`ForecastLeadTimeBins <teehr.models.calculated_fields.row_level.ForecastLeadTimeBins>`
+    * - :class:`ForecastLeadTimeBins <teehr.calculated_fields.row_level_models.ForecastLeadTimeBins>`
      - Groups lead times into bins
-   * - :class:`ThresholdValueExceeded <teehr.models.calculated_fields.row_level.ThresholdValueExceeded>`
+    * - :class:`ThresholdValueExceeded <teehr.calculated_fields.row_level_models.ThresholdValueExceeded>`
      - Boolean indicating if value exceeds threshold
-   * - :class:`ThresholdValueNotExceeded <teehr.models.calculated_fields.row_level.ThresholdValueNotExceeded>`
+    * - :class:`ThresholdValueNotExceeded <teehr.calculated_fields.row_level_models.ThresholdValueNotExceeded>`
      - Boolean indicating if value is at or below threshold
 
 Configuring Row-Level Fields
@@ -287,7 +287,7 @@ Most fields have configurable parameters:
 
 .. code-block:: python
 
-    import teehr.models.calculated_fields.row_level as rcf
+    import teehr.calculated_fields.row_level_models as rcf
 
     # Custom field names and input columns
     month_field = rcf.Month(
@@ -323,11 +323,11 @@ Timeseries-Aware Calculated Fields
 These fields perform computations that require knowledge of the full timeseries,
 such as percentile calculations or event detection.
 
-See also: :class:`TimeseriesAwareCalculatedFields <teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields>`
+See also: :class:`TimeseriesAwareCalculatedFields <teehr.calculated_fields.timeseries_aware_models.TimeseriesAwareCalculatedFields>`
 
 .. code-block:: python
 
-    import teehr.models.calculated_fields.timeseries_aware as tcf
+    import teehr.calculated_fields.timeseries_aware_models as tcf
 
     # Add event detection based on percentile threshold
     jt = ev.joined_timeseries_view().add_calculated_fields([
@@ -347,23 +347,23 @@ Available timeseries-aware fields:
 
    * - Field
      - Description
-   * - :class:`AbovePercentileEventDetection <teehr.models.calculated_fields.timeseries_aware.AbovePercentileEventDetection>`
+    * - :class:`AbovePercentileEventDetection <teehr.calculated_fields.timeseries_aware_models.AbovePercentileEventDetection>`
      - Flags values above a percentile threshold, assigns event IDs
-   * - :class:`BelowPercentileEventDetection <teehr.models.calculated_fields.timeseries_aware.BelowPercentileEventDetection>`
+    * - :class:`BelowPercentileEventDetection <teehr.calculated_fields.timeseries_aware_models.BelowPercentileEventDetection>`
      - Flags values below a percentile threshold, assigns event IDs
-   * - :class:`AboveThresholdEventDetection <teehr.models.calculated_fields.timeseries_aware.AboveThresholdEventDetection>`
+    * - :class:`AboveThresholdEventDetection <teehr.calculated_fields.timeseries_aware_models.AboveThresholdEventDetection>`
      - Flags values above a threshold from an input field, assigns event IDs
-   * - :class:`BelowThresholdEventDetection <teehr.models.calculated_fields.timeseries_aware.BelowThresholdEventDetection>`
+    * - :class:`BelowThresholdEventDetection <teehr.calculated_fields.timeseries_aware_models.BelowThresholdEventDetection>`
      - Flags values below a threshold from an input field, assigns event IDs
-   * - :class:`ExceedanceProbability <teehr.models.calculated_fields.timeseries_aware.ExceedanceProbability>`
+    * - :class:`ExceedanceProbability <teehr.calculated_fields.timeseries_aware_models.ExceedanceProbability>`
      - Computes probability of value being exceeded
-   * - :class:`BaseflowPeriodDetection <teehr.models.calculated_fields.timeseries_aware.BaseflowPeriodDetection>`
+    * - :class:`BaseflowPeriodDetection <teehr.calculated_fields.timeseries_aware_models.BaseflowPeriodDetection>`
      - Identifies baseflow periods in hydrograph
-   * - :class:`LyneHollickBaseflow <teehr.models.calculated_fields.timeseries_aware.LyneHollickBaseflow>`
+    * - :class:`LyneHollickBaseflow <teehr.calculated_fields.timeseries_aware_models.LyneHollickBaseflow>`
      - Baseflow separation using Lyne-Hollick filter
-   * - :class:`ChapmanBaseflow <teehr.models.calculated_fields.timeseries_aware.ChapmanBaseflow>`
+    * - :class:`ChapmanBaseflow <teehr.calculated_fields.timeseries_aware_models.ChapmanBaseflow>`
      - Baseflow separation using Chapman filter
-   * - :class:`ChapmanMaxwellBaseflow <teehr.models.calculated_fields.timeseries_aware.ChapmanMaxwellBaseflow>`
+    * - :class:`ChapmanMaxwellBaseflow <teehr.calculated_fields.timeseries_aware_models.ChapmanMaxwellBaseflow>`
      - Baseflow separation using Chapman-Maxwell filter
 
 
@@ -380,7 +380,7 @@ Detect events when values exceed a percentile threshold:
 
 .. code-block:: python
 
-    import teehr.models.calculated_fields.timeseries_aware as tcf
+    import teehr.calculated_fields.timeseries_aware_models as tcf
 
     # Detect high-flow events (above 85th percentile)
     event_detection = tcf.AbovePercentileEventDetection(
@@ -425,7 +425,7 @@ before comparison, so string-typed attribute fields are supported.
 
 .. code-block:: python
 
-    import teehr.models.calculated_fields.timeseries_aware as tcf
+    import teehr.calculated_fields.timeseries_aware_models as tcf
 
     # Detect high-flow events where primary_value exceeds the 'flood_stage' attribute
     event_detection = tcf.AboveThresholdEventDetection(
@@ -466,8 +466,8 @@ Chain multiple calculated fields together:
 
 .. code-block:: python
 
-    import teehr.models.calculated_fields.row_level as rcf
-    import teehr.models.calculated_fields.timeseries_aware as tcf
+    import teehr.calculated_fields.row_level_models as rcf
+    import teehr.calculated_fields.timeseries_aware_models as tcf
 
     jt = ev.joined_timeseries_view(add_attrs=True).add_calculated_fields([
         # Row-level fields
@@ -516,8 +516,8 @@ A typical workflow combining views, calculated fields, and metrics:
 
     import teehr
     from teehr.metrics import DeterministicMetrics
-    import teehr.models.calculated_fields.row_level as rcf
-    import teehr.models.calculated_fields.timeseries_aware as tcf
+    import teehr.calculated_fields.row_level_models as rcf
+    import teehr.calculated_fields.timeseries_aware_models as tcf
 
     # Open evaluation
     ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")

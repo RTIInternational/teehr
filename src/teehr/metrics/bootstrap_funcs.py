@@ -1,11 +1,11 @@
 """Contains functions for bootstrap calculations for use in Spark queries."""
-from typing import Dict, Callable, List, Optional, Tuple
+from typing import Any, Dict, Callable, List, Optional, Tuple
 import logging
 
 import pandas as pd
 import numpy as np
 
-from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.metrics.base_models import MetricsBasemodel
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +18,10 @@ def bootstrap_group_key(metric: MetricsBasemodel) -> Optional[tuple]:
     """Return a hashable key that identifies identical bootstrap configs.
 
     Two metrics with the same key can share a single set of bootstrap samples.
-    Returns ``None`` for metrics without a bootstrap configuration or when the
-    quantile-sharing path is not applicable (``quantiles=None``).
+    Returns ``None`` for metrics without a bootstrap configuration.
     """
     boot = getattr(metric, "bootstrap", None)
-    if boot is None or boot.quantiles is None:
+    if boot is None:
         return None
 
     # The input fields the UDF will receive must also match.
@@ -36,11 +35,15 @@ def bootstrap_group_key(metric: MetricsBasemodel) -> Optional[tuple]:
 
     # Build key from every config field that affects which samples are drawn.
     boot_cls = type(boot).__name__
+    quantile_mode = "quantile" if boot.quantiles is not None else "raw"
+    quantile_key = tuple(sorted(boot.quantiles)) if boot.quantiles is not None else ()
+
     base = (
         boot_cls,
         boot.reps,
         boot.seed,
-        tuple(sorted(boot.quantiles)),
+        quantile_mode,
+        quantile_key,
         boot.include_value_time,
         fields,
     )
@@ -67,7 +70,7 @@ def partition_metrics_by_bootstrap(
     Returns
     -------
     no_boot : list
-        Metrics without a bootstrap config (or with ``quantiles=None``).
+        Metrics without a bootstrap config.
     boot_groups : dict
         Mapping of group key → list of metrics that can share samples.
         Singleton groups (len==1) are included so callers can treat all
@@ -128,10 +131,9 @@ def create_shared_bootstrap_func(
     All metrics in *metrics* must share the same bootstrap configuration
     (same class, reps, seed, block_size, quantiles, and input fields).
 
-    Returns a function that, when called as a pandas UDF, returns a
-    ``MapType(StringType, FloatType)`` dict whose keys cover every metric's
-    quantile columns — identical in format to calling each metric's own
-    bootstrap UDF and merging the dicts.
+    Returns a function that, when called as a pandas UDF, returns a dict where
+    values are either per-metric quantiles (``quantiles`` configured) or raw
+    bootstrap arrays (``quantiles=None``).
     """
     # Reference bootstrap config from the first metric (all are equivalent).
     ref_boot = metrics[0].bootstrap
@@ -141,7 +143,7 @@ def create_shared_bootstrap_func(
     quantiles = ref_boot.quantiles
     output_names = [m.output_field_name for m in metrics]
 
-    def shared_bootstrap_func(*args: pd.Series) -> Dict:
+    def shared_bootstrap_func(*args: pd.Series) -> Dict[str, Any]:
         bs = _make_bs_object(ref_boot, args)
 
         # Each draw: evaluate ALL metric functions and return a list.
@@ -153,11 +155,14 @@ def create_shared_bootstrap_func(
         # results shape: (reps, N_metrics)
         results = bs.apply(combined_func, ref_boot.reps)
 
-        combined_dict: Dict[str, float] = {}
+        combined_dict: Dict[str, Any] = {}
         for i, name in enumerate(output_names):
-            combined_dict.update(
-                _calculate_quantiles(name, results[:, i], quantiles)
-            )
+            if quantiles is None:
+                combined_dict[name] = np.asarray(results[:, i], dtype=float).tolist()
+            else:
+                combined_dict.update(
+                    _calculate_quantiles(name, results[:, i], quantiles)
+                )
         return combined_dict
 
     return shared_bootstrap_func

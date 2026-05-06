@@ -9,7 +9,7 @@ import pyspark.sql.functions as F
 import pytest
 
 from teehr.models.filters import TableFilter
-from teehr.models.metrics.bootstrap_models import Bootstrappers
+from teehr.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
 
@@ -810,3 +810,67 @@ def test_shared_bootstrap_mixed_with_non_bootstrap_metric(
     assert "nash_sutcliffe_efficiency_0_5" in result_df.columns
     assert "mean_error" in result_df.columns
     assert result_df.index.size == 3
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_shared_bootstrap_raw_arrays_no_quantiles(
+    session_scope_test_warehouse,
+):
+    """Shared bootstrap path supports quantiles=None for multiple metrics."""
+    ev = session_scope_test_warehouse
+
+    boot_cfg = dict(seed=40, block_size=100, quantiles=None, reps=200)
+
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = Bootstrappers.CircularBlock(**boot_cfg)
+
+    nse = DeterministicMetrics.NashSutcliffeEfficiency()
+    nse.bootstrap = Bootstrappers.CircularBlock(**boot_cfg)
+
+    filters = [
+        TableFilter(
+            column="primary_location_id",
+            operator=ops.eq,
+            value="gage-A",
+        )
+    ]
+
+    metrics_df = (
+        ev.table("joined_timeseries")
+        .filter(filters=filters)
+        .aggregate(metrics=[kge, nse], group_by=["primary_location_id"])
+        .to_pandas()
+    )
+
+    assert "kling_gupta_efficiency" in metrics_df.columns
+    assert "nash_sutcliffe_efficiency" in metrics_df.columns
+
+    teehr_kge = np.sort(np.asarray(metrics_df.kling_gupta_efficiency.values[0], dtype=float))
+    teehr_nse = np.sort(np.asarray(metrics_df.nash_sutcliffe_efficiency.values[0], dtype=float))
+    assert teehr_kge.shape[0] == boot_cfg["reps"]
+    assert teehr_nse.shape[0] == boot_cfg["reps"]
+
+    # Compare against manual bootstrapping with the same seed/config.
+    df = ev.table("joined_timeseries").to_pandas()
+    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    p = df_gage_a.primary_value
+    s = df_gage_a.secondary_value
+
+    bs = CircularBlockBootstrap(
+        boot_cfg["block_size"],
+        p,
+        s,
+        seed=boot_cfg["seed"],
+    )
+    manual_kge = np.sort(np.asarray(bs.apply(kge.func(kge), boot_cfg["reps"]).ravel(), dtype=float))
+
+    bs = CircularBlockBootstrap(
+        boot_cfg["block_size"],
+        p,
+        s,
+        seed=boot_cfg["seed"],
+    )
+    manual_nse = np.sort(np.asarray(bs.apply(nse.func(nse), boot_cfg["reps"]).ravel(), dtype=float))
+
+    assert np.allclose(teehr_kge, manual_kge, equal_nan=True)
+    assert np.allclose(teehr_nse, manual_nse, equal_nan=True)

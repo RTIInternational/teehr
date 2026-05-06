@@ -11,18 +11,48 @@ from typing import Callable
 
 from pyspark.sql import DataFrame
 
-from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.metrics.base_models import MetricsBasemodel
 
 
 MetricBatch = list[MetricsBasemodel]
+"""Contiguous metric models consumed by one adapter invocation."""
+
 SupportsMetric = Callable[[MetricsBasemodel], bool]
+"""Predicate indicating whether an adapter can execute a metric model."""
+
 ConsumeMetricBatch = Callable[[list[MetricsBasemodel], int], tuple[MetricBatch, int]]
+"""Batch selector returning (batch, next_index) from an ordered metric list."""
+
 ApplyMetricBatch = Callable[[DataFrame, list[str], MetricBatch], DataFrame | None]
+"""Batch executor producing grouped metric outputs for selected metrics."""
 
 
 @dataclass(frozen=True)
 class MetricExecutionAdapter:
-    """Engine adapter that consumes and executes one contiguous metric batch."""
+    """Routing unit used by metric planners to execute compatible metric runs.
+
+    A planner iterates through the user-provided metric list in order and, for
+    each position, chooses the first adapter whose ``supports`` predicate
+    matches the current metric model. The adapter then:
+
+    1. Uses ``consume_batch`` to select a contiguous run of compatible metrics
+       starting at the current index.
+    2. Uses ``apply_batch`` to compute those metrics against the input
+       DataFrame and group-by columns.
+
+    Attributes
+    ----------
+    name : str
+        Human-readable identifier used for debugging and tracing.
+    supports : SupportsMetric
+        Predicate that determines whether this adapter can execute a metric.
+    consume_batch : ConsumeMetricBatch
+        Function that selects which contiguous metrics this adapter will handle
+        in a single execution pass.
+    apply_batch : ApplyMetricBatch
+        Function that executes the selected batch and returns a DataFrame with
+        grouped outputs for that batch, or ``None`` when no frame is produced.
+    """
 
     name: str
     supports: SupportsMetric

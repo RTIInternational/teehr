@@ -80,8 +80,8 @@ Tools for calculating metrics and generating synthetic timeseries.
 Metrics
 ^^^^^^^
 * :class:`The Metrics Class <teehr.evaluation.metrics.Metrics>` *(deprecated - use query() on tables/views)*
-* :class:`Row-Level Calculated Fields <teehr.models.calculated_fields.row_level.RowLevelCalculatedFields>`
-* :class:`Timeseries-Aware Calculated Fields <teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields>`
+* :class:`Row-Level Calculated Fields <teehr.calculated_fields.row_level_models.RowLevelCalculatedFields>`
+* :class:`Timeseries-Aware Calculated Fields <teehr.calculated_fields.timeseries_aware_models.TimeseriesAwareCalculatedFields>`
 * :mod:`Deterministic Functions <teehr.metrics.deterministic_funcs>`
 * :mod:`Signature Functions <teehr.metrics.signature_funcs>`
 * :mod:`Probabilistic Functions <teehr.metrics.probabilistic_funcs>`
@@ -91,6 +91,14 @@ Metrics
 * :class:`Signature Models <teehr.Signatures>`
 * :class:`Bootstrappers <teehr.Bootstrappers>`
 * :class:`Operators <teehr.Operators>`
+
+Migration note:
+
+* Calculated fields modules were renamed to explicit model/executor names:
+   ``row_level`` -> ``row_level_models``, ``timeseries_aware`` -> ``timeseries_aware_models``.
+* Metrics basemodels module was renamed:
+   ``basemodels`` -> ``base_models``.
+* Top-level imports from ``teehr`` (for example ``DeterministicMetrics`` and calculated-fields containers) are unchanged.
 
 Generated Timeseries
 ^^^^^^^^^^^^^^^^^^^^

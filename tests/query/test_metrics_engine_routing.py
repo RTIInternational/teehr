@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from teehr import DeterministicMetrics, Signatures
-from teehr.models.metrics.deterministic_models import VariabilityRatio
+from teehr.metrics.deterministic_models import VariabilityRatio
 
 EPSILON = 1e-6
 
@@ -99,7 +99,7 @@ def test_engine_spark_unsupported_metric_raises(module_scope_test_warehouse):
         (
             ev.table("joined_timeseries")
             .aggregate(
-                metrics=[DeterministicMetrics.SpearmanCorrelation()],
+                metrics=[DeterministicMetrics.RelativeBias(transform="log")],
                 group_by=["primary_location_id"],
                 engine="spark",
             )
@@ -451,3 +451,195 @@ def test_engine_spark_signature_input_field_names_override(module_scope_test_war
     expected_avgs = [np.mean(s) for _, (_, s) in sorted(groups.items())]
     _allclose(spark_df["secondary_average"], pd.Series(expected_avgs))
 
+
+@pytest.mark.module_scope_test_warehouse
+def test_engine_spark_newly_native_threshold_and_max_delta_parity(module_scope_test_warehouse):
+    """Spark engine should match python engine for threshold metrics and max value delta."""
+    ev = module_scope_test_warehouse
+
+    metrics = [
+        DeterministicMetrics.MaxValueDelta(),
+        DeterministicMetrics.ConfusionMatrix(threshold_field_name="year_2_discharge"),
+        DeterministicMetrics.FalseAlarmRatio(threshold_field_name="year_2_discharge"),
+        DeterministicMetrics.ProbabilityOfDetection(threshold_field_name="year_2_discharge"),
+        DeterministicMetrics.ProbabilityOfFalseDetection(threshold_field_name="year_2_discharge"),
+        DeterministicMetrics.CriticalSuccessIndex(threshold_field_name="year_2_discharge"),
+        DeterministicMetrics.SuccessRatio(threshold_field_name="year_2_discharge"),
+        DeterministicMetrics.FrequencyBiasIndex(threshold_field_name="year_2_discharge"),
+    ]
+
+    spark_df = (
+        ev.table("joined_timeseries")
+        .aggregate(metrics=metrics, group_by=["primary_location_id"], engine="spark")
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    python_df = (
+        ev.table("joined_timeseries")
+        .aggregate(metrics=metrics, group_by=["primary_location_id"], engine="python")
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    assert list(spark_df.columns) == list(python_df.columns)
+
+    _allclose(spark_df["max_value_delta"], python_df["max_value_delta"])
+
+    for col in [
+        "false_alarm_ratio",
+        "probability_of_detection",
+        "probability_of_false_detection",
+        "critical_success_index",
+        "success_ratio",
+        "frequency_bias_index",
+    ]:
+        _allclose(spark_df[col], python_df[col])
+
+    assert spark_df["confusion_matrix"].tolist() == python_df["confusion_matrix"].tolist()
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_engine_spark_fdc_slope_parity(module_scope_test_warehouse):
+    """Spark FDC slope should match the pandas implementation numerically."""
+    ev = module_scope_test_warehouse
+
+    lower_q, upper_q = 0.25, 0.75
+
+    spark_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[Signatures.FlowDurationCurveSlope(lower_quantile=lower_q, upper_quantile=upper_q)],
+            group_by=["primary_location_id"],
+            engine="spark",
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    python_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[Signatures.FlowDurationCurveSlope(lower_quantile=lower_q, upper_quantile=upper_q)],
+            group_by=["primary_location_id"],
+            engine="python",
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    assert list(spark_df.columns) == list(python_df.columns)
+    _allclose(spark_df["flow_duration_curve_slope"], python_df["flow_duration_curve_slope"])
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_engine_spark_spearman_parity(module_scope_test_warehouse):
+    """Spark SpearmanCorrelation should match the pandas implementation."""
+    ev = module_scope_test_warehouse
+
+    spark_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[DeterministicMetrics.SpearmanCorrelation()],
+            group_by=["primary_location_id"],
+            engine="spark",
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    python_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[DeterministicMetrics.SpearmanCorrelation()],
+            group_by=["primary_location_id"],
+            engine="python",
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    assert list(spark_df.columns) == list(python_df.columns)
+    _allclose(spark_df["spearman_correlation"], python_df["spearman_correlation"])
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_engine_spark_max_value_timedelta_parity(module_scope_test_warehouse):
+    """Spark MaxValueTimeDelta should match the pandas implementation."""
+    ev = module_scope_test_warehouse
+
+    spark_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[DeterministicMetrics.MaxValueTimeDelta()],
+            group_by=["primary_location_id"],
+            engine="spark",
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    python_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[DeterministicMetrics.MaxValueTimeDelta()],
+            group_by=["primary_location_id"],
+            engine="python",
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    assert list(spark_df.columns) == list(python_df.columns)
+    _allclose(spark_df["max_value_time_delta"], python_df["max_value_time_delta"])
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_engine_spark_annual_peak_relative_bias_parity(module_scope_test_warehouse):
+    """Spark AnnualPeakRelativeBias should match the pandas implementation."""
+    ev = module_scope_test_warehouse
+
+    spark_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[DeterministicMetrics.AnnualPeakRelativeBias()],
+            group_by=["primary_location_id"],
+            engine="spark",
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    python_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[DeterministicMetrics.AnnualPeakRelativeBias()],
+            group_by=["primary_location_id"],
+            engine="python",
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+    assert list(spark_df.columns) == list(python_df.columns)
+    _allclose(spark_df["annual_peak_flow_bias"], python_df["annual_peak_flow_bias"])

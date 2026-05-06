@@ -12,7 +12,7 @@ from pyspark.sql import Window
 from teehr.models.generate.base import (
     NormalsResolutionEnum
 )
-from teehr.models.calculated_fields.row_level import (
+from teehr.calculated_fields.row_level_models import (
     RowLevelCalculatedFields as rlc
 )
 

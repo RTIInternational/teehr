@@ -11,18 +11,47 @@ from typing import Callable
 
 from pyspark.sql import DataFrame
 
-from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
+from teehr.calculated_fields.base_models import CalculatedFieldBaseModel
 
 
 Batch = list[CalculatedFieldBaseModel]
+"""Contiguous calculated-field models consumed by one adapter invocation."""
+
 ConsumeBatch = Callable[[list[CalculatedFieldBaseModel], int], tuple[Batch, int]]
+"""Batch selector returning (batch, next_index) from ordered field models."""
+
 ApplyBatch = Callable[[DataFrame, Batch], DataFrame]
+"""Batch executor that applies selected calculated fields to a DataFrame."""
+
 SupportsField = Callable[[CalculatedFieldBaseModel], bool]
+"""Predicate indicating whether an adapter can execute a field model."""
 
 
 @dataclass(frozen=True)
 class CalculatedFieldAdapter:
-    """Engine adapter that can consume and execute one contiguous batch."""
+    """Routing unit used by planners for calculated-field execution.
+
+    A planner walks calculated fields in user-provided order and selects the
+    first adapter whose ``supports`` predicate matches the current field. The
+    adapter then:
+
+    1. Uses ``consume_batch`` to select a contiguous compatible run beginning
+       at the current index.
+    2. Uses ``apply_batch`` to apply that run to the DataFrame.
+
+    Attributes
+    ----------
+    name : str
+        Human-readable identifier used for debugging and traceability.
+    supports : SupportsField
+        Predicate that determines whether this adapter can execute a field.
+    consume_batch : ConsumeBatch
+        Function that selects which contiguous fields this adapter will
+        execute in one pass.
+    apply_batch : ApplyBatch
+        Function that applies the selected batch and returns the resulting
+        DataFrame.
+    """
 
     name: str
     supports: SupportsField

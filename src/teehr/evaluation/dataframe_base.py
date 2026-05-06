@@ -11,11 +11,11 @@ from teehr.querying.utils import (
     order_df,
     post_process_metric_results
 )
-from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
+from teehr.calculated_fields.base_models import CalculatedFieldBaseModel
 from teehr.models.filters import TableFilter
-from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.querying.metrics_spark_native import aggregate_metrics_with_engine
-from teehr.querying.calculated_fields_spark_native import (
+from teehr.metrics.base_models import MetricsBasemodel
+from teehr.metrics.engine import aggregate_metrics_with_engine
+from teehr.calculated_fields.engine import (
     apply_calculated_fields_with_engine,
 )
 import pyspark.sql as ps

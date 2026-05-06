@@ -7,12 +7,13 @@ from typing import Iterable, List, Tuple
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 
-from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.querying.metrics_adapters import (
+from teehr.metrics.base_models import MetricsBasemodel
+from teehr.metrics.adapters import (
     MetricExecutionAdapter,
     contiguous_batch_adapter,
+    single_metric_adapter,
 )
-from teehr.querying.metric_format import apply_aggregation_metrics
+from teehr.metrics.format import apply_aggregation_metrics
 from teehr.querying.utils import group_df, parse_fields_to_list, validate_fields_exist
 
 EPSILON = 1e-6
@@ -49,9 +50,40 @@ SUPPORTED_DETERMINISTIC_METRICS = {
     "RelativeMinimum",
     "RelativeMaximum",
     "RelativeStandardDeviation",
+    "MaxValueDelta",
+    "ConfusionMatrix",
+    "FalseAlarmRatio",
+    "ProbabilityOfDetection",
+    "ProbabilityOfFalseDetection",
+    "CriticalSuccessIndex",
+    "SuccessRatio",
+    "FrequencyBiasIndex",
 }
 
-SUPPORTED_METRICS = SUPPORTED_SIGNATURE_METRICS | SUPPORTED_DETERMINISTIC_METRICS
+SUPPORTED_FDC_METRICS = {
+    "FlowDurationCurveSlope",
+}
+
+SUPPORTED_SPEARMAN_METRICS = {
+    "SpearmanCorrelation",
+}
+
+SUPPORTED_TIMEDELTA_METRICS = {
+    "MaxValueTimeDelta",
+}
+
+SUPPORTED_ANNUAL_PEAK_METRICS = {
+    "AnnualPeakRelativeBias",
+}
+
+SUPPORTED_METRICS = (
+    SUPPORTED_SIGNATURE_METRICS
+    | SUPPORTED_DETERMINISTIC_METRICS
+    | SUPPORTED_FDC_METRICS
+    | SUPPORTED_SPEARMAN_METRICS
+    | SUPPORTED_TIMEDELTA_METRICS
+    | SUPPORTED_ANNUAL_PEAK_METRICS
+)
 
 
 def _field_name(value, default: str | None = None) -> str | None:
@@ -72,6 +104,22 @@ def _is_signature_metric(metric: MetricsBasemodel) -> bool:
 
 def _is_deterministic_metric(metric: MetricsBasemodel) -> bool:
     return _metric_class_name(metric) in SUPPORTED_DETERMINISTIC_METRICS
+
+
+def _is_fdc_slope_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_FDC_METRICS
+
+
+def _is_spearman_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_SPEARMAN_METRICS
+
+
+def _is_timedelta_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_TIMEDELTA_METRICS
+
+
+def _is_annual_peak_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_ANNUAL_PEAK_METRICS
 
 
 def supports_spark_native(metric_model: MetricsBasemodel) -> bool:
@@ -201,7 +249,52 @@ def _compute_deterministic_metrics(
     requested_class_names = {_metric_class_name(metric) for metric in metrics}
     needs_median = "RelativeMedian" in requested_class_names
     needs_min = "RelativeMinimum" in requested_class_names
-    needs_max = "RelativeMaximum" in requested_class_names
+    needs_max = (
+        "RelativeMaximum" in requested_class_names
+        or "MaxValueDelta" in requested_class_names
+    )
+    threshold_metric_names = {
+        "ConfusionMatrix",
+        "FalseAlarmRatio",
+        "ProbabilityOfDetection",
+        "ProbabilityOfFalseDetection",
+        "CriticalSuccessIndex",
+        "SuccessRatio",
+        "FrequencyBiasIndex",
+    }
+    needs_threshold_counts = bool(requested_class_names & threshold_metric_names)
+
+    threshold_col = None
+    if needs_threshold_counts:
+        threshold_cols = {
+            _field_name(getattr(metric, "threshold_field_name", None))
+            for metric in metrics
+            if _metric_class_name(metric) in threshold_metric_names
+        }
+        threshold_cols.discard(None)
+
+        if len(threshold_cols) != 1:
+            raise ValueError(
+                "Spark-native threshold metrics require a single shared "
+                "threshold_field_name in one aggregate call."
+            )
+
+        threshold_col = next(iter(threshold_cols))
+        validate_fields_exist(sdf.columns, [threshold_col])
+
+        invalid_threshold_groups = (
+            sdf.where(valid)
+            .groupBy(*group_by_cols)
+            .agg(F.countDistinct(F.col(threshold_col)).alias("_n_thresholds"))
+            .where(F.col("_n_thresholds") > 1)
+            .limit(1)
+            .collect()
+        )
+        if invalid_threshold_groups:
+            raise ValueError(
+                "Threshold field must contain a single unique value for each "
+                "population grouping."
+            )
 
     agg_exprs = [
         F.count(F.lit(1)).alias("_n"),
@@ -230,6 +323,16 @@ def _compute_deterministic_metrics(
         agg_exprs.extend([F.min(p).alias("_min_p"), F.min(s).alias("_min_s")])
     if needs_max:
         agg_exprs.extend([F.max(p).alias("_max_p"), F.max(s).alias("_max_s")])
+    if needs_threshold_counts:
+        thr = F.col(threshold_col).cast("double")
+        agg_exprs.extend(
+            [
+                F.sum(F.when((p >= thr) & (s >= thr), F.lit(1)).otherwise(F.lit(0))).alias("_tp"),
+                F.sum(F.when((p < thr) & (s < thr), F.lit(1)).otherwise(F.lit(0))).alias("_tn"),
+                F.sum(F.when((p < thr) & (s >= thr), F.lit(1)).otherwise(F.lit(0))).alias("_fp"),
+                F.sum(F.when((p >= thr) & (s < thr), F.lit(1)).otherwise(F.lit(0))).alias("_fn"),
+            ]
+        )
 
     stats_df = sdf.where(valid).groupBy(*group_by_cols).agg(*agg_exprs)
 
@@ -336,12 +439,308 @@ def _compute_deterministic_metrics(
             expr = _ratio(F.col("_max_s"), F.col("_max_p"), metric.add_epsilon)
         elif class_name == "RelativeStandardDeviation":
             expr = _ratio(F.col("_std_s"), F.col("_std_p"), metric.add_epsilon)
+        elif class_name == "MaxValueDelta":
+            expr = F.col("_max_s") - F.col("_max_p")
+        elif class_name == "ConfusionMatrix":
+            expr = F.create_map(
+                F.lit("TP"), F.col("_tp").cast("int"),
+                F.lit("TN"), F.col("_tn").cast("int"),
+                F.lit("FP"), F.col("_fp").cast("int"),
+                F.lit("FN"), F.col("_fn").cast("int"),
+            )
+        elif class_name == "FalseAlarmRatio":
+            expr = F.when(
+                (F.col("_tp") + F.col("_fp")) == 0,
+                _nan(),
+            ).otherwise(_divide(F.col("_fp"), F.col("_tp") + F.col("_fp")))
+        elif class_name == "ProbabilityOfDetection":
+            expr = F.when(
+                (F.col("_tp") + F.col("_fn")) == 0,
+                _nan(),
+            ).otherwise(_divide(F.col("_tp"), F.col("_tp") + F.col("_fn")))
+        elif class_name == "ProbabilityOfFalseDetection":
+            expr = F.when(
+                (F.col("_fp") + F.col("_tn")) == 0,
+                _nan(),
+            ).otherwise(_divide(F.col("_fp"), F.col("_fp") + F.col("_tn")))
+        elif class_name == "CriticalSuccessIndex":
+            expr = F.when(
+                (F.col("_tp") + F.col("_fp") + F.col("_fn")) == 0,
+                _nan(),
+            ).otherwise(_divide(F.col("_tp"), F.col("_tp") + F.col("_fp") + F.col("_fn")))
+        elif class_name == "SuccessRatio":
+            expr = F.when(
+                (F.col("_tp") + F.col("_tn") + F.col("_fp") + F.col("_fn")) == 0,
+                _nan(),
+            ).otherwise(
+                _divide(
+                    F.col("_tp") + F.col("_tn"),
+                    F.col("_tp") + F.col("_tn") + F.col("_fp") + F.col("_fn"),
+                )
+            )
+        elif class_name == "FrequencyBiasIndex":
+            expr = F.when(
+                (F.col("_tp") + F.col("_fn")) == 0,
+                _nan(),
+            ).otherwise(_divide(F.col("_tp") + F.col("_fp"), F.col("_tp") + F.col("_fn")))
         else:
             raise ValueError(f"Unsupported spark-native deterministic metric: {class_name}")
 
         metric_exprs.append(expr.alias(metric.output_field_name))
 
     return stats_df.select(*group_by_cols, *metric_exprs)
+
+
+def _compute_fdc_slope_metric(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metric: MetricsBasemodel,
+) -> DataFrame | None:
+    """Compute FlowDurationCurveSlope via per-group Weibull plotting positions.
+
+    Algorithm mirrors the pandas path exactly:
+    - Sort values descending within each group.
+    - Assign exceedance probability prob[i] = (row_num - 1) / (n + 1).
+    - Pick the row whose prob is nearest to each target quantile.
+    - Slope = (value_upper - value_lower) / (prob_upper - prob_lower),
+      with the probability denominator optionally scaled to percentile range.
+    """
+    from pyspark.sql import Window as W
+
+    p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
+    validate_fields_exist(sdf.columns, group_by_cols + [p_col])
+
+    lower_q = float(metric.lower_quantile)
+    upper_q = float(metric.upper_quantile)
+
+    if not (0 <= lower_q < upper_q <= 1):
+        raise ValueError(
+            "FlowDurationCurveSlope requires 0 <= lower_quantile < upper_quantile <= 1."
+        )
+
+    # Assign each row a 0-based rank (descending value order) within its group
+    # and compute Weibull exceedance probability: prob = (row_num - 1) / (n + 1)
+    w_ord = W.partitionBy(*group_by_cols).orderBy(
+        F.col(p_col).cast("double").desc(), F.monotonically_increasing_id()
+    )
+    w_par = W.partitionBy(*group_by_cols)
+
+    sdf2 = (
+        sdf.withColumn("_rn", F.row_number().over(w_ord))
+        .withColumn("_n", F.count(F.lit(1)).over(w_par))
+        .withColumn(
+            "_prob",
+            (F.col("_rn").cast("double") - F.lit(1.0))
+            / (F.col("_n").cast("double") + F.lit(1.0)),
+        )
+    )
+
+    # Pick the nearest row to each target quantile using min(struct) which
+    # sorts lexicographically: first by distance, then by value (tie-break).
+    agg_df = sdf2.groupBy(*group_by_cols).agg(
+        F.min(
+            F.struct(
+                F.abs(F.col("_prob") - F.lit(lower_q)).alias("dist"),
+                F.col(p_col).cast("double").alias("val"),
+                F.col("_prob").alias("prob"),
+            )
+        ).alias("_lower"),
+        F.min(
+            F.struct(
+                F.abs(F.col("_prob") - F.lit(upper_q)).alias("dist"),
+                F.col(p_col).cast("double").alias("val"),
+                F.col("_prob").alias("prob"),
+            )
+        ).alias("_upper"),
+    )
+
+    # Scale exceedance probabilities to percentile range (0-100) if requested.
+    scale = F.lit(100.0) if metric.as_percentile else F.lit(1.0)
+    lower_prob = F.col("_lower.prob") * scale
+    upper_prob = F.col("_upper.prob") * scale
+    denom = upper_prob - lower_prob
+    if metric.add_epsilon:
+        denom = denom + F.lit(EPSILON)
+
+    slope_expr = _divide(F.col("_upper.val") - F.col("_lower.val"), denom)
+
+    return agg_df.select(
+        *group_by_cols,
+        slope_expr.alias(metric.output_field_name),
+    )
+
+
+def _compute_spearman_metric(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metric: MetricsBasemodel,
+) -> DataFrame | None:
+    """Compute SpearmanCorrelation via average-rank Pearson formula.
+
+    Replicates the pandas path exactly:
+      covariance  = np.cov(rank_p, rank_s)[0,1]   # ddof=1 (sample)
+      std_p/std_s = np.std(rank_p/rank_s)          # ddof=0 (population)
+      result      = covariance / (std_p * std_s)
+
+    Ties receive the average of the ranks they would occupy (matches
+    scipy.stats.rankdata method='average').
+    """
+    from pyspark.sql import Window as W
+
+    p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
+    s_col = _field_name(getattr(metric, "secondary_field_name", None), "secondary_value")
+    validate_fields_exist(sdf.columns, group_by_cols + [p_col, s_col])
+
+    p_expr = F.col(p_col).cast("double")
+    s_expr = F.col(s_col).cast("double")
+
+    # Rank windows: ascending order within each group.
+    # rank() assigns the same minimum rank to all tied values.
+    w_ord_p = W.partitionBy(*group_by_cols).orderBy(p_expr.asc())
+    w_ord_s = W.partitionBy(*group_by_cols).orderBy(s_expr.asc())
+
+    # Tie-count windows: partition by (group + exact value).
+    w_tie_p = W.partitionBy(*(group_by_cols + [p_col]))
+    w_tie_s = W.partitionBy(*(group_by_cols + [s_col]))
+
+    # average rank = rank_min + (count_ties - 1) / 2
+    sdf2 = (
+        sdf.withColumn("_rank_min_p", F.rank().over(w_ord_p))
+        .withColumn("_tie_cnt_p", F.count(F.lit(1)).over(w_tie_p))
+        .withColumn(
+            "_rank_p",
+            F.col("_rank_min_p").cast("double")
+            + (F.col("_tie_cnt_p").cast("double") - F.lit(1.0)) / F.lit(2.0),
+        )
+        .withColumn("_rank_min_s", F.rank().over(w_ord_s))
+        .withColumn("_tie_cnt_s", F.count(F.lit(1)).over(w_tie_s))
+        .withColumn(
+            "_rank_s",
+            F.col("_rank_min_s").cast("double")
+            + (F.col("_tie_cnt_s").cast("double") - F.lit(1.0)) / F.lit(2.0),
+        )
+    )
+
+    # Match pandas ddof mixing: covar_samp (n-1) / (stddev_pop * stddev_pop)
+    cov_expr = F.covar_samp(F.col("_rank_p"), F.col("_rank_s"))
+    std_p_expr = F.stddev_pop(F.col("_rank_p"))
+    std_s_expr = F.stddev_pop(F.col("_rank_s"))
+
+    if metric.add_epsilon:
+        denom = std_p_expr * std_s_expr + F.lit(EPSILON)
+    else:
+        denom = std_p_expr * std_s_expr
+
+    spearman_expr = _divide(cov_expr, denom)
+
+    return sdf2.groupBy(*group_by_cols).agg(
+        spearman_expr.alias(metric.output_field_name)
+    )
+
+
+def _compute_max_value_timedelta_metric(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metric: MetricsBasemodel,
+) -> DataFrame | None:
+    """Compute MaxValueTimeDelta from first max-value occurrence timestamps.
+
+    pandas path uses idxmax() for each series, which returns the first index
+    of the maximum value. This implementation mirrors that by selecting the
+    first row in each group ordered by value desc, then value_time asc.
+    """
+    from pyspark.sql import Window as W
+
+    p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
+    s_col = _field_name(getattr(metric, "secondary_field_name", None), "secondary_value")
+    t_col = _field_name(getattr(metric, "value_time_field_name", None), "value_time")
+    validate_fields_exist(sdf.columns, group_by_cols + [p_col, s_col, t_col])
+
+    p = F.col(p_col).cast("double")
+    s = F.col(s_col).cast("double")
+    t = F.col(t_col)
+    valid = p.isNotNull() & s.isNotNull() & t.isNotNull()
+
+    # Tie-break by original row position to align with idxmax first-occurrence behavior.
+    ranked = sdf.where(valid).withColumn("_row_id", F.monotonically_increasing_id())
+
+    w_p = W.partitionBy(*group_by_cols).orderBy(
+        p.desc(),
+        F.col("_row_id").asc(),
+    )
+    w_s = W.partitionBy(*group_by_cols).orderBy(
+        s.desc(),
+        F.col("_row_id").asc(),
+    )
+
+    p_max = (
+        ranked.withColumn("_rn_p", F.row_number().over(w_p))
+        .where(F.col("_rn_p") == 1)
+        .select(*group_by_cols, t.alias("_p_max_time"))
+    )
+    s_max = (
+        ranked.withColumn("_rn_s", F.row_number().over(w_s))
+        .where(F.col("_rn_s") == 1)
+        .select(*group_by_cols, t.alias("_s_max_time"))
+    )
+
+    return p_max.join(s_max, on=group_by_cols, how="inner").select(
+        *group_by_cols,
+        (F.col("_s_max_time").cast("long") - F.col("_p_max_time").cast("long"))
+        .cast("double")
+        .alias(metric.output_field_name),
+    )
+
+
+def _compute_annual_peak_relative_bias_metric(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metric: MetricsBasemodel,
+) -> DataFrame | None:
+    """Compute AnnualPeakRelativeBias from yearly primary/secondary maxima.
+
+    Mirrors pandas logic:
+    1) group by year and take max(primary), max(secondary)
+    2) sum yearly maxima across years
+    3) (sum_secondary_peaks - sum_primary_peaks) / sum_primary_peaks
+    """
+    p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
+    s_col = _field_name(getattr(metric, "secondary_field_name", None), "secondary_value")
+    t_col = _field_name(getattr(metric, "value_time_field_name", None), "value_time")
+    validate_fields_exist(sdf.columns, group_by_cols + [p_col, s_col, t_col])
+
+    p = F.col(p_col).cast("double")
+    s = F.col(s_col).cast("double")
+    t = F.col(t_col)
+    valid = p.isNotNull() & s.isNotNull() & t.isNotNull()
+
+    yearly_peaks = (
+        sdf.where(valid)
+        .withColumn("_year", F.year(t))
+        .groupBy(*group_by_cols, "_year")
+        .agg(
+            F.max(p).alias("_p_year_max"),
+            F.max(s).alias("_s_year_max"),
+        )
+    )
+
+    sums = yearly_peaks.groupBy(*group_by_cols).agg(
+        F.sum(F.col("_p_year_max")).alias("_sum_p_peaks"),
+        F.sum(F.col("_s_year_max")).alias("_sum_s_peaks"),
+    )
+
+    if metric.add_epsilon:
+        expr = _divide(
+            F.col("_sum_s_peaks") - F.col("_sum_p_peaks"),
+            F.col("_sum_p_peaks") + F.lit(EPSILON),
+        )
+    else:
+        expr = _divide(
+            F.col("_sum_s_peaks") - F.col("_sum_p_peaks"),
+            F.col("_sum_p_peaks"),
+        )
+
+    return sums.select(*group_by_cols, expr.alias(metric.output_field_name))
 
 
 def _apply_signature_batch(
@@ -361,6 +760,26 @@ def _apply_deterministic_batch(
 
 
 SPARK_METRIC_ADAPTERS: tuple[MetricExecutionAdapter, ...] = (
+    single_metric_adapter(
+        name="spark-fdc-slope",
+        supports=_is_fdc_slope_metric,
+        apply_metric=_compute_fdc_slope_metric,
+    ),
+    single_metric_adapter(
+        name="spark-max-value-timedelta",
+        supports=_is_timedelta_metric,
+        apply_metric=_compute_max_value_timedelta_metric,
+    ),
+    single_metric_adapter(
+        name="spark-spearman",
+        supports=_is_spearman_metric,
+        apply_metric=_compute_spearman_metric,
+    ),
+    single_metric_adapter(
+        name="spark-annual-peak-relative-bias",
+        supports=_is_annual_peak_metric,
+        apply_metric=_compute_annual_peak_relative_bias_metric,
+    ),
     contiguous_batch_adapter(
         name="spark-signature-batch",
         supports=_is_signature_metric,

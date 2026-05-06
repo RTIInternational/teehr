@@ -2,8 +2,8 @@
 import pandas as pd
 import numpy as np
 
-from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.models.metrics.basemodels import TransformEnum
+from teehr.metrics.base_models import MetricsBasemodel
+from teehr.metrics.base_models import TransformEnum
 from typing import Callable, Optional
 import logging
 logger = logging.getLogger(__name__)

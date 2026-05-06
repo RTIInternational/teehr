@@ -8,7 +8,7 @@ import pyspark.sql.types as T
 from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
 
-from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.metrics.base_models import MetricsBasemodel
 from teehr.metrics.bootstrap_funcs import (
     partition_metrics_by_bootstrap,
     create_shared_bootstrap_func,
@@ -78,7 +78,7 @@ def _build_shared_bootstrap_udfs(
         Aggregation column expressions for each group.
     expansions : list of (temp_col, metrics_in_group)
         Post-agg instructions for expanding each shared MapType column into
-        its individual quantile columns.
+        individual metric output columns.
     """
     func_list = []
     expansions = []
@@ -118,7 +118,13 @@ def _build_shared_bootstrap_udfs(
             )
             temp_col = f"_bsgrp_{idx}"
             shared_func = create_shared_bootstrap_func(group_metrics)
-            return_type = T.MapType(T.StringType(), T.FloatType())
+            if boot.quantiles is None:
+                return_type = T.MapType(
+                    T.StringType(),
+                    T.ArrayType(T.FloatType()),
+                )
+            else:
+                return_type = T.MapType(T.StringType(), T.FloatType())
             func_pd = pandas_udf(shared_func, return_type)
             func_list.append(func_pd(*input_field_names).alias(temp_col))
             expansions.append((temp_col, group_metrics))
@@ -132,10 +138,13 @@ def _expand_shared_bootstrap_columns(sdf, expansions):
         for metric in group_metrics:
             name = metric.output_field_name
             quantiles = metric.bootstrap.quantiles
-            for q in quantiles:
-                key = f"{name}_{q}"
-                col_name = sanitize_map_key_name(key)
-                sdf = sdf.withColumn(col_name, F.col(temp_col).getItem(key))
+            if quantiles is None:
+                sdf = sdf.withColumn(name, F.col(temp_col).getItem(name))
+            else:
+                for q in quantiles:
+                    key = f"{name}_{q}"
+                    col_name = sanitize_map_key_name(key)
+                    sdf = sdf.withColumn(col_name, F.col(temp_col).getItem(key))
         sdf = sdf.drop(temp_col)
     return sdf
 
@@ -153,11 +162,11 @@ def apply_aggregation_metrics(
 
     func_list = []
 
-    # Non-bootstrap and raw-array-bootstrap metrics (unchanged path).
+    # Non-bootstrap metrics.
     for model in no_boot_metrics:
         func_list.append(_build_non_bootstrap_udf(model, gp))
 
-    # Bootstrap groups (shared-sample path for quantile metrics).
+    # Bootstrap groups (shared-sample path for quantile or raw-array metrics).
     boot_func_list, expansions = _build_shared_bootstrap_udfs(boot_groups, gp)
     func_list.extend(boot_func_list)
 

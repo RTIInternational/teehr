@@ -126,7 +126,7 @@ The ``group_by`` parameter controls how metrics are aggregated. Common groupings
 
 .. code-block:: python
 
-    import teehr.models.calculated_fields.row_level as rcf
+    import teehr.calculated_fields.row_level_models as rcf
 
     # Group by location only
     jt.aggregate(metrics=[...], group_by=["primary_location_id"])
@@ -171,7 +171,7 @@ Apply mathematical transformations before computing metrics:
 
 .. code-block:: python
 
-    from teehr.models.metrics.basemodels import TransformEnum
+    from teehr.metrics.base_models import TransformEnum
 
     # Log-transformed RMSE
     rmse = DeterministicMetrics.RootMeanSquareError()
@@ -188,7 +188,7 @@ Compute confidence intervals using bootstrap resampling:
 
 .. code-block:: python
 
-    from teehr.models.metrics.bootstrap_models import Bootstrappers
+    from teehr.metrics.bootstrap_models import Bootstrappers
 
     # Configure bootstrap
     boot = Bootstrappers.CircularBlock(
@@ -220,7 +220,7 @@ Complete Example
 
     import teehr
     from teehr.metrics import DeterministicMetrics, Signatures
-    import teehr.models.calculated_fields.row_level as rcf
+    import teehr.calculated_fields.row_level_models as rcf
 
     ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 

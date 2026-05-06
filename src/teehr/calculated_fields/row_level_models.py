@@ -3,12 +3,21 @@ from typing import Union
 from pydantic import Field
 import pandas as pd
 from datetime import timedelta
-import pyspark.sql.types as T
-import pyspark.sql.functions as F
-from pyspark.sql.functions import pandas_udf
 import pyspark.sql as ps
-from teehr.models.calculated_fields.base import CalculatedFieldABC
-from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
+from teehr.calculated_fields.base_models import CalculatedFieldABC
+from teehr.calculated_fields.base_models import CalculatedFieldBaseModel
+from teehr.calculated_fields.row_level_pandas_spark import apply_day_of_year
+from teehr.calculated_fields.row_level_pandas_spark import apply_forecast_lead_time
+from teehr.calculated_fields.row_level_pandas_spark import apply_forecast_lead_time_bins
+from teehr.calculated_fields.row_level_pandas_spark import apply_generic_sql
+from teehr.calculated_fields.row_level_pandas_spark import apply_hour_of_year
+from teehr.calculated_fields.row_level_pandas_spark import apply_month
+from teehr.calculated_fields.row_level_pandas_spark import apply_normalized_flow
+from teehr.calculated_fields.row_level_pandas_spark import apply_seasons
+from teehr.calculated_fields.row_level_pandas_spark import apply_threshold_value_exceeded
+from teehr.calculated_fields.row_level_pandas_spark import apply_threshold_value_not_exceeded
+from teehr.calculated_fields.row_level_pandas_spark import apply_water_year
+from teehr.calculated_fields.row_level_pandas_spark import apply_year
 
 
 class Month(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -34,11 +43,11 @@ class Month(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            F.month(F.col(self.input_field_name))
+        return apply_month(
+            sdf,
+            input_field_name=self.input_field_name,
+            output_field_name=self.output_field_name,
         )
-        return sdf
 
 
 class Year(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -64,11 +73,11 @@ class Year(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            F.year(F.col(self.input_field_name))
+        return apply_year(
+            sdf,
+            input_field_name=self.input_field_name,
+            output_field_name=self.output_field_name,
         )
-        return sdf
 
 
 class WaterYear(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -96,14 +105,11 @@ class WaterYear(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            (
-                F.year(F.col(self.input_field_name))
-                + F.when(F.month(F.col(self.input_field_name)) >= 10, F.lit(1)).otherwise(F.lit(0))
-            ).cast("int")
+        return apply_water_year(
+            sdf,
+            input_field_name=self.input_field_name,
+            output_field_name=self.output_field_name,
         )
-        return sdf
 
 
 class NormalizedFlow(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -135,14 +141,12 @@ class NormalizedFlow(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            F.try_divide(
-                F.col(self.primary_value_field_name).cast("double"),
-                F.col(self.drainage_area_field_name).cast("double"),
-            ).cast("float")
+        return apply_normalized_flow(
+            sdf,
+            primary_value_field_name=self.primary_value_field_name,
+            drainage_area_field_name=self.drainage_area_field_name,
+            output_field_name=self.output_field_name,
         )
-        return sdf
 
 
 class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -188,21 +192,12 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        month_col = F.month(F.col(self.value_time_field_name))
-        expr = None
-        for season, months in self.season_months.items():
-            cond = month_col.isin([int(m) for m in months])
-            expr = F.when(cond, F.lit(season)) if expr is None else expr.when(cond, F.lit(season))
-        if expr is None:
-            expr = F.lit(None).cast("string")
-        else:
-            expr = expr.otherwise(F.lit(None).cast("string"))
-
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            expr
+        return apply_seasons(
+            sdf,
+            value_time_field_name=self.value_time_field_name,
+            season_months=self.season_months,
+            output_field_name=self.output_field_name,
         )
-        return sdf
 
 
 class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -234,11 +229,12 @@ class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            F.col(self.value_time_field_name) - F.col(self.reference_time_field_name)
+        return apply_forecast_lead_time(
+            sdf,
+            value_time_field_name=self.value_time_field_name,
+            reference_time_field_name=self.reference_time_field_name,
+            output_field_name=self.output_field_name,
         )
-        return sdf
 
 
 class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -400,301 +396,16 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=pd.Timedelta(days=5)
     )
 
-    @staticmethod
-    def _validate_bin_size_dict(self) -> Union[pd.Timedelta, list, dict]:
-        """Validate and normalize bin_size input.
-
-        Validates and converts bin_size to a standardized format:
-        - Single pd.Timedelta: returns as-is
-        - List of dicts: validates structure and converts to internal format
-        - Dict of dicts: validates structure and keeps custom bin IDs
-
-        Returns a normalized structure for internal processing.
-        """
-        def _to_pd_timedelta(value, field_name, context):
-            """Convert datetime.timedelta or string to pd.Timedelta."""
-            if isinstance(value, pd.Timedelta):
-                return value
-            elif isinstance(value, timedelta):
-                return pd.Timedelta(value)
-            elif isinstance(value, str):
-                try:
-                    temp = pd.Timedelta(value)
-                    if temp < pd.Timedelta(seconds=1) and \
-                       temp != pd.Timedelta(0):
-                        raise ValueError(
-                            "Timedelta must be at least 1 second"
-                        )
-                    return temp
-                except ValueError as e:
-                    raise ValueError(
-                        f"{context} '{field_name}' has invalid timedelta"
-                        f" string: '{value}'. "
-                        f"Error: {e}"
-                    )
-            else:
-                raise TypeError(
-                    f"{context} '{field_name}' must be pd.Timedelta,"
-                    " datetime.timedelta, or a valid timedelta string,"
-                    f" got {type(value)}"
-                )
-
-        # Single Timedelta - convert if needed
-        if isinstance(self.bin_size, (pd.Timedelta, timedelta, str)):
-            return _to_pd_timedelta(self.bin_size, 'bin_size', 'bin_size')
-
-        # List of dicts format
-        if isinstance(self.bin_size, list):
-            if not self.bin_size:
-                raise ValueError("bin_size list cannot be empty")
-
-            # Validate each dict has required keys
-            for i, bin_dict in enumerate(self.bin_size):
-                if not isinstance(bin_dict, dict):
-                    raise TypeError(
-                        f"Item {i} in bin_size list must be a dict"
-                        )
-
-                required_keys = {'start_inclusive', 'end_exclusive'}
-                if not required_keys.issubset(bin_dict.keys()):
-                    raise ValueError(
-                        f"Item {i} missing required keys. "
-                        f"Must have: {required_keys}"
-                    )
-
-                # Validate and convert values to pd.Timedelta
-                start = _to_pd_timedelta(
-                    bin_dict['start_inclusive'],
-                    'start_inclusive',
-                    f"Item {i}"
-                )
-                end = _to_pd_timedelta(
-                    bin_dict['end_exclusive'],
-                    'end_exclusive',
-                    f"Item {i}"
-                )
-
-            # Convert to internal format: list of tuples (start, end, bin_id)
-            # For list format, bin_id is None (will be auto-generated as ISO)
-            normalized = []
-            for bin_dict in self.bin_size:
-                start = _to_pd_timedelta(
-                    bin_dict['start_inclusive'],
-                    'start_inclusive',
-                    'bin_dict'
-                )
-                end = _to_pd_timedelta(
-                    bin_dict['end_exclusive'],
-                    'end_exclusive',
-                    'bin_dict'
-                )
-                normalized.append((start, end, None))
-
-            return normalized
-
-        # Dict of dicts format
-        if isinstance(self.bin_size, dict):
-            if not self.bin_size:
-                raise ValueError("bin_size dict cannot be empty")
-
-            # Validate structure
-            for key, value in self.bin_size.items():
-                if not isinstance(key, str):
-                    raise TypeError(
-                        f"Dict keys must be strings (custom bin IDs), got "
-                        f"{type(key)}"
-                    )
-
-                if not isinstance(value, dict):
-                    raise TypeError(
-                        "Dict values must be dicts with bin specification"
-                    )
-
-                required_keys = {'start_inclusive', 'end_exclusive'}
-                if not required_keys.issubset(value.keys()):
-                    raise ValueError(
-                        f"Bin '{key}' missing required keys. Must have: "
-                        f"{required_keys}"
-                    )
-
-                # Validate and convert to pd.Timedelta
-                _to_pd_timedelta(
-                    value['start_inclusive'],
-                    'start_inclusive',
-                    f"Bin '{key}'"
-                )
-                _to_pd_timedelta(
-                    value['end_exclusive'],
-                    'end_exclusive',
-                    f"Bin '{key}'"
-                )
-
-            # Convert to internal format: list of tuples
-            normalized = []
-            for custom_id, bin_dict in self.bin_size.items():
-                start = _to_pd_timedelta(
-                    bin_dict['start_inclusive'],
-                    'start_inclusive',
-                    f"Bin '{custom_id}'"
-                )
-                end = _to_pd_timedelta(
-                    bin_dict['end_exclusive'],
-                    'end_exclusive',
-                    f"Bin '{custom_id}'"
-                )
-                normalized.append((start, end, custom_id))
-
-            return normalized
-
-        raise TypeError(
-            "bin_size must be pd.Timedelta, datetime.timedelta, "
-            "a valid timedelta string, list of dicts, or dict of dicts"
-        )
-
-    @staticmethod
-    def _add_forecast_lead_time(self, sdf: ps.DataFrame) -> ps.DataFrame:
-        """Calculate forecast lead time if not already present."""
-        if self.lead_time_field_name not in sdf.columns:
-            flt_cf = ForecastLeadTime(
-                value_time_field_name=self.value_time_field_name,
-                reference_time_field_name=self.reference_time_field_name,
-                output_field_name=self.lead_time_field_name
-            )
-            sdf = flt_cf.apply_to(sdf)
-        return sdf
-
-    @staticmethod
-    def _add_forecast_lead_time_bin(
-        self,
-        sdf: ps.DataFrame
-    ) -> ps.DataFrame:
-        """Add forecast lead time bin column."""
-
-        def _timedelta_to_iso_duration(td: pd.Timedelta) -> str:
-            """Convert pd.Timedelta to ISO 8601 duration string."""
-            iso_str = td.isoformat()
-            # Remove trailing 0M0S, 0S, etc. for cleaner output
-            iso_str = iso_str.replace(
-                '0M0S', '').replace(
-                '0S', '').replace(
-                '0M', '')
-            # Handle edge case where we removed everything after 'T'
-            if iso_str.endswith('T'):
-                iso_str = iso_str[:-1] + 'T0S'
-            return iso_str
-
-        @pandas_udf(returnType=T.StringType())
-        def func(lead_time: pd.Series) -> pd.Series:
-            # Single Timedelta - uniform binning
-            if isinstance(self.bin_size, pd.Timedelta):
-                bin_size_seconds = self.bin_size.total_seconds()
-
-                bin_numbers = (
-                    lead_time.dt.total_seconds() // bin_size_seconds
-                ).astype(int)
-
-                bin_ids = pd.Series("", index=lead_time.index)
-
-                for bin_num in bin_numbers.unique():
-                    bin_mask = bin_numbers == bin_num
-
-                    if bin_mask.any():
-                        start_td = pd.Timedelta(
-                            seconds=bin_num * bin_size_seconds
-                            )
-                        end_td = pd.Timedelta(
-                            seconds=(bin_num + 1) * bin_size_seconds
-                            )
-
-                        # Convert to ISO duration format
-                        start_iso = _timedelta_to_iso_duration(start_td)
-                        end_iso = _timedelta_to_iso_duration(end_td)
-                        bin_id = f"{start_iso}_{end_iso}"
-
-                        bin_ids[bin_mask] = bin_id
-
-                return bin_ids
-
-            # List/Dict format - dynamic binning with explicit ranges
-            # self.bin_size is now a list of tuples: (start, end, bin_id)
-            # bin_id is None for auto-generated, or a string for custom
-            else:
-                bin_ids = pd.Series("", index=lead_time.index)
-                lead_time_seconds = lead_time.dt.total_seconds()
-
-                # Check if we need to add an overflow bin
-                max_lead_time = lead_time.max()
-                last_bin_end = self.bin_size[-1][1]
-
-                # Create working copy of bin_size
-                bins_to_use = []
-
-                # Convert all bins, generating ISO format for None bin_ids
-                for start_td, end_td, bin_id in self.bin_size:
-                    if bin_id is None:
-                        # Auto-generated: create ISO duration format
-                        start_iso = _timedelta_to_iso_duration(start_td)
-                        end_iso = _timedelta_to_iso_duration(end_td)
-                        final_bin_id = f"{start_iso}_{end_iso}"
-                    else:
-                        # Custom ID: use as-is
-                        final_bin_id = bin_id
-
-                    bins_to_use.append((start_td, end_td, final_bin_id))
-
-                # If max lead time exceeds last bin, create overflow bin
-                if max_lead_time >= last_bin_end:
-                    overflow_start = last_bin_end
-                    overflow_end = max_lead_time
-
-                    # Determine overflow bin_id
-                    if self.bin_size[-1][2] is None:
-                        # Auto-generated format: use ISO duration strings
-                        start_iso = _timedelta_to_iso_duration(overflow_start)
-                        end_iso = _timedelta_to_iso_duration(overflow_end)
-                        overflow_bin_id = f"{start_iso}_{end_iso}"
-                    else:
-                        # Custom ID format: append suffix
-                        overflow_bin_id = "overflow"
-
-                    bins_to_use.append(
-                        (overflow_start, overflow_end, overflow_bin_id)
-                        )
-
-                for i, (start_td, end_td, bin_id) in enumerate(bins_to_use):
-                    start_seconds = start_td.total_seconds()
-                    end_seconds = end_td.total_seconds()
-
-                    # Check if this is the last bin (including overflow bin)
-                    is_last_bin = (i == len(bins_to_use) - 1)
-
-                    if is_last_bin:
-                        # Last bin is inclusive of end_exclusive
-                        mask = lead_time_seconds >= start_seconds
-                    else:
-                        # All other bins are [start, end)
-                        mask = (
-                            (lead_time_seconds >= start_seconds) &
-                            (lead_time_seconds < end_seconds)
-                        )
-
-                    if mask.any():
-                        bin_ids[mask] = bin_id
-
-                return bin_ids
-
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            func(self.lead_time_field_name)
-        )
-        return sdf
-
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        self.bin_size = self._validate_bin_size_dict(self)
-        sdf = self._add_forecast_lead_time(self, sdf)
-        sdf = self._add_forecast_lead_time_bin(self, sdf)
-        return sdf
+        return apply_forecast_lead_time_bins(
+            sdf,
+            value_time_field_name=self.value_time_field_name,
+            reference_time_field_name=self.reference_time_field_name,
+            lead_time_field_name=self.lead_time_field_name,
+            output_field_name=self.output_field_name,
+            bin_size=self.bin_size,
+        )
 
 
 class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -726,15 +437,12 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            F.coalesce(
-                F.col(self.input_field_name).cast("double")
-                > F.col(self.threshold_field_name).cast("double"),
-                F.lit(False),
-            ).cast("boolean")
+        return apply_threshold_value_exceeded(
+            sdf,
+            input_field_name=self.input_field_name,
+            threshold_field_name=self.threshold_field_name,
+            output_field_name=self.output_field_name,
         )
-        return sdf
 
 
 class ThresholdValueNotExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -766,15 +474,12 @@ class ThresholdValueNotExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            F.coalesce(
-                F.col(self.input_field_name).cast("double")
-                <= F.col(self.threshold_field_name).cast("double"),
-                F.lit(False),
-            ).cast("boolean")
+        return apply_threshold_value_not_exceeded(
+            sdf,
+            input_field_name=self.input_field_name,
+            threshold_field_name=self.threshold_field_name,
+            output_field_name=self.output_field_name,
         )
-        return sdf
 
 
 class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -805,28 +510,11 @@ class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        dt_col = F.col(self.input_field_name)
-        year_col = F.year(dt_col)
-        month_col = F.month(dt_col)
-        day_col = F.dayofmonth(dt_col)
-        doy_col = F.dayofyear(dt_col)
-
-        is_leap = (
-            ((year_col % 4) == 0)
-            & (((year_col % 100) != 0) | ((year_col % 400) == 0))
+        return apply_day_of_year(
+            sdf,
+            input_field_name=self.input_field_name,
+            output_field_name=self.output_field_name,
         )
-
-        adjusted = (
-            F.when(is_leap & (month_col == 2) & (day_col == 29), F.lit(59))
-            .when(is_leap & (month_col > 2), doy_col - F.lit(1))
-            .otherwise(doy_col)
-        )
-
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            adjusted.cast("int")
-        )
-        return sdf
 
 
 class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -852,32 +540,11 @@ class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        dt_col = F.col(self.input_field_name)
-        year_col = F.year(dt_col)
-        month_col = F.month(dt_col)
-        day_col = F.dayofmonth(dt_col)
-        doy_col = F.dayofyear(dt_col)
-        hour_col = F.hour(dt_col)
-
-        is_leap = (
-            ((year_col % 4) == 0)
-            & (((year_col % 100) != 0) | ((year_col % 400) == 0))
+        return apply_hour_of_year(
+            sdf,
+            input_field_name=self.input_field_name,
+            output_field_name=self.output_field_name,
         )
-
-        adjusted = (
-            F.when(
-                is_leap & (month_col == 2) & (day_col == 29),
-                F.lit(58 * 24) + hour_col,
-            )
-            .when(is_leap & (month_col > 2), (doy_col - F.lit(2)) * F.lit(24) + hour_col)
-            .otherwise((doy_col - F.lit(1)) * F.lit(24) + hour_col)
-        )
-
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            adjusted.cast("int")
-        )
-        return sdf
 
 
 class GenericSQL(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -894,7 +561,6 @@ class GenericSQL(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     Examples
     --------
-
     .. code-block:: python
 
         from teehr import RowLevelCalculatedFields as rcf
@@ -913,11 +579,11 @@ class GenericSQL(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        sdf = sdf.withColumn(
-            self.output_field_name,
-            F.expr(self.sql_statement)
+        return apply_generic_sql(
+            sdf,
+            output_field_name=self.output_field_name,
+            sql_statement=self.sql_statement,
         )
-        return sdf
 
 
 class RowLevelCalculatedFields:

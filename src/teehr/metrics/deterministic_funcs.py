@@ -4,8 +4,8 @@ import numpy.typing as npt
 import pandas as pd
 from scipy.stats import rankdata
 
-from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.models.metrics.basemodels import TransformEnum
+from teehr.metrics.base_models import MetricsBasemodel
+from teehr.metrics.base_models import TransformEnum
 
 from typing import Callable, Optional
 import logging

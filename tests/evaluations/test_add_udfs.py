@@ -639,6 +639,75 @@ def test_calculated_fields_auto_mixed_spark_and_python(function_scope_two_locati
 
 
 @pytest.mark.function_scope_two_location_warehouse
+def test_calculated_fields_auto_row_level_default_stays_spark(
+    function_scope_two_location_warehouse,
+):
+    """Row-level fields should stay Spark-native unless python is explicitly requested."""
+    ev = function_scope_two_location_warehouse
+
+    result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([
+        rcf.Month(output_field_name="month_default"),
+        rcf.Seasons(output_field_name="season_default"),
+    ], engine="auto").to_sdf()
+
+    assert "month_default" in result.columns
+    assert "season_default" in result.columns
+
+    physical_plan = result._jdf.queryExecution().executedPlan().toString().lower()
+    assert "arrowevalpython" not in physical_plan
+
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_calculated_fields_python_row_level_explicit_engine(function_scope_two_location_warehouse):
+    """Row-level python backend should run when engine='python' is explicitly requested."""
+    ev = function_scope_two_location_warehouse
+
+    spark_result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([
+        rcf.Month(output_field_name="month_spark"),
+        rcf.Seasons(output_field_name="season_spark"),
+    ], engine="spark").to_sdf()
+
+    python_result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([
+        rcf.Month(output_field_name="month_python"),
+        rcf.Seasons(output_field_name="season_python"),
+    ], engine="python").to_sdf()
+
+    result = spark_result.join(
+        python_result.select("value_time", "month_python", "season_python"),
+        on=["value_time"],
+        how="inner",
+    )
+
+    mismatched_month = result.filter(F.col("month_spark") != F.col("month_python")).count()
+    mismatched_season = result.filter(F.col("season_spark") != F.col("season_python")).count()
+
+    assert mismatched_month == 0
+    assert mismatched_season == 0
+
+    physical_plan = python_result._jdf.queryExecution().executedPlan().toString().lower()
+    assert "arrowevalpython" in physical_plan
+
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_calculated_fields_spark_engine_accepts_row_level(function_scope_two_location_warehouse):
+    """Spark engine should still accept row-level fields."""
+    ev = function_scope_two_location_warehouse
+
+    result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([
+        rcf.Month(output_field_name="month_spark_only")
+    ], engine="spark").to_sdf()
+    assert "month_spark_only" in result.columns
+
+
+@pytest.mark.function_scope_two_location_warehouse
 def test_exceedance_probability(function_scope_two_location_warehouse):
     """Test exceedance probability UDF."""
     ev = function_scope_two_location_warehouse
