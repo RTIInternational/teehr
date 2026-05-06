@@ -52,13 +52,15 @@ class CircularBlock(BootstrapBasemodel):
     ----------
     random_state : RandomState, optional
         The random state for the random number generator.
-    block_size : int
+    block_size : int or None, optional
         The block size for the CircularBlockBootstrap.
-        Default value is 365.
+        If ``None`` (default), TEEHR estimates an optimal block size using
+        ``arch.bootstrap.optimal_block_length`` on the primary metric input
+        series and uses the ``b_cb`` estimate.
     """
 
     random_state: Union[RandomState, None] = None
-    block_size: int = 365
+    block_size: Union[int, None] = None
     name: str = Field(default="CircularBlock")
     include_value_time: bool = Field(False, frozen=True)
     func: Callable = Field(
@@ -74,13 +76,15 @@ class Stationary(BootstrapBasemodel):
     ----------
     random_state : RandomState, optional
         The random state for the random number generator.
-    block_size : int
+    block_size : int or None, optional
         The block size for the StationaryBootstrap.
-        Default value is 365.
+        If ``None`` (default), TEEHR estimates an optimal block size using
+        ``arch.bootstrap.optimal_block_length`` on the primary metric input
+        series and uses the ``b_sb`` estimate.
     """
 
     random_state: Union[RandomState, None] = None
-    block_size: int = 365
+    block_size: Union[int, None] = None
     name: str = Field(default="Stationary")
     include_value_time: bool = Field(False, frozen=True)
     func: Callable = Field(
