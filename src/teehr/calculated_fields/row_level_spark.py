@@ -157,6 +157,52 @@ def _timedelta_to_iso_duration(td: pd.Timedelta) -> str:
     return iso_str
 
 
+def _seconds_to_iso_expr(sec_col: F.Column) -> F.Column:
+    """Convert a seconds Column to an ISO 8601 duration string Column."""
+    sec = sec_col.cast("long")
+    d = (sec / F.lit(86400)).cast("long")
+    rem1 = sec - d * F.lit(86400)
+    h = (rem1 / F.lit(3600)).cast("long")
+    rem2 = rem1 - h * F.lit(3600)
+    m = (rem2 / F.lit(60)).cast("long")
+    s = rem2 - m * F.lit(60)
+
+    t_with_days = F.when(
+        (m == 0) & (s == 0), F.concat(F.lit("T"), h.cast("string"), F.lit("H"))
+    ).when(
+        s == 0,
+        F.concat(F.lit("T"), h.cast("string"), F.lit("H"), m.cast("string"), F.lit("M")),
+    ).otherwise(
+        F.concat(
+            F.lit("T"), h.cast("string"), F.lit("H"),
+            m.cast("string"), F.lit("M"),
+            s.cast("string"), F.lit("S"),
+        )
+    )
+
+    t_no_days = F.when(
+        (h == 0) & (m == 0) & (s == 0), F.lit("T0S")
+    ).when(
+        (m == 0) & (s == 0), F.concat(F.lit("T"), h.cast("string"), F.lit("H"))
+    ).when(
+        s == 0,
+        F.concat(F.lit("T"), h.cast("string"), F.lit("H"), m.cast("string"), F.lit("M")),
+    ).otherwise(
+        F.concat(
+            F.lit("T"), h.cast("string"), F.lit("H"),
+            m.cast("string"), F.lit("M"),
+            s.cast("string"), F.lit("S"),
+        )
+    )
+
+    return F.when(
+        d > 0,
+        F.concat(F.lit("P"), d.cast("string"), F.lit("D"), t_with_days),
+    ).otherwise(
+        F.concat(F.lit("P"), t_no_days)
+    )
+
+
 def apply_forecast_lead_time_bins(
     sdf: ps.DataFrame,
     *,
@@ -166,10 +212,7 @@ def apply_forecast_lead_time_bins(
     output_field_name: str,
     bin_size: Union[pd.Timedelta, timedelta, str, list, dict],
 ) -> ps.DataFrame:
-    """Add forecast lead-time bin IDs with configurable binning."""
-    import pyspark.sql.types as T
-    from pyspark.sql.functions import pandas_udf
-
+    """Add forecast lead-time bin IDs with Spark-native binning logic."""
     normalized_bin_size = validate_forecast_lead_time_bin_size(bin_size)
 
     if lead_time_field_name not in sdf.columns:
@@ -180,61 +223,51 @@ def apply_forecast_lead_time_bins(
             output_field_name=lead_time_field_name,
         )
 
-    @pandas_udf(returnType=T.StringType())
-    def func(lead_time: pd.Series) -> pd.Series:
-        if isinstance(normalized_bin_size, pd.Timedelta):
-            bin_size_seconds = normalized_bin_size.total_seconds()
-            bin_numbers = (lead_time.dt.total_seconds() // bin_size_seconds).astype(int)
-            bin_ids = pd.Series("", index=lead_time.index)
+    lead_sec = (
+        F.unix_timestamp(F.col(value_time_field_name))
+        - F.unix_timestamp(F.col(reference_time_field_name))
+    ).cast("long")
 
-            for bin_num in bin_numbers.unique():
-                bin_mask = bin_numbers == bin_num
-                if bin_mask.any():
-                    start_td = pd.Timedelta(seconds=bin_num * bin_size_seconds)
-                    end_td = pd.Timedelta(seconds=(bin_num + 1) * bin_size_seconds)
-                    bin_id = f"{_timedelta_to_iso_duration(start_td)}_{_timedelta_to_iso_duration(end_td)}"
-                    bin_ids[bin_mask] = bin_id
-            return bin_ids
-
-        bin_ids = pd.Series("", index=lead_time.index)
-        lead_time_seconds = lead_time.dt.total_seconds()
+    if isinstance(normalized_bin_size, pd.Timedelta):
+        bin_size_sec = F.lit(int(normalized_bin_size.total_seconds()))
+        bin_num = (lead_sec / bin_size_sec).cast("long")
+        start_sec = bin_num * bin_size_sec
+        end_sec = (bin_num + F.lit(1)) * bin_size_sec
+        bin_id_expr = F.concat(
+            _seconds_to_iso_expr(start_sec),
+            F.lit("_"),
+            _seconds_to_iso_expr(end_sec),
+        )
+    else:
         bins_to_use = []
-
         for start_td, end_td, bin_id in normalized_bin_size:
-            if bin_id is None:
-                final_bin_id = f"{_timedelta_to_iso_duration(start_td)}_{_timedelta_to_iso_duration(end_td)}"
-            else:
-                final_bin_id = bin_id
-            bins_to_use.append((start_td, end_td, final_bin_id))
+            final_id = (
+                bin_id
+                if bin_id is not None
+                else f"{_timedelta_to_iso_duration(start_td)}_{_timedelta_to_iso_duration(end_td)}"
+            )
+            bins_to_use.append(
+                (int(start_td.total_seconds()), int(end_td.total_seconds()), final_id)
+            )
 
-        max_lead_time = lead_time.max()
-        last_bin_end = normalized_bin_size[-1][1]
-        if max_lead_time >= last_bin_end:
-            overflow_start = last_bin_end
-            overflow_end = max_lead_time
-            if normalized_bin_size[-1][2] is None:
-                overflow_bin_id = (
-                    f"{_timedelta_to_iso_duration(overflow_start)}_"
-                    f"{_timedelta_to_iso_duration(overflow_end)}"
-                )
-            else:
-                overflow_bin_id = "overflow"
-            bins_to_use.append((overflow_start, overflow_end, overflow_bin_id))
+        last_end_sec = bins_to_use[-1][1]
 
-        for i, (start_td, end_td, bin_id) in enumerate(bins_to_use):
-            start_seconds = start_td.total_seconds()
-            end_seconds = end_td.total_seconds()
-            is_last_bin = i == len(bins_to_use) - 1
-            if is_last_bin:
-                mask = lead_time_seconds >= start_seconds
-            else:
-                mask = (lead_time_seconds >= start_seconds) & (lead_time_seconds < end_seconds)
-            if mask.any():
-                bin_ids[mask] = bin_id
+        first_start_s, first_end_s, first_bid = bins_to_use[0]
+        first_cond = (lead_sec >= F.lit(first_start_s)) & (lead_sec < F.lit(first_end_s))
+        bin_id_expr = F.when(first_cond, F.lit(first_bid))
 
-        return bin_ids
+        for i in range(1, len(bins_to_use)):
+            start_s, end_s, bid = bins_to_use[i]
+            cond = (lead_sec >= F.lit(start_s)) & (lead_sec < F.lit(end_s))
+            bin_id_expr = bin_id_expr.when(cond, F.lit(bid))
 
-    return sdf.withColumn(output_field_name, func(lead_time_field_name))
+        bin_id_expr = bin_id_expr.otherwise(
+            F.when(lead_sec >= F.lit(last_end_sec), F.lit("overflow")).otherwise(
+                F.lit(None).cast("string")
+            )
+        )
+
+    return sdf.withColumn(output_field_name, bin_id_expr)
 
 
 def apply_threshold_value_exceeded(
