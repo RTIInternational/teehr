@@ -310,9 +310,6 @@ def apply_lead_time_bins_spark(
             _seconds_to_iso_expr(end_sec),
         )
     else:
-        max_row = sdf.agg(F.max(lead_sec).alias("_max_ls")).collect()[0]
-        max_lead_sec = max_row["_max_ls"]
-
         bins_to_use = []
         for start_td, end_td, bin_id in normalized:
             final_id = (
@@ -325,36 +322,21 @@ def apply_lead_time_bins_spark(
             )
 
         last_end_sec = bins_to_use[-1][1]
-        if max_lead_sec is not None and max_lead_sec >= last_end_sec:
-            overflow_start = last_end_sec
-            overflow_end = int(max_lead_sec)
-            if normalized[-1][2] is None:
-                overflow_id = (
-                    f"{_timedelta_to_iso_duration(pd.Timedelta(seconds=overflow_start))}_"
-                    f"{_timedelta_to_iso_duration(pd.Timedelta(seconds=overflow_end))}"
-                )
-            else:
-                overflow_id = "overflow"
-            bins_to_use.append((overflow_start, overflow_end, overflow_id))
 
         first_start_s, first_end_s, first_bid = bins_to_use[0]
-        first_cond = (
-            lead_sec >= F.lit(first_start_s)
-            if len(bins_to_use) == 1
-            else (lead_sec >= F.lit(first_start_s)) & (lead_sec < F.lit(first_end_s))
-        )
+        first_cond = (lead_sec >= F.lit(first_start_s)) & (lead_sec < F.lit(first_end_s))
         bin_id_expr = F.when(first_cond, F.lit(first_bid))
 
         for i in range(1, len(bins_to_use)):
             start_s, end_s, bid = bins_to_use[i]
-            is_last = i == len(bins_to_use) - 1
-            cond = (
-                lead_sec >= F.lit(start_s)
-                if is_last
-                else (lead_sec >= F.lit(start_s)) & (lead_sec < F.lit(end_s))
-            )
+            cond = (lead_sec >= F.lit(start_s)) & (lead_sec < F.lit(end_s))
             bin_id_expr = bin_id_expr.when(cond, F.lit(bid))
 
-        bin_id_expr = bin_id_expr.otherwise(F.lit(None).cast("string"))
+        # Keep this lazy by deriving overflow from row-level lead time.
+        bin_id_expr = bin_id_expr.otherwise(
+            F.when(lead_sec >= F.lit(last_end_sec), F.lit("overflow")).otherwise(
+                F.lit(None).cast("string")
+            )
+        )
 
     return sdf.withColumn(cf.output_field_name, bin_id_expr)

@@ -214,10 +214,10 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
         "value_time"
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 6
-    assert 'P1DT12H_P2DT0H' in [row['forecast_lead_time_bin'] for row in
-                                sorted_sdf.select(
-                                     'forecast_lead_time_bin'
-                                     ).distinct().collect()]
+    assert 'overflow' in [row['forecast_lead_time_bin'] for row in
+                          sorted_sdf.select(
+                               'forecast_lead_time_bin'
+                               ).distinct().collect()]
 
     # try with dynamic bin sizes w/ string dict keys that DO encompass full
     # lead time range

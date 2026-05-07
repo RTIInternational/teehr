@@ -281,20 +281,6 @@ def _compute_deterministic_metrics(
         threshold_col = next(iter(threshold_cols))
         validate_fields_exist(sdf.columns, [threshold_col])
 
-        invalid_threshold_groups = (
-            sdf.where(valid)
-            .groupBy(*group_by_cols)
-            .agg(F.countDistinct(F.col(threshold_col)).alias("_n_thresholds"))
-            .where(F.col("_n_thresholds") > 1)
-            .limit(1)
-            .collect()
-        )
-        if invalid_threshold_groups:
-            raise ValueError(
-                "Threshold field must contain a single unique value for each "
-                "population grouping."
-            )
-
     agg_exprs = [
         F.count(F.lit(1)).alias("_n"),
         F.sum(p).alias("_sum_p"),
@@ -326,6 +312,7 @@ def _compute_deterministic_metrics(
         thr = F.col(threshold_col).cast("double")
         agg_exprs.extend(
             [
+                F.countDistinct(F.col(threshold_col)).alias("_n_thresholds"),
                 F.sum(F.when((p >= thr) & (s >= thr), F.lit(1)).otherwise(F.lit(0))).alias("_tp"),
                 F.sum(F.when((p < thr) & (s < thr), F.lit(1)).otherwise(F.lit(0))).alias("_tn"),
                 F.sum(F.when((p < thr) & (s >= thr), F.lit(1)).otherwise(F.lit(0))).alias("_fp"),
@@ -334,6 +321,19 @@ def _compute_deterministic_metrics(
         )
 
     stats_df = sdf.where(valid).groupBy(*group_by_cols).agg(*agg_exprs)
+
+    if needs_threshold_counts:
+        # Keep threshold validation in the Spark plan so errors are raised lazily
+        # when an action is triggered, rather than during DataFrame construction.
+        stats_df = stats_df.where(
+            F.coalesce(
+                F.assert_true(
+                    F.col("_n_thresholds") <= F.lit(1),
+                    "Threshold field must contain a single unique value for each population grouping.",
+                ),
+                F.lit(True),
+            )
+        )
 
     metric_exprs = []
     for metric in metrics:

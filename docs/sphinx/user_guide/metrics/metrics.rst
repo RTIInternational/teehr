@@ -68,8 +68,7 @@ The ``engine`` parameter controls how metrics are computed under the hood.
    * - ``"spark"``
      - Forces the Spark-native path for every metric.  Raises
        ``ValueError`` if any requested metric is not supported natively
-       (e.g. ``SpearmanCorrelation``, or any metric with a transform or
-       bootstrap configured).  Produces a physical plan with no
+       (e.g. metrics with a transform or bootstrap configured). Produces a physical plan with no
        ``AggregateInPandas`` nodes, which can significantly improve
        performance on large datasets.
    * - ``"python"``
@@ -82,7 +81,7 @@ The ``engine`` parameter controls how metrics are computed under the hood.
 
 *Deterministic metrics:* MeanError, RelativeBias, MultiplicativeBias,
 MeanSquareError, RootMeanSquareError, MeanAbsoluteError,
-MeanAbsoluteRelativeError, PearsonCorrelation, Rsquared,
+MeanAbsoluteRelativeError, PearsonCorrelation, SpearmanCorrelation, Rsquared,
 NashSutcliffeEfficiency, NormalizedNashSutcliffeEfficiency,
 VariabilityRatio, RootMeanStandardDeviationRatio,
 KlingGuptaEfficiency, KlingGuptaEfficiencyMod1, KlingGuptaEfficiencyMod2,
@@ -125,8 +124,8 @@ RelativeStandardDeviation
     # Auto mode – mix native and python metrics transparently
     metrics_df = ev.table("joined_timeseries").aggregate(
         metrics=[
-            DeterministicMetrics.MeanError(),           # spark-native
-            DeterministicMetrics.SpearmanCorrelation(), # python path
+        DeterministicMetrics.MeanError(),                      # spark-native
+        DeterministicMetrics.MeanError(transform="log"),      # python path (transform)
         ],
         group_by=["primary_location_id"],
     ).to_pandas()
