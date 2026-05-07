@@ -198,6 +198,11 @@ Bootstrapping
 
 Compute confidence intervals using bootstrap resampling:
 
+For ``CircularBlock`` and ``Stationary`` bootstrapping, ``block_size`` is
+optional. If omitted (or set to ``None``), TEEHR uses
+``arch.bootstrap.optimal_block_length`` to estimate an optimal block size from
+the primary metric input series.
+
 .. code-block:: python
 
     from teehr.metrics.models.bootstrap import Bootstrappers
@@ -205,10 +210,14 @@ Compute confidence intervals using bootstrap resampling:
     # Configure bootstrap
     boot = Bootstrappers.CircularBlock(
         reps=1000,
-        block_size=365,
+        # block_size=None -> auto estimate using optimal_block_length (b_cb)
+        block_size=None,
         seed=42,
         quantiles=[0.05, 0.5, 0.95]
     )
+
+    # Optional: provide a fixed block size if desired
+    # boot = Bootstrappers.CircularBlock(reps=1000, block_size=365, seed=42)
 
     # Apply to metric
     kge = DeterministicMetrics.KlingGuptaEfficiency()
