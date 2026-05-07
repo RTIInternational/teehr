@@ -560,17 +560,9 @@ class TeehrDataFrameBase(ABC):
         Raises
         ------
         AttributeError
-            If the underlying ``_sdf`` has not been loaded (is None).
+            If Spark proxying is disabled, or if the underlying Spark
+            DataFrame cannot be resolved.
         """
-        try:
-            sdf = object.__getattribute__(self, '_sdf')
-        except AttributeError:
-            sdf = None
-        if sdf is None:
-            raise AttributeError(
-                f"Table not loaded (sdf is None). Cannot proxy '{name}' to DataFrame."
-            )
-
         try:
             ev = object.__getattribute__(self, '_ev')
             proxy_enabled = getattr(ev, 'enable_spark_proxy', False)
@@ -584,6 +576,13 @@ class TeehrDataFrameBase(ABC):
                 f"or set enable_spark_proxy=True on your Evaluation to enable "
                 f"transparent proxying of PySpark DataFrame methods."
             )
+
+        try:
+            sdf = self.to_sdf()
+        except Exception as exc:
+            raise AttributeError(
+                f"Unable to resolve Spark DataFrame for proxy attribute '{name}'."
+            ) from exc
 
         attr = getattr(sdf, name)
         if callable(attr):
