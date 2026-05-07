@@ -28,6 +28,7 @@ from teehr.calculated_fields.timeseries_aware_spark import (
 )
 from teehr.calculated_fields.row_level_pandas import (
     apply_day_of_year_pandas,
+    apply_forecast_lead_time_pandas,
     apply_hour_of_year_pandas,
     apply_month_pandas,
     apply_normalized_flow_pandas,
@@ -36,6 +37,18 @@ from teehr.calculated_fields.row_level_pandas import (
     apply_threshold_value_not_exceeded_pandas,
     apply_water_year_pandas,
     apply_year_pandas,
+)
+from teehr.calculated_fields.row_level_spark import (
+    apply_day_of_year,
+    apply_forecast_lead_time,
+    apply_hour_of_year,
+    apply_month,
+    apply_normalized_flow,
+    apply_seasons,
+    apply_threshold_value_exceeded,
+    apply_threshold_value_not_exceeded,
+    apply_water_year,
+    apply_year,
 )
 from teehr.calculated_fields.models.base import CalculatedFieldBaseModel
 from teehr.calculated_fields.models.row_level import (
@@ -257,6 +270,13 @@ def _apply_row_level_python(sdf: DataFrame, cf: CalculatedFieldBaseModel) -> Dat
             season_months=cf.season_months,
             output_field_name=cf.output_field_name,
         )
+    if isinstance(cf, ForecastLeadTime):
+        return apply_forecast_lead_time_pandas(
+            sdf,
+            value_time_field_name=cf.value_time_field_name,
+            reference_time_field_name=cf.reference_time_field_name,
+            output_field_name=cf.output_field_name,
+        )
     if isinstance(cf, ThresholdValueExceeded):
         return apply_threshold_value_exceeded_pandas(
             sdf,
@@ -285,6 +305,76 @@ def _apply_row_level_python(sdf: DataFrame, cf: CalculatedFieldBaseModel) -> Dat
         )
 
     # Preserve prior behavior for row-level models without a dedicated pandas path.
+    return _apply_with_model(sdf, cf)
+
+
+def _apply_row_level_spark(sdf: DataFrame, cf: CalculatedFieldBaseModel) -> DataFrame:
+    if isinstance(cf, Month):
+        return apply_month(
+            sdf,
+            input_field_name=cf.input_field_name,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, Year):
+        return apply_year(
+            sdf,
+            input_field_name=cf.input_field_name,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, WaterYear):
+        return apply_water_year(
+            sdf,
+            input_field_name=cf.input_field_name,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, NormalizedFlow):
+        return apply_normalized_flow(
+            sdf,
+            primary_value_field_name=cf.primary_value_field_name,
+            drainage_area_field_name=cf.drainage_area_field_name,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, Seasons):
+        return apply_seasons(
+            sdf,
+            value_time_field_name=cf.value_time_field_name,
+            season_months=cf.season_months,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, ForecastLeadTime):
+        return apply_forecast_lead_time(
+            sdf,
+            value_time_field_name=cf.value_time_field_name,
+            reference_time_field_name=cf.reference_time_field_name,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, ThresholdValueExceeded):
+        return apply_threshold_value_exceeded(
+            sdf,
+            input_field_name=cf.input_field_name,
+            threshold_field_name=cf.threshold_field_name,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, ThresholdValueNotExceeded):
+        return apply_threshold_value_not_exceeded(
+            sdf,
+            input_field_name=cf.input_field_name,
+            threshold_field_name=cf.threshold_field_name,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, DayOfYear):
+        return apply_day_of_year(
+            sdf,
+            input_field_name=cf.input_field_name,
+            output_field_name=cf.output_field_name,
+        )
+    if isinstance(cf, HourOfYear):
+        return apply_hour_of_year(
+            sdf,
+            input_field_name=cf.input_field_name,
+            output_field_name=cf.output_field_name,
+        )
+
     return _apply_with_model(sdf, cf)
 
 
@@ -378,7 +468,7 @@ SPARK_EXECUTION_ADAPTERS: tuple[CalculatedFieldAdapter, ...] = (
     single_field_adapter(
         name="spark-row-level",
         supports=_supports_row_level,
-        apply_field=_apply_with_model,
+        apply_field=_apply_row_level_spark,
     ),
     single_field_adapter(
         name="spark-exceedance-probability",

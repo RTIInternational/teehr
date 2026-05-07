@@ -10,7 +10,6 @@ from pyspark.sql.functions import pandas_udf
 
 from teehr.calculated_fields.row_level_spark import (
     _timedelta_to_iso_duration,
-    apply_forecast_lead_time,
     validate_forecast_lead_time_bin_size,
 )
 
@@ -104,6 +103,27 @@ def apply_seasons_pandas(
     return sdf.withColumn(output_field_name, _seasons(value_time_field_name))
 
 
+def apply_forecast_lead_time_pandas(
+    sdf: ps.DataFrame,
+    *,
+    value_time_field_name: str,
+    reference_time_field_name: str,
+    output_field_name: str,
+) -> ps.DataFrame:
+    """Add forecast lead time via pandas execution (opt-in path)."""
+
+    @pandas_udf(returnType=T.DayTimeIntervalType())
+    def _lead_time(value_time: pd.Series, reference_time: pd.Series) -> pd.Series:
+        value_dt = pd.to_datetime(value_time)
+        reference_dt = pd.to_datetime(reference_time)
+        return value_dt - reference_dt
+
+    return sdf.withColumn(
+        output_field_name,
+        _lead_time(value_time_field_name, reference_time_field_name),
+    )
+
+
 def apply_forecast_lead_time_bins_pandas(
     sdf: ps.DataFrame,
     *,
@@ -117,7 +137,7 @@ def apply_forecast_lead_time_bins_pandas(
     normalized_bin_size = validate_forecast_lead_time_bin_size(bin_size)
 
     if lead_time_field_name not in sdf.columns:
-        sdf = apply_forecast_lead_time(
+        sdf = apply_forecast_lead_time_pandas(
             sdf,
             value_time_field_name=value_time_field_name,
             reference_time_field_name=reference_time_field_name,

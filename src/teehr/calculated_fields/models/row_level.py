@@ -6,18 +6,24 @@ from datetime import timedelta
 import pyspark.sql as ps
 from teehr.calculated_fields.models.base import CalculatedFieldABC
 from teehr.calculated_fields.models.base import CalculatedFieldBaseModel
-from teehr.calculated_fields.row_level_spark import apply_day_of_year
-from teehr.calculated_fields.row_level_spark import apply_forecast_lead_time
-from teehr.calculated_fields.row_level_spark import apply_forecast_lead_time_bins
+from teehr.calculated_fields.row_level_pandas import apply_day_of_year_pandas as apply_day_of_year
+from teehr.calculated_fields.row_level_pandas import apply_forecast_lead_time_pandas as apply_forecast_lead_time
+from teehr.calculated_fields.row_level_pandas import (
+    apply_forecast_lead_time_bins_pandas as apply_forecast_lead_time_bins,
+)
+from teehr.calculated_fields.row_level_pandas import apply_hour_of_year_pandas as apply_hour_of_year
+from teehr.calculated_fields.row_level_pandas import apply_month_pandas as apply_month
+from teehr.calculated_fields.row_level_pandas import apply_normalized_flow_pandas as apply_normalized_flow
+from teehr.calculated_fields.row_level_pandas import apply_seasons_pandas as apply_seasons
+from teehr.calculated_fields.row_level_pandas import (
+    apply_threshold_value_exceeded_pandas as apply_threshold_value_exceeded,
+)
+from teehr.calculated_fields.row_level_pandas import (
+    apply_threshold_value_not_exceeded_pandas as apply_threshold_value_not_exceeded,
+)
+from teehr.calculated_fields.row_level_pandas import apply_water_year_pandas as apply_water_year
+from teehr.calculated_fields.row_level_pandas import apply_year_pandas as apply_year
 from teehr.calculated_fields.row_level_spark import apply_generic_sql
-from teehr.calculated_fields.row_level_spark import apply_hour_of_year
-from teehr.calculated_fields.row_level_spark import apply_month
-from teehr.calculated_fields.row_level_spark import apply_normalized_flow
-from teehr.calculated_fields.row_level_spark import apply_seasons
-from teehr.calculated_fields.row_level_spark import apply_threshold_value_exceeded
-from teehr.calculated_fields.row_level_spark import apply_threshold_value_not_exceeded
-from teehr.calculated_fields.row_level_spark import apply_water_year
-from teehr.calculated_fields.row_level_spark import apply_year
 
 
 class Month(CalculatedFieldABC, CalculatedFieldBaseModel):
