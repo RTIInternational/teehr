@@ -24,8 +24,8 @@ Calculated Fields
    :recursive:
    :nosignatures:
 
-   row_level_models.RowLevelCalculatedFields
-   timeseries_aware_models.TimeseriesAwareCalculatedFields
+   models.row_level.RowLevelCalculatedFields
+   models.timeseries_aware.TimeseriesAwareCalculatedFields
 
 
 Metric Functions

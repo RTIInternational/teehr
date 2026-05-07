@@ -95,7 +95,7 @@ Metrics
 Migration note:
 
 * Calculated fields modules were renamed to explicit model/executor names:
-   ``row_level`` -> ``row_level_models``, ``timeseries_aware`` -> ``timeseries_aware_models``.
+   ``row_level`` -> ``models.row_level``, ``timeseries_aware`` -> ``models.timeseries_aware``.
 * Metrics basemodels module was renamed:
    ``basemodels`` -> ``base_models``.
 * Top-level imports from ``teehr`` (for example ``DeterministicMetrics`` and calculated-fields containers) are unchanged.

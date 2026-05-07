@@ -2,10 +2,9 @@
 from typing import List
 import logging
 
-import pandas as pd
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql import GroupedData
+from pyspark.sql import DataFrame, GroupedData
 from pyspark.sql.functions import pandas_udf
 
 from teehr.metrics.models.base import MetricsBasemodel
@@ -152,8 +151,8 @@ def _expand_shared_bootstrap_columns(sdf, expansions):
 def apply_aggregation_metrics(
     gp: GroupedData,
     include_metrics: List[MetricsBasemodel] = None
-) -> pd.DataFrame:
-    """Apply metrics to a PySpark DataFrame."""
+) -> DataFrame:
+    """Apply metrics to grouped Spark data and return an aggregated DataFrame."""
     if not isinstance(include_metrics, List):
         include_metrics = [include_metrics]
 
