@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 def _optimal_block_size(data: np.ndarray, method: str = "stationary") -> int:
     """Estimate the optimal block size for block bootstrap methods.
 
+    Implements robust estimation with data normalization, matching the approach
+    from nwm-explorer to improve numerical stability across diverse data ranges.
+
     Parameters
     ----------
     data:
@@ -29,7 +32,37 @@ def _optimal_block_size(data: np.ndarray, method: str = "stationary") -> int:
     """
     from arch.bootstrap import optimal_block_length
 
-    result = optimal_block_length(data)
+    clean = np.asarray(data, dtype=float).ravel()
+    clean = clean[np.isfinite(clean)]
+
+    # arch.bootstrap.optimal_block_length can fail on very short or invalid
+    # arrays (e.g., length <= 2 after dropping NaN/inf).
+    if clean.size <= 2:
+        logger.warning(
+            "Insufficient finite samples (%s) for optimal block estimation; "
+            "falling back to block_size=2",
+            int(clean.size),
+        )
+        return 2
+
+    # Normalize data to stable range [0, 1] before estimation.
+    # This improves robustness across diverse data magnitudes.
+    max_value = np.max(np.abs(clean))
+    if max_value > 0:
+        normalized = clean / (max_value * 1.01)
+    else:
+        normalized = clean
+
+    try:
+        result = optimal_block_length(normalized)
+    except Exception as exc:
+        logger.warning(
+            "optimal_block_length failed (%s: %s); falling back to block_size=2",
+            type(exc).__name__,
+            str(exc),
+        )
+        return 2
+
     col_candidates = (
         ("b_sb", "stationary") if method == "stationary"
         else ("b_cb", "circular")
@@ -37,7 +70,10 @@ def _optimal_block_size(data: np.ndarray, method: str = "stationary") -> int:
 
     for col in col_candidates:
         if col in result.columns:
-            block_size = int(np.ceil(result[col].iloc[0]))
+            value = result[col].iloc[0]
+            if value is None or not np.isfinite(value):
+                continue
+            block_size = int(np.ceil(float(value)))
             return max(block_size, 2)
 
     # Fallback for unexpected arch return schema.
@@ -177,15 +213,30 @@ def _make_bs_object(boot, args):
 
 def create_shared_bootstrap_func(
     metrics: List[MetricsBasemodel],
+    minimum_sample_size: int = 30,
+    minimum_mean: float = 0.01,
+    minimum_variance: float = 0.000025,
 ) -> Callable:
     """Create a single bootstrap UDF that evaluates multiple metrics per draw.
 
     All metrics in *metrics* must share the same bootstrap configuration
     (same class, reps, seed, block_size, quantiles, and input fields).
 
-    Returns a function that, when called as a pandas UDF, returns a dict where
-    values are either per-metric quantiles (``quantiles`` configured) or raw
-    bootstrap arrays (``quantiles=None``).
+    Parameters
+    ----------
+    metrics : List[MetricsBasemodel]
+        Metrics sharing the same bootstrap config.
+    minimum_sample_size : int, optional
+        Minimum sample count to run bootstrap. Default 30.
+    minimum_mean : float, optional
+        Minimum mean value of primary series to run bootstrap. Default 0.01.
+    minimum_variance : float, optional
+        Minimum variance of primary series to run bootstrap. Default 0.000025.
+
+    Returns
+    -------
+    Callable
+        UDF returning dict with per-metric quantiles or raw bootstrap arrays.
     """
     # Reference bootstrap config from the first metric (all are equivalent).
     ref_boot = metrics[0].bootstrap
@@ -196,6 +247,34 @@ def create_shared_bootstrap_func(
     output_names = [m.output_field_name for m in metrics]
 
     def shared_bootstrap_func(*args: pd.Series) -> Dict[str, Any]:
+        # Validate series quality before attempting bootstrap (nwm-explorer pattern).
+        primary_series = np.asarray(args[0], dtype=float)
+        if len(primary_series) < minimum_sample_size:
+            logger.debug(
+                "Sample size %s < minimum %s; skipping bootstrap.",
+                len(primary_series),
+                minimum_sample_size,
+            )
+            return {name: None for name in output_names}
+
+        mean_val = np.nanmean(primary_series)
+        if mean_val < minimum_mean:
+            logger.debug(
+                "Mean %.6e < minimum %.6e; skipping bootstrap.",
+                mean_val,
+                minimum_mean,
+            )
+            return {name: None for name in output_names}
+
+        var_val = np.nanvar(primary_series)
+        if var_val < minimum_variance:
+            logger.debug(
+                "Variance %.6e < minimum %.6e; skipping bootstrap.",
+                var_val,
+                minimum_variance,
+            )
+            return {name: None for name in output_names}
+
         bs = _make_bs_object(ref_boot, args)
 
         # Each draw: evaluate ALL metric functions and return a list.
