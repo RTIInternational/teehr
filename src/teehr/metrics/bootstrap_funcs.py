@@ -25,14 +25,29 @@ def _optimal_block_size(data: np.ndarray, method: str = "stationary") -> int:
     Returns
     -------
     int
-        Estimated block size (at least 1).
+        Estimated block size (at least 2).
     """
     from arch.bootstrap import optimal_block_length
 
-    col = "b_sb" if method == "stationary" else "b_cb"
     result = optimal_block_length(data)
-    block_size = int(np.ceil(result[col].iloc[0]))
-    return max(block_size, 1)
+    col_candidates = (
+        ("b_sb", "stationary") if method == "stationary"
+        else ("b_cb", "circular")
+    )
+
+    for col in col_candidates:
+        if col in result.columns:
+            block_size = int(np.ceil(result[col].iloc[0]))
+            return max(block_size, 2)
+
+    # Fallback for unexpected arch return schema.
+    logger.warning(
+        "optimal_block_length columns %s did not include expected %s; "
+        "falling back to block_size=2",
+        list(result.columns),
+        list(col_candidates),
+    )
+    return 2
 
 
 # ---------------------------------------------------------------------------
