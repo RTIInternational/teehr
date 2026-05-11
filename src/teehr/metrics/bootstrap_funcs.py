@@ -10,6 +10,31 @@ from teehr.metrics.models.base import MetricsBasemodel
 logger = logging.getLogger(__name__)
 
 
+def _optimal_block_size(data: np.ndarray, method: str = "stationary") -> int:
+    """Estimate the optimal block size for block bootstrap methods.
+
+    Parameters
+    ----------
+    data:
+        1-D array of the primary metric input (e.g. primary values).
+    method:
+        ``"stationary"`` uses the ``b_sb`` column from
+        ``arch.bootstrap.optimal_block_length``;
+        ``"circular"`` uses the ``b_cb`` column.
+
+    Returns
+    -------
+    int
+        Estimated block size (at least 1).
+    """
+    from arch.bootstrap import optimal_block_length
+
+    col = "b_sb" if method == "stationary" else "b_cb"
+    result = optimal_block_length(data)
+    block_size = int(np.ceil(result[col].iloc[0]))
+    return max(block_size, 1)
+
+
 # ---------------------------------------------------------------------------
 # Shared-bootstrap helpers
 # ---------------------------------------------------------------------------
@@ -94,16 +119,28 @@ def _make_bs_object(boot, args):
     boot_cls = type(boot).__name__
     if boot_cls == "CircularBlock":
         from arch.bootstrap import CircularBlockBootstrap
+        block_size = boot.block_size
+        if block_size is None:
+            block_size = _optimal_block_size(
+                np.asarray(args[0], dtype=float), method="circular"
+            )
+            logger.debug(f"CircularBlock: auto block_size={block_size}")
         return CircularBlockBootstrap(
-            boot.block_size,
+            block_size,
             *args,
             seed=boot.seed,
             random_state=boot.random_state,
         )
     elif boot_cls == "Stationary":
         from arch.bootstrap import StationaryBootstrap
+        block_size = boot.block_size
+        if block_size is None:
+            block_size = _optimal_block_size(
+                np.asarray(args[0], dtype=float), method="stationary"
+            )
+            logger.debug(f"Stationary: auto block_size={block_size}")
         return StationaryBootstrap(
-            boot.block_size,
+            block_size,
             *args,
             seed=boot.seed,
             random_state=boot.random_state,
