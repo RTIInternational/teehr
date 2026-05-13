@@ -1,8 +1,8 @@
 """Component class for fetching data from from the TEEHR data warehouse."""
-from typing import Union, List
+from typing import Union, List, Optional
 from datetime import datetime
 import logging
-from io import BytesIO
+from urllib.parse import urlparse, parse_qsl
 
 import pandas as pd
 import geopandas as gpd
@@ -33,11 +33,15 @@ class Download:
         self.api_base_url = "https://api.teehr.rtiamanzi.org"
         self.verify_ssl = True
         self.timeout = self.DEFAULT_TIMEOUT
+        self.api_key = None
+        self.bearer_token = None
 
     def configure(
         self,
         api_base_url: str = None,
         api_port: int = None,
+        api_key: str = None,
+        bearer_token: str = None,
         verify_ssl: bool = True,
         timeout: int = DEFAULT_TIMEOUT
     ) -> "Download":
@@ -51,6 +55,11 @@ class Download:
         api_port : int, optional
             Port number for the API. If provided, will be appended to the
             base URL (e.g., "https://api.teehr.rtiamanzi.org:8443").
+        api_key : str, optional
+            API key for teehr-hub authenticated routes. Sent as x-api-key.
+        bearer_token : str, optional
+            Bearer token for authenticated routes. Sent as
+            Authorization: Bearer <token>.
         verify_ssl : bool, optional
             Whether to verify SSL certificates when making requests.
             Default: True
@@ -85,6 +94,8 @@ class Download:
             else:
                 base_url = f"{base_url}:{api_port}"
         self.api_base_url = base_url
+        self.api_key = api_key
+        self.bearer_token = bearer_token
         self.verify_ssl = verify_ssl
         self.timeout = timeout
 
@@ -112,6 +123,7 @@ class Download:
         api_base_url: str,
         verify_ssl: bool = False,
         params: dict = None,
+        headers: dict = None,
         timeout: int = DEFAULT_TIMEOUT
     ) -> requests.Response:
         """Make a request to the warehouse API.
@@ -126,6 +138,8 @@ class Download:
             Whether to verify SSL certificates. Default: False
         params : dict, optional
             Query parameters for the request
+        headers : dict, optional
+            Request headers for the API call
         timeout : int, optional
             Request timeout in seconds. Default: 60
 
@@ -141,11 +155,17 @@ class Download:
         requests.exceptions.Timeout
             If the request times out
         """
-        url = f"{api_base_url}/{endpoint}"
+        url = endpoint if endpoint.startswith("http") else f"{api_base_url}/{endpoint}"
 
         logger.debug(f"Making request to {url} with params {params}")
         try:
-            response = requests.get(url, params=params or {}, verify=verify_ssl, timeout=timeout)
+            response = requests.get(
+                url,
+                params=params or {},
+                headers=headers or {},
+                verify=verify_ssl,
+                timeout=timeout
+            )
             response.raise_for_status()
         except requests.exceptions.Timeout:
             logger.error(f"Request to {url} timed out.")
@@ -153,13 +173,42 @@ class Download:
 
         return response
 
+    def _build_auth_headers(self) -> dict:
+        """Build auth headers for outbound API requests."""
+        headers = {}
+        if self.bearer_token:
+            headers["Authorization"] = f"Bearer {self.bearer_token}"
+        if self.api_key:
+            headers["x-api-key"] = self.api_key
+        return headers
+
+    @staticmethod
+    def _extract_next_link(payload: dict) -> str:
+        """Extract the next-page URL from a collection payload links array."""
+        links = payload.get("links", []) if isinstance(payload, dict) else []
+        for link in links:
+            if link.get("rel") == "next" and link.get("href"):
+                return link["href"]
+        return None
+
+    @staticmethod
+    def _params_from_next_link(next_link: str, base_params: dict) -> tuple[str, dict]:
+        """Parse a next link URL into endpoint and params, preserving base filters."""
+        parsed = urlparse(next_link)
+        endpoint = parsed.path.lstrip("/")
+        next_params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+
+        merged_params = {**base_params}
+        merged_params.update(next_params)
+        return endpoint, merged_params
+
     def locations(
         self,
         prefix: str = None,
         ids: Union[str, List[str]] = None,
         bbox: List[float] = None,
         include_attributes: bool = False,
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         load: bool = False,
         write_mode: str = "append",
         timeout: int = None,
@@ -181,7 +230,8 @@ class Download:
             Default: False
         page_size : int, optional
             Number of locations to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "locations" table. Default: False
@@ -225,29 +275,60 @@ class Download:
 
         request_timeout = self._resolve_timeout(timeout)
         all_gdfs = []
-        page_params = {**params, 'limit': page_size}
+        base_params = {**params}
+        page_params = {**base_params}
+        if page_size is not None:
+            page_params["limit"] = page_size
         current_offset = 0
+        request_endpoint = "collections/locations/items"
 
         while True:
-            page_params['offset'] = current_offset
+            page_params["offset"] = current_offset
             response = self._make_request(
-                "collections/locations/items",
+                request_endpoint,
                 self.api_base_url,
                 self.verify_ssl,
                 page_params,
-                request_timeout
+                headers=self._build_auth_headers(),
+                timeout=request_timeout
             )
-            gdf = gpd.read_file(BytesIO(response.content))
+            payload = response.json()
+            links_present = isinstance(payload, dict) and "links" in payload
 
-            all_gdfs.append(gdf)
+            features = payload.get("features", [])
+            if features:
+                gdf = gpd.GeoDataFrame.from_features(features)
+                all_gdfs.append(gdf)
+
+            records_returned = payload.get("numberReturned", len(features))
             logger.debug(
-                f"Fetched page offset={current_offset} with {len(gdf)} locations"
+                f"Fetched page offset={current_offset} with {records_returned} locations"
             )
 
-            if len(gdf) < page_size:
+            next_link = self._extract_next_link(payload)
+            if next_link:
+                request_endpoint, page_params = self._params_from_next_link(next_link, base_params)
+                if page_size is not None:
+                    page_params.setdefault("limit", page_size)
+                if "offset" in page_params:
+                    try:
+                        current_offset = int(page_params["offset"])
+                    except (TypeError, ValueError):
+                        current_offset += records_returned
+                else:
+                    current_offset += records_returned
+                continue
+
+            if links_present:
                 break
 
-            current_offset += page_size
+            if records_returned == 0:
+                break
+
+            current_offset += records_returned
+            page_params = {**base_params}
+            if page_size is not None:
+                page_params["limit"] = page_size
 
         if not all_gdfs:
             return gpd.GeoDataFrame()
@@ -274,7 +355,7 @@ class Download:
         self,
         name: str = None,
         type: str = None,
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         load: bool = False,
         write_mode: str = "append",
         timeout: int = None,
@@ -290,7 +371,8 @@ class Download:
             Filter by attribute type ("categorical" or "continuous")
         page_size : int, optional
             Number of attributes to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "attributes" table. Default: False
@@ -344,7 +426,7 @@ class Download:
         self,
         location_id: Union[str, List[str]] = None,
         attribute_name: str = None,
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         load: bool = False,
         write_mode: str = "append",
         timeout: int = None,
@@ -360,7 +442,8 @@ class Download:
             Filter by attribute name
         page_size : int, optional
             Number of location attributes to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_attributes" table. Default: False
@@ -416,7 +499,7 @@ class Download:
     def units(
         self,
         name: str = None,
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         load: bool = False,
         write_mode: str = "append",
         timeout: int = None,
@@ -430,7 +513,8 @@ class Download:
             Filter by unit name
         page_size : int, optional
             Number of units to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "units" table. Default: False
@@ -481,7 +565,7 @@ class Download:
     def variables(
         self,
         name: str = None,
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         load: bool = False,
         write_mode: str = "append",
         timeout: int = None,
@@ -495,7 +579,8 @@ class Download:
             Filter by variable name
         page_size : int, optional
             Number of variables to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "variables" table. Default: False
@@ -547,7 +632,7 @@ class Download:
         self,
         name: str = None,
         timeseries_type: str = None,
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         load: bool = False,
         write_mode: str = "append",
         timeout: int = None,
@@ -563,7 +648,8 @@ class Download:
             Filter by configuration type ("primary" or "secondary")
         page_size : int, optional
             Number of configurations to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "configurations" table. Default: False
@@ -619,7 +705,7 @@ class Download:
         secondary_location_id: Union[str, List[str]] = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         load: bool = False,
         write_mode: str = "append",
         timeout: int = None,
@@ -641,7 +727,8 @@ class Download:
             Passed as a query parameter to the API. Default: None
         page_size : int, optional
             Number of location crosswalks to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "location_crosswalks" table. Default: False
@@ -707,7 +794,7 @@ class Download:
         self,
         endpoint: str,
         params: dict,
-        page_size: int,
+        page_size: Optional[int],
         timeout: int = DEFAULT_TIMEOUT,
     ) -> list:
         """Fetch all pages from a JSON items endpoint using limit/offset pagination.
@@ -718,8 +805,9 @@ class Download:
             API endpoint path (e.g., "collections/attributes/items")
         params : dict
             Base query parameters (without limit/offset)
-        page_size : int
-            Number of items to request per page
+        page_size : int, optional
+            Number of items to request per page. If None, the API
+            determines page size based on server configuration and auth.
         timeout : int, optional
             Request timeout in seconds. Default: 60
 
@@ -729,29 +817,57 @@ class Download:
             All items accumulated across all pages
         """
         all_items = []
-        page_params = {**params, 'limit': page_size}
+        base_params = {**params}
+        page_params = {**base_params}
+        if page_size is not None:
+            page_params["limit"] = page_size
         current_offset = 0
+        request_endpoint = endpoint
 
         while True:
             page_params['offset'] = current_offset
             response = self._make_request(
-                endpoint,
+                request_endpoint,
                 self.api_base_url,
                 self.verify_ssl,
                 page_params,
-                timeout
+                headers=self._build_auth_headers(),
+                timeout=timeout
             )
-            page_items = response.json()["items"]
+            payload = response.json()
+            links_present = isinstance(payload, dict) and "links" in payload
+            page_items = payload.get("items", [])
 
             all_items.extend(page_items)
+            records_returned = payload.get("numberReturned", len(page_items))
             logger.debug(
-                f"Fetched page offset={current_offset} with {len(page_items)} items from {endpoint}"
+                f"Fetched page offset={current_offset} with {records_returned} items from {endpoint}"
             )
 
-            if len(page_items) < page_size:
+            next_link = self._extract_next_link(payload)
+            if next_link:
+                request_endpoint, page_params = self._params_from_next_link(next_link, base_params)
+                if page_size is not None:
+                    page_params.setdefault("limit", page_size)
+                if "offset" in page_params:
+                    try:
+                        current_offset = int(page_params["offset"])
+                    except (TypeError, ValueError):
+                        current_offset += records_returned
+                else:
+                    current_offset += records_returned
+                continue
+
+            if links_present:
                 break
 
-            current_offset += page_size
+            if records_returned == 0:
+                break
+
+            current_offset += records_returned
+            page_params = {**base_params}
+            if page_size is not None:
+                page_params["limit"] = page_size
 
         return all_items
 
@@ -764,7 +880,7 @@ class Download:
         end_date: Union[str, datetime, pd.Timestamp] = None,
         load: bool = False,
         write_mode: str = "append",
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
@@ -793,7 +909,8 @@ class Download:
             "create_or_replace". Default: "append"
         page_size : int, optional
             Number of series items to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         timeout : int, optional
             Request timeout in seconds. If None, uses the instance default
             (set via configure() or __init__, default: 60).
@@ -862,9 +979,11 @@ class Download:
         variable_name: str = None,
         start_date: Union[str, datetime, pd.Timestamp] = None,
         end_date: Union[str, datetime, pd.Timestamp] = None,
+        reference_start_date: Union[str, datetime, pd.Timestamp] = None,
+        reference_end_date: Union[str, datetime, pd.Timestamp] = None,
         load: bool = False,
         write_mode: str = "append",
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         timeout: int = None,
         **kwargs
     ) -> Union[pd.DataFrame, None]:
@@ -889,6 +1008,13 @@ class Download:
             End date for timeseries query.
             Accepts ISO 8601 string, datetime, or pd.Timestamp.
             If None, only start_date is used.
+        reference_start_date : Union[str, datetime, pd.Timestamp], optional
+            Start date for reference_time (i.e., time of forecast) timeseries query.
+            Accepts ISO 8601 string, datetime, or pd.Timestamp.
+        reference_end_date : Union[str, datetime, pd.Timestamp], optional
+            End date for reference_time (i.e., time of forecast) timeseries query.
+            Accepts ISO 8601 string, datetime, or pd.Timestamp.
+            If None, only reference_start_date is used.
         load : bool, optional
             If True, load the downloaded data into the local evaluation
             "secondary_timeseries" table. Default: False
@@ -897,7 +1023,8 @@ class Download:
             "create_or_replace". Default: "append"
         page_size : int, optional
             Number of series items to fetch per API request.
-            Decrease if timeout errors are encountered. Default: 10000.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         timeout : int, optional
             Request timeout in seconds. If None, uses the instance default
             (set via configure() or __init__, default: 60).
@@ -952,6 +1079,10 @@ class Download:
         if datetime_range:
             params["datetime"] = datetime_range
 
+        reference_datetime_range = format_datetime_range(reference_start_date, reference_end_date)
+        if reference_datetime_range:
+            params["reference_time"] = reference_datetime_range
+
         items = self._fetch_paginated_items(
             "collections/secondary_timeseries/items",
             params,
@@ -979,7 +1110,7 @@ class Download:
         location_ids: Union[str, List[str]] = None,
         prefix: str = None,
         bbox: List[float] = None,
-        page_size: int = 10000,
+        page_size: Optional[int] = None,
         timeout: int = None,
     ) -> None:
         """Download a subset of evaluation data from the warehouse API.
@@ -1003,7 +1134,8 @@ class Download:
             in the format [minx, miny, maxx, maxy].
         page_size : int, optional
             Number of series items to fetch per API request for timeseries.
-            Decrease if timeout errors are encountered. Default: 10000
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
         timeout : int, optional
             Request timeout in seconds. If None, uses the instance default
             (set via configure() or __init__, default: 60).
