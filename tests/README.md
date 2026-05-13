@@ -50,6 +50,9 @@ pytest tests/query/test_filters.py::test_chain_filter_single_str
 
 # Run tests matching a pattern
 pytest -k "filter"
+
+# Run local teehr-hub integration tests (opt-in)
+TEEHR_DOWNLOAD_API_KEY=your_key pytest -m local_api tests/download/test_download.py
 ```
 
 ## Common pytest Options
@@ -81,6 +84,9 @@ pytest -m session_scope_test_warehouse
 
 # Run tests NOT marked with marker
 pytest -m "not slow"
+
+# Exclude local API integration tests from default runs
+pytest -m "not local_api"
 
 # Run tests matching keyword expression
 pytest -k "metrics and not bootstrap"
@@ -174,7 +180,14 @@ pytest -m function_scope_test_warehouse
 pytest -m function_scope_large_ensemble_warehouse
 pytest -m function_scope_small_ensemble_warehouse
 pytest -m function_scope_two_location_warehouse
+
+# Local teehr-hub integration tests (requires env vars)
+pytest -m local_api
 ```
+
+Required environment variables for local teehr-hub download tests:
+- `TEEHR_DOWNLOAD_API_KEY` (required)
+- `TEEHR_DOWNLOAD_API_BASE_URL` (optional, defaults to `https://api.teehr.local.app.garden`)
 
 ### Combining Options
 
