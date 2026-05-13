@@ -2,7 +2,7 @@
 from typing import Union, List, Optional
 from datetime import datetime
 import logging
-from urllib.parse import urlparse, parse_qsl
+from urllib.parse import urlparse, parse_qs
 
 import pandas as pd
 import geopandas as gpd
@@ -183,8 +183,8 @@ class Download:
         return headers
 
     @staticmethod
-    def _extract_next_link(payload: dict) -> str:
-        """Extract the next-page URL from a collection payload links array."""
+    def _extract_next_link(payload: dict) -> Optional[str]:
+        """Extract the next-page URL from a collection payload links array, if present."""
         links = payload.get("links", []) if isinstance(payload, dict) else []
         for link in links:
             if link.get("rel") == "next" and link.get("href"):
@@ -193,13 +193,15 @@ class Download:
 
     @staticmethod
     def _params_from_next_link(next_link: str, base_params: dict) -> tuple[str, dict]:
-        """Parse a next link URL into endpoint and params, preserving base filters."""
+        """Parse a next link URL into endpoint and pagination params, preserving base filters."""
         parsed = urlparse(next_link)
         endpoint = parsed.path.lstrip("/")
-        next_params = dict(parse_qsl(parsed.query, keep_blank_values=True))
 
         merged_params = {**base_params}
-        merged_params.update(next_params)
+        next_params = parse_qs(parsed.query, keep_blank_values=True)
+        for key in ("offset", "limit"):
+            if key in next_params and next_params[key]:
+                merged_params[key] = next_params[key][-1]
         return endpoint, merged_params
 
     def locations(

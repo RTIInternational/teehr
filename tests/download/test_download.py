@@ -9,12 +9,17 @@ from teehr.evaluation.download import Download
 import geopandas as gpd
 
 
+LOCAL_API_SETTINGS_MISSING = os.getenv("TEEHR_DOWNLOAD_API_KEY") is None
+SKIP_LOCAL_API = pytest.mark.skipif(
+    LOCAL_API_SETTINGS_MISSING,
+    reason="Set TEEHR_DOWNLOAD_API_KEY to run local teehr-hub download tests.",
+)
+
+
 def _require_local_api_settings() -> tuple[str, str]:
-    """Load local API settings from env vars or skip test if unavailable."""
+    """Load local API settings from env vars."""
     api_base_url = os.getenv("TEEHR_DOWNLOAD_API_BASE_URL", "https://api.teehr.local.app.garden")
     api_key = os.getenv("TEEHR_DOWNLOAD_API_KEY")
-    if not api_key:
-        pytest.skip("Set TEEHR_DOWNLOAD_API_KEY to run local teehr-hub download tests.")
     return api_base_url, api_key
 
 
@@ -73,6 +78,7 @@ def test_download_evaluation_subset(function_scope_evaluation_template):
 
 @pytest.mark.function_scope_evaluation_template
 @pytest.mark.local_api
+@SKIP_LOCAL_API
 def test_download_from_local_primary_timeseries(function_scope_evaluation_template):
     """Test downloading from the S3 warehouse via the TEEHR API."""
     ev = function_scope_evaluation_template
@@ -96,6 +102,7 @@ def test_download_from_local_primary_timeseries(function_scope_evaluation_templa
 
 @pytest.mark.function_scope_evaluation_template
 @pytest.mark.local_api
+@SKIP_LOCAL_API
 def test_download_from_local_locations(function_scope_evaluation_template):
     """Test downloading from the S3 warehouse via the TEEHR API."""
     ev = function_scope_evaluation_template
@@ -110,8 +117,10 @@ def test_download_from_local_locations(function_scope_evaluation_template):
 
     assert isinstance(gdf, gpd.GeoDataFrame)
 
+
 @pytest.mark.function_scope_evaluation_template
 @pytest.mark.local_api
+@SKIP_LOCAL_API
 def test_download_from_local_primary_timeseries_pagination(function_scope_evaluation_template):
     """Test downloading from the S3 warehouse via the TEEHR API."""
     ev = function_scope_evaluation_template
@@ -198,6 +207,8 @@ def test_fetch_paginated_items_next_link_pagination(monkeypatch):
             }
         ),
         MockResponse({"items": [{"id": "2"}], "numberReturned": 1, "links": []}),
+
+
     ]
 
     def mock_get(url, params=None, headers=None, verify=None, timeout=None):
@@ -215,6 +226,51 @@ def test_fetch_paginated_items_next_link_pagination(monkeypatch):
     assert len(items) == 2
     assert calls[0][1]["type"] == "categorical"
     assert calls[1][1]["type"] == "categorical"
+
+
+def test_fetch_paginated_items_next_link_preserves_list_filters(monkeypatch):
+    """Next-link pagination keeps original repeated filter params intact."""
+    ev = SimpleNamespace(_load=None)
+    download = Download(ev)
+    download.configure(api_base_url="https://api.example.com")
+
+    calls = []
+    responses = [
+        MockResponse(
+            {
+                "items": [{"id": "1"}],
+                "numberReturned": 1,
+                "links": [
+                    {
+                        "rel": "next",
+                        "href": (
+                            "https://api.example.com/collections/attributes/items?"
+                            "primary_location_id=a&primary_location_id=b&offset=1&limit=1"
+                        ),
+                    }
+                ],
+            }
+        ),
+        MockResponse({"items": [{"id": "2"}], "numberReturned": 1, "links": []}),
+    ]
+
+    def mock_get(url, params=None, headers=None, verify=None, timeout=None):
+        calls.append((url, params))
+        return responses.pop(0)
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    items = download._fetch_paginated_items(
+        endpoint="collections/attributes/items",
+        params={"primary_location_id": ["a", "b"]},
+        page_size=1,
+    )
+
+    assert [i["id"] for i in items] == ["1", "2"]
+    assert calls[0][1]["primary_location_id"] == ["a", "b"]
+    assert calls[1][1]["primary_location_id"] == ["a", "b"]
+    assert calls[1][1]["offset"] == 1
+    assert calls[1][1]["limit"] == "1"
 
 
 def test_fetch_paginated_items_offset_fallback(monkeypatch):
