@@ -213,6 +213,24 @@ def test_add_attributes_chained(module_scope_test_warehouse):
     assert "year_2_discharge" in pdf.columns
     assert len(pdf) > 0
 
+
+@pytest.mark.module_scope_test_warehouse
+def test_add_attributes_to_locations(module_scope_test_warehouse):
+    """Test add_attributes to the locations table."""
+    ev = module_scope_test_warehouse
+
+    pdf = (
+        ev.locations
+        .add_attributes(attr_list=["year_2_discharge"])
+        .filter("id = 'gage-A'")
+        .to_pandas()
+    )
+
+    assert all(pdf['id'] == 'gage-A')
+    assert "year_2_discharge" in pdf.columns
+    assert len(pdf) > 0
+
+
 def test_views_with_explicit_catalog_and_namespace(module_scope_test_warehouse):
     """Test that views accept catalog_name and namespace_name parameters.
 
