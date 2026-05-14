@@ -220,20 +220,48 @@ Downloading from TEEHR Warehouse
 
 The ``download`` component retrieves pre-processed data from the TEEHR data warehouse
 via the TEEHR-HUB REST API. This is useful for quickly setting up evaluations with
-curated datasets.
+curated datasets.  Starting in May 2026 the API now requires authentication through the
+use of API keys or bearer tokens, which can be obtained by contacting the TEEHR team.
 
 Configure the API
 -----------------
 
+Authentication credentials and the API base URL are read automatically from
+environment variables at startup, so calling ``configure()`` is optional for
+common cases:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Environment variable
+     - Purpose
+   * - ``TEEHR_DOWNLOAD_API_BASE_URL``
+     - Override the default API base URL
+   * - ``TEEHR_DOWNLOAD_API_KEY``
+     - API key sent as ``x-api-key``
+   * - ``TEEHR_DOWNLOAD_BEARER_TOKEN``
+     - Bearer token sent as ``Authorization: Bearer <token>``
+
+Set these in your shell or ``.env`` file rather than embedding secrets in code:
+
+.. code-block:: bash
+
+   export TEEHR_DOWNLOAD_API_BASE_URL="some-alternative-api-endpoint"
+   export TEEHR_DOWNLOAD_API_KEY="your-api-key-here"
+
+Then use the download component without passing credentials in Python:
+
 .. code-block:: python
 
-   # Default configuration (public TEEHR warehouse)
-   ev.download.configure()
+   # No configure() call needed — credentials are read from env vars
+   ev.download.locations(prefix="usgs", load=True)
 
-   # Or specify a custom endpoint
+   # configure() can still override individual settings explicitly
    ev.download.configure(
        api_base_url="https://api.teehr.rtiamanzi.org",
-       verify_ssl=True
+       verify_ssl=False,
+       timeout=120
    )
 
 See also: :meth:`Download.configure() <teehr.evaluation.download.Download.configure>`

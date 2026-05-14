@@ -2,6 +2,7 @@
 from typing import Union, List, Optional
 from datetime import datetime
 import logging
+import os
 from urllib.parse import urlparse, parse_qs
 
 import pandas as pd
@@ -30,11 +31,13 @@ class Download:
         """
         self._ev = ev
         self._load = ev._load
-        self.api_base_url = "https://api.teehr.rtiamanzi.org"
+        self.api_base_url = (
+            os.getenv("TEEHR_DOWNLOAD_API_BASE_URL", "https://api.teehr.rtiamanzi.org")
+        )
         self.verify_ssl = True
         self.timeout = self.DEFAULT_TIMEOUT
-        self.api_key = None
-        self.bearer_token = None
+        self.api_key = os.getenv("TEEHR_DOWNLOAD_API_KEY")
+        self.bearer_token = os.getenv("TEEHR_DOWNLOAD_BEARER_TOKEN")
 
     def configure(
         self,
@@ -57,9 +60,11 @@ class Download:
             base URL (e.g., "https://api.teehr.rtiamanzi.org:8443").
         api_key : str, optional
             API key for teehr-hub authenticated routes. Sent as x-api-key.
+            For testing only. Please use the ``TEEHR_DOWNLOAD_API_KEY`` environment variable.
         bearer_token : str, optional
             Bearer token for authenticated routes. Sent as
             Authorization: Bearer <token>.
+            For testing only. Please use the ``TEEHR_DOWNLOAD_BEARER_TOKEN`` environment variable.
         verify_ssl : bool, optional
             Whether to verify SSL certificates when making requests.
             Default: True
@@ -82,7 +87,10 @@ class Download:
         ... )
         >>> locations = ev.download.locations(prefix="usgs")
         """
-        base_url = api_base_url or "https://api.teehr.rtiamanzi.org"
+        base_url = (
+            api_base_url
+            or os.getenv("TEEHR_DOWNLOAD_API_BASE_URL", "https://api.teehr.rtiamanzi.org")
+        )
         if api_port is not None:
             if "://" in base_url:
                 scheme, rest = base_url.split("://", 1)
@@ -94,8 +102,11 @@ class Download:
             else:
                 base_url = f"{base_url}:{api_port}"
         self.api_base_url = base_url
-        self.api_key = api_key
-        self.bearer_token = bearer_token
+        self.api_key = api_key if api_key is not None else os.getenv("TEEHR_DOWNLOAD_API_KEY")
+        self.bearer_token = (
+            bearer_token if bearer_token is not None
+            else os.getenv("TEEHR_DOWNLOAD_BEARER_TOKEN")
+        )
         self.verify_ssl = verify_ssl
         self.timeout = timeout
 
