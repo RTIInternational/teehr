@@ -17,8 +17,8 @@ def test_by_description(tmpdir):
                 "description": "Total Spillway Releases"
             }
         ],
-        start_date=datetime(2023, 2, 19),
-        end_date=datetime(2023, 2, 20),
+        start_date=datetime(2025, 2, 19),
+        end_date=datetime(2025, 2, 20),
         output_parquet_dir=Path(tmpdir),
         chunk_by="location_id",
         overwrite_output=True,
@@ -31,8 +31,8 @@ def test_by_description(tmpdir):
         )
     )
     assert len(df) == 24
-    assert df["value_time"].min() == pd.Timestamp("2023-02-19 00:00:00")
-    assert df["value_time"].max() == pd.Timestamp("2023-02-19 23:00:00")
+    assert df["value_time"].min() == pd.Timestamp("2025-02-19 00:00:00")
+    assert df["value_time"].max() == pd.Timestamp("2025-02-19 23:00:00")
 
 
 def test_chunkby_location_id(tmpdir):

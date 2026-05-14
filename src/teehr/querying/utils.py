@@ -347,9 +347,11 @@ def join_attributes(
             target_location_id = "location_id"
         elif "primary_location_id" in target_df_columns:
             target_location_id = "primary_location_id"
+        elif "id" in target_df_columns:
+            target_location_id = "id"
         else:
             error_msg = (
-                "No 'location_id' or 'primary_location_id' column "
+                "No 'location_id', 'primary_location_id', or 'id' column "
                 "found in target DataFrame."
             )
             logger.error(error_msg)
