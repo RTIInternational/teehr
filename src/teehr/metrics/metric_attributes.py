@@ -1,5 +1,5 @@
 """Dictionaries defining static metric attributes."""
-from teehr.models.metrics.basemodels import MetricCategories as mc
+from teehr.metrics.models.base import MetricCategories as mc
 
 
 ME_ATTRS = {

@@ -6,7 +6,7 @@ from numpy.random import RandomState
 from pydantic import Field
 
 import teehr.metrics.bootstrap_funcs as bootstrap_funcs
-from teehr.models.metrics.basemodels import BootstrapBasemodel
+from teehr.metrics.models.base import BootstrapBasemodel
 
 
 class Gumboot(BootstrapBasemodel):

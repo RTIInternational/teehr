@@ -11,11 +11,11 @@ from teehr.evaluation.evaluation import Evaluation  # noqa
 from teehr.evaluation.evaluation import RemoteReadOnlyEvaluation  # noqa
 from teehr.evaluation.evaluation import RemoteReadWriteEvaluation  # noqa
 from teehr.evaluation.evaluation import LocalReadWriteEvaluation  # noqa
-from teehr.models.metrics.deterministic_models import DeterministicMetrics  # noqa
-from teehr.models.metrics.probabilistic_models import ProbabilisticMetrics  # noqa
-from teehr.models.metrics.signature_models import Signatures  # noqa
-from teehr.models.metrics.bootstrap_models import Bootstrappers  # noqa
-from teehr.models.metrics.basemodels import Operators  # noqa
+from teehr.metrics.models.deterministic import DeterministicMetrics  # noqa
+from teehr.metrics.models.probabilistic import ProbabilisticMetrics  # noqa
+from teehr.metrics.models.signature import Signatures  # noqa
+from teehr.metrics.models.bootstrap import Bootstrappers  # noqa
+from teehr.metrics.models.base import Operators  # noqa
 from teehr.models.pydantic_table_models import (  # noqa
     Configuration,
     Attribute,
@@ -23,9 +23,9 @@ from teehr.models.pydantic_table_models import (  # noqa
     Variable
 )
 
-from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields # noqa
-from teehr.models.calculated_fields.timeseries_aware import TimeseriesAwareCalculatedFields # noqa
-from teehr.models.generate.timeseries_generator_models import (  # noqa
+from teehr.calculated_fields.models.row_level import RowLevelCalculatedFields # noqa
+from teehr.calculated_fields.models.timeseries_aware import TimeseriesAwareCalculatedFields # noqa
+from teehr.generate.models.timeseries_generator_models import (  # noqa
     SignatureTimeseriesGenerators,
     BenchmarkForecastGenerators
 )

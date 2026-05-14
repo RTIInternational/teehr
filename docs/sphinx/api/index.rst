@@ -80,8 +80,8 @@ Tools for calculating metrics and generating synthetic timeseries.
 Metrics
 ^^^^^^^
 * :class:`The Metrics Class <teehr.evaluation.metrics.Metrics>` *(deprecated - use query() on tables/views)*
-* :class:`Row-Level Calculated Fields <teehr.models.calculated_fields.row_level.RowLevelCalculatedFields>`
-* :class:`Timeseries-Aware Calculated Fields <teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields>`
+* :class:`Row-Level Calculated Fields <teehr.calculated_fields.models.row_level.RowLevelCalculatedFields>`
+* :class:`Timeseries-Aware Calculated Fields <teehr.calculated_fields.models.timeseries_aware.TimeseriesAwareCalculatedFields>`
 * :mod:`Deterministic Functions <teehr.metrics.deterministic_funcs>`
 * :mod:`Signature Functions <teehr.metrics.signature_funcs>`
 * :mod:`Probabilistic Functions <teehr.metrics.probabilistic_funcs>`
@@ -92,9 +92,17 @@ Metrics
 * :class:`Bootstrappers <teehr.Bootstrappers>`
 * :class:`Operators <teehr.Operators>`
 
+Migration note:
+
+* Calculated fields modules were renamed to explicit model paths:
+   ``row_level`` -> ``models.row_level``, ``timeseries_aware`` -> ``models.timeseries_aware``.
+* Metrics basemodels module was renamed:
+   ``basemodels`` -> ``models.base``.
+* Top-level imports from ``teehr`` (for example ``DeterministicMetrics`` and calculated-fields containers) are unchanged.
+
 Generated Timeseries
 ^^^^^^^^^^^^^^^^^^^^
 * :class:`Generated Timeseries <teehr.evaluation.generate.GeneratedTimeseries>`
-* :class:`Streamflow Normals <teehr.models.generate.timeseries_generator_models.Normals>`
-* :class:`Reference Forecast Model <teehr.models.generate.timeseries_generator_models.ReferenceForecast>`
-* :class:`Persistence Forecast Model <teehr.models.generate.timeseries_generator_models.Persistence>`
+* :class:`Streamflow Normals <teehr.generate.models.timeseries_generator_models.Normals>`
+* :class:`Reference Forecast Model <teehr.generate.models.timeseries_generator_models.ReferenceForecast>`
+* :class:`Persistence Forecast Model <teehr.generate.models.timeseries_generator_models.Persistence>`

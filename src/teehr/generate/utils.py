@@ -9,10 +9,10 @@ from pyspark.sql import functions as F
 import pyspark.sql as ps
 from pyspark.sql import Window
 
-from teehr.models.generate.base import (
+from teehr.generate.models.base import (
     NormalsResolutionEnum
 )
-from teehr.models.calculated_fields.row_level import (
+from teehr.calculated_fields.models.row_level import (
     RowLevelCalculatedFields as rlc
 )
 

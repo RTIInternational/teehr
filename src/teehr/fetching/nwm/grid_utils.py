@@ -16,7 +16,7 @@ from teehr.fetching.utils import (
     format_nwm_configuration_metadata,
     convert_value_from_kelvin_to_celsius
 )
-from teehr.models.fetching.utils import TimeseriesTypeEnum
+from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,

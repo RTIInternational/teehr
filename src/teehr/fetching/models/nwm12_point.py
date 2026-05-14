@@ -5,7 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from teehr.models.fetching.nwm22_point import (
+from teehr.fetching.models.nwm22_point import (
     ShortAndAnalysis,
     LongRangeMem1,
     LongRangeMem2,

@@ -17,8 +17,8 @@ from teehr.fetching.utils import (
     get_nwm_variable_mapper,
     format_nwm_configuration_metadata
 )
-from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
-from teehr.models.fetching.utils import (
+from teehr.fetching.models.nwm22_grid import ForcingVariablesEnum
+from teehr.fetching.models.utils import (
     USGSChunkByEnum,
     USGSServiceEnum,
     SupportedNWMRetroVersionsEnum,

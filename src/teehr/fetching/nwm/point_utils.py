@@ -15,7 +15,7 @@ from teehr.fetching.utils import (
     format_nwm_configuration_metadata,
     parse_nwm_json_paths
 )
-from teehr.models.fetching.utils import TimeseriesTypeEnum
+from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,

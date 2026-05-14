@@ -3,10 +3,10 @@ from typing import Callable, Dict
 
 from pydantic import Field
 
-from teehr.models.metrics.basemodels import ProbabilisticBasemodel
+from teehr.metrics.models.base import ProbabilisticBasemodel
 from teehr.metrics import probabilistic_funcs
-import teehr.models.metrics.metric_attributes as tma
-from teehr.models.metrics.basemodels import CRPSEstimators
+import teehr.metrics.metric_attributes as tma
+from teehr.metrics.models.base import CRPSEstimators
 
 
 class CRPS(ProbabilisticBasemodel):

@@ -5,7 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from teehr.models.fetching.nwm22_grid import (
+from teehr.fetching.models.nwm22_grid import (
     Analysis,
     ShortRange,
     LongRange,

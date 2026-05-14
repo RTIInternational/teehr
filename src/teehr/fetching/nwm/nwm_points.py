@@ -19,7 +19,7 @@ from teehr.fetching.utils import (
     end_on_z_hour,
     get_end_date_from_ingest_days
 )
-from teehr.models.fetching.utils import (
+from teehr.fetching.models.utils import (
     SupportedNWMOperationalVersionsEnum,
     SupportedNWMDataSourcesEnum,
     SupportedKerchunkMethod,
@@ -254,19 +254,19 @@ def nwm_to_parquet(
 
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
-        from teehr.models.fetching.nwm12_point import PointConfigurationModel
+        from teehr.fetching.models.nwm12_point import PointConfigurationModel
         analysis_config_dict = NWM12_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
-        from teehr.models.fetching.nwm20_point import PointConfigurationModel
+        from teehr.fetching.models.nwm20_point import PointConfigurationModel
         analysis_config_dict = NWM20_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
-        from teehr.models.fetching.nwm22_point import PointConfigurationModel
+        from teehr.fetching.models.nwm22_point import PointConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
-        from teehr.models.fetching.nwm22_point import PointConfigurationModel
+        from teehr.fetching.models.nwm22_point import PointConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
-        from teehr.models.fetching.nwm30_point import PointConfigurationModel
+        from teehr.fetching.models.nwm30_point import PointConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
         raise ValueError(

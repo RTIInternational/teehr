@@ -51,7 +51,7 @@ from teehr.fetching.const import (
     MEMBER,
     NWM_VARIABLE_MAPPER
 )
-from teehr.models.fetching.utils import (
+from teehr.fetching.models.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum,

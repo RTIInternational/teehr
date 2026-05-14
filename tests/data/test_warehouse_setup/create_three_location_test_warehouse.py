@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 
 import teehr
-import teehr.models.calculated_fields.row_level as rcf
+import teehr.calculated_fields.models.row_level as rcf
 
 
 def _create_warehouse(dir_path):

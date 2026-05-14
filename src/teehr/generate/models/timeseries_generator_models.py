@@ -6,7 +6,7 @@ from pyspark.sql import functions as F
 import pyspark.sql as ps
 
 from teehr.evaluation.evaluation import Evaluation
-from teehr.models.generate.base import (
+from teehr.generate.models.base import (
     GeneratorABC,
     SignatureGeneratorBaseModel,
     NormalsResolutionEnum,

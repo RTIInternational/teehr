@@ -23,14 +23,14 @@ from typing import List, Union, Optional, Dict
 from pathlib import Path
 from datetime import datetime, timedelta
 from dataretrieval import waterdata
-from teehr.models.fetching.utils import USGSChunkByEnum, USGSServiceEnum
+from teehr.fetching.models.utils import USGSChunkByEnum, USGSServiceEnum
 from pydantic import validate_call, ConfigDict
 from teehr.fetching.utils import (
     write_timeseries_parquet_file,
     get_period_start_end_times,
     create_periods_based_on_chunksize
 )
-from teehr.models.fetching.utils import TimeseriesTypeEnum
+from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     USGS_NODATA_VALUES,
     USGS_CONFIGURATION_NAME,

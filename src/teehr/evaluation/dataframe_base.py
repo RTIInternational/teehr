@@ -9,13 +9,15 @@ from teehr.querying.utils import (
     join_attributes,
     join_geometry,
     order_df,
-    group_df,
     post_process_metric_results
 )
-from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
+from teehr.calculated_fields.models.base import CalculatedFieldBaseModel
 from teehr.models.filters import TableFilter
-from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.querying.metric_format import apply_aggregation_metrics
+from teehr.metrics.models.base import MetricsBasemodel
+from teehr.metrics.engine import aggregate_metrics_with_engine
+from teehr.calculated_fields.engine import (
+    apply_calculated_fields_with_engine,
+)
 import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
@@ -274,7 +276,8 @@ class TeehrDataFrameBase(ABC):
     def aggregate(
         self,
         group_by: Union[str, List[str]],
-        metrics: List[MetricsBasemodel]
+        metrics: List[MetricsBasemodel],
+        engine: str = "auto",
     ):
         """Aggregate data with grouping and metrics.
 
@@ -284,6 +287,9 @@ class TeehrDataFrameBase(ABC):
             Fields to group by for metric calculation.
         metrics : List[MetricsBasemodel]
             Metrics to calculate.
+        engine : str, optional
+            Aggregation engine to use. Options are ``"auto"``,
+            ``"python"``, or ``"spark"``. Default is ``"auto"``.
 
         Returns
         -------
@@ -315,12 +321,15 @@ class TeehrDataFrameBase(ABC):
         """
         logger.info("Performing the aggregation.")
 
-        logger.debug(f"Grouping by '{group_by}' and applying metrics.")
-        gp = group_df(self.to_sdf(), group_by)
-
-        sdf = apply_aggregation_metrics(
-            gp=gp,
-            include_metrics=metrics,
+        logger.debug(
+            f"Grouping by '{group_by}' and applying metrics with "
+            f"engine='{engine}'."
+        )
+        sdf = aggregate_metrics_with_engine(
+            sdf=self.to_sdf(),
+            group_by=group_by,
+            metrics=metrics,
+            engine=engine,
         )
         metrics_sdf = post_process_metric_results(
             metrics_sdf=sdf,
@@ -331,7 +340,8 @@ class TeehrDataFrameBase(ABC):
 
     def add_calculated_fields(
         self,
-        cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
+        cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]],
+        engine: str = "auto",
     ):
         """Add calculated fields to the DataFrame.
 
@@ -339,6 +349,9 @@ class TeehrDataFrameBase(ABC):
         ----------
         cfs : Union[CalculatedFieldBaseModel, List[...]]
             The calculated fields to add.
+        engine : str, optional
+            Execution engine for calculated fields. Options are ``"auto"``,
+            ``"python"``, or ``"spark"``. Default is ``"auto"``.
 
         Returns
         -------
@@ -357,9 +370,11 @@ class TeehrDataFrameBase(ABC):
         if not isinstance(cfs, list):
             cfs = [cfs]
 
-        sdf = self.to_sdf()
-        for cf in cfs:
-            sdf = cf.apply_to(sdf)
+        sdf = apply_calculated_fields_with_engine(
+            sdf=self.to_sdf(),
+            cfs=cfs,
+            engine=engine,
+        )
         return self._with_sdf(sdf)
 
     def write(
@@ -545,15 +560,9 @@ class TeehrDataFrameBase(ABC):
         Raises
         ------
         AttributeError
-            If the underlying ``_sdf`` could not be obtained (e.g., View
-            computation failed or ``to_sdf()`` returned None).
+            If Spark proxying is disabled, or if the underlying Spark
+            DataFrame cannot be resolved.
         """
-        sdf = self.to_sdf()
-        if sdf is None:
-            raise AttributeError(
-                f"Table not loaded (sdf is None). Cannot proxy '{name}' to DataFrame."
-            )
-
         try:
             ev = object.__getattribute__(self, '_ev')
             proxy_enabled = getattr(ev, 'enable_spark_proxy', False)
@@ -568,6 +577,13 @@ class TeehrDataFrameBase(ABC):
                 f"transparent proxying of PySpark DataFrame methods."
             )
 
+        try:
+            sdf = self.to_sdf()
+        except Exception as exc:
+            raise AttributeError(
+                f"Unable to resolve Spark DataFrame for proxy attribute '{name}'."
+            ) from exc
+
         attr = getattr(sdf, name)
         if callable(attr):
             def wrapper(*args, **kwargs):
@@ -577,4 +593,3 @@ class TeehrDataFrameBase(ABC):
                 return result
             return wrapper
         return attr
-

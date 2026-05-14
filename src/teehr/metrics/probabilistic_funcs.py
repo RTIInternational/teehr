@@ -5,7 +5,7 @@ import logging
 import pandas as pd
 import numpy as np
 
-from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.metrics.models.base import MetricsBasemodel
 # from teehr.metrics.deterministic_funcs import _transform
 
 logger = logging.getLogger(__name__)

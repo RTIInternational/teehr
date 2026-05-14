@@ -7,8 +7,8 @@ specifies metric-specific defaults via class variables.
 from pyspark.sql import types as T
 
 from pydantic import Field
-import teehr.models.metrics.metric_attributes as tma
-from teehr.models.metrics.basemodels import (
+import teehr.metrics.metric_attributes as tma
+from teehr.metrics.models.base import (
     DeterministicBasemodel,
     ThresholdBasemodel,
 )

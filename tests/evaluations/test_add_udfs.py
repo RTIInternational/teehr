@@ -214,10 +214,10 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
         "value_time"
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 6
-    assert 'P1DT12H_P2DT0H' in [row['forecast_lead_time_bin'] for row in
-                                sorted_sdf.select(
-                                     'forecast_lead_time_bin'
-                                     ).distinct().collect()]
+    assert 'overflow' in [row['forecast_lead_time_bin'] for row in
+                          sorted_sdf.select(
+                               'forecast_lead_time_bin'
+                               ).distinct().collect()]
 
     # try with dynamic bin sizes w/ string dict keys that DO encompass full
     # lead time range
@@ -489,6 +489,75 @@ def test_percentile_event_detection(function_scope_two_location_warehouse):
 
 
 @pytest.mark.function_scope_two_location_warehouse
+def test_percentile_event_detection_grouped_spark(function_scope_two_location_warehouse):
+    """Test grouped percentile event detection using spark-native batching."""
+    ev = function_scope_two_location_warehouse
+
+    cf1 = tcf.AbovePercentileEventDetection(
+        quantile=0.85,
+        output_event_field_name="event_above_q85",
+        output_event_id_field_name="event_above_q85_id",
+        skip_event_id=True,
+    )
+    cf2 = tcf.AbovePercentileEventDetection(
+        quantile=0.90,
+        output_event_field_name="event_above_q90",
+        output_event_id_field_name="event_above_q90_id",
+        skip_event_id=True,
+    )
+
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([cf1, cf2], engine="spark").to_sdf()
+
+    assert "event_above_q85" in sdf.columns
+    assert "event_above_q90" in sdf.columns
+
+    q85_count = sdf.filter(F.col("event_above_q85")).count()
+    q90_count = sdf.filter(F.col("event_above_q90")).count()
+    assert q85_count >= q90_count
+
+    # Both quantiles should be computed in one grouped percentile pass.
+    plan_text = sdf._jdf.queryExecution().optimizedPlan().toString().lower()
+    assert plan_text.count("percentile_approx") == 1
+
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_percentile_event_detection_grouped_spark_different_groups(
+    function_scope_two_location_warehouse,
+):
+    """Percentile detectors with different group keys must not be batched."""
+    ev = function_scope_two_location_warehouse
+
+    # Same value/time fields, different uniqueness_fields/grouping.
+    cf1 = tcf.AbovePercentileEventDetection(
+        quantile=0.85,
+        uniqueness_fields=["primary_location_id", "configuration_name"],
+        output_event_field_name="event_above_cfg",
+        output_event_id_field_name="event_above_cfg_id",
+        skip_event_id=True,
+    )
+    cf2 = tcf.AbovePercentileEventDetection(
+        quantile=0.85,
+        uniqueness_fields=["primary_location_id"],
+        output_event_field_name="event_above_loc",
+        output_event_id_field_name="event_above_loc_id",
+        skip_event_id=True,
+    )
+
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([cf1, cf2], engine="spark").to_sdf()
+
+    assert "event_above_cfg" in sdf.columns
+    assert "event_above_loc" in sdf.columns
+
+    # Different grouping keys should force separate percentile computations.
+    plan_text = sdf._jdf.queryExecution().optimizedPlan().toString().lower()
+    assert plan_text.count("percentile_approx") == 2
+
+
+@pytest.mark.function_scope_two_location_warehouse
 def test_threshold_event_detection(function_scope_two_location_warehouse):
     """Test above/below threshold event detection variants."""
     ev = function_scope_two_location_warehouse
@@ -535,6 +604,107 @@ def test_threshold_event_detection(function_scope_two_location_warehouse):
     assert sdf.filter(
         (~F.col('event_below')) & (F.col('event_below_id').isNull())
     ).count() == 0
+
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_calculated_fields_auto_mixed_spark_and_python(function_scope_two_location_warehouse):
+    """Test mixed spark-native and python calculated fields in auto mode."""
+    ev = function_scope_two_location_warehouse
+
+    sdf = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
+    sdf = sdf.withColumn("threshold", F.lit("50.0"))
+
+    ted = tcf.AboveThresholdEventDetection(
+        threshold_field_name="threshold",
+        skip_event_id=True,
+    )
+    seasons = rcf.Seasons()
+
+    # Use a temporary accessor chain so add_calculated_fields engine routing is exercised.
+    ev._write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace",
+    )
+
+    result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([ted, seasons], engine="auto").to_sdf()
+
+    assert "event_above" in result.columns
+    assert "season" in result.columns
+    assert result.filter(F.col("event_above")).count() > 0
+
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_calculated_fields_auto_row_level_default_stays_spark(
+    function_scope_two_location_warehouse,
+):
+    """Row-level fields should stay Spark-native unless python is explicitly requested."""
+    ev = function_scope_two_location_warehouse
+
+    result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([
+        rcf.Month(output_field_name="month_default"),
+        rcf.Seasons(output_field_name="season_default"),
+    ], engine="auto").to_sdf()
+
+    assert "month_default" in result.columns
+    assert "season_default" in result.columns
+
+    physical_plan = result._jdf.queryExecution().executedPlan().toString().lower()
+    assert "arrowevalpython" not in physical_plan
+
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_calculated_fields_python_row_level_explicit_engine(function_scope_two_location_warehouse):
+    """Row-level python backend should run when engine='python' is explicitly requested."""
+    ev = function_scope_two_location_warehouse
+
+    spark_result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([
+        rcf.Month(output_field_name="month_spark"),
+        rcf.Seasons(output_field_name="season_spark"),
+    ], engine="spark").to_sdf()
+
+    python_result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([
+        rcf.Month(output_field_name="month_python"),
+        rcf.Seasons(output_field_name="season_python"),
+    ], engine="python").to_sdf()
+
+    result = spark_result.join(
+        python_result.select("value_time", "month_python", "season_python"),
+        on=["value_time"],
+        how="inner",
+    )
+
+    mismatched_month = result.filter(F.col("month_spark") != F.col("month_python")).count()
+    mismatched_season = result.filter(F.col("season_spark") != F.col("season_python")).count()
+
+    assert mismatched_month == 0
+    assert mismatched_season == 0
+
+    physical_plan = python_result._jdf.queryExecution().executedPlan().toString().lower()
+    assert "arrowevalpython" in physical_plan
+
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_calculated_fields_spark_engine_accepts_row_level(function_scope_two_location_warehouse):
+    """Spark engine should still accept row-level fields."""
+    ev = function_scope_two_location_warehouse
+
+    result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([
+        rcf.Month(output_field_name="month_spark_only")
+    ], engine="spark").to_sdf()
+    assert "month_spark_only" in result.columns
 
 
 @pytest.mark.function_scope_two_location_warehouse

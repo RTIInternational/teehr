@@ -16,7 +16,7 @@ Metrics Class
 
 Calculated Fields
 -----------------
-.. currentmodule:: teehr.models.calculated_fields
+.. currentmodule:: teehr.calculated_fields
 
 .. autosummary::
    :toctree: generated
@@ -24,8 +24,8 @@ Calculated Fields
    :recursive:
    :nosignatures:
 
-   row_level.RowLevelCalculatedFields
-   timeseries_aware.TimeseriesAwareCalculatedFields
+   models.row_level.RowLevelCalculatedFields
+   models.timeseries_aware.TimeseriesAwareCalculatedFields
 
 
 Metric Functions
@@ -74,7 +74,7 @@ Generated Timeseries
 
 Generated Timeseries Models
 ---------------------------
-.. currentmodule:: teehr.models.generate.timeseries_generator_models
+.. currentmodule:: teehr.generate.models.timeseries_generator_models
 
 .. autosummary::
    :template: custom-class-template-no-inheritance.rst

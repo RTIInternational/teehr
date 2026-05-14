@@ -4,11 +4,11 @@ This module defines signature metrics (single-field statistics) using a compact
 class-variable pattern. Each metric class inherits common fields from
 SignatureBasemodel and only specifies metric-specific defaults via class variables.
 """
-from typing import ClassVar, Dict, List
+from typing import ClassVar, Dict
 
 from pydantic import Field
-import teehr.models.metrics.metric_attributes as tma
-from teehr.models.metrics.basemodels import SignatureBasemodel
+import teehr.metrics.metric_attributes as tma
+from teehr.metrics.models.base import SignatureBasemodel
 from teehr.metrics import signature_funcs as sig_funcs
 
 
