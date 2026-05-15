@@ -17,6 +17,9 @@ The easiest way to install TEEHR is from PyPI using `pip`. If using `pip` to ins
 ## How to Install TEEHR (Windows)
 Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL). Detailed installation instructions for Windows users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html#installation-guide-for-windows) under 'Installation Guide for Windows'.
 
+## Scala/Spark UDAFs (Development)
+The project includes Scala/Spark custom aggregation functions (UDAFs) for JVM-native aggregations. For Scala development, see [scala/README.md](scala/README.md) for setup and build instructions. Prerequisites: Java 8+ and sbt 1.10+.
+
 ## Versioning
 The TEEHR project follows semantic versioning as described here: [https://semver.org/](https://semver.org/).
 Note, per the specification, "Major version zero (0.y.z) is for initial development. Anything MAY change at any time. The public API SHOULD NOT be considered stable.".  We are solidly in "major version zero" territory, and trying to move fast, so expect breaking changes often.
