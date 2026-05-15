@@ -14,6 +14,7 @@ from teehr.metrics.adapters import (
     single_metric_adapter,
 )
 from teehr.querying.utils import parse_fields_to_list, validate_fields_exist
+from teehr.utils.spark import null_safe_join_on_columns
 
 EPSILON = 1e-6
 
@@ -683,7 +684,14 @@ def _compute_max_value_timedelta_metric(
         .select(*group_by_cols, t.alias("_s_max_time"))
     )
 
-    return p_max.join(s_max, on=group_by_cols, how="inner").select(
+    return null_safe_join_on_columns(
+        p_max,
+        s_max,
+        join_columns=group_by_cols,
+        how="inner",
+        left_alias="p",
+        right_alias="s",
+    ).select(
         *group_by_cols,
         (F.col("_s_max_time").cast("long") - F.col("_p_max_time").cast("long"))
         .cast("double")
@@ -825,7 +833,12 @@ def _compute_spark_native_with_adapters(
 
     result_df = metric_frames[0]
     for frame in metric_frames[1:]:
-        result_df = result_df.join(frame, on=group_by_cols, how="outer")
+        result_df = null_safe_join_on_columns(
+            result_df,
+            frame,
+            join_columns=group_by_cols,
+            how="outer",
+        )
 
     ordered_cols = list(dict.fromkeys(group_by_cols + [m.output_field_name for m in metrics]))
     return result_df.select(*ordered_cols)

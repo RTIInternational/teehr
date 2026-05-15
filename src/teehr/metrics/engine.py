@@ -19,6 +19,7 @@ from teehr.metrics.spark_native import (
     supports_spark_native,
 )
 from teehr.querying.utils import group_df, parse_fields_to_list
+from teehr.utils.spark import null_safe_join_on_columns
 
 
 def aggregate_metrics_with_engine(
@@ -64,7 +65,14 @@ def aggregate_metrics_with_engine(
     python_gp = group_df(sdf, group_by_cols)
     python_df = apply_aggregation_metrics(gp=python_gp, include_metrics=python_metrics)
 
-    combined_df = spark_df.join(python_df, on=group_by_cols, how="outer")
+    combined_df = null_safe_join_on_columns(
+        spark_df,
+        python_df,
+        join_columns=group_by_cols,
+        how="outer",
+        left_alias="spark",
+        right_alias="python",
+    )
     ordered_cols = _ordered_output_columns(combined_df, group_by_cols, metrics)
     return combined_df.select(*ordered_cols)
 

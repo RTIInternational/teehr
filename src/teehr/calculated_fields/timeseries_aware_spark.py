@@ -18,6 +18,7 @@ from teehr.calculated_fields.models.timeseries_aware import (
     AbovePercentileEventDetection,
     AboveThresholdEventDetection,
 )
+from teehr.utils.spark import null_safe_join_on_columns
 
 
 def _normalize_fields(
@@ -58,7 +59,12 @@ def _add_event_ids(
         F.max(F.col(time_col)).alias(end_col),
     )
 
-    sdf = sdf.join(bounds, on=[*group_cols, seg_col], how="left")
+    sdf = null_safe_join_on_columns(
+        sdf,
+        bounds,
+        join_columns=[*group_cols, seg_col],
+        how="left",
+    )
     sdf = sdf.withColumn(
         output_event_id_col,
         F.concat(
@@ -92,7 +98,12 @@ def apply_percentile_batch_spark(
         ).alias("__percentiles")
     )
 
-    sdf = sdf.join(thresholds, on=group_cols, how="left")
+    sdf = null_safe_join_on_columns(
+        sdf,
+        thresholds,
+        join_columns=group_cols,
+        how="left",
+    )
 
     for cf in cfs:
         idx = q_index[float(cf.quantile)]

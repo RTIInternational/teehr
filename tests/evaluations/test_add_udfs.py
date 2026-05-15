@@ -695,6 +695,44 @@ def test_calculated_fields_python_row_level_explicit_engine(function_scope_two_l
 
 
 @pytest.mark.function_scope_two_location_warehouse
+def test_calculated_fields_python_timeseries_aware_explicit_engine(function_scope_two_location_warehouse):
+    """Timeseries aware-level python backend should run when engine='python' is explicitly requested."""
+    ev = function_scope_two_location_warehouse
+
+    spark_cf1 = tcf.AbovePercentileEventDetection(
+        quantile=0.85,
+        output_event_field_name="spark_event_above_cfg",
+        output_event_id_field_name="spark_event_above_cfg_id"
+    )
+
+    python_cf1 = tcf.AbovePercentileEventDetection(
+        quantile=0.85,
+        output_event_field_name="python_event_above_cfg",
+        output_event_id_field_name="python_event_above_cfg_id"
+    )
+
+    spark_result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([spark_cf1], engine="spark").to_sdf()
+
+    python_result = ev.table("joined_timeseries").filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).add_calculated_fields([python_cf1], engine="python").to_sdf()
+
+    result = spark_result.join(
+        python_result.select("value_time", "python_event_above_cfg", "python_event_above_cfg_id"),
+        on=["value_time"],
+        how="inner",
+    )
+
+    mismatched_events = result.filter(F.col("spark_event_above_cfg") != F.col("python_event_above_cfg")).count()
+    assert mismatched_events == 0
+
+    mismatched_event_ids = result.filter(F.col("spark_event_above_cfg_id") != F.col("python_event_above_cfg_id")).count()
+    assert mismatched_event_ids == 0
+
+
+@pytest.mark.function_scope_two_location_warehouse
 def test_calculated_fields_spark_engine_accepts_row_level(function_scope_two_location_warehouse):
     """Spark engine should still accept row-level fields."""
     ev = function_scope_two_location_warehouse
