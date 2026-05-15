@@ -12,10 +12,10 @@ import org.apache.spark.sql.functions._
 object NseRegistration {
 
   /**
-   * Register NSE aggregator as a Spark SQL function.
+   * Register NSE as an aggregate SQL function (UDAF).
    *
-   * After calling this, you can use NSE in Spark SQL:
-   *   spark.sql("SELECT nse(primary, secondary) FROM data GROUP BY location")
+   * After calling this, you can use NSE in grouped SQL:
+   *   spark.sql("SELECT key, nse(primary, secondary) FROM data GROUP BY key")
    *
    * @param spark SparkSession to register the function in
    * @param transformType Transform to apply (default: "none")
@@ -30,13 +30,7 @@ object NseRegistration {
   ): Unit = {
     val transformEnum = parseTransform(transformType)
     val aggregator = new NashSutcliffeAggregator(transformEnum, addEpsilon)
-
-    spark.udf.register(
-      functionName,
-      (primary: Double, secondary: Double) =>
-        aggregator.reduce(aggregator.zero, (primary, secondary)).finish(addEpsilon),
-      org.apache.spark.sql.types.DoubleType
-    )
+    spark.udf.register(functionName, udaf(aggregator))
   }
 
   /**

@@ -35,6 +35,7 @@ def create_spark_session(
     remote_catalog_name: str = const.REMOTE_CATALOG_NAME,
     remote_catalog_type: str = const.REMOTE_CATALOG_TYPE,
     remote_catalog_uri: str = const.REMOTE_CATALOG_REST_URI,
+    register_teehr_udafs: bool = True,
     # Spark K8'specific parameters
     start_spark_cluster: bool = False,
     executor_instances: int = 2,
@@ -79,6 +80,11 @@ def create_spark_session(
         Type of the remote Iceberg catalog. Default is "rest".
     remote_catalog_uri : str
         URI for the remote Iceberg catalog. Default is TEEHR catalog REST URI.
+    register_teehr_udafs : bool
+        Whether to auto-register TEEHR Scala SQL aggregate functions (for
+        example ``nse``) on session startup. Registration is best-effort and
+        only succeeds when the Scala aggregation classes are available on the
+        Spark classpath. Default is True.
     start_spark_cluster : bool
         Whether to start a Spark cluster (Kubernetes mode).
         Default is False (local mode).
@@ -219,12 +225,43 @@ def create_spark_session(
     spark = SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
     sedona_spark = SedonaContext.create(spark)
 
+    if register_teehr_udafs:
+        _register_teehr_sql_udafs(sedona_spark)
+
     if debug_config:
         log_session_config(sedona_spark)
 
     logger.info("🎉 Spark session created successfully!")
 
     return sedona_spark
+
+
+def _register_teehr_sql_udafs(spark: SparkSession):
+    """Register TEEHR Scala SQL aggregate functions in the active session.
+
+    This is best-effort: if the Scala classes are missing from the classpath,
+    the session still starts and registration is skipped with a warning.
+    """
+
+    try:
+        jvm = spark.sparkContext._jvm
+        j_spark = spark._jsparkSession
+
+        # Prefer static forwarders on the object class when available.
+        try:
+            jvm.com.rti.teehr.aggregations.NseRegistration.registerNseStandard(j_spark)
+        except Exception:
+            registration_obj = getattr(jvm.com.rti.teehr.aggregations, "NseRegistration$")
+            registration_module = getattr(registration_obj, "MODULE$")
+            registration_module.registerNseStandard(j_spark)
+
+        logger.info("✅ Registered TEEHR SQL UDAFs: nse, nse_log, nse_log_eps, nse_sqrt")
+    except Exception as exc:
+        logger.warning(
+            "Skipping TEEHR SQL UDAF registration. "
+            "Scala aggregation classes may be missing from classpath. Error: %s",
+            exc,
+        )
 
 
 def _create_spark_base_session(

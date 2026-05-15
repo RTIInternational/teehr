@@ -1,4 +1,14 @@
-"""Helper module to invoke Scala NSE aggregator from Python."""
+"""
+DEPRECATED: Use Spark SQL/DataFrame UDAF for NSE aggregation instead of this module.
+
+This module is deprecated and will be removed in a future release.
+All new code should use the registered Scala UDAF via Spark SQL or DataFrame API:
+
+    from pyspark.sql import functions as F
+    df.groupBy(...).agg(F.expr("nse(primary_value, secondary_value)").alias("nse"))
+
+See documentation for details.
+"""
 from typing import List
 from pyspark.sql import SparkSession
 
@@ -11,13 +21,11 @@ def invoke_scala_nse_sql(
     add_epsilon: bool = False,
 ) -> float:
     """
-    Compute NSE using Scala aggregator directly on the driver machine.
+    DEPRECATED: Use Spark SQL/DataFrame UDAF for NSE aggregation instead.
 
     This method calls the Scala NashSutcliffeAggregator directly without
-    trying to distribute the computation via RDD.
-
-    For testing and simple cases, this works well. For production distributed
-    aggregation, would need Spark SQL registered functions.
+    distributing the computation. For production and distributed aggregation,
+    use the registered UDAF via Spark SQL or DataFrame API.
 
     Args:
         spark: SparkSession with Scala JAR on classpath

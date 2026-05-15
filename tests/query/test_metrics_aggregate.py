@@ -26,25 +26,48 @@ R_BENCHMARK_RESULTS = Path(
 )
 
 
+
 @pytest.mark.module_scope_test_warehouse
-@pytest.mark.skip(reason="This test is a work in progress and currently fails due to missing Scala UDAF implementation.")
-def test_scala_udaf(module_scope_test_warehouse):
-    """Test get_metrics method."""
-    # Define the evaluation object.
+def test_scala_udaf_performance(module_scope_test_warehouse):
+    """
+    Compare Python and Scala NSE UDAF performance and correctness using DataFrame/SQL APIs only.
+    """
+    import time
+    from pyspark.sql import functions as F
+
     ev = module_scope_test_warehouse
 
-    # Test TEEHR Nash-Sutcliffe Efficiency
+    # Compute NSE using Python reference (TEEHR metrics engine)
+    t0 = time.time()
     teehr_metrics_sdf = ev.table("joined_timeseries").aggregate(
         metrics=[DeterministicMetrics.NashSutcliffeEfficiency()],
         group_by=["primary_location_id", "configuration_name"],
     ).to_sdf()
+    python_result = teehr_metrics_sdf.toPandas().sort_values(["primary_location_id", "configuration_name"]).reset_index(drop=True)
+    t_python = time.time() - t0
 
+    # Compute NSE using Scala UDAF via DataFrame API
     joined_ts_sdf = ev.table("joined_timeseries").to_sdf()
-
-    # Test Scala UDAF by comparing to Spark SQL implementation of NSE.
+    t0 = time.time()
     scala_udf_metrics_sdf = joined_ts_sdf.groupBy("primary_location_id", "configuration_name").agg(
-        #SCALA HERE
+        F.expr("nse(primary_value, secondary_value)").alias("nse")
     )
+    scala_result = scala_udf_metrics_sdf.toPandas().sort_values(["primary_location_id", "configuration_name"]).reset_index(drop=True)
+    t_scala = time.time() - t0
+
+    # Compare results for correctness
+    pd = __import__('pandas')
+    import numpy as np
+    assert pd.testing.assert_series_equal(
+        python_result["nash_sutcliffe_efficiency"],
+        scala_result["nse"],
+        check_names=False,
+        check_dtype=False,
+        atol=1e-6,
+        rtol=1e-6,
+    ) is None
+
+    print(f"TEEHR Python NSE time: {t_python:.4f}s, Scala UDAF NSE time: {t_scala:.4f}s, speedup: {t_python/t_scala if t_scala > 0 else float('inf'):.2f}x")
 
 @pytest.mark.module_scope_test_warehouse
 def test_executing_deterministic_metrics(module_scope_test_warehouse):

@@ -41,7 +41,9 @@ def spark_shared_session():
     This creates one Spark session for the entire test run and stops it
     at the end. Individual tests should NOT stop this session.
     """
-    spark = create_spark_session()
+    # /home/fkluiben/teehr/scala/target/scala-2.13/teehr-aggregations-assembly-0.1.0.jar
+    spark = create_spark_session(update_configs={"spark.jars": "/home/fkluiben/teehr/scala/target/scala-2.13/teehr-aggregations-assembly-0.1.0.jar"})
+    # spark = create_spark_session()
     yield spark
     spark.stop()
 
