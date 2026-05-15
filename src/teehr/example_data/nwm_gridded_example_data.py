@@ -10,11 +10,11 @@ files = [
     },
     {
         "name": "primary_timeseries.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/765-build-and-publish-docs-gh-action-is-failing/src/teehr/example_data/fetch_nwm_grids/primary_timeseries.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/src/teehr/example_data/fetch_nwm_grids/primary_timeseries.parquet"
     },
     {
         "name": "secondary_timeseries.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/765-build-and-publish-docs-gh-action-is-failing/src/teehr/example_data/fetch_nwm_grids/secondary_timeseries.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/src/teehr/example_data/fetch_nwm_grids/secondary_timeseries.parquet"
     },
     {
         "name": "location_crosswalks.parquet",
@@ -22,7 +22,7 @@ files = [
     },
     {
         "name": "joined_timeseries.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/765-build-and-publish-docs-gh-action-is-failing/src/teehr/example_data/fetch_nwm_grids/joined_timeseries.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/src/teehr/example_data/fetch_nwm_grids/joined_timeseries.parquet"
     },
     {
         "name": "forcing_xwalk.parquet",
