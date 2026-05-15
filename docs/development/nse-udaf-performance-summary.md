@@ -33,6 +33,69 @@ $$
 \sum (p_i - \bar{p})^2 = \sum p_i^2 - \frac{(\sum p_i)^2}{n}
 $$
 
+### Extra detail: why this denominator formula is useful in Spark
+The denominator in NSE is the total squared deviation from the primary mean:
+
+$$
+\sum (p_i - \bar{p})^2
+$$
+
+Computing this directly would require either:
+- storing all values in memory per group, or
+- doing a second pass after the mean is known.
+
+Instead, `NseState` stores sufficient statistics that are mergeable across partitions:
+- `n = count`
+- `S_1 = \sum p_i`
+- `S_2 = \sum p_i^2`
+
+Then Spark can reconstruct the denominator at the end as:
+
+$$
+\sum (p_i - \bar{p})^2 = S_2 - \frac{S_1^2}{n}
+$$
+
+This identity is the key that makes NSE an efficient distributed aggregate: each executor only needs to keep compact running sums, not the full row history.
+
+### Extra detail: how `NseState` is used end-to-end
+`NseState` is the aggregation buffer that Spark serializes, ships, and merges.
+
+1. `zero` phase
+- For each group on each partition, Spark initializes an empty `NseState`:
+  - `count = 0`
+  - `primarySum = 0.0`
+  - `primarySumSquares = 0.0`
+  - `sumSquaredError = 0.0`
+  - `isValid = true`
+
+2. `reduce` phase (row-level, executor local)
+- For each `(primary, secondary)` row, the aggregator:
+  - applies optional transform to both values,
+  - checks validity (`NaN`/`Inf` handling through `isValid`),
+  - updates state fields incrementally:
+    - `count += 1`
+    - `primarySum += primary`
+    - `primarySumSquares += primary * primary`
+    - `sumSquaredError += (primary - secondary)^2`
+
+3. `merge` phase (between partial aggregates)
+- Spark combines two partial `NseState` buffers by simple field-wise addition and validity conjunction:
+  - counts and sums are added,
+  - `isValid` becomes `left.isValid && right.isValid`.
+- This is associative/commutative behavior, which is exactly what Spark needs for parallel tree aggregation.
+
+4. `finish` phase (final per-group result)
+- Edge cases are resolved first (empty group, single point, invalid state, non-positive variance).
+- Denominator is reconstructed from `primarySumSquares` and `primarySum`.
+- Optional epsilon is added when requested.
+- Final metric is computed:
+
+$$
+\mathrm{NSE} = 1 - \frac{\mathrm{sumSquaredError}}{\mathrm{sumSquaredDeviations}}
+$$
+
+The important implementation property is that all information needed for the final NSE is preserved in a fixed-size state, regardless of group size.
+
 ### Registration
 UDAF registration is handled by [scala/src/main/scala/com/rti/teehr/aggregations/NseRegistration.scala](scala/src/main/scala/com/rti/teehr/aggregations/NseRegistration.scala) and wired into session startup in [src/teehr/evaluation/spark_session_utils.py](src/teehr/evaluation/spark_session_utils.py).
 
