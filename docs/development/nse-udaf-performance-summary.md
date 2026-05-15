@@ -7,6 +7,53 @@ A new test compares NSE computed through:
 
 Observed result from the test run: **~1.55x speedup** for the Scala UDAF path.
 
+## Graphical Representation
+
+```mermaid
+flowchart LR
+    A[Python test<br/>groupBy + expr nse primary secondary] --> B[Driver SparkSession]
+    B --> C[Session catalog<br/>resolves nse UDAF]
+    C --> D[Logical and physical plan]
+    D --> E1[Executor 1<br/>Partition 1]
+    D --> E2[Executor 2<br/>Partition 2]
+    D --> E3[Executor N<br/>Partition N]
+
+    subgraph X[Per executor per group]
+      R[reduce rows] --> S[NseState update<br/>count sum sumSquares sse isValid]
+    end
+
+    E1 --> R
+    E2 --> R
+    E3 --> R
+
+    S --> M[Shuffle and merge partial states]
+    M --> F[finish per group<br/>denom = sumSquares - sum squared over count]
+    F --> G[NSE output rows]
+    G --> H[Driver returns DataFrame result]
+
+    P[Python reference path] -. pandas conversion and Python metric loop .-> H
+```
+
+```mermaid
+sequenceDiagram
+    participant Py as Python caller
+    participant Dr as Spark Driver
+    participant Ex as Executors
+    participant Cat as Session catalog
+
+    Py->>Dr: create_spark_session register_teehr_udafs true
+    Dr->>Cat: register nse nse_log nse_log_eps nse_sqrt
+    Py->>Dr: groupBy agg expr nse
+    Dr->>Cat: resolve routine nse
+    Dr->>Ex: dispatch aggregate tasks
+    loop per partition and group
+      Ex->>Ex: zero then reduce rows into NseState
+    end
+    Ex->>Dr: return partial NseState buffers
+    Dr->>Dr: merge states and finish NSE
+    Dr-->>Py: grouped NSE result
+```
+
 ## How the Spark UDAF Is Implemented
 
 ### Core aggregator (Scala)
