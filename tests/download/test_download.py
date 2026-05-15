@@ -42,6 +42,8 @@ class MockResponse:
 
 
 @pytest.mark.function_scope_evaluation_template
+@pytest.mark.remote_api
+@SKIP_LOCAL_API
 def test_download_locations_by_ids(function_scope_evaluation_template):
     """Test downloading from the S3 warehouse via the TEEHR API."""
     ev = function_scope_evaluation_template
@@ -56,6 +58,8 @@ def test_download_locations_by_ids(function_scope_evaluation_template):
 
 
 @pytest.mark.function_scope_evaluation_template
+@pytest.mark.remote_api
+@SKIP_LOCAL_API
 def test_download_evaluation_subset(function_scope_evaluation_template):
     """Test downloading from the S3 warehouse via the TEEHR API."""
     ev = function_scope_evaluation_template
