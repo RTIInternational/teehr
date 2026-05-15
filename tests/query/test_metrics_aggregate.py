@@ -27,6 +27,26 @@ R_BENCHMARK_RESULTS = Path(
 
 
 @pytest.mark.module_scope_test_warehouse
+@pytest.mark.skip(reason="This test is a work in progress and currently fails due to missing Scala UDAF implementation.")
+def test_scala_udaf(module_scope_test_warehouse):
+    """Test get_metrics method."""
+    # Define the evaluation object.
+    ev = module_scope_test_warehouse
+
+    # Test TEEHR Nash-Sutcliffe Efficiency
+    teehr_metrics_sdf = ev.table("joined_timeseries").aggregate(
+        metrics=[DeterministicMetrics.NashSutcliffeEfficiency()],
+        group_by=["primary_location_id", "configuration_name"],
+    ).to_sdf()
+
+    joined_ts_sdf = ev.table("joined_timeseries").to_sdf()
+
+    # Test Scala UDAF by comparing to Spark SQL implementation of NSE.
+    scala_udf_metrics_sdf = joined_ts_sdf.groupBy("primary_location_id", "configuration_name").agg(
+        #SCALA HERE
+    )
+
+@pytest.mark.module_scope_test_warehouse
 def test_executing_deterministic_metrics(module_scope_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
