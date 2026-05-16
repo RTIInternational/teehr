@@ -549,6 +549,57 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
     assert (sorted(cols) == sorted(benchmark_cols))
 
 
+@pytest.mark.session_scope_test_warehouse
+def test_shared_quantile_bootstrap_returns_map_when_not_unpacked(session_scope_test_warehouse):
+    """Shared quantile bootstrap should keep per-metric MapType outputs by default."""
+    ev = session_scope_test_warehouse
+
+    boot = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=[0.05, 0.5, 0.95],
+        reps=100,
+    )
+
+    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    nse = DeterministicMetrics.NashSutcliffeEfficiency(bootstrap=boot)
+
+    # Leave unpack_results as default False for both metrics.
+    metrics_df = (
+        ev.table("joined_timeseries")
+        .filter([
+            "primary_location_id = 'gage-A'",
+        ])
+        .aggregate(
+            metrics=[kge, nse],
+            group_by=["primary_location_id"],
+        )
+        .to_pandas()
+    )
+
+    assert "kling_gupta_efficiency" in metrics_df.columns
+    assert "nash_sutcliffe_efficiency" in metrics_df.columns
+    assert "kling_gupta_efficiency_0_5" not in metrics_df.columns
+    assert "nash_sutcliffe_efficiency_0_5" not in metrics_df.columns
+
+    kge_map = metrics_df["kling_gupta_efficiency"].iloc[0]
+    nse_map = metrics_df["nash_sutcliffe_efficiency"].iloc[0]
+
+    assert isinstance(kge_map, dict)
+    assert isinstance(nse_map, dict)
+
+    assert sorted(kge_map.keys()) == sorted([
+        "kling_gupta_efficiency_0.05",
+        "kling_gupta_efficiency_0.5",
+        "kling_gupta_efficiency_0.95",
+    ])
+    assert sorted(nse_map.keys()) == sorted([
+        "nash_sutcliffe_efficiency_0.05",
+        "nash_sutcliffe_efficiency_0.5",
+        "nash_sutcliffe_efficiency_0.95",
+    ])
+
+
 @pytest.mark.function_scope_test_warehouse
 def test_circularblock_bootstrapping_threshold_metric(function_scope_test_warehouse):
     """Test CircularBlock bootstrapping for threshold-based deterministic metrics."""
