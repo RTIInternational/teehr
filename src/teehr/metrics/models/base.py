@@ -1,4 +1,5 @@
 """Enums and Basemodels for metric classes."""
+import warnings
 from typing import Union, Callable, List, Dict, Any, ClassVar
 
 from teehr.models.str_enum import StrEnum
@@ -214,6 +215,25 @@ class DeterministicBasemodel(MetricsBasemodel):
             values["func"] = cls.default_func
         if values.get("attrs") is None and cls.default_attrs:
             values["attrs"] = cls.default_attrs
+        # Back-fill primary/secondary_field_name from positional input_field_names
+        # (legacy style) before applying class defaults, so the Spark-native path
+        # reads the correct column names without causing attribute-assignment
+        # recursion inside the mode='after' validator.
+        input_fns = values.get("input_field_names")
+        if input_fns is not None:
+            warnings.warn(
+                "The 'input_field_names' parameter is deprecated and will be removed in a future release. "
+                "Please use 'primary_field_name' and 'secondary_field_name' instead. "
+                "For example, instead of input_field_names=['col_a', 'col_b'], "
+                "use primary_field_name='col_a', secondary_field_name='col_b'.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            _names = list(input_fns) if isinstance(input_fns, list) else [input_fns]
+            if "primary_field_name" not in values and len(_names) >= 1:
+                values["primary_field_name"] = _names[0]
+            if "secondary_field_name" not in values and len(_names) >= 2:
+                values["secondary_field_name"] = _names[1]
         if values.get("primary_field_name") is None:
             values["primary_field_name"] = cls.default_primary_field_name
         if values.get("secondary_field_name") is None:
@@ -224,7 +244,13 @@ class DeterministicBasemodel(MetricsBasemodel):
 
     @model_validator(mode="after")
     def build_input_field_names(self):
-        """Compose input_field_names from explicit field names by default."""
+        """Compose input_field_names from explicit field names by default.
+
+        When ``input_field_names`` is provided explicitly (legacy style) the
+        ``primary_field_name`` / ``secondary_field_name`` back-fill is handled
+        by ``apply_class_defaults`` (mode='before') to avoid triggering
+        validate_assignment recursion here.
+        """
         if self.input_field_names is None:
             fields = []
             for fld in [

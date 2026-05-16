@@ -643,3 +643,121 @@ def test_engine_spark_annual_peak_relative_bias_parity(module_scope_test_warehou
 
     assert list(spark_df.columns) == list(python_df.columns)
     _allclose(spark_df["annual_peak_flow_bias"], python_df["annual_peak_flow_bias"])
+
+
+# ---------------------------------------------------------------------------
+# Field-name style parity: input_field_names (legacy) vs primary/secondary_field_name
+# ---------------------------------------------------------------------------
+
+def _chained_relative_bias(ev, metric_kwargs, engine):
+    """Aggregate max per group then compute relative bias via chaining."""
+    return (
+        ev.table("joined_timeseries")
+        .aggregate(
+            group_by=["primary_location_id", "month"],
+            metrics=[
+                Signatures.Maximum(
+                    input_field_names=["primary_value"],
+                    output_field_name="max_primary_value",
+                ),
+                Signatures.Maximum(
+                    input_field_names=["secondary_value"],
+                    output_field_name="max_secondary_value",
+                ),
+            ],
+            engine=engine,
+        )
+        .aggregate(
+            group_by=["primary_location_id"],
+            metrics=[
+                DeterministicMetrics.RelativeBias(
+                    output_field_name="event_max_relative_bias",
+                    **metric_kwargs,
+                )
+            ],
+            engine=engine,
+        )
+        .order_by("primary_location_id")
+        .to_pandas()
+        .sort_values("primary_location_id")
+        .reset_index(drop=True)
+    )
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_input_field_names_vs_explicit_fields_python_engine(module_scope_test_warehouse):
+    """Python engine: input_field_names and primary/secondary_field_name produce identical results."""
+    ev = module_scope_test_warehouse
+
+    legacy_df = _chained_relative_bias(
+        ev,
+        metric_kwargs={"input_field_names": ["max_primary_value", "max_secondary_value"]},
+        engine="python",
+    )
+    explicit_df = _chained_relative_bias(
+        ev,
+        metric_kwargs={
+            "primary_field_name": "max_primary_value",
+            "secondary_field_name": "max_secondary_value",
+        },
+        engine="python",
+    )
+
+    assert list(legacy_df.columns) == list(explicit_df.columns)
+    assert "event_max_relative_bias" in legacy_df.columns
+    _allclose(legacy_df["event_max_relative_bias"], explicit_df["event_max_relative_bias"])
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_input_field_names_vs_explicit_fields_spark_engine(module_scope_test_warehouse):
+    """Spark engine: input_field_names and primary/secondary_field_name produce identical results."""
+    ev = module_scope_test_warehouse
+
+    legacy_df = _chained_relative_bias(
+        ev,
+        metric_kwargs={"input_field_names": ["max_primary_value", "max_secondary_value"]},
+        engine="spark",
+    )
+    explicit_df = _chained_relative_bias(
+        ev,
+        metric_kwargs={
+            "primary_field_name": "max_primary_value",
+            "secondary_field_name": "max_secondary_value",
+        },
+        engine="spark",
+    )
+
+    assert list(legacy_df.columns) == list(explicit_df.columns)
+    assert "event_max_relative_bias" in legacy_df.columns
+    _allclose(legacy_df["event_max_relative_bias"], explicit_df["event_max_relative_bias"])
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_input_field_names_python_and_spark_engine_parity(module_scope_test_warehouse):
+    """Legacy input_field_names: python and spark engines produce identical results."""
+    ev = module_scope_test_warehouse
+
+    legacy_kwargs = {"input_field_names": ["max_primary_value", "max_secondary_value"]}
+
+    python_df = _chained_relative_bias(ev, metric_kwargs=legacy_kwargs, engine="python")
+    spark_df = _chained_relative_bias(ev, metric_kwargs=legacy_kwargs, engine="spark")
+
+    assert list(python_df.columns) == list(spark_df.columns)
+    _allclose(spark_df["event_max_relative_bias"], python_df["event_max_relative_bias"])
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_explicit_field_names_python_and_spark_engine_parity(module_scope_test_warehouse):
+    """Explicit primary/secondary_field_name: python and spark engines produce identical results."""
+    ev = module_scope_test_warehouse
+
+    explicit_kwargs = {
+        "primary_field_name": "max_primary_value",
+        "secondary_field_name": "max_secondary_value",
+    }
+
+    python_df = _chained_relative_bias(ev, metric_kwargs=explicit_kwargs, engine="python")
+    spark_df = _chained_relative_bias(ev, metric_kwargs=explicit_kwargs, engine="spark")
+
+    assert list(python_df.columns) == list(spark_df.columns)
+    _allclose(spark_df["event_max_relative_bias"], python_df["event_max_relative_bias"])
