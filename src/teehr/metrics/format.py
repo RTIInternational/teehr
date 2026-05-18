@@ -13,7 +13,6 @@ from teehr.metrics.bootstrap_funcs import (
     create_shared_bootstrap_func,
 )
 from teehr.querying.utils import (
-    sanitize_map_key_name,
     validate_fields_exist,
     parse_fields_to_list
 )
@@ -131,8 +130,18 @@ def _build_shared_bootstrap_udfs(
     return func_list, expansions
 
 
-def _expand_shared_bootstrap_columns(sdf, expansions):
-    """Unpack shared MapType columns into per-quantile columns and drop temps."""
+def _materialize_shared_bootstrap_columns(sdf, expansions):
+    """Build per-metric output columns from shared bootstrap MapType temps.
+
+    For shared quantile bootstrap groups, the temporary map contains flattened
+    keys (e.g., ``metric_name_0.5``) across all metrics in the group. This
+    function reconstructs one output column per metric:
+
+    - quantiles is None: output is an ArrayType column with raw samples.
+    - quantiles set: output is a MapType column for that metric only.
+
+    Downstream post-processing can then honor ``unpack_results`` consistently.
+    """
     for temp_col, group_metrics in expansions:
         for metric in group_metrics:
             name = metric.output_field_name
@@ -140,10 +149,14 @@ def _expand_shared_bootstrap_columns(sdf, expansions):
             if quantiles is None:
                 sdf = sdf.withColumn(name, F.col(temp_col).getItem(name))
             else:
+                key_value_pairs = []
                 for q in quantiles:
                     key = f"{name}_{q}"
-                    col_name = sanitize_map_key_name(key)
-                    sdf = sdf.withColumn(col_name, F.col(temp_col).getItem(key))
+                    key_value_pairs.extend([
+                        F.lit(key),
+                        F.col(temp_col).getItem(key),
+                    ])
+                sdf = sdf.withColumn(name, F.create_map(*key_value_pairs))
         sdf = sdf.drop(temp_col)
     return sdf
 
@@ -171,8 +184,8 @@ def apply_aggregation_metrics(
 
     sdf = gp.agg(*func_list)
 
-    # Expand shared MapType columns into individual quantile columns.
+    # Materialize one output column per metric from shared temp maps.
     if expansions:
-        sdf = _expand_shared_bootstrap_columns(sdf, expansions)
+        sdf = _materialize_shared_bootstrap_columns(sdf, expansions)
 
     return sdf
