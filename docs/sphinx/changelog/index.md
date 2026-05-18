@@ -1,4 +1,33 @@
 # Release Notes
+
+## 0.6.4 - 2026-05-18
+
+### Breaking Changes
+- None
+
+### Added
+- **Download authentication**
+  - Added auth support for teehr-hub download requests.
+  - Added support for configuring downloads via an environment variable.
+
+### Changed
+- **Query execution**
+  - Improved query efficiency with engine-based routing, Spark-native execution paths, shared bootstrap sampling, and module reorganization.
+- **Docs and examples**
+  - Updated the documentation notebook and publish workflow assets to match the latest download and metrics behavior.
+
+### Fixed
+- Fixed metric model properties and the notebook/example code that exercises them.
+- Fixed an issue with null join fields in metric evaluation.
+- Added an ID field name check to support adding attributes to the locations table.
+- Fixed the documentation publish workflow and refreshed the packaged example datasets it uses.
+
+### Dependencies
+- None
+
+### Deprecated
+- Setting metric input field names using the `input_field_names` list in favor of explicit definition using the `primary_field_name` and `secondary_field_name` properties.
+
 ## 0.6.3 - 2026-05-06
 
 ### Breaking Changes
