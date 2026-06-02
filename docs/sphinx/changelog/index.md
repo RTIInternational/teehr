@@ -1,5 +1,25 @@
 # Release Notes
 
+## 0.6.5 - 2026-06-02
+
+### Added
+- Added migration scripts in `src/teehr/migrations/0007` to correct Hawaii NWM variable naming in `secondary_timeseries`.
+
+### Changed
+- None
+
+### Fixed
+- Renamed `streamflow_hourly_inst` to `streamflow_15min_inst` for:
+  - `nwm30_analysis_assim_hawaii_no_da`
+  - `nwm30_short_range_hawaii`
+
+### Dependencies
+- None
+
+### Deprecated
+- None
+
+
 ## 0.6.4 - 2026-05-18
 
 ### Breaking Changes
