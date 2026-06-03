@@ -105,6 +105,25 @@ class FlowDurationCurveSlope(SignatureBasemodel):
     as_percentile: bool = Field(default=False)
 
 
+class CenterOfTiming(SignatureBasemodel):
+    """Center of Timing: day-of-year when cumulative volume reaches 50% of total.
+
+    This signature requires both primary_value and value_time fields.
+    Additional Parameters
+    ---------------------
+    missing_threshold : float
+        Maximum allowed fraction of missing days in the water year
+        for a valid result, by default 0.1.
+    """
+
+    default_output_field_name: ClassVar[str] = "center_of_timing"
+    default_func = sig_funcs.center_of_timing
+    default_attrs: ClassVar[Dict] = tma.CT_ATTRS
+    default_value_time_field_name: ClassVar[str] = "value_time"
+
+    missing_threshold: float = Field(default=0.1)
+
+
 # =============================================================================
 # Container Class for Discovery
 # =============================================================================
@@ -125,6 +144,7 @@ class Signatures:
 
     **Hydrologic:**
     - FlowDurationCurveSlope
+    - CenterOfTiming
 
     Example
     -------
@@ -146,3 +166,4 @@ class Signatures:
 
     # Hydrologic signatures
     FlowDurationCurveSlope = FlowDurationCurveSlope
+    CenterOfTiming = CenterOfTiming

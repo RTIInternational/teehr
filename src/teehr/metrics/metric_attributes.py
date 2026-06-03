@@ -380,3 +380,12 @@ FBIAS_ATTRS = {
     "optimal_value": None,
     "requires_threshold_field": True,
 }
+
+CT_ATTRS = {
+    "short_name": "center_of_timing",
+    "display_name": "Center of Timing",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
