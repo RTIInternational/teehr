@@ -389,3 +389,12 @@ CT_ATTRS = {
     "optimal_value": None,
     "requires_threshold_field": False,
 }
+
+SDOT_ATTRS = {
+    "short_name": "standard_deviation_of_timing",
+    "display_name": "Standard Deviation of Timing",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}

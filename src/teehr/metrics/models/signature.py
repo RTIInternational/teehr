@@ -124,6 +124,25 @@ class CenterOfTiming(SignatureBasemodel):
     missing_threshold: float = Field(default=0.1)
 
 
+class StandardDeviationOfTiming(SignatureBasemodel):
+    """Standard Deviation of Timing: variability of event timing across years.
+
+    This signature requires both primary_value and value_time fields.
+    Additional Parameters
+    ---------------------
+    missing_threshold : float
+        Maximum allowed fraction of missing days in the water year
+        for a valid result, by default 0.1.
+    """
+
+    default_output_field_name: ClassVar[str] = "standard_deviation_of_timing"
+    default_func = sig_funcs.standard_deviation_of_timing
+    default_attrs: ClassVar[Dict] = tma.SDOT_ATTRS
+    default_value_time_field_name: ClassVar[str] = "value_time"
+
+    missing_threshold: float = Field(default=0.1)
+
+
 # =============================================================================
 # Container Class for Discovery
 # =============================================================================
@@ -167,3 +186,4 @@ class Signatures:
     # Hydrologic signatures
     FlowDurationCurveSlope = FlowDurationCurveSlope
     CenterOfTiming = CenterOfTiming
+    StandardDeviationOfTiming = StandardDeviationOfTiming

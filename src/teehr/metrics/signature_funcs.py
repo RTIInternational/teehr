@@ -281,7 +281,6 @@ def center_of_timing(model: MetricsBasemodel) -> Callable:
     ) -> pd.Timedelta:
         """Perform center_of_timing calculation on aggregated data."""
         # apply transform if specified
-        # (NOTE: ALWAYS include in any TEEHR metric at start of wrapped function)
         p, value_time = _transform(p, model, value_time)
 
         # ensure inputs are sorted by value_time
@@ -311,3 +310,112 @@ def center_of_timing(model: MetricsBasemodel) -> Callable:
             return CT
 
     return center_of_timing_inner
+
+
+def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
+    """Create standard_deviation_of_timing metric function."""
+    logger.debug("Building the standard_deviation_of_timing metric function")
+
+    def _sort_inputs(
+        p: pd.Series,
+        value_time: pd.Series
+    ) -> pd.Series:
+        """Sorts value_time for standard_deviation_of_timing_inner()."""
+        # ensure ordinates are ordered by value_time
+        temp_df = pd.DataFrame({'primary_value': p, 'value_time': value_time})
+        sorted_df = temp_df.sort_values(by='value_time').reset_index(drop=True)
+        return sorted_df['primary_value'], sorted_df['value_time']
+
+    def _ensure_daily_timestep(
+        p: pd.Series,
+        value_time: pd.Series
+    ) -> pd.Series:
+        """Ensure inputs are in daily timestep for standard_deviation_of_timing_inner()."""
+        # determine unique, non-NaT timestep sizes
+        unique_timesteps = value_time.diff().unique()
+        unique_timesteps = [ts for ts in unique_timesteps if pd.notna(ts)]
+
+        # return original series' if already in daily timestep
+        if (len(unique_timesteps) == 1) & (unique_timesteps[0] == pd.Timedelta(days=1)):
+            return p.reset_index(drop=True), value_time.reset_index(drop=True)
+        else:
+            # assemble dataframe and resample to daily
+            df = pd.DataFrame({'primary_value': p.values}, index=value_time.values)
+
+            # calculate mean for day if at least one sub-day value is available
+            resampled_df = df.resample('D').apply(lambda x: x.mean() if x.notna().any() else np.nan)
+
+            # remove NaNs to preserve original index
+            resampled_df = resampled_df.dropna()
+
+            # normalize indices, return values
+            p_d = resampled_df['primary_value'].reset_index(drop=True)
+            value_time_d = resampled_df.index.to_series().reset_index(drop=True)
+            return p_d, value_time_d
+
+    def _get_day_of_WY(
+        dates: pd.Series
+    ) -> pd.Series:
+        """Obtain the numeric day-of-water-year for standard_deviation_of_timing_inner()."""
+        import datetime
+        # obtain the water year for each date
+        water_years = dates.apply(lambda x: x.year + 1 if x.month >= 10 else x.year)
+
+        # get the start date of the corresponding water year for each date
+        water_year_starts = pd.to_datetime([datetime.date(wy - 1, 10, 1) for wy in water_years])
+
+        # get the difference in days and add 1 (since day 1 is the start date)
+        days_of_WY = (dates - water_year_starts).dt.days + 1
+
+        return days_of_WY
+
+    def standard_deviation_of_timing_inner(
+        p: pd.Series,
+        value_time: pd.Series
+    ) -> pd.Timedelta:
+        """Perform standard_deviation_of_timing calculation on aggregated data."""
+        # apply transform if specified
+        p, value_time = _transform(p, model, value_time)
+
+        # ensure inputs are sorted by value_time
+        p, value_time = _sort_inputs(p, value_time)
+
+        # ensure input data is a daily timestep
+        p_d, value_time_d = _ensure_daily_timestep(p, value_time)
+
+        # Only calculate SDoT for WYs with less missing values than the threshold
+        if len(value_time_d) < (1-model.missing_threshold)*366:
+            SDoT = None
+            return SDoT
+
+        else:
+            # obtain day of water year from value_time_d
+            WY_days = _get_day_of_WY(value_time_d)
+
+            # obtain mask for non-zero flow steps and apply
+            non_zero = p_d > 0
+            p_nz = p_d[non_zero]
+            WY_days_nz = WY_days[non_zero]
+
+            # calculate CT (with division by zero protection)
+            sum_p_nz = np.sum(p_nz)
+            CT = np.sum(p_nz * WY_days_nz) / sum_p_nz
+
+            if not np.isnan(CT) and CT < 0:
+                CT = CT + 365
+
+            # get number of non-zero flow steps
+            n_prime = len(p_nz)
+
+            # calculate SDoT (with division by zero protection)
+            if n_prime > 1:
+                SDoT_numerator = np.sum(p_nz * (WY_days_nz - CT)**2)
+                SDoT_denominator = sum_p_nz * (n_prime - 1)
+                if model.add_epsilon:
+                    SDoT = np.sqrt(SDoT_numerator / (SDoT_denominator + EPSILON))
+                else:
+                    SDoT = np.sqrt(SDoT_numerator / SDoT_denominator)
+
+            return SDoT
+
+    return standard_deviation_of_timing_inner
