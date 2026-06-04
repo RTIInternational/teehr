@@ -76,6 +76,14 @@ SUPPORTED_ANNUAL_PEAK_METRICS = {
     "AnnualPeakRelativeBias",
 }
 
+SUPPORTED_CENTER_OF_TIMING_METRICS = {
+    "CenterOfTiming",
+}
+
+SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS = {
+    "StandardDeviationOfTiming"
+}
+
 SUPPORTED_METRICS = (
     SUPPORTED_SIGNATURE_METRICS
     | SUPPORTED_DETERMINISTIC_METRICS
@@ -83,6 +91,8 @@ SUPPORTED_METRICS = (
     | SUPPORTED_SPEARMAN_METRICS
     | SUPPORTED_TIMEDELTA_METRICS
     | SUPPORTED_ANNUAL_PEAK_METRICS
+    | SUPPORTED_CENTER_OF_TIMING_METRICS
+    | SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS
 )
 
 
@@ -120,6 +130,14 @@ def _is_timedelta_metric(metric: MetricsBasemodel) -> bool:
 
 def _is_annual_peak_metric(metric: MetricsBasemodel) -> bool:
     return _metric_class_name(metric) in SUPPORTED_ANNUAL_PEAK_METRICS
+
+
+def _is_center_of_timing_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_CENTER_OF_TIMING_METRICS
+
+
+def _is_standard_deviation_of_timing_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS
 
 
 def supports_spark_native(metric_model: MetricsBasemodel) -> bool:
@@ -570,6 +588,185 @@ def _compute_fdc_slope_metric(
     )
 
 
+def _compute_center_of_timing_metric(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metric: MetricsBasemodel,
+) -> DataFrame | None:
+    """Compute CenterOfTiming via weighted mean of day-of-water-year.
+
+    Mirrors the pandas path exactly:
+    1) Resample to daily (avg per date within each group).
+    2) If count of valid daily values < (1 - missing_threshold) * 366, return null.
+    3) Compute day-of-water-year: Oct 1 is day 1.
+    4) Filter to non-zero daily values.
+    5) CT = sum(p_daily * day_of_WY) / sum(p_daily).
+    """
+    p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
+    t_col = _field_name(getattr(metric, "value_time_field_name", None), "value_time")
+    validate_fields_exist(sdf.columns, group_by_cols + [p_col, t_col])
+
+    p = F.col(p_col).cast("double")
+    t = F.col(t_col)
+    missing_threshold = float(getattr(metric, "missing_threshold", 0.1))
+
+    # Step 1: Resample to daily — avg per calendar date per group
+    daily_df = (
+        sdf.where(p.isNotNull() & t.isNotNull())
+        .withColumn("_date", F.to_date(t))
+        .groupBy(*group_by_cols, "_date")
+        .agg(F.avg(p).alias("_p_daily"))
+        .where(F.col("_p_daily").isNotNull())
+    )
+
+    # Step 2: Day-of-water-year (WY starts Oct 1)
+    wy_start = F.when(
+        F.month(F.col("_date")) >= 10,
+        F.make_date(F.year(F.col("_date")), F.lit(10), F.lit(1)),
+    ).otherwise(
+        F.make_date(F.year(F.col("_date")) - 1, F.lit(10), F.lit(1)),
+    )
+    daily_df = daily_df.withColumn(
+        "_day_of_wy",
+        (F.datediff(F.col("_date"), wy_start) + 1).cast("double"),
+    )
+
+    # Step 3: Count valid daily rows per group (for missing-threshold check)
+    count_df = daily_df.groupBy(*group_by_cols).agg(
+        F.count(F.lit(1)).alias("_n_daily")
+    )
+
+    # Step 4: Non-zero weighted sums
+    ct_df = (
+        daily_df
+        .where(F.col("_p_daily") > 0)
+        .groupBy(*group_by_cols)
+        .agg(
+            F.sum(F.col("_p_daily") * F.col("_day_of_wy")).alias("_sum_pw"),
+            F.sum(F.col("_p_daily")).alias("_sum_p"),
+        )
+    )
+
+    result_df = null_safe_join_on_columns(
+        count_df,
+        ct_df,
+        join_columns=group_by_cols,
+        how="left",
+    )
+
+    min_days = (1.0 - missing_threshold) * 366.0
+    ct_expr = F.when(
+        F.col("_n_daily") < F.lit(min_days),
+        F.lit(None).cast("double"),
+    ).otherwise(
+        _divide(F.col("_sum_pw"), F.col("_sum_p"))
+    )
+
+    return result_df.select(
+        *group_by_cols,
+        ct_expr.alias(metric.output_field_name),
+    )
+
+
+def _compute_standard_deviation_of_timing_metric(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metric: MetricsBasemodel,
+) -> DataFrame | None:
+    """Compute StandardDeviationOfTiming as a weighted sample std-dev of day-of-WY.
+
+    Mirrors the pandas path:
+    1) Resample to daily (avg per date per group).
+    2) If valid daily count < (1 - missing_threshold) * 366, return null.
+    3) Day-of-water-year: Oct 1 = day 1.
+    4) Filter to non-zero daily values.
+    5) Single-pass aggregation collecting sum_pw, sum_p, sum_pd2, n_prime.
+    6) Apply König-Steiner identity: numerator = sum_pd2 - sum_pw² / sum_p.
+    7) SDoT = sqrt(numerator / (sum_p * (n_prime - 1))), null if n_prime <= 1.
+    """
+    p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
+    t_col = _field_name(getattr(metric, "value_time_field_name", None), "value_time")
+    validate_fields_exist(sdf.columns, group_by_cols + [p_col, t_col])
+
+    p = F.col(p_col).cast("double")
+    t = F.col(t_col)
+    missing_threshold = float(getattr(metric, "missing_threshold", 0.1))
+
+    # Step 1: Resample to daily
+    daily_df = (
+        sdf.where(p.isNotNull() & t.isNotNull())
+        .withColumn("_date", F.to_date(t))
+        .groupBy(*group_by_cols, "_date")
+        .agg(F.avg(p).alias("_p_daily"))
+        .where(F.col("_p_daily").isNotNull())
+    )
+
+    # Step 2: Day-of-water-year (WY starts Oct 1)
+    wy_start = F.when(
+        F.month(F.col("_date")) >= 10,
+        F.make_date(F.year(F.col("_date")), F.lit(10), F.lit(1)),
+    ).otherwise(
+        F.make_date(F.year(F.col("_date")) - 1, F.lit(10), F.lit(1)),
+    )
+    daily_df = daily_df.withColumn(
+        "_day_of_wy",
+        (F.datediff(F.col("_date"), wy_start) + 1).cast("double"),
+    )
+
+    # Step 3: Total daily count for missing-threshold gate
+    count_df = daily_df.groupBy(*group_by_cols).agg(
+        F.count(F.lit(1)).alias("_n_daily")
+    )
+
+    # Step 4-5: Single-pass weighted stats over non-zero rows only
+    pw = F.col("_p_daily")
+    d = F.col("_day_of_wy")
+    stats_df = (
+        daily_df
+        .where(pw > 0)
+        .groupBy(*group_by_cols)
+        .agg(
+            F.sum(pw * d).alias("_sum_pw"),       # sum(p * day)
+            F.sum(pw).alias("_sum_p"),             # sum(p)
+            F.sum(pw * d * d).alias("_sum_pd2"),   # sum(p * day²)
+            F.count(F.lit(1)).alias("_n_prime"),   # count of non-zero rows
+        )
+    )
+
+    result_df = null_safe_join_on_columns(
+        count_df,
+        stats_df,
+        join_columns=group_by_cols,
+        how="left",
+    )
+
+    min_days = (1.0 - missing_threshold) * 366.0
+
+    # Step 6: König-Steiner identity — no need to materialize CT
+    numerator = (
+        F.col("_sum_pd2")
+        - (F.col("_sum_pw") * F.col("_sum_pw") / F.col("_sum_p"))
+    )
+    denominator = F.col("_sum_p") * (F.col("_n_prime") - F.lit(1))
+    if metric.add_epsilon:
+        denominator = denominator + F.lit(EPSILON)
+
+    # Step 7: Guard conditions matching pandas behavior
+    invalid = (
+        (F.col("_n_daily") < F.lit(min_days))
+        | F.col("_n_prime").isNull()
+        | (F.col("_n_prime") <= F.lit(1))
+    )
+    sdot_expr = F.when(invalid, F.lit(None).cast("double")).otherwise(
+        F.sqrt(_divide(numerator, denominator))
+    )
+
+    return result_df.select(
+        *group_by_cols,
+        sdot_expr.alias(metric.output_field_name),
+    )
+
+
 def _compute_spearman_metric(
     sdf: DataFrame,
     group_by_cols: List[str],
@@ -771,6 +968,16 @@ SPARK_METRIC_ADAPTERS: tuple[MetricExecutionAdapter, ...] = (
         name="spark-fdc-slope",
         supports=_is_fdc_slope_metric,
         apply_metric=_compute_fdc_slope_metric,
+    ),
+    single_metric_adapter(
+        name="spark-center-of-timing",
+        supports=_is_center_of_timing_metric,
+        apply_metric=_compute_center_of_timing_metric,
+    ),
+    single_metric_adapter(
+        name="spark-standard-deviation-of-timing",
+        supports=_is_standard_deviation_of_timing_metric,
+        apply_metric=_compute_standard_deviation_of_timing_metric,
     ),
     single_metric_adapter(
         name="spark-max-value-timedelta",
