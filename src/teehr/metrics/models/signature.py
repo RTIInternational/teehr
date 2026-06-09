@@ -111,7 +111,7 @@ class CenterOfTiming(SignatureBasemodel):
     This signature requires both primary_value and value_time fields.
     Additional Parameters
     ---------------------
-    missing_threshold : float
+    missing_day_threshold : float
         Maximum allowed fraction of missing days in the water year
         for a valid result, by default 0.1.
     """
@@ -121,7 +121,7 @@ class CenterOfTiming(SignatureBasemodel):
     default_attrs: ClassVar[Dict] = tma.CT_ATTRS
     default_value_time_field_name: ClassVar[str] = "value_time"
 
-    missing_threshold: float = Field(default=0.1)
+    missing_day_threshold: float = Field(default=0.1)
 
 
 class StandardDeviationOfTiming(SignatureBasemodel):
@@ -130,7 +130,7 @@ class StandardDeviationOfTiming(SignatureBasemodel):
     This signature requires both primary_value and value_time fields.
     Additional Parameters
     ---------------------
-    missing_threshold : float
+    missing_day_threshold : float
         Maximum allowed fraction of missing days in the water year
         for a valid result, by default 0.1.
     """
@@ -140,7 +140,7 @@ class StandardDeviationOfTiming(SignatureBasemodel):
     default_attrs: ClassVar[Dict] = tma.SDOT_ATTRS
     default_value_time_field_name: ClassVar[str] = "value_time"
 
-    missing_threshold: float = Field(default=0.1)
+    missing_day_threshold: float = Field(default=0.1)
 
 
 # =============================================================================
@@ -164,6 +164,7 @@ class Signatures:
     **Hydrologic:**
     - FlowDurationCurveSlope
     - CenterOfTiming
+    - StandardDeviationOfTiming
 
     Example
     -------
