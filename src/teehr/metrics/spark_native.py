@@ -597,7 +597,7 @@ def _compute_center_of_timing_metric(
 
     Mirrors the pandas path exactly:
     1) Resample to daily (avg per date within each group).
-    2) If count of valid daily values < (1 - missing_threshold) * 366, return null.
+    2) If count of valid daily values < (1 - missing_day_threshold) * 366, return null.
     3) Compute day-of-water-year: Oct 1 is day 1.
     4) Filter to non-zero daily values.
     5) CT = sum(p_daily * day_of_WY) / sum(p_daily).
@@ -608,7 +608,7 @@ def _compute_center_of_timing_metric(
 
     p = F.col(p_col).cast("double")
     t = F.col(t_col)
-    missing_threshold = float(getattr(metric, "missing_threshold", 0.1))
+    missing_day_threshold = float(getattr(metric, "missing_day_threshold", 0.1))
 
     # Step 1: Resample to daily — avg per calendar date per group
     daily_df = (
@@ -654,7 +654,7 @@ def _compute_center_of_timing_metric(
         how="left",
     )
 
-    min_days = (1.0 - missing_threshold) * 366.0
+    min_days = (1.0 - missing_day_threshold) * 366.0
     ct_expr = F.when(
         F.col("_n_daily") < F.lit(min_days),
         F.lit(None).cast("double"),
@@ -677,7 +677,7 @@ def _compute_standard_deviation_of_timing_metric(
 
     Mirrors the pandas path:
     1) Resample to daily (avg per date per group).
-    2) If valid daily count < (1 - missing_threshold) * 366, return null.
+    2) If valid daily count < (1 - missing_day_threshold) * 366, return null.
     3) Day-of-water-year: Oct 1 = day 1.
     4) Filter to non-zero daily values.
     5) Single-pass aggregation collecting sum_pw, sum_p, sum_pd2, n_prime.
@@ -690,7 +690,7 @@ def _compute_standard_deviation_of_timing_metric(
 
     p = F.col(p_col).cast("double")
     t = F.col(t_col)
-    missing_threshold = float(getattr(metric, "missing_threshold", 0.1))
+    missing_day_threshold = float(getattr(metric, "missing_day_threshold", 0.1))
 
     # Step 1: Resample to daily
     daily_df = (
@@ -740,7 +740,7 @@ def _compute_standard_deviation_of_timing_metric(
         how="left",
     )
 
-    min_days = (1.0 - missing_threshold) * 366.0
+    min_days = (1.0 - missing_day_threshold) * 366.0
 
     # Step 6: König-Steiner identity — no need to materialize CT
     numerator = (
