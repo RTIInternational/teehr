@@ -295,15 +295,16 @@ def center_of_timing(model: MetricsBasemodel) -> Callable:
     def center_of_timing_inner(
         p: pd.Series,
         value_time: pd.Series
-    ) -> float | pd.Series:
+    ) -> float:
         """Perform center_of_timing calculation.
+
+        Computes CT for each water year separately (with leap-year handling),
+        then returns the mean across all water years.
 
         Returns
         -------
         float
-            If single water year in input data
-        pd.Series
-            If multiple water years, indexed by water_year
+            Mean CT across all water years in the input data.
         """
         # apply transform if specified
         p, value_time = _transform(p, model, value_time)
@@ -319,7 +320,7 @@ def center_of_timing(model: MetricsBasemodel) -> Callable:
         unique_wys = water_years.unique()
 
         # Group by water year and compute CT for each
-        results = {}
+        ct_values = []
 
         for wy in unique_wys:
             wy_mask = water_years == wy
@@ -331,7 +332,6 @@ def center_of_timing(model: MetricsBasemodel) -> Callable:
 
             # Check missing data threshold
             if len(value_time_wy) < (1 - model.missing_day_threshold) * year_len:
-                results[wy] = None
                 continue
 
             # Obtain day of water year
@@ -344,20 +344,17 @@ def center_of_timing(model: MetricsBasemodel) -> Callable:
 
             # Calculate CT
             if len(p_nz) == 0:
-                results[wy] = None
-            else:
-                sum_p_nz = np.sum(p_nz)
-                if sum_p_nz > 0:
-                    CT = np.sum(p_nz * WY_days_nz) / sum_p_nz
-                    results[wy] = CT
-                else:
-                    results[wy] = None
+                continue
 
-        # Return format depends on number of years
-        if len(unique_wys) == 1:
-            return results[unique_wys[0]]
-        else:
-            return pd.Series(results, name='center_of_timing')
+            sum_p_nz = np.sum(p_nz)
+            if sum_p_nz > 0:
+                CT = np.sum(p_nz * WY_days_nz) / sum_p_nz
+                ct_values.append(CT)
+
+        # Return mean across all valid water years
+        if len(ct_values) == 0:
+            return None
+        return np.mean(ct_values)
 
     return center_of_timing_inner
 
@@ -369,15 +366,16 @@ def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
     def standard_deviation_of_timing_inner(
         p: pd.Series,
         value_time: pd.Series
-    ) -> float | pd.Series:
+    ) -> float:
         """Perform standard_deviation_of_timing calculation.
+
+        Computes SDoT for each water year separately (with leap-year handling),
+        then returns the mean across all water years.
 
         Returns
         -------
         float
-            If single water year in input data
-        pd.Series
-            If multiple water years, indexed by water_year
+            Mean SDoT across all water years in the input data.
         """
         # apply transform if specified
         p, value_time = _transform(p, model, value_time)
@@ -393,7 +391,7 @@ def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
         unique_wys = water_years.unique()
 
         # Group by water year and compute SDoT for each
-        results = {}
+        sdot_values = []
 
         for wy in unique_wys:
             wy_mask = water_years == wy
@@ -405,7 +403,6 @@ def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
 
             # Check missing data threshold
             if len(value_time_wy) < (1 - model.missing_day_threshold) * year_len:
-                results[wy] = None
                 continue
 
             # Obtain day of water year
@@ -418,12 +415,10 @@ def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
 
             # Calculate CT first (needed for SDoT)
             if len(p_nz) <= 1:
-                results[wy] = None
                 continue
 
             sum_p_nz = np.sum(p_nz)
             if sum_p_nz == 0:
-                results[wy] = None
                 continue
 
             CT = np.sum(p_nz * WY_days_nz) / sum_p_nz
@@ -443,16 +438,14 @@ def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
                 SDoT = np.sqrt(SDoT_numerator / (SDoT_denominator + EPSILON))
             else:
                 if SDoT_denominator == 0:
-                    results[wy] = None
                     continue
                 SDoT = np.sqrt(SDoT_numerator / SDoT_denominator)
 
-            results[wy] = SDoT
+            sdot_values.append(SDoT)
 
-        # Return format depends on number of years
-        if len(unique_wys) == 1:
-            return results[unique_wys[0]]
-        else:
-            return pd.Series(results, name='standard_deviation_of_timing')
+        # Return mean across all valid water years
+        if len(sdot_values) == 0:
+            return None
+        return np.mean(sdot_values)
 
     return standard_deviation_of_timing_inner
