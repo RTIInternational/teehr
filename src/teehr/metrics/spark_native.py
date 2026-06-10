@@ -595,12 +595,14 @@ def _compute_center_of_timing_metric(
 ) -> DataFrame | None:
     """Compute CenterOfTiming via weighted mean of day-of-water-year.
 
-    Mirrors the pandas path exactly:
+    Updated to handle multiple water years with proper leap-year support:
     1) Resample to daily (avg per date within each group).
-    2) If count of valid daily values < (1 - missing_day_threshold) * 366, return null.
-    3) Compute day-of-water-year: Oct 1 is day 1.
-    4) Filter to non-zero daily values.
-    5) CT = sum(p_daily * day_of_WY) / sum(p_daily).
+    2) Compute water year for each date.
+    3) Determine year length (365 or 366) per water year for threshold.
+    4) If count of valid daily values < (1 - missing_day_threshold) * year_len, return null.
+    5) Compute day-of-water-year: Oct 1 is day 1.
+    6) Filter to non-zero daily values.
+    7) CT = sum(p_daily * day_of_WY) / sum(p_daily) per water year.
     """
     p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
     t_col = _field_name(getattr(metric, "value_time_field_name", None), "value_time")
@@ -619,7 +621,16 @@ def _compute_center_of_timing_metric(
         .where(F.col("_p_daily").isNotNull())
     )
 
-    # Step 2: Day-of-water-year (WY starts Oct 1)
+    # Step 2: Compute water year (year + 1 if month >= 10)
+    water_year = F.when(
+        F.month(F.col("_date")) >= 10,
+        F.year(F.col("_date")) + 1
+    ).otherwise(
+        F.year(F.col("_date"))
+    )
+    daily_df = daily_df.withColumn("_water_year", water_year)
+
+    # Step 3: Compute day-of-water-year (WY starts Oct 1)
     wy_start = F.when(
         F.month(F.col("_date")) >= 10,
         F.make_date(F.year(F.col("_date")), F.lit(10), F.lit(1)),
@@ -631,16 +642,33 @@ def _compute_center_of_timing_metric(
         (F.datediff(F.col("_date"), wy_start) + 1).cast("double"),
     )
 
-    # Step 3: Count valid daily rows per group (for missing-threshold check)
-    count_df = daily_df.groupBy(*group_by_cols).agg(
-        F.count(F.lit(1)).alias("_n_daily")
+    # Step 4: Determine year length per water year (365 or 366 for leap years)
+    # Water year ends in September, so Feb is in year (wy)
+    # A year is a leap year if divisible by 4, except centuries (divisible by 100),
+    # unless also divisible by 400
+    is_leap = (
+        ((F.col("_water_year") % 4) == 0)
+        & (((F.col("_water_year") % 100) != 0) | ((F.col("_water_year") % 400) == 0))
+    )
+    daily_df = daily_df.withColumn(
+        "_year_len",
+        F.when(is_leap, F.lit(366)).otherwise(F.lit(365))
     )
 
-    # Step 4: Non-zero weighted sums
+    # Add water_year to grouping for per-year computation
+    wy_group_cols = group_by_cols + ["_water_year"]
+
+    # Step 5: Count valid daily rows per group + water year
+    count_df = daily_df.groupBy(*wy_group_cols).agg(
+        F.count(F.lit(1)).alias("_n_daily"),
+        F.max(F.col("_year_len")).alias("_year_len")  # Same for all rows in a water year
+    )
+
+    # Step 6: Non-zero weighted sums per water year
     ct_df = (
         daily_df
         .where(F.col("_p_daily") > 0)
-        .groupBy(*group_by_cols)
+        .groupBy(*wy_group_cols)
         .agg(
             F.sum(F.col("_p_daily") * F.col("_day_of_wy")).alias("_sum_pw"),
             F.sum(F.col("_p_daily")).alias("_sum_p"),
@@ -650,13 +678,14 @@ def _compute_center_of_timing_metric(
     result_df = null_safe_join_on_columns(
         count_df,
         ct_df,
-        join_columns=group_by_cols,
+        join_columns=wy_group_cols,
         how="left",
     )
 
-    min_days = (1.0 - missing_day_threshold) * 366.0
+    # Step 7: Apply year-specific threshold and compute CT
+    min_days_expr = (F.lit(1.0) - F.lit(missing_day_threshold)) * F.col("_year_len")
     ct_expr = F.when(
-        F.col("_n_daily") < F.lit(min_days),
+        F.col("_n_daily") < min_days_expr,
         F.lit(None).cast("double"),
     ).otherwise(
         _divide(F.col("_sum_pw"), F.col("_sum_p"))
@@ -664,6 +693,7 @@ def _compute_center_of_timing_metric(
 
     return result_df.select(
         *group_by_cols,
+        F.col("_water_year").alias("water_year"),
         ct_expr.alias(metric.output_field_name),
     )
 
@@ -675,14 +705,16 @@ def _compute_standard_deviation_of_timing_metric(
 ) -> DataFrame | None:
     """Compute StandardDeviationOfTiming as a weighted sample std-dev of day-of-WY.
 
-    Mirrors the pandas path:
+    Updated to handle multiple water years with proper leap-year support:
     1) Resample to daily (avg per date per group).
-    2) If valid daily count < (1 - missing_day_threshold) * 366, return null.
-    3) Day-of-water-year: Oct 1 = day 1.
-    4) Filter to non-zero daily values.
-    5) Single-pass aggregation collecting sum_pw, sum_p, sum_pd2, n_prime.
-    6) Apply König-Steiner identity: numerator = sum_pd2 - sum_pw² / sum_p.
-    7) SDoT = sqrt(numerator / (sum_p * (n_prime - 1))), null if n_prime <= 1.
+    2) Compute water year for each date.
+    3) Determine year length (365 or 366) per water year for threshold.
+    4) If valid daily count < (1 - missing_day_threshold) * year_len, return null.
+    5) Day-of-water-year: Oct 1 = day 1.
+    6) Filter to non-zero daily values.
+    7) Single-pass aggregation collecting sum_pw, sum_p, sum_pd2, n_prime per water year.
+    8) Apply König-Steiner identity: numerator = sum_pd2 - sum_pw² / sum_p.
+    9) SDoT = sqrt(numerator / (sum_p * (n_prime - 1))), null if n_prime <= 1.
     """
     p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
     t_col = _field_name(getattr(metric, "value_time_field_name", None), "value_time")
@@ -701,7 +733,16 @@ def _compute_standard_deviation_of_timing_metric(
         .where(F.col("_p_daily").isNotNull())
     )
 
-    # Step 2: Day-of-water-year (WY starts Oct 1)
+    # Step 2: Compute water year (year + 1 if month >= 10)
+    water_year = F.when(
+        F.month(F.col("_date")) >= 10,
+        F.year(F.col("_date")) + 1
+    ).otherwise(
+        F.year(F.col("_date"))
+    )
+    daily_df = daily_df.withColumn("_water_year", water_year)
+
+    # Step 3: Compute day-of-water-year (WY starts Oct 1)
     wy_start = F.when(
         F.month(F.col("_date")) >= 10,
         F.make_date(F.year(F.col("_date")), F.lit(10), F.lit(1)),
@@ -713,18 +754,33 @@ def _compute_standard_deviation_of_timing_metric(
         (F.datediff(F.col("_date"), wy_start) + 1).cast("double"),
     )
 
-    # Step 3: Total daily count for missing-threshold gate
-    count_df = daily_df.groupBy(*group_by_cols).agg(
-        F.count(F.lit(1)).alias("_n_daily")
+    # Step 4: Determine year length per water year (365 or 366 for leap years)
+    # Water year ends in September, so Feb is in year (wy)
+    is_leap = (
+        ((F.col("_water_year") % 4) == 0)
+        & (((F.col("_water_year") % 100) != 0) | ((F.col("_water_year") % 400) == 0))
+    )
+    daily_df = daily_df.withColumn(
+        "_year_len",
+        F.when(is_leap, F.lit(366)).otherwise(F.lit(365))
     )
 
-    # Step 4-5: Single-pass weighted stats over non-zero rows only
+    # Add water_year to grouping for per-year computation
+    wy_group_cols = group_by_cols + ["_water_year"]
+
+    # Step 5: Total daily count per water year for missing-threshold gate
+    count_df = daily_df.groupBy(*wy_group_cols).agg(
+        F.count(F.lit(1)).alias("_n_daily"),
+        F.max(F.col("_year_len")).alias("_year_len")  # Same for all rows in a water year
+    )
+
+    # Step 6-7: Single-pass weighted stats over non-zero rows only per water year
     pw = F.col("_p_daily")
     d = F.col("_day_of_wy")
     stats_df = (
         daily_df
         .where(pw > 0)
-        .groupBy(*group_by_cols)
+        .groupBy(*wy_group_cols)
         .agg(
             F.sum(pw * d).alias("_sum_pw"),       # sum(p * day)
             F.sum(pw).alias("_sum_p"),             # sum(p)
@@ -736,13 +792,14 @@ def _compute_standard_deviation_of_timing_metric(
     result_df = null_safe_join_on_columns(
         count_df,
         stats_df,
-        join_columns=group_by_cols,
+        join_columns=wy_group_cols,
         how="left",
     )
 
-    min_days = (1.0 - missing_day_threshold) * 366.0
+    # Step 8: Apply year-specific threshold
+    min_days_expr = (F.lit(1.0) - F.lit(missing_day_threshold)) * F.col("_year_len")
 
-    # Step 6: König-Steiner identity — no need to materialize CT
+    # Step 9: König-Steiner identity — no need to materialize CT
     numerator = (
         F.col("_sum_pd2")
         - (F.col("_sum_pw") * F.col("_sum_pw") / F.col("_sum_p"))
@@ -751,9 +808,9 @@ def _compute_standard_deviation_of_timing_metric(
     if metric.add_epsilon:
         denominator = denominator + F.lit(EPSILON)
 
-    # Step 7: Guard conditions matching pandas behavior
+    # Step 10: Guard conditions matching pandas behavior
     invalid = (
-        (F.col("_n_daily") < F.lit(min_days))
+        (F.col("_n_daily") < min_days_expr)
         | F.col("_n_prime").isNull()
         | (F.col("_n_prime") <= F.lit(1))
     )
@@ -763,6 +820,7 @@ def _compute_standard_deviation_of_timing_metric(
 
     return result_df.select(
         *group_by_cols,
+        F.col("_water_year").alias("water_year"),
         sdot_expr.alias(metric.output_field_name),
     )
 

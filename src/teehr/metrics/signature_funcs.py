@@ -257,13 +257,27 @@ def _ensure_daily_timestep(
         return p_d, value_time_d
 
 
+def _get_water_year(dates: pd.Series) -> pd.Series:
+    """Get water year from dates (year + 1 if month >= October)."""
+    return dates.apply(lambda x: x.year + 1 if x.month >= 10 else x.year)
+
+
+def _get_water_year_length(wy: int) -> int:
+    """Get length of water year (365 or 366 based on leap year).
+
+    Water year ends in September, so Feb is in year (wy).
+    """
+    import calendar
+    return 366 if calendar.isleap(wy) else 365
+
+
 def _get_day_of_wy(
     dates: pd.Series
 ) -> pd.Series:
     """Obtain the numeric day-of-water-year for center_of_timing_inner()."""
     import datetime
     # obtain the water year for each date
-    water_years = dates.apply(lambda x: x.year + 1 if x.month >= 10 else x.year)
+    water_years = _get_water_year(dates)
 
     # get the start date of the corresponding water year for each date
     water_year_starts = pd.to_datetime([datetime.date(wy - 1, 10, 1) for wy in water_years])
@@ -281,8 +295,16 @@ def center_of_timing(model: MetricsBasemodel) -> Callable:
     def center_of_timing_inner(
         p: pd.Series,
         value_time: pd.Series
-    ) -> pd.Timedelta:
-        """Perform center_of_timing calculation on aggregated data."""
+    ) -> float | pd.Series:
+        """Perform center_of_timing calculation.
+
+        Returns
+        -------
+        float
+            If single water year in input data
+        pd.Series
+            If multiple water years, indexed by water_year
+        """
         # apply transform if specified
         p, value_time = _transform(p, model, value_time)
 
@@ -292,25 +314,50 @@ def center_of_timing(model: MetricsBasemodel) -> Callable:
         # ensure input data is a daily timestep
         p_d, value_time_d = _ensure_daily_timestep(p, value_time)
 
-        # Only calculate CT for WYs with less missing values than the threshold
-        if len(value_time_d) < (1-model.missing_day_threshold)*366:
-            CT = None
-            return CT
+        # Determine water years present
+        water_years = _get_water_year(value_time_d)
+        unique_wys = water_years.unique()
 
-        else:
-            # obtain day of water year from value_time_d
-            WY_days = _get_day_of_wy(value_time_d)
+        # Group by water year and compute CT for each
+        results = {}
 
-            # obtain mask for non-zero flow steps and apply
-            non_zero = p_d > 0
-            p_nz = p_d[non_zero]
+        for wy in unique_wys:
+            wy_mask = water_years == wy
+            p_wy = p_d[wy_mask]
+            value_time_wy = value_time_d[wy_mask]
+
+            # Get water year length for leap year handling
+            year_len = _get_water_year_length(wy)
+
+            # Check missing data threshold
+            if len(value_time_wy) < (1 - model.missing_day_threshold) * year_len:
+                results[wy] = None
+                continue
+
+            # Obtain day of water year
+            WY_days = _get_day_of_wy(value_time_wy)
+
+            # Filter to non-zero flow steps
+            non_zero = p_wy > 0
+            p_nz = p_wy[non_zero]
             WY_days_nz = WY_days[non_zero]
 
-            # calculate CT (with division by zero protection)
-            sum_p_nz = np.sum(p_nz)
-            CT = np.sum(p_nz * WY_days_nz) / sum_p_nz
+            # Calculate CT
+            if len(p_nz) == 0:
+                results[wy] = None
+            else:
+                sum_p_nz = np.sum(p_nz)
+                if sum_p_nz > 0:
+                    CT = np.sum(p_nz * WY_days_nz) / sum_p_nz
+                    results[wy] = CT
+                else:
+                    results[wy] = None
 
-            return CT
+        # Return format depends on number of years
+        if len(unique_wys) == 1:
+            return results[unique_wys[0]]
+        else:
+            return pd.Series(results, name='center_of_timing')
 
     return center_of_timing_inner
 
@@ -322,8 +369,16 @@ def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
     def standard_deviation_of_timing_inner(
         p: pd.Series,
         value_time: pd.Series
-    ) -> pd.Timedelta:
-        """Perform standard_deviation_of_timing calculation on aggregated data."""
+    ) -> float | pd.Series:
+        """Perform standard_deviation_of_timing calculation.
+
+        Returns
+        -------
+        float
+            If single water year in input data
+        pd.Series
+            If multiple water years, indexed by water_year
+        """
         # apply transform if specified
         p, value_time = _transform(p, model, value_time)
 
@@ -333,39 +388,71 @@ def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
         # ensure input data is a daily timestep
         p_d, value_time_d = _ensure_daily_timestep(p, value_time)
 
-        # Only calculate SDoT for WYs with less missing values than the threshold
-        if len(value_time_d) < (1-model.missing_day_threshold)*366:
-            SDoT = None
-            return SDoT
+        # Determine water years present
+        water_years = _get_water_year(value_time_d)
+        unique_wys = water_years.unique()
 
-        else:
-            # obtain day of water year from value_time_d
-            WY_days = _get_day_of_wy(value_time_d)
+        # Group by water year and compute SDoT for each
+        results = {}
 
-            # obtain mask for non-zero flow steps and apply
-            non_zero = p_d > 0
-            p_nz = p_d[non_zero]
+        for wy in unique_wys:
+            wy_mask = water_years == wy
+            p_wy = p_d[wy_mask]
+            value_time_wy = value_time_d[wy_mask]
+
+            # Get water year length for leap year handling
+            year_len = _get_water_year_length(wy)
+
+            # Check missing data threshold
+            if len(value_time_wy) < (1 - model.missing_day_threshold) * year_len:
+                results[wy] = None
+                continue
+
+            # Obtain day of water year
+            WY_days = _get_day_of_wy(value_time_wy)
+
+            # Filter to non-zero flow steps
+            non_zero = p_wy > 0
+            p_nz = p_wy[non_zero]
             WY_days_nz = WY_days[non_zero]
 
-            # calculate CT (with division by zero protection)
+            # Calculate CT first (needed for SDoT)
+            if len(p_nz) <= 1:
+                results[wy] = None
+                continue
+
             sum_p_nz = np.sum(p_nz)
+            if sum_p_nz == 0:
+                results[wy] = None
+                continue
+
             CT = np.sum(p_nz * WY_days_nz) / sum_p_nz
 
-            if not np.isnan(CT) and CT < 0:
-                CT = CT + 365
+            # Normalize CT to [1, year_len] range
+            if not np.isnan(CT):
+                CT = ((CT - 1) % year_len) + 1
 
-            # get number of non-zero flow steps
+            # Get number of non-zero flow steps
             n_prime = len(p_nz)
 
-            # calculate SDoT (with division by zero protection)
-            if n_prime > 1:
-                SDoT_numerator = np.sum(p_nz * (WY_days_nz - CT)**2)
-                SDoT_denominator = sum_p_nz * (n_prime - 1)
-                if model.add_epsilon:
-                    SDoT = np.sqrt(SDoT_numerator / (SDoT_denominator + EPSILON))
-                else:
-                    SDoT = np.sqrt(SDoT_numerator / SDoT_denominator)
+            # Calculate SDoT
+            SDoT_numerator = np.sum(p_nz * (WY_days_nz - CT)**2)
+            SDoT_denominator = sum_p_nz * (n_prime - 1)
 
-            return SDoT
+            if model.add_epsilon:
+                SDoT = np.sqrt(SDoT_numerator / (SDoT_denominator + EPSILON))
+            else:
+                if SDoT_denominator == 0:
+                    results[wy] = None
+                    continue
+                SDoT = np.sqrt(SDoT_numerator / SDoT_denominator)
+
+            results[wy] = SDoT
+
+        # Return format depends on number of years
+        if len(unique_wys) == 1:
+            return results[unique_wys[0]]
+        else:
+            return pd.Series(results, name='standard_deviation_of_timing')
 
     return standard_deviation_of_timing_inner
