@@ -77,7 +77,8 @@ The ``engine`` parameter controls how metrics are computed under the hood.
 
 **Metrics supported on the Spark-native path** (no transform, no bootstrap):
 
-*Signature metrics:* Count, Minimum, Maximum, Average, Sum, Variance, MaxValueTime
+*Signature metrics:* Count, Minimum, Maximum, Average, Sum, Variance, MaxValueTime,
+FlowDurationCurveSlope, CenterOfTiming, StdDevOfTiming
 
 *Deterministic metrics:* MeanError, RelativeBias, MultiplicativeBias,
 MeanSquareError, RootMeanSquareError, MeanAbsoluteError,
@@ -270,16 +271,11 @@ Available Metrics
 =================
 
 The metrics currently built into TEEHR are listed in the tables below.
-The metrics currently built into TEEHR are listed in the tables below.
 Please note that some are still in development and planned for inclusion in future versions.
 
 Signatures
 ==========
 
-Signatures
-==========
-
-Signatures operate on a single field to characterize timeseries properties.
 Signatures operate on a single field to characterize timeseries properties.
 
 .. list-table::
@@ -331,6 +327,16 @@ Signatures operate on a single field to characterize timeseries properties.
      - :math:`Variance`
      - :math:`\sigma^2_{prim}`
      - :class:`Variance <teehr.Signatures.Variance>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Center of Timing
+     - :math:`Center\ of\ Timing`
+     - :math:`\frac{\sum(t_i \cdot prim_i)}{\sum(prim_i)}`
+     - :class:`Center of Timing <teehr.Signatures.CenterOfTiming>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Standard Deviation of Timing
+     - :math:`Std\ Dev\ of\ Timing`
+     - :math:`\sqrt{\frac{\sum(prim_i \cdot (t_i - CenterOfTiming)^2)}{\sum(prim_i)}}`
+     - :class:`Standard Deviation of Timing <teehr.Signatures.StandardDeviationOfTiming>`
 
 
 Deterministic Metrics

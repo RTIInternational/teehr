@@ -9,6 +9,7 @@ import pytest
 
 from teehr.models.filters import TableFilter
 from teehr import TimeseriesAwareCalculatedFields as tcf
+from teehr import RowLevelCalculatedFields as rcf
 
 BOOT_YEAR_FILE = Path(
     "tests",
@@ -100,7 +101,67 @@ def test_executing_signatures(module_scope_test_warehouse):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 9
+    assert metrics_df.columns.size == 11
+
+
+@pytest.mark.module_scope_resops_signatures_test_warehouse
+def test_resops_signatures(module_scope_resops_signatures_test_warehouse):
+    """Test get_metrics method with ensemble metrics."""
+    ev = module_scope_resops_signatures_test_warehouse
+
+    # Now, metrics.
+    ct = Signatures.CenterOfTiming(primary_field_name='value')
+    sdot = Signatures.StandardDeviationOfTiming(primary_field_name='value')
+
+    # execute using spark engine
+    spark_df = ev.table(
+        table_name='primary_timeseries',
+    ).filter(
+        'configuration_name == "usgs_daily"'
+    ).add_calculated_fields(
+        [rcf.WaterYear()]
+    ).aggregate(
+        group_by=['location_id', 'water_year'],
+        metrics=[ct, sdot],
+        engine='spark'
+    ).order_by([
+        'location_id', 'water_year'
+    ]).to_pandas()
+
+    # execute using python engine
+    python_df = ev.table(
+        table_name='primary_timeseries',
+    ).filter(
+        'configuration_name == "usgs_daily"'
+    ).add_calculated_fields(
+        [rcf.WaterYear()]
+    ).aggregate(
+        group_by=['location_id', 'water_year'],
+        metrics=[ct, sdot],
+        engine='python'
+    ).order_by([
+        'location_id', 'water_year'
+    ]).to_pandas()
+
+    # check values against mines sample
+    assert np.isclose(
+        spark_df.center_of_timing.values[0],
+        180.882938
+    )
+    assert np.isclose(
+        spark_df.standard_deviation_of_timing.values[0],
+        3.928218
+    )
+
+    # check python and spark engines give same result
+    assert np.isclose(
+        spark_df.center_of_timing.values[0],
+        python_df.center_of_timing.values[0]
+    )
+    assert np.isclose(
+        spark_df.standard_deviation_of_timing.values[0],
+        python_df.standard_deviation_of_timing.values[0]
+    )
 
 
 @pytest.mark.module_scope_test_warehouse

@@ -76,6 +76,14 @@ SUPPORTED_ANNUAL_PEAK_METRICS = {
     "AnnualPeakRelativeBias",
 }
 
+SUPPORTED_CENTER_OF_TIMING_METRICS = {
+    "CenterOfTiming",
+}
+
+SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS = {
+    "StandardDeviationOfTiming"
+}
+
 SUPPORTED_METRICS = (
     SUPPORTED_SIGNATURE_METRICS
     | SUPPORTED_DETERMINISTIC_METRICS
@@ -83,6 +91,8 @@ SUPPORTED_METRICS = (
     | SUPPORTED_SPEARMAN_METRICS
     | SUPPORTED_TIMEDELTA_METRICS
     | SUPPORTED_ANNUAL_PEAK_METRICS
+    | SUPPORTED_CENTER_OF_TIMING_METRICS
+    | SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS
 )
 
 
@@ -120,6 +130,14 @@ def _is_timedelta_metric(metric: MetricsBasemodel) -> bool:
 
 def _is_annual_peak_metric(metric: MetricsBasemodel) -> bool:
     return _metric_class_name(metric) in SUPPORTED_ANNUAL_PEAK_METRICS
+
+
+def _is_center_of_timing_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_CENTER_OF_TIMING_METRICS
+
+
+def _is_standard_deviation_of_timing_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS
 
 
 def supports_spark_native(metric_model: MetricsBasemodel) -> bool:
@@ -570,6 +588,251 @@ def _compute_fdc_slope_metric(
     )
 
 
+def _compute_center_of_timing_metric(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metric: MetricsBasemodel,
+) -> DataFrame | None:
+    """Compute CenterOfTiming via weighted mean of day-of-water-year.
+
+    Computes CT for each water year separately with proper leap-year support,
+    then returns the mean across all water years (matching pandas behavior).
+
+    1) Resample to daily (avg per date within each group).
+    2) Compute water year for each date.
+    3) Determine year length (365 or 366) per water year for threshold.
+    4) If count of valid daily values < (1 - missing_day_threshold) * year_len, skip that WY.
+    5) Compute day-of-water-year: Oct 1 is day 1.
+    6) Filter to non-zero daily values.
+    7) CT = sum(p_daily * day_of_WY) / sum(p_daily) per water year.
+    8) Average CT across all valid water years.
+    """
+    p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
+    t_col = _field_name(getattr(metric, "value_time_field_name", None), "value_time")
+    validate_fields_exist(sdf.columns, group_by_cols + [p_col, t_col])
+
+    p = F.col(p_col).cast("double")
+    t = F.col(t_col)
+    missing_day_threshold = float(getattr(metric, "missing_day_threshold", 0.1))
+
+    # Step 1: Resample to daily — avg per calendar date per group
+    daily_df = (
+        sdf.where(p.isNotNull() & t.isNotNull())
+        .withColumn("_date", F.to_date(t))
+        .groupBy(*group_by_cols, "_date")
+        .agg(F.avg(p).alias("_p_daily"))
+        .where(F.col("_p_daily").isNotNull())
+    )
+
+    # Step 2: Compute water year (year + 1 if month >= 10)
+    water_year = F.when(
+        F.month(F.col("_date")) >= 10,
+        F.year(F.col("_date")) + 1
+    ).otherwise(
+        F.year(F.col("_date"))
+    )
+    daily_df = daily_df.withColumn("_water_year", water_year)
+
+    # Step 3: Compute day-of-water-year (WY starts Oct 1)
+    wy_start = F.when(
+        F.month(F.col("_date")) >= 10,
+        F.make_date(F.year(F.col("_date")), F.lit(10), F.lit(1)),
+    ).otherwise(
+        F.make_date(F.year(F.col("_date")) - 1, F.lit(10), F.lit(1)),
+    )
+    daily_df = daily_df.withColumn(
+        "_day_of_wy",
+        (F.datediff(F.col("_date"), wy_start) + 1).cast("double"),
+    )
+
+    # Step 4: Determine year length per water year (365 or 366 for leap years)
+    is_leap = (
+        ((F.col("_water_year") % 4) == 0)
+        & (((F.col("_water_year") % 100) != 0) | ((F.col("_water_year") % 400) == 0))
+    )
+    daily_df = daily_df.withColumn(
+        "_year_len",
+        F.when(is_leap, F.lit(366)).otherwise(F.lit(365))
+    )
+
+    # Add water_year to grouping for per-year computation
+    wy_group_cols = group_by_cols + ["_water_year"]
+
+    # Step 5: Count valid daily rows per group + water year
+    count_df = daily_df.groupBy(*wy_group_cols).agg(
+        F.count(F.lit(1)).alias("_n_daily"),
+        F.max(F.col("_year_len")).alias("_year_len")
+    )
+
+    # Step 6: Non-zero weighted sums per water year
+    ct_df = (
+        daily_df
+        .where(F.col("_p_daily") > 0)
+        .groupBy(*wy_group_cols)
+        .agg(
+            F.sum(F.col("_p_daily") * F.col("_day_of_wy")).alias("_sum_pw"),
+            F.sum(F.col("_p_daily")).alias("_sum_p"),
+        )
+    )
+
+    result_df = null_safe_join_on_columns(
+        count_df,
+        ct_df,
+        join_columns=wy_group_cols,
+        how="left",
+    )
+
+    # Step 7: Apply year-specific threshold and compute CT per WY
+    min_days_expr = (F.lit(1.0) - F.lit(missing_day_threshold)) * F.col("_year_len")
+    ct_per_wy = F.when(
+        F.col("_n_daily") < min_days_expr,
+        F.lit(None).cast("double"),
+    ).otherwise(
+        _divide(F.col("_sum_pw"), F.col("_sum_p"))
+    )
+
+    result_df = result_df.withColumn("_ct_per_wy", ct_per_wy)
+
+    # Step 8: Average CT across all valid water years (matching pandas behavior)
+    final_df = result_df.groupBy(*group_by_cols).agg(
+        F.avg(F.col("_ct_per_wy")).alias(metric.output_field_name)
+    )
+
+    return final_df
+
+
+def _compute_standard_deviation_of_timing_metric(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metric: MetricsBasemodel,
+) -> DataFrame | None:
+    """Compute StandardDeviationOfTiming as a weighted sample std-dev of day-of-WY.
+
+    Computes SDoT for each water year separately with proper leap-year support,
+    then returns the mean across all water years (matching pandas behavior).
+
+    1) Resample to daily (avg per date per group).
+    2) Compute water year for each date.
+    3) Determine year length (365 or 366) per water year for threshold.
+    4) If valid daily count < (1 - missing_day_threshold) * year_len, skip that WY.
+    5) Day-of-water-year: Oct 1 = day 1.
+    6) Filter to non-zero daily values.
+    7) Single-pass aggregation collecting sum_pw, sum_p, sum_pd2, n_prime per water year.
+    8) Apply König-Steiner identity: numerator = sum_pd2 - sum_pw² / sum_p.
+    9) SDoT = sqrt(numerator / (sum_p * (n_prime - 1))) per water year.
+    10) Average SDoT across all valid water years.
+    """
+    p_col = _field_name(getattr(metric, "primary_field_name", None), "primary_value")
+    t_col = _field_name(getattr(metric, "value_time_field_name", None), "value_time")
+    validate_fields_exist(sdf.columns, group_by_cols + [p_col, t_col])
+
+    p = F.col(p_col).cast("double")
+    t = F.col(t_col)
+    missing_day_threshold = float(getattr(metric, "missing_day_threshold", 0.1))
+
+    # Step 1: Resample to daily
+    daily_df = (
+        sdf.where(p.isNotNull() & t.isNotNull())
+        .withColumn("_date", F.to_date(t))
+        .groupBy(*group_by_cols, "_date")
+        .agg(F.avg(p).alias("_p_daily"))
+        .where(F.col("_p_daily").isNotNull())
+    )
+
+    # Step 2: Compute water year (year + 1 if month >= 10)
+    water_year = F.when(
+        F.month(F.col("_date")) >= 10,
+        F.year(F.col("_date")) + 1
+    ).otherwise(
+        F.year(F.col("_date"))
+    )
+    daily_df = daily_df.withColumn("_water_year", water_year)
+
+    # Step 3: Compute day-of-water-year (WY starts Oct 1)
+    wy_start = F.when(
+        F.month(F.col("_date")) >= 10,
+        F.make_date(F.year(F.col("_date")), F.lit(10), F.lit(1)),
+    ).otherwise(
+        F.make_date(F.year(F.col("_date")) - 1, F.lit(10), F.lit(1)),
+    )
+    daily_df = daily_df.withColumn(
+        "_day_of_wy",
+        (F.datediff(F.col("_date"), wy_start) + 1).cast("double"),
+    )
+
+    # Step 4: Determine year length per water year (365 or 366 for leap years)
+    is_leap = (
+        ((F.col("_water_year") % 4) == 0)
+        & (((F.col("_water_year") % 100) != 0) | ((F.col("_water_year") % 400) == 0))
+    )
+    daily_df = daily_df.withColumn(
+        "_year_len",
+        F.when(is_leap, F.lit(366)).otherwise(F.lit(365))
+    )
+
+    # Add water_year to grouping for per-year computation
+    wy_group_cols = group_by_cols + ["_water_year"]
+
+    # Step 5: Total daily count per water year for missing-threshold gate
+    count_df = daily_df.groupBy(*wy_group_cols).agg(
+        F.count(F.lit(1)).alias("_n_daily"),
+        F.max(F.col("_year_len")).alias("_year_len")
+    )
+
+    # Step 6-7: Single-pass weighted stats over non-zero rows only per water year
+    pw = F.col("_p_daily")
+    d = F.col("_day_of_wy")
+    stats_df = (
+        daily_df
+        .where(pw > 0)
+        .groupBy(*wy_group_cols)
+        .agg(
+            F.sum(pw * d).alias("_sum_pw"),
+            F.sum(pw).alias("_sum_p"),
+            F.sum(pw * d * d).alias("_sum_pd2"),
+            F.count(F.lit(1)).alias("_n_prime"),
+        )
+    )
+
+    result_df = null_safe_join_on_columns(
+        count_df,
+        stats_df,
+        join_columns=wy_group_cols,
+        how="left",
+    )
+
+    # Step 8: Apply year-specific threshold
+    min_days_expr = (F.lit(1.0) - F.lit(missing_day_threshold)) * F.col("_year_len")
+
+    # Step 9: König-Steiner identity — compute SDoT per WY
+    numerator = (
+        F.col("_sum_pd2")
+        - (F.col("_sum_pw") * F.col("_sum_pw") / F.col("_sum_p"))
+    )
+    denominator = F.col("_sum_p") * (F.col("_n_prime") - F.lit(1))
+    if metric.add_epsilon:
+        denominator = denominator + F.lit(EPSILON)
+
+    # Guard conditions matching pandas behavior
+    invalid = (
+        (F.col("_n_daily") < min_days_expr)
+        | F.col("_n_prime").isNull()
+        | (F.col("_n_prime") <= F.lit(1))
+    )
+    sdot_per_wy = F.when(invalid, F.lit(None).cast("double")).otherwise(
+        F.sqrt(_divide(numerator, denominator))
+    )
+
+    result_df = result_df.withColumn("_sdot_per_wy", sdot_per_wy)
+
+    # Step 10: Average SDoT across all valid water years (matching pandas behavior)
+    final_df = result_df.groupBy(*group_by_cols).agg(
+        F.avg(F.col("_sdot_per_wy")).alias(metric.output_field_name)
+    )
+
+    return final_df
+
+
 def _compute_spearman_metric(
     sdf: DataFrame,
     group_by_cols: List[str],
@@ -771,6 +1034,16 @@ SPARK_METRIC_ADAPTERS: tuple[MetricExecutionAdapter, ...] = (
         name="spark-fdc-slope",
         supports=_is_fdc_slope_metric,
         apply_metric=_compute_fdc_slope_metric,
+    ),
+    single_metric_adapter(
+        name="spark-center-of-timing",
+        supports=_is_center_of_timing_metric,
+        apply_metric=_compute_center_of_timing_metric,
+    ),
+    single_metric_adapter(
+        name="spark-standard-deviation-of-timing",
+        supports=_is_standard_deviation_of_timing_metric,
+        apply_metric=_compute_standard_deviation_of_timing_metric,
     ),
     single_metric_adapter(
         name="spark-max-value-timedelta",

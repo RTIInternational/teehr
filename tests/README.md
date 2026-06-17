@@ -173,6 +173,7 @@ pytest -m session_scope_test_warehouse
 
 # Module-scoped fixtures (shared within test file)
 pytest -m module_scope_test_warehouse
+pytest -m module_scope_resops_signatures_test_warehouse
 
 # Function-scoped fixtures (isolated per test, slowest)
 pytest -m function_scope_evaluation_template
