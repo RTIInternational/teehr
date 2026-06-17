@@ -25,7 +25,7 @@ from teehr.utilities.import_evaluation import update_metadata_paths
 
 def _cleanup_spark(ev):
     """Drop all temporary views and clear the Spark cache."""
-    temp_views = ev.spark.sql("SHOW VIEWS").filter("isTemporary = true").collect()
+    temp_views = ev.sql("SHOW VIEWS").filter("isTemporary = true").collect()
     for view in temp_views:
         try:
             ev.spark.catalog.dropTempView(view.viewName)
@@ -160,6 +160,28 @@ def function_scope_evaluation_template(spark_shared_session, tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
+def module_scope_resops_signatures_test_warehouse(tmp_path_factory, spark_shared_session):
+    """Extract and import the resops signatures test warehouse for each test module.
+
+    This contains a two location evaluation with USGS observations and NWM 3.0 retrospective streamflow.
+    In addition, it includes a USGS daily streamflow configuration to test against a sample output provided
+    by the Colorado School of Mines ResOps group.
+
+    See: tests/data/test_warehouse_setup/create_resops_signatures_test_warehouse.py for how this was created.
+    """
+    test_data_dir = Path.cwd() / "tests" / "data" / "test_warehouse_data"
+    tar_file = test_data_dir / "resops_signatures_test_warehouse.tar.gz"
+    temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
+    shutil.unpack_archive(tar_file, temp_extract_dir)
+    ev = update_metadata_paths(
+        dir_path=temp_extract_dir / "resops_signatures_test_warehouse",
+        spark=spark_shared_session
+    )
+    yield ev
+    _cleanup_spark(ev)
+
+
+@pytest.fixture(scope="module")
 def module_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     """Extract and import the three location test warehouse for each test module.
 
@@ -241,4 +263,3 @@ def pytest_configure(config):
     py4j_logger.setLevel(logging.ERROR)  # Only show errors, not info messages
     # Alternatively, to completely silence py4j:
     # py4j_logger.disabled = True
-
