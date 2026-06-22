@@ -278,20 +278,22 @@ def generate_json_paths(
 
     elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
+        fs = fsspec.filesystem("s3", anon=True)
         results = []
         for gcs_path in gcs_component_paths:
-            results.append(check_for_prebuilt_json_paths(gcs_path))
+            results.append(check_for_prebuilt_json_paths(fs, gcs_path))
         json_paths = dask.compute(results)[0]
         json_paths = [path for path in json_paths if path is not None]
 
     elif kerchunk_method == SupportedKerchunkMethod.auto:
         # Use whatever pre-builts exist, and create the missing
         #  files, if any
+        fs = fsspec.filesystem("s3", anon=True)
         results = []
         for gcs_path in gcs_component_paths:
             results.append(
                 check_for_prebuilt_json_paths(
-                    gcs_path, return_gcs_path=True
+                    fs, gcs_path, return_gcs_path=True
                 )
             )
         s3_or_gcs_paths = dask.compute(results)[0]
@@ -461,13 +463,15 @@ def list_to_np(lst):
 
 @dask.delayed
 def check_for_prebuilt_json_paths(
-    gcs_path: str, return_gcs_path=False
+    fs: fsspec.filesystem, gcs_path: str, return_gcs_path=False
 ) -> str:
     """Check for existence of a pre-built kerchunk json in s3 based \
     on its GCS path.
 
     Parameters
     ----------
+    fs : fsspec.filesystem
+        S3-based filesystem.
     gcs_path : str
         Path to the netcdf file in GCS.
     return_gcs_path : bool, optional
@@ -478,7 +482,6 @@ def check_for_prebuilt_json_paths(
     str
         Path to the json in s3 or netcdf file in GCS.
     """
-    fs = fsspec.filesystem("s3", anon=True)
     s3_path = f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json"
     if fs.exists(s3_path):
         return s3_path
