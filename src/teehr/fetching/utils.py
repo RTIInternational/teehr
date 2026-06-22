@@ -442,9 +442,8 @@ def get_dataset(
         The data stored in the blob.
     """
     logger.debug(f"Getting xarray dataset from: {filepath}")
-
     try:
-        m = fsspec.filesystem(
+        fsspec.filesystem(
             "reference", fo=filepath, **kwargs
         ).get_mapper()
     except FileNotFoundError as e:
@@ -454,7 +453,7 @@ def get_dataset(
             return None
     except ValueError:
         raise ValueError(f"There was a problem reading {filepath}")
-    return xr.open_dataset(m, engine="zarr", consolidated=False)
+    return xr.open_dataset(filepath, engine="kerchunk")
 
 
 def list_to_np(lst):
