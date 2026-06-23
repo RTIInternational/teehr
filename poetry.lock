@@ -1382,33 +1382,33 @@ tests = ["pytest", "pytest-cov", "pytest-xdist"]
 
 [[package]]
 name = "dask"
-version = "2025.12.0"
+version = "2026.6.0"
 description = "Parallel PyData with Task Scheduling"
 optional = false
 python-versions = ">=3.10"
 groups = ["main", "dev"]
 files = [
-    {file = "dask-2025.12.0-py3-none-any.whl", hash = "sha256:4213ce9c5d51d6d89337cff69de35d902aa0bf6abdb8a25c942a4d0281f3a598"},
-    {file = "dask-2025.12.0.tar.gz", hash = "sha256:8d478f2aabd025e2453cf733ad64559de90cf328c20209e4574e9543707c3e1b"},
+    {file = "dask-2026.6.0-py3-none-any.whl", hash = "sha256:1539859071065dca379ca592ff76e911cd7965dc466da0040354ab466179189b"},
+    {file = "dask-2026.6.0.tar.gz", hash = "sha256:ae3436bd31ebce2be75edf952bd1fc687a1f11ec03fe8b1bec2903d222344a45"},
 ]
 
 [package.dependencies]
 click = ">=8.1"
 cloudpickle = ">=3.0.0"
-distributed = {version = ">=2025.12.0,<2025.12.1", optional = true, markers = "extra == \"distributed\""}
+distributed = {version = ">=2026.6.0,<2026.6.1", optional = true, markers = "extra == \"distributed\""}
 fsspec = ">=2021.09.0"
 importlib_metadata = {version = ">=4.13.0", markers = "python_version < \"3.12\""}
 packaging = ">=20.0"
 partd = ">=1.4.0"
-pyyaml = ">=5.3.1"
+pyyaml = ">=5.4.1"
 toolz = ">=0.12.0"
 
 [package.extras]
 array = ["numpy (>=1.24)"]
-complete = ["dask[array,dataframe,diagnostics,distributed]", "lz4 (>=4.3.2)", "pyarrow (>=14.0.1)"]
-dataframe = ["dask[array]", "pandas (>=2.0)", "pyarrow (>=14.0.1)"]
+complete = ["dask[array,dataframe,diagnostics,distributed]", "lz4 (>=4.3.2)"]
+dataframe = ["dask[array]", "pandas (>=2.0)", "pyarrow (>=16.0)"]
 diagnostics = ["bokeh (>=3.1.0)", "jinja2 (>=2.10.3)"]
-distributed = ["distributed (>=2025.12.0,<2025.12.1)"]
+distributed = ["distributed (>=2026.6.0,<2026.6.1)"]
 test = ["pandas[test]", "pre-commit", "pytest", "pytest-cov", "pytest-mock", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist"]
 
 [[package]]
@@ -1516,20 +1516,20 @@ files = [
 
 [[package]]
 name = "distributed"
-version = "2025.12.0"
+version = "2026.6.0"
 description = "Distributed scheduler for Dask"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "distributed-2025.12.0-py3-none-any.whl", hash = "sha256:35d18449002ea191e97f7e04a33e16f90c2243486be52d4d0f991072ea06b48a"},
-    {file = "distributed-2025.12.0.tar.gz", hash = "sha256:b1e58f1b3d733885335817562ee1723379f23733e4ef3546f141080d9cb01a74"},
+    {file = "distributed-2026.6.0-py3-none-any.whl", hash = "sha256:ca034e8b4d05b8a92f0655ebd0914e82308509a213889456d7ddd2bd0543439b"},
+    {file = "distributed-2026.6.0.tar.gz", hash = "sha256:88b836dc2d85340cad7e08f2611b9336a70ed018d88bc5a70c3721d4a7efcabd"},
 ]
 
 [package.dependencies]
 click = ">=8.0"
 cloudpickle = ">=3.0.0"
-dask = ">=2025.12.0,<2025.12.1"
+dask = ">=2026.6.0,<2026.6.1"
 jinja2 = ">=2.10.3"
 locket = ">=1.0.0"
 msgpack = ">=1.0.2"
@@ -1540,7 +1540,6 @@ sortedcontainers = ">=2.0.5"
 tblib = ">=1.6.0,<3.2.0 || >3.2.0,<3.2.1 || >3.2.1"
 toolz = ">=0.12.0"
 tornado = ">=6.2.0"
-urllib3 = ">=1.26.5"
 zict = ">=3.0.0"
 
 [[package]]
@@ -8457,4 +8456,4 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "59ff1c04dab2f7984d9bdac09ea67010ab8a0950e5b1ac38f4822c4f8d6d4b78"
+content-hash = "1716e2be02c9e274f1aef7f21160a51a845985a59e9d9a84d77c6eb9d195152b"
