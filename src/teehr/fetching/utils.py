@@ -427,25 +427,18 @@ def np_to_list(t):
 def get_dataset(
     filepath: str, ignore_missing_file: bool, **kwargs
 ) -> xr.Dataset:
-    """Retrieve a blob from the data service as xarray.Dataset.
-
-    Parameters
-    ----------
-    filepath : str
-        Path to the kerchunk json file. Can be local or remote.
-    ignore_missing_file : bool
-        Flag controlling whether to ignore missing files.
-
-    Returns
-    -------
-    xarray.Dataset
-        The data stored in the blob.
-    """
+    """Get an xarray dataset from a filepath."""
     logger.debug(f"Getting xarray dataset from: {filepath}")
     try:
-        fsspec.filesystem(
-            "reference", fo=filepath, **kwargs
-        ).get_mapper()
+        if filepath.startswith("s3://"):
+            # Explicitly open with anonymous access to avoid env credentials
+            # being picked up by s3fs (zarr >= 3.0 tightened credential resolution)
+            s3 = fsspec.filesystem("s3", anon=True)
+            with s3.open(filepath, "rb") as f:
+                reference = ujson.load(f)
+            return xr.open_dataset(reference, engine="kerchunk", storage_options=kwargs)
+        else:
+            fsspec.filesystem("reference", fo=filepath, **kwargs).get_mapper()
     except FileNotFoundError as e:
         if not ignore_missing_file:
             raise e
@@ -453,7 +446,7 @@ def get_dataset(
             return None
     except ValueError:
         raise ValueError(f"There was a problem reading {filepath}")
-    return xr.open_dataset(filepath, engine="kerchunk")
+    return xr.open_dataset(filepath, engine="kerchunk", storage_options=kwargs)
 
 
 def list_to_np(lst):
