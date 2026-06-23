@@ -431,22 +431,17 @@ def get_dataset(
     logger.debug(f"Getting xarray dataset from: {filepath}")
     try:
         if filepath.startswith("s3://"):
-            # Explicitly open with anonymous access to avoid env credentials
-            # being picked up by s3fs (zarr >= 3.0 tightened credential resolution)
             s3 = fsspec.filesystem("s3", anon=True)
             with s3.open(filepath, "rb") as f:
                 reference = ujson.load(f)
             return xr.open_dataset(reference, engine="kerchunk", storage_options=kwargs)
-        else:
-            fsspec.filesystem("reference", fo=filepath, **kwargs).get_mapper()
+        return xr.open_dataset(filepath, engine="kerchunk", storage_options=kwargs)
     except FileNotFoundError as e:
         if not ignore_missing_file:
             raise e
-        else:
-            return None
+        return None
     except ValueError:
         raise ValueError(f"There was a problem reading {filepath}")
-    return xr.open_dataset(filepath, engine="kerchunk", storage_options=kwargs)
 
 
 def list_to_np(lst):
