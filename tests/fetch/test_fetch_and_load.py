@@ -8,6 +8,9 @@ import pandas as pd
 import numpy as np
 import pytest
 
+# # Start up a local Dask cluster
+# from dask.distributed import Client
+# client = Client()
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEO_GAGES_FILEPATH = Path(
@@ -150,7 +153,7 @@ def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_templat
         process_by_z_hour=False,
         starting_z_hour=3,
         ending_z_hour=20,
-        kerchunk_method="auto"
+        kerchunk_method="remote"
     )
     ts_df = ev.secondary_timeseries.to_pandas()
 

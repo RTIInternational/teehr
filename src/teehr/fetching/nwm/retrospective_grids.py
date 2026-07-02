@@ -48,8 +48,7 @@ from teehr.fetching.const import (
     REFERENCE_TIME,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME,
-    NWM_VARIABLE_MAPPER
+    CONFIGURATION_NAME
 )
 from teehr.fetching.models.utils import (
     NWMChunkByEnum,
@@ -365,7 +364,7 @@ def nwm_retro_grids_to_parquet(
 
             # Get spatial information from the zarr store. (limited data)
             tmp_s3_zarr_url = "s3://noaa-nwm-retrospective-2-1-zarr-pds/precip.zarr"
-            tmp_ds = xr.open_zarr(fsspec.get_mapper(tmp_s3_zarr_url, anon=True))
+            tmp_ds = xr.open_zarr(fsspec.get_mapper(tmp_s3_zarr_url, anon=True, asynchronous=True))
             nwm21_crs = tmp_ds.crs.attrs["esri_pe_string"]
             x_dim = tmp_ds.x.values
             y_dim = tmp_ds.y.values
@@ -466,7 +465,7 @@ def nwm_retro_grids_to_parquet(
         )
 
         ds = xr.open_zarr(
-            fsspec.get_mapper(s3_zarr_url, anon=True),
+            fsspec.get_mapper(s3_zarr_url, anon=True, asynchronous=True),
             chunks={}, consolidated=True
         ).sel(time=slice(start_date, end_date))
 

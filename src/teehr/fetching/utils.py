@@ -7,6 +7,7 @@ import logging
 import re
 import json
 from warnings import warn
+import asyncio
 
 import dask
 import fsspec
@@ -278,38 +279,33 @@ def generate_json_paths(
 
     elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
-        fs = fsspec.filesystem("s3", anon=True)
-        results = []
-        for gcs_path in gcs_component_paths:
-            results.append(check_for_prebuilt_json_paths(fs, gcs_path))
-        json_paths = dask.compute(results)[0]
-        json_paths = [path for path in json_paths if path is not None]
+        fs = fsspec.filesystem("s3", anon=True, asynchronous=True)
+        s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
+        file_check_output = asyncio.run(check_if_files_exist(fs, s3_path_list))
+        json_paths = [path for path, exists in file_check_output.items() if exists]
+        missing_files = [path for path, exists in file_check_output.items() if not exists]
+        logger.info(
+            (f"Mode: {kerchunk_method}. Found {len(json_paths)} pre-built jsons in s3,")
+            (f" skipping {len(missing_files)} missing files.")
+        )
 
     elif kerchunk_method == SupportedKerchunkMethod.auto:
         # Use whatever pre-builts exist, and create the missing
-        #  files, if any
-        fs = fsspec.filesystem("s3", anon=True)
-        results = []
-        for gcs_path in gcs_component_paths:
-            results.append(
-                check_for_prebuilt_json_paths(
-                    fs, gcs_path, return_gcs_path=True
-                )
-            )
-        s3_or_gcs_paths = dask.compute(results)[0]
+        fs = fsspec.filesystem("s3", anon=True, asynchronous=True)
+        s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
+        file_check_output = asyncio.run(check_if_files_exist(fs, s3_path_list))
+        json_paths = [path for path, exists in file_check_output.items() if exists]
+        missing_files = [path for path, exists in file_check_output.items() if not exists]
+        logger.info(
+            (f"Mode: {kerchunk_method}. Found {len(json_paths)} pre-built jsons in s3,")
+            (f" building references for {len(missing_files)} files.")
+        )
 
-        # Build any jsons that do not already exist in s3
-        gcs_paths = []
-        json_paths = []
-        for path in s3_or_gcs_paths:
-            if path.split("://")[0] == "gcs":
-                gcs_paths.append(path)
-            else:
-                json_paths.append(path)
-
-        if len(gcs_paths) > 0:
+        if len(missing_files) > 0:
+            # Set back to gcs paths
+            missing_files = [path.replace(NWM_S3_JSON_PATH, "gcs:/") for path in missing_files]
             json_paths.extend(
-                build_zarr_references(gcs_paths,
+                build_zarr_references(missing_files,
                                       json_dir,
                                       ignore_missing_file)
             )
@@ -449,33 +445,14 @@ def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
 
 
-@dask.delayed
-def check_for_prebuilt_json_paths(
-    fs: fsspec.filesystem, gcs_path: str, return_gcs_path=False
-) -> str:
-    """Check for existence of a pre-built kerchunk json in s3 based \
-    on its GCS path.
-
-    Parameters
-    ----------
-    fs : fsspec.filesystem
-        S3-based filesystem.
-    gcs_path : str
-        Path to the netcdf file in GCS.
-    return_gcs_path : bool, optional
-        Flag to return GCS path of s3 is missing, by default False.
-
-    Returns
-    -------
-    str
-        Path to the json in s3 or netcdf file in GCS.
-    """
-    s3_path = f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json"
-    if fs.exists(s3_path):
-        return s3_path
-    else:
-        if return_gcs_path:
-            return gcs_path
+async def check_if_files_exist(fs: fsspec.filesystem, file_path_list):
+    """Check for existence of files asynchronously."""
+    # Prepare concurrent tasks using the internal async method _exists
+    tasks = [fs._exists(path) for path in file_path_list]
+    # Execute all network requests in parallel
+    results = await asyncio.gather(*tasks)
+    # Map each path to its True/False result
+    return dict(zip(file_path_list, results))
 
 
 @dask.delayed
