@@ -445,7 +445,7 @@ def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
 
 
-async def check_if_files_exist(fs: fsspec.filesystem, file_path_list):
+async def check_if_files_exist(fs: fsspec.filesystem, file_path_list: List[str]) -> Dict[str, bool]:
     """Check for existence of files asynchronously."""
     # Prepare concurrent tasks using the internal async method _exists
     tasks = [fs._exists(path) for path in file_path_list]
@@ -512,6 +512,49 @@ def gen_json(
             logger.warning(f"A missing file was encountered: {remote_path}")
             return None
     return outf
+
+# TO REPLACE build_zarr_references()? ---------------->
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from typing import List
+import xarray as xr
+import virtualizarr
+
+def _parse_hourly_metadata(path: str):
+    """Parses one hour of data instantly into an in-memory virtual dataset."""
+    try:
+        # Grabs byte-ranges without writing anything to your hard drive
+        return virtualizarr.open_virtual_dataset(path, indexes={})
+    except Exception:
+        return None
+
+def build_hourly_timeseries(
+    remote_paths: List[str],
+    output_parquet: str,
+    max_workers: int = 64
+):
+    print(f"Scanning headers for {len(remote_paths)} hourly timesteps...")
+
+    # 1. Threaded multi-file I/O to read cloud metadata concurrently
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = executor.map(_parse_hourly_metadata, remote_paths)
+        v_datasets = [vds for vds in results if vds is not None]
+
+    if not v_datasets:
+        raise FileNotFoundError("No files could be parsed.")
+
+    print("Concatenating hourly timesteps across the time dimension...")
+    # 2. Xarray handles stacking your thousands of steps cleanly in memory
+    combined_vds = xr.concat(v_datasets, dim="time")
+
+    print(f"Writing a single, optimized Parquet reference file to {output_parquet}...")
+    # 3. Saves everything as a structured Parquet file instead of bloated JSON
+    combined_vds.vz.to_kerchunk(output_parquet, format="parquet")
+    print("Done!")
+
+# # To open later in your pipeline:
+# # ds = xr.open_dataset("nwm_thousands_of_hours.parq", engine="kerchunk"
+# <-------------------------------------------
 
 
 def build_zarr_references(
