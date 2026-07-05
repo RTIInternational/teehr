@@ -1,13 +1,16 @@
 """Module defining common utilities for fetching and processing NWM data."""
 from pathlib import Path
-from typing import Union, Optional, Iterable, List, Dict
+from typing import Union, Optional, Iterable, List, Dict, Tuple
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from datetime import timedelta
 import logging
 import re
 import json
+import tempfile
 from warnings import warn
 import asyncio
+import virtualizarr
 
 import dask
 import fsspec
@@ -162,6 +165,38 @@ def parse_nwm_json_paths(
     )
 
 
+def parse_nwm_forecast_gcs_paths(
+    gcs_paths: List[str],
+) -> pd.DataFrame:
+    """Parse day and z_hour from NWM file paths.
+
+    Works with any NWM file path type: GCS HDF5 (.nc), S3 or local kerchunk
+    JSON (.json), or VirtualiZarr parquet reference (.parq). Uses DAY_PATTERN
+    and TZ_PATTERN to extract day and z_hour; returns z_hour in 't00z' format
+    matching parse_nwm_json_paths.
+
+    Parameters
+    ----------
+    gcs_paths : List[str]
+        List of NWM file paths (GCS .nc, S3 .json, local .json, or local .parq).
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with columns: day (YYYYMMDD str), z_hour ('t00z' str),
+        filepath (str).
+    """
+    logger.debug("Parsing day and z-hour from NWM file paths.")
+    days = []
+    z_hours = []
+    for path in gcs_paths:
+        filename = Path(path).name
+        res = re.search(DAY_PATTERN, path).group()
+        days.append(res.split(".")[1])
+        z_hours.append(re.search(TZ_PATTERN, filename).group())
+    return pd.DataFrame({"day": days, "z_hour": z_hours, "filepath": gcs_paths})
+
+
 def format_nwm_configuration_metadata(
     nwm_config_name: str,
     nwm_version: str
@@ -251,6 +286,10 @@ def generate_json_paths(
     ignore_missing_file: bool
 ) -> List[str]:
     """Generate file paths to Kerchunk reference json files.
+
+    .. deprecated::
+        This function is no longer called by the NWM points pipeline and may be
+        removed in a future release. Use ``resolve_nwm_file_paths`` instead.
 
     Parameters
     ----------
@@ -513,49 +552,274 @@ def gen_json(
             return None
     return outf
 
-# TO REPLACE build_zarr_references()? ---------------->
-from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
-from typing import List
-import xarray as xr
-import virtualizarr
+def open_virtual_ref(
+    filepath: str,
+    reader_options: Optional[Dict] = None,
+    ignore_missing_file: bool = True,
+    cache_dir: Optional[Path] = None,
+) -> Optional[xr.Dataset]:
+    """Open a single virtual dataset from a reference or HDF5/NetCDF file path.
 
-def _parse_hourly_metadata(path: str):
-    """Parses one hour of data instantly into an in-memory virtual dataset."""
+    Detects the file type from the extension: ``.json`` or ``.parq`` files are
+    opened as kerchunk references; all other paths (e.g. GCS ``.nc``) are
+    scanned as HDF5 via VirtualiZarr. When a raw ``.nc`` path is scanned and
+    ``cache_dir`` is provided, the resulting virtual dataset is saved as a
+    ``.parq`` file in ``cache_dir`` for future reuse.
+
+    Error handling mirrors ``get_dataset``:
+
+    - ``FileNotFoundError`` / ``OSError``: log warning + return ``None`` if
+      ``ignore_missing_file=True``; raise if ``False``.
+    - All other exceptions always re-raise regardless of flag.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to a ``.json``, ``.parq``, or ``.nc`` file. Supports GCS, S3,
+        and local paths.
+    reader_options : Optional[Dict]
+        Passed directly to ``virtualizarr.open_virtual_dataset``, e.g.
+        ``{"storage_options": {"token": "anon"}}`` for GCS anonymous access.
+    ignore_missing_file : bool
+        Controls behaviour on missing or corrupt files.
+    cache_dir : Optional[Path]
+        If provided and ``filepath`` is a ``.nc`` file, the resulting virtual
+        dataset is saved as ``{date}.{fname}.parq`` in ``cache_dir``.
+
+    Returns
+    -------
+    Optional[xr.Dataset]
+        The virtual dataset, or ``None`` if the file is missing/corrupt and
+        ``ignore_missing_file`` is ``True``.
+    """
+    logger.debug(f"Opening virtual reference: {filepath}")
+    suffix = Path(filepath.split("?")[0]).suffix.lower()
     try:
-        # Grabs byte-ranges without writing anything to your hard drive
-        return virtualizarr.open_virtual_dataset(path, indexes={})
-    except Exception:
+        if suffix in (".json", ".parq"):
+            vds = virtualizarr.open_virtual_dataset(
+                filepath,
+                filetype="kerchunk",
+                reader_options=reader_options or {},
+            )
+        else:
+            vds = virtualizarr.open_virtual_dataset(
+                filepath,
+                indexes={},
+                reader_options=reader_options or {},
+            )
+            if cache_dir is not None:
+                p = filepath.split("/")
+                date = p[3]
+                fname = p[5]
+                cache_path = Path(cache_dir, f"{date}.{fname}.parq")
+                if not cache_path.exists():
+                    vds.vz.to_kerchunk(str(cache_path), format="parquet")
+                    logger.debug(f"Cached virtual reference to {cache_path}")
+        return vds
+    except FileNotFoundError as e:
+        if not ignore_missing_file:
+            raise e
+        logger.warning(f"A missing file was encountered: {filepath}")
+        return None
+    except OSError as e:
+        if not ignore_missing_file:
+            raise Exception(f"Corrupt file: {filepath}") from e
+        logger.warning(f"A potentially corrupt file was encountered: {filepath}")
         return None
 
-def build_hourly_timeseries(
-    remote_paths: List[str],
-    output_parquet: str,
-    max_workers: int = 64
-):
-    print(f"Scanning headers for {len(remote_paths)} hourly timesteps...")
 
-    # 1. Threaded multi-file I/O to read cloud metadata concurrently
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        results = executor.map(_parse_hourly_metadata, remote_paths)
-        v_datasets = [vds for vds in results if vds is not None]
+def open_virtual_refs_parallel(
+    filepaths: List[Optional[str]],
+    reader_options: Optional[Dict] = None,
+    ignore_missing_file: bool = True,
+    max_workers: int = 64,
+    cache_dir: Optional[Path] = None,
+) -> Tuple[List[xr.Dataset], List[bool]]:
+    """Open virtual datasets from a list of file paths in parallel.
 
-    if not v_datasets:
-        raise FileNotFoundError("No files could be parsed.")
+    Uses a ``ThreadPoolExecutor`` to open multiple virtual references
+    concurrently. ``None`` entries in ``filepaths`` (e.g. files pre-skipped by
+    ``resolve_nwm_file_paths`` for ``kerchunk_method="remote"``) are passed
+    through as ``None`` without incurring a network call.
 
-    print("Concatenating hourly timesteps across the time dimension...")
-    # 2. Xarray handles stacking your thousands of steps cleanly in memory
-    combined_vds = xr.concat(v_datasets, dim="time")
+    Parameters
+    ----------
+    filepaths : List[Optional[str]]
+        Paths to open. ``None`` entries are treated as pre-skipped files.
+    reader_options : Optional[Dict]
+        Passed through to ``open_virtual_ref`` for each file.
+    ignore_missing_file : bool
+        Passed through to ``open_virtual_ref``.
+    max_workers : int
+        Maximum number of threads for parallel opens. Default 64.
+    cache_dir : Optional[Path]
+        Passed through to ``open_virtual_ref`` for ``.nc`` file caching.
 
-    print(f"Writing a single, optimized Parquet reference file to {output_parquet}...")
-    # 3. Saves everything as a structured Parquet file instead of bloated JSON
-    combined_vds.vz.to_kerchunk(output_parquet, format="parquet")
-    print("Done!")
+    Returns
+    -------
+    Tuple[List[xr.Dataset], List[bool]]
+        ``(v_datasets, valid_mask)`` where ``valid_mask[i]`` is ``True`` if
+        ``filepaths[i]`` produced a valid dataset. Callers should use
+        ``valid_mask`` to align results with their own DataFrame or list.
+    """
+    def _open(fp: Optional[str]) -> Optional[xr.Dataset]:
+        if fp is None:
+            return None
+        return open_virtual_ref(
+            fp,
+            reader_options=reader_options,
+            ignore_missing_file=ignore_missing_file,
+            cache_dir=cache_dir,
+        )
 
-# # To open later in your pipeline:
-# # ds = xr.open_dataset("nwm_thousands_of_hours.parq", engine="kerchunk"
-# <-------------------------------------------
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(filepaths))) as executor:
+        results = list(executor.map(_open, filepaths))
 
+    valid_mask = [r is not None for r in results]
+    v_datasets = [r for r in results if r is not None]
+    return v_datasets, valid_mask
+
+
+def concat_and_open_virtual_datasets(
+    v_datasets: List[xr.Dataset],
+    concat_dim: str = "time",
+    storage_options: Optional[Dict] = None,
+) -> xr.Dataset:
+    """Concatenate virtual datasets and materialise as a single xarray Dataset.
+
+    Combines a list of VirtualiZarr virtual datasets along the specified
+    dimension, writes the combined manifest to a temporary Parquet reference
+    file, then opens it as a real xarray Dataset backed by a single zarr store.
+    zarr v3 fetches all required chunks asynchronously.
+
+    Parameters
+    ----------
+    v_datasets : List[xr.Dataset]
+        List of virtual datasets to concatenate.
+    concat_dim : str
+        Dimension to concatenate along. Default ``"time"``.
+    storage_options : Optional[Dict]
+        Passed to ``xr.open_dataset`` when opening the kerchunk dataset, e.g.
+        ``{"target_options": {"anon": True}}`` for anonymous GCS access.
+
+    Returns
+    -------
+    xr.Dataset
+        A materialised xarray Dataset backed by a single zarr store.
+    """
+    combined_vds = xr.concat(v_datasets, dim=concat_dim)
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".parq", delete=False) as tmp:
+            tmp_path = tmp.name
+        combined_vds.vz.to_kerchunk(tmp_path, format="parquet")
+        ds = xr.open_dataset(
+            tmp_path,
+            engine="kerchunk",
+            storage_options=storage_options or {},
+        )
+    finally:
+        if tmp_path is not None:
+            Path(tmp_path).unlink(missing_ok=True)
+    return ds
+
+
+def resolve_nwm_file_paths(
+    gcs_paths: List[str],
+    kerchunk_method: str,
+    json_dir: Path,
+    ignore_missing_file: bool,
+) -> List[Optional[str]]:
+    """Resolve the best available virtual reference path for each GCS file.
+
+    For each GCS file path, returns the highest-priority available reference
+    according to ``kerchunk_method``:
+
+    - ``"local"``: check ``json_dir`` for ``.parq`` then ``.json``; fall back
+      to the original GCS ``.nc`` path (VirtualiZarr will scan the HDF5 header
+      and cache the result to ``json_dir`` via ``open_virtual_ref``).
+    - ``"remote"``: check S3 for a pre-built kerchunk JSON using a single async
+      batch call; return ``None`` for files with no S3 JSON (they are skipped).
+    - ``"auto"``: check S3 first, then ``json_dir`` for ``.parq``/``.json``,
+      then fall back to the GCS ``.nc`` path.
+
+    Parameters
+    ----------
+    gcs_paths : List[str]
+        GCS paths to NWM netcdf files.
+    kerchunk_method : str
+        One of ``"local"``, ``"remote"``, or ``"auto"``.
+    json_dir : Path
+        Cache directory for local ``.json`` and ``.parq`` reference files.
+    ignore_missing_file : bool
+        Passed through for logging context; controls whether callers raise on
+        empty results.
+
+    Returns
+    -------
+    List[Optional[str]]
+        Same length as ``gcs_paths``. Each entry is the best available
+        reference path, or ``None`` if the file should be skipped
+        (``"remote"`` mode with no S3 JSON).
+    """
+    logger.debug(f"Resolving file paths. kerchunk_method: {kerchunk_method}")
+
+    json_dir_path = Path(json_dir)
+    if not json_dir_path.exists():
+        json_dir_path.mkdir(parents=True)
+
+    def _local_cache_path(gcs_path: str) -> Optional[str]:
+        p = gcs_path.split("/")
+        date = p[3]
+        fname = p[5]
+        parq = Path(json_dir, f"{date}.{fname}.parq")
+        if parq.exists():
+            return str(parq)
+        jsn = Path(json_dir, f"{date}.{fname}.json")
+        if jsn.exists():
+            return str(jsn)
+        return None
+
+    resolved: List[Optional[str]] = [None] * len(gcs_paths)
+
+    if kerchunk_method == SupportedKerchunkMethod.local:
+        for i, gcs_path in enumerate(gcs_paths):
+            cached = _local_cache_path(gcs_path)
+            resolved[i] = cached if cached is not None else gcs_path
+
+    elif kerchunk_method == SupportedKerchunkMethod.remote:
+        fs = fsspec.filesystem("s3", anon=True, asynchronous=True)
+        s3_paths = [
+            f"{NWM_S3_JSON_PATH}/{p.split('://')[1]}.json" for p in gcs_paths
+        ]
+        file_check = asyncio.run(check_if_files_exist(fs, s3_paths))
+        found = sum(1 for v in file_check.values() if v)
+        logger.info(
+            f"Mode: {kerchunk_method}. Found {found} pre-built jsons in s3,"
+            f" skipping {len(gcs_paths) - found} missing files."
+        )
+        for i, s3_path in enumerate(s3_paths):
+            resolved[i] = s3_path if file_check.get(s3_path) else None
+
+    elif kerchunk_method == SupportedKerchunkMethod.auto:
+        fs = fsspec.filesystem("s3", anon=True, asynchronous=True)
+        s3_paths = [
+            f"{NWM_S3_JSON_PATH}/{p.split('://')[1]}.json" for p in gcs_paths
+        ]
+        file_check = asyncio.run(check_if_files_exist(fs, s3_paths))
+        found = sum(1 for v in file_check.values() if v)
+        logger.info(
+            f"Mode: {kerchunk_method}. Found {found} pre-built jsons in s3,"
+            f" checking local cache and GCS for {len(gcs_paths) - found} remaining files."
+        )
+        for i, (gcs_path, s3_path) in enumerate(zip(gcs_paths, s3_paths)):
+            if file_check.get(s3_path):
+                resolved[i] = s3_path
+            else:
+                cached = _local_cache_path(gcs_path)
+                resolved[i] = cached if cached is not None else gcs_path
+
+    return resolved
 
 def build_zarr_references(
     remote_paths: List[str],
