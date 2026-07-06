@@ -12,7 +12,7 @@ from teehr.fetching.nwm.point_utils import (
     fetch_and_format_nwm_points,
 )
 from teehr.fetching.utils import (
-    resolve_nwm_file_paths,
+    generate_json_paths,
     build_remote_nwm_filelist,
     validate_operational_start_end_date,
     start_on_z_hour,
@@ -333,17 +333,17 @@ def nwm_to_parquet(
             gcs_component_paths=gcs_component_paths
         )
 
-        # Resolve the best available reference path for each GCS file
-        file_paths = resolve_nwm_file_paths(
-            gcs_paths=gcs_component_paths,
-            kerchunk_method=kerchunk_method,
-            json_dir=Path(json_dir),
-            ignore_missing_file=ignore_missing_file,
+        # Create paths to local and/or remote kerchunk jsons
+        json_paths = generate_json_paths(
+            kerchunk_method,
+            gcs_component_paths,
+            json_dir,
+            ignore_missing_file
         )
 
         # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_points(
-            file_paths=file_paths,
+            file_paths=json_paths,
             location_ids=location_ids,
             configuration=configuration,
             variable_name=variable_name,
@@ -356,5 +356,4 @@ def nwm_to_parquet(
             variable_mapper=variable_mapper,
             timeseries_type=timeseries_type,
             drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,
-            cache_dir=Path(json_dir),
         )

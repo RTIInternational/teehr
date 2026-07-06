@@ -14,9 +14,7 @@ from teehr.fetching.utils import (
     split_dataframe,
     format_nwm_configuration_metadata,
     parse_nwm_json_paths,
-    parse_nwm_forecast_gcs_paths,
-    open_virtual_refs_parallel,
-    concat_and_open_virtual_datasets,
+    combine_and_open_kerchunk_refs,
 )
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -27,7 +25,7 @@ from teehr.fetching.const import (
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME,
-    MEMBER
+    MEMBER,
 )
 
 
@@ -47,7 +45,7 @@ def file_chunk_loop(
     .. deprecated::
         This function is no longer called by the NWM points pipeline and
         may be removed in a future release. Processing is now handled by
-        ``open_virtual_refs_parallel`` and ``concat_and_open_virtual_datasets``.
+        ``combine_and_open_kerchunk_refs``.
     """
     ds = get_dataset(
         row.filepath,
@@ -113,7 +111,6 @@ def process_chunk_of_files(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-    cache_dir: Optional[Path] = None,
 ):
     """Assemble a table for a chunk of NWM files."""
     location_ids = np.array(location_ids).astype(int)
@@ -130,23 +127,18 @@ def process_chunk_of_files(
             (MEMBER, pa.string())
         ]
     )
+    valid_paths = [fp for fp in df.filepath.tolist() if fp is not None]
+    df_valid = df[[fp is not None for fp in df.filepath.tolist()]].reset_index(drop=True)
 
-    v_datasets, valid_mask = open_virtual_refs_parallel(
-        filepaths=df.filepath.tolist(),
-        reader_options={"storage_options": {"token": "anon"}},
-        ignore_missing_file=ignore_missing_file,
-        cache_dir=cache_dir,
-    )
-    df_valid = df[valid_mask].reset_index(drop=True)
-
-    if not v_datasets:
+    if not valid_paths:
         raise FileNotFoundError(
             "No NWM files for specified input configuration were found in GCS!"
         )
 
-    ds = concat_and_open_virtual_datasets(
-        v_datasets=v_datasets,
-        concat_dim="time",
+    ds = combine_and_open_kerchunk_refs(
+        json_paths=valid_paths,
+        target_protocol="gcs",
+        target_options={"anon": True},
         storage_options={"target_options": {"anon": True}},
     )
 
@@ -242,7 +234,6 @@ def fetch_and_format_nwm_points(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-    cache_dir: Optional[Path] = None,
 ):
     """Fetch NWM point data and save as parquet files.
 
@@ -291,19 +282,14 @@ def fetch_and_format_nwm_points(
     if not output_parquet_dir.exists():
         output_parquet_dir.mkdir(parents=True)
 
-    # Filter None entries (files skipped by resolve_nwm_file_paths)
+    # Filter None entries (files skipped for remote mode with no S3 JSON)
     non_null_paths = [p for p in file_paths if p is not None]
     if not non_null_paths:
         raise FileNotFoundError(
             "No NWM files could be resolved for the given configuration."
         )
 
-    # Parse day/z_hour from whichever path type was resolved
-    first_path = non_null_paths[0]
-    if first_path.endswith(".nc"):
-        df_refs = parse_nwm_forecast_gcs_paths(non_null_paths)
-    else:
-        df_refs = parse_nwm_json_paths(non_null_paths)
+    df_refs = parse_nwm_json_paths(non_null_paths)
 
     if process_by_z_hour:
         # Option #1. Groupby day and z_hour
@@ -327,5 +313,4 @@ def fetch_and_format_nwm_points(
             variable_mapper,
             timeseries_type,
             drop_overlapping_assimilation_values,
-            cache_dir=cache_dir,
         )

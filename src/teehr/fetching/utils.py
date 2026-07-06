@@ -1,17 +1,16 @@
 """Module defining common utilities for fetching and processing NWM data."""
 from pathlib import Path
-from typing import Union, Optional, Iterable, List, Dict, Tuple
+from typing import Union, Optional, Iterable, List, Dict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from datetime import timedelta
 import logging
 import re
 import json
-import tempfile
 from warnings import warn
 import asyncio
-import virtualizarr
 
+from kerchunk.combine import MultiZarrToZarr
 import dask
 import fsspec
 import ujson  # fast json
@@ -287,10 +286,6 @@ def generate_json_paths(
 ) -> List[str]:
     """Generate file paths to Kerchunk reference json files.
 
-    .. deprecated::
-        This function is no longer called by the NWM points pipeline and may be
-        removed in a future release. Use ``resolve_nwm_file_paths`` instead.
-
     Parameters
     ----------
     kerchunk_method : str
@@ -324,8 +319,8 @@ def generate_json_paths(
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
-            (f"Mode: {kerchunk_method}. Found {len(json_paths)} pre-built jsons in s3,")
-            (f" skipping {len(missing_files)} missing files.")
+            f"Mode: {kerchunk_method}. Found {len(json_paths)} pre-built jsons in s3,"
+            f" skipping {len(missing_files)} missing files."
         )
 
     elif kerchunk_method == SupportedKerchunkMethod.auto:
@@ -336,8 +331,8 @@ def generate_json_paths(
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
-            (f"Mode: {kerchunk_method}. Found {len(json_paths)} pre-built jsons in s3,")
-            (f" building references for {len(missing_files)} files.")
+            f"Mode: {kerchunk_method}. Found {len(json_paths)} pre-built jsons in s3,"
+            f" building references for {len(missing_files)} files."
         )
 
         if len(missing_files) > 0:
@@ -552,176 +547,67 @@ def gen_json(
             return None
     return outf
 
-def open_virtual_ref(
-    filepath: str,
-    reader_options: Optional[Dict] = None,
-    ignore_missing_file: bool = True,
-    cache_dir: Optional[Path] = None,
-) -> Optional[xr.Dataset]:
-    """Open a single virtual dataset from a reference or HDF5/NetCDF file path.
 
-    Detects the file type from the extension: ``.json`` or ``.parq`` files are
-    opened as kerchunk references; all other paths (e.g. GCS ``.nc``) are
-    scanned as HDF5 via VirtualiZarr. When a raw ``.nc`` path is scanned and
-    ``cache_dir`` is provided, the resulting virtual dataset is saved as a
-    ``.parq`` file in ``cache_dir`` for future reuse.
-
-    Error handling mirrors ``get_dataset``:
-
-    - ``FileNotFoundError`` / ``OSError``: log warning + return ``None`` if
-      ``ignore_missing_file=True``; raise if ``False``.
-    - All other exceptions always re-raise regardless of flag.
-
-    Parameters
-    ----------
-    filepath : str
-        Path to a ``.json``, ``.parq``, or ``.nc`` file. Supports GCS, S3,
-        and local paths.
-    reader_options : Optional[Dict]
-        Passed directly to ``virtualizarr.open_virtual_dataset``, e.g.
-        ``{"storage_options": {"token": "anon"}}`` for GCS anonymous access.
-    ignore_missing_file : bool
-        Controls behaviour on missing or corrupt files.
-    cache_dir : Optional[Path]
-        If provided and ``filepath`` is a ``.nc`` file, the resulting virtual
-        dataset is saved as ``{date}.{fname}.parq`` in ``cache_dir``.
-
-    Returns
-    -------
-    Optional[xr.Dataset]
-        The virtual dataset, or ``None`` if the file is missing/corrupt and
-        ``ignore_missing_file`` is ``True``.
-    """
-    logger.debug(f"Opening virtual reference: {filepath}")
-    suffix = Path(filepath.split("?")[0]).suffix.lower()
-    try:
-        if suffix in (".json", ".parq"):
-            vds = virtualizarr.open_virtual_dataset(
-                filepath,
-                filetype="kerchunk",
-                reader_options=reader_options or {},
-            )
-        else:
-            vds = virtualizarr.open_virtual_dataset(
-                filepath,
-                indexes={},
-                reader_options=reader_options or {},
-            )
-            if cache_dir is not None:
-                p = filepath.split("/")
-                date = p[3]
-                fname = p[5]
-                cache_path = Path(cache_dir, f"{date}.{fname}.parq")
-                if not cache_path.exists():
-                    vds.vz.to_kerchunk(str(cache_path), format="parquet")
-                    logger.debug(f"Cached virtual reference to {cache_path}")
-        return vds
-    except FileNotFoundError as e:
-        if not ignore_missing_file:
-            raise e
-        logger.warning(f"A missing file was encountered: {filepath}")
-        return None
-    except OSError as e:
-        if not ignore_missing_file:
-            raise Exception(f"Corrupt file: {filepath}") from e
-        logger.warning(f"A potentially corrupt file was encountered: {filepath}")
-        return None
-
-
-def open_virtual_refs_parallel(
-    filepaths: List[Optional[str]],
-    reader_options: Optional[Dict] = None,
-    ignore_missing_file: bool = True,
-    max_workers: int = 64,
-    cache_dir: Optional[Path] = None,
-) -> Tuple[List[xr.Dataset], List[bool]]:
-    """Open virtual datasets from a list of file paths in parallel.
-
-    Uses a ``ThreadPoolExecutor`` to open multiple virtual references
-    concurrently. ``None`` entries in ``filepaths`` (e.g. files pre-skipped by
-    ``resolve_nwm_file_paths`` for ``kerchunk_method="remote"``) are passed
-    through as ``None`` without incurring a network call.
-
-    Parameters
-    ----------
-    filepaths : List[Optional[str]]
-        Paths to open. ``None`` entries are treated as pre-skipped files.
-    reader_options : Optional[Dict]
-        Passed through to ``open_virtual_ref`` for each file.
-    ignore_missing_file : bool
-        Passed through to ``open_virtual_ref``.
-    max_workers : int
-        Maximum number of threads for parallel opens. Default 64.
-    cache_dir : Optional[Path]
-        Passed through to ``open_virtual_ref`` for ``.nc`` file caching.
-
-    Returns
-    -------
-    Tuple[List[xr.Dataset], List[bool]]
-        ``(v_datasets, valid_mask)`` where ``valid_mask[i]`` is ``True`` if
-        ``filepaths[i]`` produced a valid dataset. Callers should use
-        ``valid_mask`` to align results with their own DataFrame or list.
-    """
-    def _open(fp: Optional[str]) -> Optional[xr.Dataset]:
-        if fp is None:
-            return None
-        return open_virtual_ref(
-            fp,
-            reader_options=reader_options,
-            ignore_missing_file=ignore_missing_file,
-            cache_dir=cache_dir,
-        )
-
-    with ThreadPoolExecutor(max_workers=min(max_workers, len(filepaths))) as executor:
-        results = list(executor.map(_open, filepaths))
-
-    valid_mask = [r is not None for r in results]
-    v_datasets = [r for r in results if r is not None]
-    return v_datasets, valid_mask
-
-
-def concat_and_open_virtual_datasets(
-    v_datasets: List[xr.Dataset],
-    concat_dim: str = "time",
+def combine_and_open_kerchunk_refs(
+    json_paths: List[str],
+    target_protocol: str = "gcs",
+    target_options: Optional[Dict] = None,
+    concat_dims: Optional[List[str]] = None,
     storage_options: Optional[Dict] = None,
 ) -> xr.Dataset:
-    """Concatenate virtual datasets and materialise as a single xarray Dataset.
+    """Combine multiple kerchunk reference files into a single xarray Dataset.
 
-    Combines a list of VirtualiZarr virtual datasets along the specified
-    dimension, writes the combined manifest to a temporary Parquet reference
-    file, then opens it as a real xarray Dataset backed by a single zarr store.
-    zarr v3 fetches all required chunks asynchronously.
+    Reads all reference files in parallel (handles local, S3, and GCS paths),
+    merges them with ``MultiZarrToZarr``, then opens the combined zarr store
+    as a single xarray Dataset.  zarr v3 fetches all required chunks
+    asynchronously from the merged store.
 
     Parameters
     ----------
-    v_datasets : List[xr.Dataset]
-        List of virtual datasets to concatenate.
-    concat_dim : str
-        Dimension to concatenate along. Default ``"time"``.
+    json_paths : List[str]
+        Paths to kerchunk JSON reference files. Mixed local/S3/GCS paths are
+        supported within the same call.
+    target_protocol : str
+        fsspec protocol for the actual data chunks referenced in the JSON
+        files. Default ``"gcs"``.
+    target_options : Optional[Dict]
+        Auth/storage options for the data chunks. Defaults to
+        ``{"anon": True}``.
+    concat_dims : Optional[List[str]]
+        Dimension(s) to concatenate along. Default ``["time"]``.
     storage_options : Optional[Dict]
-        Passed to ``xr.open_dataset`` when opening the kerchunk dataset, e.g.
-        ``{"target_options": {"anon": True}}`` for anonymous GCS access.
+        Passed to ``xr.open_dataset`` for the kerchunk engine, e.g.
+        ``{"target_options": {"anon": True}}``.
 
     Returns
     -------
     xr.Dataset
         A materialised xarray Dataset backed by a single zarr store.
     """
-    combined_vds = xr.concat(v_datasets, dim=concat_dim)
-    tmp_path = None
-    try:
-        with tempfile.NamedTemporaryFile(suffix=".parq", delete=False) as tmp:
-            tmp_path = tmp.name
-        combined_vds.vz.to_kerchunk(tmp_path, format="parquet")
-        ds = xr.open_dataset(
-            tmp_path,
-            engine="kerchunk",
-            storage_options=storage_options or {},
-        )
-    finally:
-        if tmp_path is not None:
-            Path(tmp_path).unlink(missing_ok=True)
-    return ds
+    def _read_ref(path: str) -> dict:
+        if path.startswith("s3://"):
+            with fsspec.open(path, "rb", anon=True) as f:
+                return ujson.load(f)
+        if path.startswith(("gcs://", "gs://")):
+            with fsspec.open(path, "rb", token="anon") as f:
+                return ujson.load(f)
+        return ujson.loads(Path(path).read_bytes())
+
+    with ThreadPoolExecutor(max_workers=min(64, len(json_paths))) as executor:
+        refs = list(executor.map(_read_ref, json_paths))
+
+    mzz = MultiZarrToZarr(
+        refs,
+        remote_protocol=target_protocol,
+        remote_options=target_options or {"anon": True},
+        concat_dims=concat_dims or ["time"],
+    )
+    combined = mzz.translate()
+    return xr.open_dataset(
+        combined,
+        engine="kerchunk",
+        storage_options=storage_options or {},
+    )
 
 
 def resolve_nwm_file_paths(
@@ -737,7 +623,7 @@ def resolve_nwm_file_paths(
 
     - ``"local"``: check ``json_dir`` for ``.parq`` then ``.json``; fall back
       to the original GCS ``.nc`` path (VirtualiZarr will scan the HDF5 header
-      and cache the result to ``json_dir`` via ``open_virtual_ref``).
+      and cache the result to ``json_dir``).
     - ``"remote"``: check S3 for a pre-built kerchunk JSON using a single async
       batch call; return ``None`` for files with no S3 JSON (they are skipped).
     - ``"auto"``: check S3 first, then ``json_dir`` for ``.parq``/``.json``,
@@ -820,6 +706,7 @@ def resolve_nwm_file_paths(
                 resolved[i] = cached if cached is not None else gcs_path
 
     return resolved
+
 
 def build_zarr_references(
     remote_paths: List[str],
