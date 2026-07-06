@@ -313,9 +313,8 @@ def generate_json_paths(
 
     elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
-        fs = fsspec.filesystem("s3", anon=True, asynchronous=True)
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = asyncio.run(check_if_files_exist(fs, s3_path_list))
+        file_check_output = asyncio.run(check_if_files_exist(s3_path_list))
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -325,9 +324,8 @@ def generate_json_paths(
 
     elif kerchunk_method == SupportedKerchunkMethod.auto:
         # Use whatever pre-builts exist, and create the missing
-        fs = fsspec.filesystem("s3", anon=True, asynchronous=True)
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = asyncio.run(check_if_files_exist(fs, s3_path_list))
+        file_check_output = asyncio.run(check_if_files_exist(s3_path_list))
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -479,13 +477,18 @@ def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
 
 
-async def check_if_files_exist(fs: fsspec.filesystem, file_path_list: List[str]) -> Dict[str, bool]:
-    """Check for existence of files asynchronously."""
-    # Prepare concurrent tasks using the internal async method _exists
+async def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
+    """Check for existence of S3 files asynchronously.
+
+    Creates a fresh async S3 filesystem inside the coroutine so the
+    aiohttp TCPConnector is bound to the same event loop as the
+    ``asyncio.run()`` caller.  Reusing a filesystem created outside the
+    coroutine attaches Futures to a different loop, causing errors when
+    the same process runs multiple fetches in sequence.
+    """
+    fs = fsspec.filesystem("s3", anon=True, asynchronous=True, skip_instance_cache=True)
     tasks = [fs._exists(path) for path in file_path_list]
-    # Execute all network requests in parallel
     results = await asyncio.gather(*tasks)
-    # Map each path to its True/False result
     return dict(zip(file_path_list, results))
 
 
@@ -613,8 +616,7 @@ def combine_and_open_kerchunk_refs(
 def resolve_nwm_file_paths(
     gcs_paths: List[str],
     kerchunk_method: str,
-    json_dir: Path,
-    ignore_missing_file: bool,
+    json_dir: Path
 ) -> List[Optional[str]]:
     """Resolve the best available virtual reference path for each GCS file.
 
@@ -674,11 +676,10 @@ def resolve_nwm_file_paths(
             resolved[i] = cached if cached is not None else gcs_path
 
     elif kerchunk_method == SupportedKerchunkMethod.remote:
-        fs = fsspec.filesystem("s3", anon=True, asynchronous=True)
         s3_paths = [
             f"{NWM_S3_JSON_PATH}/{p.split('://')[1]}.json" for p in gcs_paths
         ]
-        file_check = asyncio.run(check_if_files_exist(fs, s3_paths))
+        file_check = asyncio.run(check_if_files_exist(s3_paths))
         found = sum(1 for v in file_check.values() if v)
         logger.info(
             f"Mode: {kerchunk_method}. Found {found} pre-built jsons in s3,"
@@ -688,11 +689,10 @@ def resolve_nwm_file_paths(
             resolved[i] = s3_path if file_check.get(s3_path) else None
 
     elif kerchunk_method == SupportedKerchunkMethod.auto:
-        fs = fsspec.filesystem("s3", anon=True, asynchronous=True)
         s3_paths = [
             f"{NWM_S3_JSON_PATH}/{p.split('://')[1]}.json" for p in gcs_paths
         ]
-        file_check = asyncio.run(check_if_files_exist(fs, s3_paths))
+        file_check = asyncio.run(check_if_files_exist(s3_paths))
         found = sum(1 for v in file_check.values() if v)
         logger.info(
             f"Mode: {kerchunk_method}. Found {found} pre-built jsons in s3,"
