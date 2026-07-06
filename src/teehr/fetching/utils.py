@@ -303,7 +303,7 @@ def generate_json_paths(
     List[str]
         List of filepaths to json files locally and/or in s3.
     """
-    logger.debug(f"Generating json paths. kerchunk_method: {kerchunk_method}")
+    logger.info(f"Generating json paths. kerchunk_method: {kerchunk_method}")
 
     if kerchunk_method == SupportedKerchunkMethod.local:
         # Create them manually first

@@ -2,8 +2,8 @@
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 import re
+import logging
 
-import fsspec
 import numpy as np
 import pandas as pd
 import pyarrow as pa
@@ -26,6 +26,8 @@ from teehr.fetching.const import (
     CONFIGURATION_NAME,
     MEMBER,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def process_chunk_of_files(
@@ -230,6 +232,8 @@ def fetch_and_format_nwm_points(
     else:
         # Option #2. Chunk by some number of files
         dfs = split_dataframe(df_refs, stepsize)
+
+    logger.info(f"Processing {len(dfs)} chunks of files for configuration: {configuration}, variable: {variable_name}.")
 
     for df in dfs:
         process_chunk_of_files(
