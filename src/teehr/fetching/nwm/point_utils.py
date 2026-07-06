@@ -1,15 +1,14 @@
 """Module defining shared functions for processing NWM point data."""
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional
 import re
 
-import dask
+import fsspec
 import numpy as np
 import pandas as pd
 import pyarrow as pa
 
 from teehr.fetching.utils import (
-    get_dataset,
     write_timeseries_parquet_file,
     split_dataframe,
     format_nwm_configuration_metadata,
@@ -27,75 +26,6 @@ from teehr.fetching.const import (
     CONFIGURATION_NAME,
     MEMBER,
 )
-
-
-@dask.delayed
-def file_chunk_loop(
-    row: Tuple,
-    location_ids: np.array,
-    variable_name: str,
-    configuration: str,
-    schema: pa.Schema,
-    ignore_missing_file: bool,
-    nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
-):
-    """Fetch NWM values and convert to tabular format for a single json.
-
-    .. deprecated::
-        This function is no longer called by the NWM points pipeline and
-        may be removed in a future release. Processing is now handled by
-        ``combine_and_open_kerchunk_refs``.
-    """
-    ds = get_dataset(
-        row.filepath,
-        ignore_missing_file,
-        target_options={'anon': True}
-    )
-    if not ds:
-        return None
-    ds = ds.sel(feature_id=location_ids)
-    vals = ds[variable_name].astype("float32").values
-    nwm_units = ds[variable_name].units
-
-    if variable_mapper is None:
-        teehr_variable_name = variable_name
-        teehr_units = nwm_units
-    else:
-        teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
-            variable_name, {}
-        ).get("name", variable_name)
-        teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, {}).get("name", nwm_units)
-
-    ref_time = pd.to_datetime(row.day) \
-        + pd.to_timedelta(int(row.z_hour[1:3]), unit="h")
-
-    valid_time = ds.time.values
-    feature_ids = ds.feature_id.values.astype(int)
-    teehr_location_ids = \
-        [f"{nwm_version}-{feat_id}" for feat_id in feature_ids]
-    num_vals = vals.size
-
-    teehr_config = format_nwm_configuration_metadata(
-        nwm_config_name=configuration,
-        nwm_version=nwm_version
-    )
-
-    output_table = pa.table(
-        {
-            VALUE: vals,
-            REFERENCE_TIME: np.full(vals.shape, ref_time),
-            LOCATION_ID: teehr_location_ids,
-            VALUE_TIME: np.full(vals.shape, valid_time),
-            CONFIGURATION_NAME: num_vals * [teehr_config["name"]],
-            VARIABLE_NAME: num_vals * [teehr_variable_name],
-            UNIT_NAME: num_vals * [teehr_units],
-            MEMBER: num_vals * [teehr_config["member"]]
-        },
-        schema=schema,
-    )
-
-    return output_table
 
 
 def process_chunk_of_files(
@@ -135,12 +65,14 @@ def process_chunk_of_files(
             "No NWM files for specified input configuration were found in GCS!"
         )
 
-    ds = combine_and_open_kerchunk_refs(
+    ds, read_mask = combine_and_open_kerchunk_refs(
         json_paths=valid_paths,
+        ignore_missing_file=ignore_missing_file,
         target_protocol="gcs",
         target_options={"anon": True},
         storage_options={"target_options": {"anon": True}},
     )
+    df_valid = df_valid[read_mask].reset_index(drop=True)
 
     ds = ds.sel(feature_id=location_ids)
     vals = ds[variable_name].astype("float32").values
