@@ -336,12 +336,16 @@ def generate_json_paths(
         )
 
         if len(missing_files) > 0:
-            # Set back to gcs paths
-            missing_files = [path.replace(NWM_S3_JSON_PATH, "gcs:/") for path in missing_files]
+            # Set back to gcs paths and strip the .json extension
+            missing_files = [
+                path.replace(NWM_S3_JSON_PATH, "gcs:/").replace(".json", "") for path in missing_files
+            ]
             json_paths.extend(
-                build_zarr_references(missing_files,
-                                      json_dir,
-                                      ignore_missing_file)
+                build_zarr_references(
+                    missing_files,
+                    json_dir,
+                    ignore_missing_file
+                )
             )
 
     return json_paths
