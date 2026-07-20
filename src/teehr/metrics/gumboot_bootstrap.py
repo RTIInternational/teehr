@@ -55,7 +55,7 @@ class GumbootBootstrap(IIDBootstrap):
             self.boot_year_array = np.genfromtxt(
                 boot_year_file, delimiter=",", dtype=int
             )
-            if np.in1d(
+            if np.isin(
                 np.unique(self.boot_year_array),
                 self.unique_water_years
             ).all() is False:
