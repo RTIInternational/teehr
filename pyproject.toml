@@ -14,7 +14,7 @@ license = "GNU v3"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.14"
+python = ">=3.11,<=3.14"
 geopandas = ">=1,<2"
 pydantic = ">=2.4.2,<3"
 dask = ">=2026"
