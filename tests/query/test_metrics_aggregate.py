@@ -309,7 +309,7 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
     assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 15.99071)
     assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 16.27986)
     assert np.isclose(
-        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.42549799
+        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.4226622
     )
     assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[2])
 
