@@ -1,5 +1,22 @@
 # Release Notes
 
+## 0.6.6 - 2026-07-28
+
+### Added
+- Added migration scripts in `src/teehr/migrations/0010` to rename `streamflow_hourly_inst` to `streamflow_none_inst` in `primary_timeseries`.
+
+### Changed
+- None
+
+### Fixed
+- Renamed `streamflow_hourly_inst` to `streamflow_none_inst` in USGS fetching
+
+### Dependencies
+- None
+
+### Deprecated
+- None
+
 ## 0.6.5 - 2026-06-02
 
 ### Added
