@@ -26,7 +26,7 @@ NWM_S3_JSON_PATH = "s3://ciroh-nwm-zarr-copy"
 
 USGS_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
-        "iv": "streamflow_hourly_inst",
+        "iv": "streamflow_none_inst",
         "dv": "streamflow_daily_mean",
     },
     UNIT_NAME: {
