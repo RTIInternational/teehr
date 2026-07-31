@@ -672,10 +672,6 @@ def _configure_iceberg_catalogs(
     conf.set(f"spark.sql.catalog.{remote_catalog_name}.uri", remote_catalog_uri)
     conf.set(f"spark.sql.catalog.{remote_catalog_name}.warehouse", remote_warehouse_dir)
     conf.set(f"spark.sql.catalog.{remote_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
-    # S3 end point and path style access
-    if os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "false").lower() == "true":
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint", os.environ.get("REMOTE_CATALOG_S3_ENDPOINT"))
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access", os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS").lower())
 
 
 def _update_configs_and_packages(
@@ -1105,30 +1101,10 @@ def _build_polaris_auth_configs(
             except requests.HTTPError as exc:
                 if not _is_http_error_with_status(exc, 401):
                     raise
-                current_user_token, refresh_token, _ = ensure_fresh_polaris_user_token(
-                    current_token=None,
-                    username=os.getenv("POLARIS_USERNAME"),
-                    password=os.getenv("POLARIS_PASSWORD"),
-                    client_id=os.getenv("POLARIS_CLIENT_ID", "jupyterhub"),
-                    client_secret=os.getenv("POLARIS_CLIENT_SECRET"),
-                    refresh_token=refresh_token,
-                    allow_password_fallback=True,
-                    refresh_window_seconds=300,
-                    token_endpoint=os.getenv("POLARIS_OAUTH2_TOKEN_ENDPOINT"),
-                )
-                os.environ["POLARIS_USER_TOKEN"] = current_user_token
-                if refresh_token:
-                    os.environ["POLARIS_REFRESH_TOKEN"] = refresh_token
-                broker_session_token = ensure_broker_session_token(
-                    user_id=authmanager_user_id,
-                    session_id=authmanager_session_id,
-                    realm=polaris_realm,
-                    refresh_token=refresh_token,
-                    bearer_token=current_user_token,
-                    catalog="iceberg",
-                    audience=broker_audience,
-                    broker_url=broker_url,
-                )
+                raise RuntimeError(
+                    "Broker session creation failed with 401 — user token is invalid or expired. "
+                    "Re-authenticate via JupyterHub to obtain a fresh token."
+                ) from exc
             os.environ["POLARIS_BROKER_SESSION_TOKEN"] = broker_session_token
 
         configs["spark.sql.catalog.iceberg.rest.auth.type"] = (
@@ -1168,6 +1144,11 @@ def _build_polaris_auth_configs(
             credential = f"{polaris_client_id}:{polaris_client_secret}"
             configs["spark.sql.catalog.iceberg.credential"] = credential
             configs["spark.sql.catalog.iceberg.rest.auth.oauth2.credential"] = credential
+
+    # STS credential vending: Polaris vends per-request S3 credentials via the catalog REST API.
+    # When active, explicit S3 catalog credentials are superseded by Polaris-vended ones.
+    if _as_bool_str(os.getenv("POLARIS_USE_STS", "false")) == "true":
+        configs["spark.sql.catalog.iceberg.s3.remote-signing-enabled"] = "true"
 
     return configs
 
