@@ -19,7 +19,6 @@ from sedona.spark import SedonaContext
 import pandas as pd
 import botocore.session
 
-import teehr.const as const
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,12 +34,12 @@ SEDONA_VERSION = "1.8.0"
 def create_spark_session(
     # App name and catalog settings
     app_name: str = "TEEHR Evaluation",
-    local_catalog_name: str = const.LOCAL_CATALOG_NAME,
-    local_catalog_type: str = const.LOCAL_CATALOG_TYPE,
-    remote_warehouse_dir: str = const.REMOTE_WAREHOUSE_S3_PATH,
-    remote_catalog_name: str = const.REMOTE_CATALOG_NAME,
-    remote_catalog_type: str = const.REMOTE_CATALOG_TYPE,
-    remote_catalog_uri: str = const.REMOTE_CATALOG_REST_URI,
+    local_catalog_name: str = "local",
+    local_catalog_type: str = "jdbc",
+    remote_warehouse_dir: Optional[str] = None,
+    remote_catalog_name: str = "iceberg",
+    remote_catalog_type: Optional[str] = None,
+    remote_catalog_uri: Optional[str] = None,
     # Spark K8'specific parameters
     start_spark_cluster: bool = False,
     force_recreate_session: bool = False,
@@ -51,12 +50,12 @@ def create_spark_session(
     executor_namespace: str = None,
     driver_memory: str = None,
     driver_max_result_size: str = None,
-    pod_template_path: Union[str, Path] = const.POD_TEMPLATE_PATH,
+    pod_template_path: Optional[Union[str, Path]] = None,
     # AWS credential parameters
     aws_access_key_id: str = None,
     aws_secret_access_key: str = None,
     aws_session_token: str = None,
-    aws_region: str = const.AWS_REGION,
+    aws_region: Optional[str] = None,
     aws_profile: str = None,
     # GCS credential parameters
     enable_gcs: bool = False,
@@ -158,6 +157,13 @@ def create_spark_session(
         Configured Spark session.
     """
     logger.info(f"🚀 Creating Spark session: {app_name}")
+
+    # Resolve env-var-backed defaults at call time, not at module import
+    remote_warehouse_dir = remote_warehouse_dir or os.getenv("REMOTE_WAREHOUSE_S3_PATH", "")
+    remote_catalog_type = remote_catalog_type or os.getenv("REMOTE_CATALOG_TYPE", "rest")
+    remote_catalog_uri = remote_catalog_uri or os.getenv("REMOTE_CATALOG_REST_URI", "")
+    aws_region = aws_region or os.getenv("AWS_REGION", "us-east-2")
+    pod_template_path = pod_template_path or "/opt/teehr/executor-pod-template.yaml"
 
     # AuthManager requires a fresh JVM per user session to avoid static state leakage
     resolved_use_authmanager = (
@@ -418,8 +424,8 @@ def _set_spark_cluster_configuration(
     conf.set("spark.sql.shuffle.partitions", str(default_shuffle_partitions))
 
     # Authentication - use service account token if available
-    token_file = const.SERVICE_ACCOUNT_TOKEN_PATH
-    ca_file = const.CA_CERTIFICATE_PATH
+    token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
     if os.path.exists(token_file) and os.path.exists(ca_file):
         logger.info("🔐 Using in-cluster authentication")
         conf.set("spark.kubernetes.authenticate.submission.oauthTokenFile", token_file)
