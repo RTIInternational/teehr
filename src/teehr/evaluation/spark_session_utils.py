@@ -152,6 +152,16 @@ def create_spark_session(
     debug_config : bool
         Whether to log the final Spark configuration for debugging.
         Default is False.
+    polaris_token : str, optional
+        Short-lived Polaris access token to pass directly to the Iceberg REST
+        catalog. Used when the AuthManager broker path is not active. When
+        omitted, the service-account client-credentials path is used instead
+        (requires ``POLARIS_CLIENT_ID`` and ``POLARIS_CLIENT_SECRET``).
+    use_authmanager : bool, optional
+        Whether to use the TeehrBrokerAuthManager for transparent token
+        refresh during long-lived Spark sessions. When ``None`` (default),
+        resolved from the ``POLARIS_USE_AUTHMANAGER`` environment variable.
+        Requires ``POLARIS_REFRESH_TOKEN`` and a running teehr-api broker.
 
     Returns
     -------
