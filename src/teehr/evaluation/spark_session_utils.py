@@ -80,15 +80,17 @@ def create_spark_session(
         Name of the local Iceberg catalog. Default is "local".
     local_catalog_type : str
         Type of the local Iceberg catalog. Default is "jdbc".
-    remote_warehouse_dir : str
-        Remote warehouse directory for Iceberg catalog. Default is TEEHR
-        warehouse S3 path.
+    remote_warehouse_dir : str, optional
+        Remote warehouse directory or Polaris realm name for the Iceberg catalog.
+        Defaults to the ``REMOTE_WAREHOUSE_S3_PATH`` environment variable.
     remote_catalog_name : str
         Name of the remote Iceberg catalog. Default is "iceberg".
-    remote_catalog_type : str
-        Type of the remote Iceberg catalog. Default is "rest".
-    remote_catalog_uri : str
-        URI for the remote Iceberg catalog. Default is TEEHR catalog REST URI.
+    remote_catalog_type : str, optional
+        Type of the remote Iceberg catalog.
+        Defaults to the ``REMOTE_CATALOG_TYPE`` environment variable, or "rest".
+    remote_catalog_uri : str, optional
+        URI for the remote Iceberg catalog REST endpoint.
+        Defaults to the ``REMOTE_CATALOG_REST_URI`` environment variable.
     start_spark_cluster : bool
         Whether to start a Spark cluster (Kubernetes mode).
         Default is False (local mode).
@@ -109,17 +111,17 @@ def create_spark_session(
         Memory allocation for the Spark driver. Default is None.
     driver_max_result_size : str
         Maximum result size for the Spark driver. Default is None.
-    pod_template_path : Union[str, Path]
+    pod_template_path : str or Path, optional
         Path to the pod template file for Spark executors.
-        Default is "/opt/teehr/executor-pod-template.yaml".
+        Defaults to "/opt/teehr/executor-pod-template.yaml".
     aws_access_key_id : str
         AWS access key ID for S3 access. Default is None.
     aws_secret_access_key : str
         AWS secret access key for S3 access. Default is None.
     aws_session_token : str
         AWS session token for temporary credentials. Default is None.
-    aws_region : str
-        AWS region name. Default is "us-east-2".
+    aws_region : str, optional
+        AWS region name. Defaults to the ``AWS_REGION`` environment variable, or "us-east-2".
     aws_profile : str
         AWS profile name to use from ~/.aws/credentials. Only reads credentials
         file if this parameter is explicitly provided. Default is None.
@@ -840,6 +842,36 @@ def ensure_fresh_polaris_user_token(
     refresh_window_seconds: int = 120,
     token_endpoint: Optional[str] = None,
 ) -> Tuple[str, Optional[str], bool]:
+    """Return a fresh Polaris access token, refreshing via refresh_token if needed.
+
+    Parameters
+    ----------
+    current_token : str, optional
+        The current access token. Returned as-is if still valid.
+    client_id : str
+        Keycloak client ID used for the refresh grant.
+    client_secret : str, optional
+        Keycloak client secret. Default is None.
+    refresh_token : str, optional
+        Refresh token used to acquire a new access token. Required when the
+        current token is expired or absent.
+    refresh_window_seconds : int
+        Seconds before expiry at which the token is considered stale and
+        proactively refreshed. Default is 120.
+    token_endpoint : str, optional
+        Override for the OAuth2 token endpoint URL. Defaults to the
+        ``POLARIS_OAUTH2_SERVER_URI`` environment variable.
+
+    Returns
+    -------
+    Tuple[str, Optional[str], bool]
+        ``(access_token, refresh_token, was_refreshed)``
+
+    Raises
+    ------
+    RuntimeError
+        If the token is expired and no valid refresh_token is available.
+    """
     if current_token and not _token_expires_soon(current_token, refresh_window_seconds):
         return current_token, refresh_token, False
 
