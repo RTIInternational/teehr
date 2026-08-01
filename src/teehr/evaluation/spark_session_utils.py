@@ -812,30 +812,6 @@ def _request_oauth_tokens(
     return access_token, payload.get("refresh_token")
 
 
-def mint_polaris_user_token(
-    username: Optional[str],
-    password: Optional[str],
-    client_id: str,
-    client_secret: Optional[str] = None,
-    token_endpoint: Optional[str] = None,
-) -> str:
-    if not username or not password:
-        raise RuntimeError("username and password are required for password grant token minting")
-
-    data = {
-        "grant_type": "password",
-        "client_id": client_id,
-        "username": username,
-        "password": password,
-        "scope": "openid profile email",
-    }
-    if client_secret:
-        data["client_secret"] = client_secret
-
-    access_token, _ = _request_oauth_tokens(data=data, token_endpoint=token_endpoint)
-    return access_token
-
-
 def refresh_polaris_user_token(
     refresh_token: str,
     client_id: str,
@@ -858,12 +834,9 @@ def refresh_polaris_user_token(
 
 def ensure_fresh_polaris_user_token(
     current_token: Optional[str],
-    username: Optional[str],
-    password: Optional[str],
     client_id: str,
     client_secret: Optional[str] = None,
     refresh_token: Optional[str] = None,
-    allow_password_fallback: bool = True,
     refresh_window_seconds: int = 120,
     token_endpoint: Optional[str] = None,
 ) -> Tuple[str, Optional[str], bool]:
@@ -871,47 +844,18 @@ def ensure_fresh_polaris_user_token(
         return current_token, refresh_token, False
 
     if refresh_token:
-        try:
-            refreshed_access, refreshed_refresh = refresh_polaris_user_token(
-                refresh_token=refresh_token,
-                client_id=client_id,
-                client_secret=client_secret,
-                token_endpoint=token_endpoint,
-            )
-            return refreshed_access, (refreshed_refresh or refresh_token), True
-        except requests.RequestException:
-            if not allow_password_fallback:
-                raise
-
-    if allow_password_fallback and username and password:
-        minted = mint_polaris_user_token(
-            username=username,
-            password=password,
+        refreshed_access, refreshed_refresh = refresh_polaris_user_token(
+            refresh_token=refresh_token,
             client_id=client_id,
             client_secret=client_secret,
             token_endpoint=token_endpoint,
         )
-        return minted, refresh_token, True
+        return refreshed_access, (refreshed_refresh or refresh_token), True
 
     raise RuntimeError(
-        "Unable to obtain a fresh Polaris user token. "
-        "Provide POLARIS_REFRESH_TOKEN or enable password-grant fallback credentials."
+        "Unable to obtain a fresh Polaris user token: no valid refresh_token available. "
+        "Set POLARIS_REFRESH_TOKEN in the session environment."
     )
-
-
-def apply_polaris_token_to_spark(
-    spark,
-    token: str,
-    catalog_name: str = "iceberg",
-    realm: Optional[str] = None,
-) -> None:
-    active_realm = realm or os.getenv("POLARIS_DEFAULT_REALM", "teehr")
-    base = f"spark.sql.catalog.{catalog_name}"
-    spark.conf.set(f"{base}.rest.auth.type", "oauth2")
-    spark.conf.set(f"{base}.token", token)
-    spark.conf.set(f"{base}.rest.auth.oauth2.token", token)
-    spark.conf.set(f"{base}.header.X-Polaris-Realm", active_realm)
-    spark.conf.set(f"{base}.rest.transport.header.X-Polaris-Realm", active_realm)
 
 
 def _as_bool_str(value: str, default: str = "true") -> str:
@@ -1073,12 +1017,9 @@ def _build_polaris_auth_configs(
 
         current_user_token, refresh_token, _ = ensure_fresh_polaris_user_token(
             current_token=current_user_token,
-            username=os.getenv("POLARIS_USERNAME"),
-            password=os.getenv("POLARIS_PASSWORD"),
             client_id=os.getenv("POLARIS_CLIENT_ID", "jupyterhub"),
             client_secret=os.getenv("POLARIS_CLIENT_SECRET"),
             refresh_token=refresh_token,
-            allow_password_fallback=False,
             refresh_window_seconds=300,
             token_endpoint=os.getenv("POLARIS_OAUTH2_TOKEN_ENDPOINT"),
         )
@@ -1206,74 +1147,3 @@ def create_minio_spark_session(
 
 
 
-def request_broker_polaris_token(
-    *,
-    user_id: str,
-    session_id: str,
-    bearer_token: str,
-    realm: Optional[str] = None,
-    catalog: str = "iceberg",
-    requested_ttl_seconds: int = 600,
-    audience: Optional[str] = None,
-    broker_url: Optional[str] = None,
-    timeout_seconds: int = 20,
-) -> Tuple[str, int, str]:
-    endpoint = broker_url or os.getenv("POLARIS_BROKER_URL", "http://teehr-api:8000/auth/polaris-token")
-    active_realm = realm or os.getenv("POLARIS_DEFAULT_REALM", "teehr")
-    active_audience = audience or os.getenv("POLARIS_BROKER_AUDIENCE", "account")
-
-    if not bearer_token:
-        raise RuntimeError("bearer_token is required to request a broker token")
-
-    resp = requests.post(
-        endpoint,
-        headers={"Authorization": f"Bearer {bearer_token}"},
-        json={
-            "user_id": user_id,
-            "session_id": session_id,
-            "realm": active_realm,
-            "catalog": catalog,
-            "requested_ttl_seconds": requested_ttl_seconds,
-            "audience": active_audience,
-        },
-        timeout=timeout_seconds,
-    )
-    resp.raise_for_status()
-    payload = resp.json()
-    access_token = payload.get("access_token")
-    expires_at = int(payload.get("expires_at_epoch_seconds", 0))
-    trace_id = payload.get("trace_id", "")
-
-    if not access_token or expires_at <= 0:
-        raise RuntimeError("Broker response missing access_token or expires_at_epoch_seconds")
-
-    return access_token, expires_at, trace_id
-
-
-def ensure_fresh_polaris_token_via_broker(
-    *,
-    current_token: Optional[str],
-    user_id: str,
-    session_id: str,
-    bearer_token: str,
-    realm: Optional[str] = None,
-    catalog: str = "iceberg",
-    refresh_window_seconds: int = 120,
-    requested_ttl_seconds: int = 600,
-    audience: Optional[str] = None,
-    broker_url: Optional[str] = None,
-) -> Tuple[str, bool]:
-    if current_token and not _token_expires_soon(current_token, refresh_window_seconds):
-        return current_token, False
-
-    refreshed_token, _, _ = request_broker_polaris_token(
-        user_id=user_id,
-        session_id=session_id,
-        bearer_token=bearer_token,
-        realm=realm,
-        catalog=catalog,
-        requested_ttl_seconds=requested_ttl_seconds,
-        audience=audience,
-        broker_url=broker_url,
-    )
-    return refreshed_token, True
