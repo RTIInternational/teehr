@@ -82,7 +82,7 @@ def create_spark_session(
         Type of the local Iceberg catalog. Default is "jdbc".
     remote_warehouse_dir : str, optional
         Remote warehouse directory or Polaris realm name for the Iceberg catalog.
-        Defaults to the ``REMOTE_WAREHOUSE_S3_PATH`` environment variable.
+        Defaults to the ``REMOTE_WAREHOUSE_IDENTIFIER`` environment variable.
     remote_catalog_name : str
         Name of the remote Iceberg catalog. Default is "iceberg".
     remote_catalog_type : str, optional
@@ -171,7 +171,7 @@ def create_spark_session(
     logger.info(f"🚀 Creating Spark session: {app_name}")
 
     # Resolve env-var-backed defaults at call time, not at module import
-    remote_warehouse_dir = remote_warehouse_dir or os.getenv("REMOTE_WAREHOUSE_S3_PATH", "")
+    remote_warehouse_dir = remote_warehouse_dir or os.getenv("REMOTE_WAREHOUSE_IDENTIFIER", "")
     remote_catalog_type = remote_catalog_type or os.getenv("REMOTE_CATALOG_TYPE", "rest")
     remote_catalog_uri = remote_catalog_uri or os.getenv("REMOTE_CATALOG_REST_URI", "")
     aws_region = aws_region or os.getenv("AWS_REGION", "us-east-2")
@@ -1157,12 +1157,8 @@ def create_minio_spark_session(
     polaris_realm = os.getenv("POLARIS_DEFAULT_REALM", "teehr")
     remote_catalog_uri = os.getenv("REMOTE_CATALOG_REST_URI", "http://polaris:8181/api/catalog")
 
-    # Polaris REST expects the catalog name as warehouse identifier, not an S3 URI
-    remote_warehouse_dir = (
-        polaris_realm
-        if remote_catalog_uri.rstrip("/").endswith("/api/catalog")
-        else os.getenv("REMOTE_WAREHOUSE_S3_PATH", "s3://warehouse/")
-    )
+    # Polaris REST expects the catalog name as warehouse identifier.
+    remote_warehouse_dir = os.getenv("REMOTE_WAREHOUSE_IDENTIFIER", polaris_realm)
 
     minio_configs: Dict[str, str] = {
         "spark.sql.catalog.iceberg.s3.endpoint": s3_endpoint,

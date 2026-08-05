@@ -46,7 +46,7 @@ class LocalCatalog(PydanticBaseModel):
 class RemoteCatalog(PydanticBaseModel):
     """Base model for remote catalog configuration."""
 
-    warehouse_dir: str | Path | None = Field(default=const.REMOTE_WAREHOUSE_S3_PATH)
+    warehouse_dir: str | Path | None = Field(default=const.REMOTE_WAREHOUSE_IDENTIFIER)
     catalog_name: str | None = Field(default=const.REMOTE_CATALOG_NAME)
     namespace_name: str | None = Field(default=const.REMOTE_NAMESPACE_NAME)
     catalog_type: str | None = Field(default=const.REMOTE_CATALOG_TYPE)
