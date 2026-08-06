@@ -258,6 +258,8 @@ def create_spark_session(
     # Build Polaris auth configs and merge with caller-provided update_configs.
     # Auth configs are the base; caller's configs take precedence.
     polaris_auth_configs = _build_polaris_auth_configs(polaris_token, use_authmanager)
+    authmanager_jars = _build_polaris_auth_jars(resolved_use_authmanager)
+
     executor_env_configs = _build_executor_env_configs(
         resolved_use_authmanager=resolved_use_authmanager,
         start_spark_cluster=start_spark_cluster,
@@ -270,7 +272,7 @@ def create_spark_session(
     _update_configs_and_packages(
         conf=conf,
         update_configs=effective_configs or None,
-        add_jars=add_jars,
+        add_jars=(add_jars or []) + authmanager_jars,
         add_packages=add_packages
     )
 
@@ -303,7 +305,7 @@ def _create_spark_base_session(
     base_packages = [
         f"org.apache.sedona:sedona-spark-shaded-{PYSPARK_VERSION}_{SCALA_VERSION}:{SEDONA_VERSION}",
         f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
-        f"org.apache.iceberg:iceberg-core:{ICEBERG_VERSION}",
+        # f"org.apache.iceberg:iceberg-core:{ICEBERG_VERSION}",
         "org.datasyslab:geotools-wrapper:1.8.0-33.1",
         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
         "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for compatibility
@@ -312,9 +314,15 @@ def _create_spark_base_session(
     ]
     conf.set("spark.jars.packages", ",".join(base_packages))
 
+    # Ensure package resolution uses a writable location in containerized runs.
+    # ivy_dir = os.getenv("SPARK_JARS_IVY", "/tmp/.ivy2.5.2")
+    # conf.set("spark.jars.ivy", ivy_dir)
+
     # Set configurations
     conf.set("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
     conf.set("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
+    # conf.set("spark.driver.userClassPathFirst", "true")
+    # conf.set("spark.executor.userClassPathFirst", "true")
     conf.set("spark.sql.session.timeZone", "UTC")
     conf.set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
@@ -717,6 +725,17 @@ def _update_configs_and_packages(
     # Update or add specified configs
     if update_configs is not None:
         for key, value in update_configs.items():
+            if key == "spark.jars":
+                # Merge jar lists to avoid clobbering jars gathered from packages.
+                existing_jars = conf.get("spark.jars").split(",") if conf.contains("spark.jars") else []
+                incoming_jars = [j for j in str(value).split(",") if j]
+                merged_jars = []
+                for jar in existing_jars + incoming_jars:
+                    if jar and jar not in merged_jars:
+                        merged_jars.append(jar)
+                if merged_jars:
+                    conf.set("spark.jars", ",".join(merged_jars))
+                continue
             conf.set(key, value)
     return
 
@@ -1061,11 +1080,6 @@ def _build_polaris_auth_configs(
         broker_session_token = os.getenv("POLARIS_BROKER_SESSION_TOKEN", "")
         if broker_session_token and _token_expires_soon(broker_session_token, 300):
             broker_session_token = ""
-        authmanager_jar = os.getenv(
-            "POLARIS_AUTHMANAGER_JAR",
-            "/opt/spark/jars/teehr-authmanager.jar",
-        )
-
         current_user_token, refresh_token, _ = ensure_fresh_polaris_user_token(
             current_token=current_user_token,
             client_id=os.getenv("POLARIS_CLIENT_ID", "jupyterhub"),
@@ -1111,7 +1125,6 @@ def _build_polaris_auth_configs(
         configs["spark.sql.catalog.iceberg.rest.auth.teehr.broker-session-token-env"] = (
             "POLARIS_BROKER_SESSION_TOKEN"
         )
-        configs["spark.jars"] = authmanager_jar
 
     elif polaris_token:
         configs["spark.sql.catalog.iceberg.rest.auth.type"] = "oauth2"
@@ -1143,6 +1156,27 @@ def _build_polaris_auth_configs(
         configs["spark.sql.catalog.iceberg.s3.remote-signing-enabled"] = "true"
 
     return configs
+
+
+def _build_polaris_auth_jars(
+    resolved_use_authmanager: bool,
+) -> List[str]:
+    """Return additive jar paths needed by Polaris auth features."""
+    if not resolved_use_authmanager:
+        return []
+
+    jars_csv = os.getenv(
+        "POLARIS_AUTHMANAGER_JAR",
+        "/opt/spark/jars/teehr-authmanager.jar",
+    )
+    jars = [j.strip() for j in jars_csv.split(",") if j.strip()]
+
+    unique_jars: List[str] = []
+    for jar in jars:
+        if jar not in unique_jars:
+            unique_jars.append(jar)
+
+    return unique_jars
 
 
 def _build_executor_env_configs(
