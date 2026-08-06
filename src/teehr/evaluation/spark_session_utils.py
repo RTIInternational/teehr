@@ -6,6 +6,7 @@ import logging
 import os
 import socket
 import time
+import glob
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urlsplit, urlunsplit
@@ -259,6 +260,7 @@ def create_spark_session(
     # Auth configs are the base; caller's configs take precedence.
     polaris_auth_configs = _build_polaris_auth_configs(polaris_token, use_authmanager)
     authmanager_jars = _build_polaris_auth_jars(resolved_use_authmanager)
+    resolved_package_jars = _collect_resolved_package_jars(conf)
 
     executor_env_configs = _build_executor_env_configs(
         resolved_use_authmanager=resolved_use_authmanager,
@@ -272,7 +274,7 @@ def create_spark_session(
     _update_configs_and_packages(
         conf=conf,
         update_configs=effective_configs or None,
-        add_jars=(add_jars or []) + authmanager_jars,
+        add_jars=(add_jars or []) + authmanager_jars + resolved_package_jars,
         add_packages=add_packages
     )
 
@@ -315,14 +317,14 @@ def _create_spark_base_session(
     conf.set("spark.jars.packages", ",".join(base_packages))
 
     # Ensure package resolution uses a writable location in containerized runs.
-    # ivy_dir = os.getenv("SPARK_JARS_IVY", "/tmp/.ivy2.5.2")
-    # conf.set("spark.jars.ivy", ivy_dir)
+    ivy_dir = os.getenv("SPARK_JARS_IVY", "/tmp/.ivy2.5.2")
+    conf.set("spark.jars.ivy", ivy_dir)
 
     # Set configurations
     conf.set("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
     conf.set("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
-    # conf.set("spark.driver.userClassPathFirst", "true")
-    # conf.set("spark.executor.userClassPathFirst", "true")
+    conf.set("spark.driver.userClassPathFirst", "true")
+    conf.set("spark.executor.userClassPathFirst", "true")
     conf.set("spark.sql.session.timeZone", "UTC")
     conf.set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
@@ -738,6 +740,56 @@ def _update_configs_and_packages(
                 continue
             conf.set(key, value)
     return
+
+
+def _collect_resolved_package_jars(conf: SparkConf) -> List[str]:
+    """Collect local jars resolved from spark.jars.packages."""
+    if not conf.contains("spark.jars.packages"):
+        return []
+
+    packages_csv = conf.get("spark.jars.packages")
+    if not packages_csv:
+        return []
+
+    ivy_dir = conf.get("spark.jars.ivy") if conf.contains("spark.jars.ivy") else "/tmp/.ivy2"
+
+    ivy_roots = [
+        Path(ivy_dir),
+        Path("/tmp/.ivy2"),
+        Path("/tmp/.ivy2.5.2"),
+        Path.home() / ".ivy2.5.2",
+        Path.home() / ".ivy2",
+    ]
+
+    discovered: List[str] = []
+
+    for package in [p.strip() for p in packages_csv.split(",") if p.strip()]:
+        try:
+            group, artifact, version = package.split(":", 2)
+        except ValueError:
+            continue
+
+        jar_name = f"{group}_{artifact}-{version}.jar"
+
+        for root in ivy_roots:
+            candidate = root / "jars" / jar_name
+            if candidate.exists():
+                jar_path = str(candidate)
+                if jar_path not in discovered:
+                    discovered.append(jar_path)
+                break
+
+        if not any(jar_name in path for path in discovered):
+            for match in glob.glob(f"/tmp/.ivy2*/jars/{jar_name}"):
+                if match not in discovered:
+                    discovered.append(match)
+
+    if discovered:
+        logger.info("Discovered %d Ivy package jars for spark.jars distribution", len(discovered))
+    else:
+        logger.info("No local Ivy package jars discovered for spark.jars distribution")
+
+    return discovered
 
 
 def log_session_config(spark: SparkSession):
