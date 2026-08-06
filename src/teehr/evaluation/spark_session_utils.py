@@ -258,7 +258,11 @@ def create_spark_session(
     # Build Polaris auth configs and merge with caller-provided update_configs.
     # Auth configs are the base; caller's configs take precedence.
     polaris_auth_configs = _build_polaris_auth_configs(polaris_token, use_authmanager)
-    effective_configs: Dict[str, str] = {**polaris_auth_configs}
+    executor_env_configs = _build_executor_env_configs(
+        resolved_use_authmanager=resolved_use_authmanager,
+        start_spark_cluster=start_spark_cluster,
+    )
+    effective_configs: Dict[str, str] = {**polaris_auth_configs, **executor_env_configs}
     if update_configs:
         effective_configs.update(update_configs)
 
@@ -1132,6 +1136,55 @@ def _build_polaris_auth_configs(
     # When active, explicit S3 catalog credentials are superseded by Polaris-vended ones.
     if _as_bool_str(os.getenv("POLARIS_USE_STS", "false")) == "true":
         configs["spark.sql.catalog.iceberg.s3.remote-signing-enabled"] = "true"
+
+    return configs
+
+
+def _build_executor_env_configs(
+    resolved_use_authmanager: bool,
+    start_spark_cluster: bool,
+) -> Dict[str, str]:
+    """Build spark.executorEnv.* configs for Polaris auth in executor pods.
+
+    Local (non-cluster) sessions do not create executor pods, so this returns
+    no-op configs unless Kubernetes cluster mode is enabled.
+    """
+    if not start_spark_cluster:
+        return {}
+
+    configs: Dict[str, str] = {}
+
+    polaris_realm = os.getenv("POLARIS_DEFAULT_REALM", "")
+    if polaris_realm:
+        configs["spark.executorEnv.POLARIS_DEFAULT_REALM"] = polaris_realm
+
+    if resolved_use_authmanager:
+        # Jupyter path: propagate only delegated broker session token.
+        broker_session_token = os.getenv("POLARIS_BROKER_SESSION_TOKEN", "")
+        if broker_session_token:
+            configs["spark.executorEnv.POLARIS_BROKER_SESSION_TOKEN"] = broker_session_token
+            logger.info("Propagating delegated Polaris broker session token to Spark executors")
+        else:
+            logger.warning(
+                "POLARIS_USE_AUTHMANAGER is enabled but POLARIS_BROKER_SESSION_TOKEN is not set; "
+                "executor-side Polaris auth may fail for distributed catalog operations"
+            )
+        return configs
+
+    # Service-account path (e.g., Prefect): propagate client credentials.
+    oauth_server_uri = os.getenv("POLARIS_OAUTH2_SERVER_URI", "")
+    polaris_client_id = os.getenv("POLARIS_CLIENT_ID", "")
+    polaris_client_secret = os.getenv("POLARIS_CLIENT_SECRET", "")
+
+    if oauth_server_uri:
+        configs["spark.executorEnv.POLARIS_OAUTH2_SERVER_URI"] = oauth_server_uri
+    if polaris_client_id:
+        configs["spark.executorEnv.POLARIS_CLIENT_ID"] = polaris_client_id
+    if polaris_client_secret:
+        configs["spark.executorEnv.POLARIS_CLIENT_SECRET"] = polaris_client_secret
+
+    if polaris_client_id and polaris_client_secret:
+        logger.info("Propagating Polaris service client credentials to Spark executors")
 
     return configs
 
