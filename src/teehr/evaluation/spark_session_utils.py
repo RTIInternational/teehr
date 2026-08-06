@@ -910,17 +910,21 @@ def _as_bool_str(value: str, default: str = "true") -> str:
 
 
 def _apply_runtime_spark_configs(spark, configs: Dict[str, str]) -> None:
-    immutable_after_start = {
-        "spark.jars",
-        "spark.jars.ivy",
-        "spark.driver.extraClassPath",
-        "spark.executor.extraClassPath",
-    }
     for key, value in configs.items():
         if not key.startswith("spark."):
             continue
-        if key in immutable_after_start:
+
+        # Spark 4+ enforces runtime immutability for many configs. Apply only
+        # keys that the active session reports as modifiable.
+        try:
+            is_modifiable = bool(spark.conf.isModifiable(key))
+        except Exception:
+            is_modifiable = False
+
+        if not is_modifiable:
+            logger.debug("Skipping non-modifiable runtime Spark config: %s", key)
             continue
+
         spark.conf.set(key, value)
 
 
