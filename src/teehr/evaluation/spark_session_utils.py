@@ -912,6 +912,7 @@ def _as_bool_str(value: str, default: str = "true") -> str:
 def _apply_runtime_spark_configs(spark, configs: Dict[str, str]) -> None:
     immutable_after_start = {
         "spark.jars",
+        "spark.jars.ivy",
         "spark.driver.extraClassPath",
         "spark.executor.extraClassPath",
     }
