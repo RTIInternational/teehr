@@ -414,17 +414,6 @@ def write_timeseries_parquet_file(
         )
 
 
-def parquet_to_gdf(parquet_filepath: str) -> gpd.GeoDataFrame:
-    """Read parquet as GeoDataFrame."""
-    gdf = gpd.read_parquet(parquet_filepath)
-    return gdf
-
-
-def np_to_list(t):
-    """Convert numpy array to list."""
-    return [a.tolist() for a in t]
-
-
 def get_dataset(
     filepath: str, ignore_missing_file: bool, **kwargs
 ) -> xr.Dataset:
@@ -612,98 +601,6 @@ def combine_and_open_kerchunk_refs(
         storage_options=storage_options,
     )
     return ds, read_mask
-
-
-def resolve_nwm_file_paths(
-    gcs_paths: List[str],
-    kerchunk_method: str,
-    json_dir: Path
-) -> List[Optional[str]]:
-    """Resolve the best available virtual reference path for each GCS file.
-
-    For each GCS file path, returns the highest-priority available reference
-    according to ``kerchunk_method``:
-
-    - ``"local"``: check ``json_dir`` for ``.parq`` then ``.json``; fall back
-      to the original GCS ``.nc`` path (VirtualiZarr will scan the HDF5 header
-      and cache the result to ``json_dir``).
-    - ``"remote"``: check S3 for a pre-built kerchunk JSON;
-      return ``None`` for files with no S3 JSON (they are skipped).
-    - ``"auto"``: check S3 first, then ``json_dir`` for ``.parq``/``.json``,
-      then fall back to the GCS ``.nc`` path.
-
-    Parameters
-    ----------
-    gcs_paths : List[str]
-        GCS paths to NWM netcdf files.
-    kerchunk_method : str
-        One of ``"local"``, ``"remote"``, or ``"auto"``.
-    json_dir : Path
-        Cache directory for local ``.json`` and ``.parq`` reference files.
-
-    Returns
-    -------
-    List[Optional[str]]
-        Same length as ``gcs_paths``. Each entry is the best available
-        reference path, or ``None`` if the file should be skipped
-        (``"remote"`` mode with no S3 JSON).
-    """
-    logger.debug(f"Resolving file paths. kerchunk_method: {kerchunk_method}")
-
-    json_dir_path = Path(json_dir)
-    if not json_dir_path.exists():
-        json_dir_path.mkdir(parents=True)
-
-    def _local_cache_path(gcs_path: str) -> Optional[str]:
-        p = gcs_path.split("/")
-        date = p[3]
-        fname = p[5]
-        parq = Path(json_dir, f"{date}.{fname}.parq")
-        if parq.exists():
-            return str(parq)
-        jsn = Path(json_dir, f"{date}.{fname}.json")
-        if jsn.exists():
-            return str(jsn)
-        return None
-
-    resolved: List[Optional[str]] = [None] * len(gcs_paths)
-
-    if kerchunk_method == SupportedKerchunkMethod.local:
-        for i, gcs_path in enumerate(gcs_paths):
-            cached = _local_cache_path(gcs_path)
-            resolved[i] = cached if cached is not None else gcs_path
-
-    elif kerchunk_method == SupportedKerchunkMethod.remote:
-        s3_paths = [
-            f"{NWM_S3_JSON_PATH}/{p.split('://')[1]}.json" for p in gcs_paths
-        ]
-        file_check = check_if_files_exist(s3_paths)
-        found = sum(1 for v in file_check.values() if v)
-        logger.info(
-            f"Mode: {kerchunk_method}. Found {found} pre-built jsons in s3,"
-            f" skipping {len(gcs_paths) - found} missing files."
-        )
-        for i, s3_path in enumerate(s3_paths):
-            resolved[i] = s3_path if file_check.get(s3_path) else None
-
-    elif kerchunk_method == SupportedKerchunkMethod.auto:
-        s3_paths = [
-            f"{NWM_S3_JSON_PATH}/{p.split('://')[1]}.json" for p in gcs_paths
-        ]
-        file_check = check_if_files_exist(s3_paths)
-        found = sum(1 for v in file_check.values() if v)
-        logger.info(
-            f"Mode: {kerchunk_method}. Found {found} pre-built jsons in s3,"
-            f" checking local cache and GCS for {len(gcs_paths) - found} remaining files."
-        )
-        for i, (gcs_path, s3_path) in enumerate(zip(gcs_paths, s3_paths)):
-            if file_check.get(s3_path):
-                resolved[i] = s3_path
-            else:
-                cached = _local_cache_path(gcs_path)
-                resolved[i] = cached if cached is not None else gcs_path
-
-    return resolved
 
 
 def build_zarr_references(

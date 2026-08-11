@@ -171,16 +171,15 @@ def fetch_and_format_nwm_points(
 ):
     """Fetch NWM point data and save as parquet files.
 
-    Accepts a mixed list of resolved file paths (GCS .nc, S3/local .json, or
-    local .parq) as returned by ``resolve_nwm_file_paths``. ``None`` entries
-    (files skipped by ``kerchunk_method="remote"``) are filtered out before
-    processing. Each chunk is opened as a single zarr store via VirtualiZarr,
-    allowing zarr v3 to fetch all required chunks asynchronously.
+    Accepts a list of kerchunk reference file paths (S3/local .json, or local .parq)
+    as produced by ``generate_json_paths``. ``None`` entries are filtered out before
+    processing. Each chunk is combined into a single xarray Dataset via kerchunk.
+    Intended to be refactored to use VirtualiZarr in a future release.
 
     Parameters
     ----------
     file_paths : List[Optional[str]]
-        Resolved file paths from ``resolve_nwm_file_paths``. May contain
+        Resolved file paths from ``generate_json_paths``. May contain
         ``None`` entries for files that should be skipped.
     location_ids : Iterable[int]
         Array specifying NWM IDs of interest.
@@ -205,7 +204,7 @@ def fetch_and_format_nwm_points(
         they already exist.  True = overwrite; False = fail.
     nwm_version : str
         Specified NWM version.
-    variable_mapper : Dict[str, Dict[str, str]]
+    variable_mapper : Dict[str, Dict[str, Dict[str, str]]]
         A mapping dictionary for variable names and units.
     timeseries_type : TimeseriesTypeEnum
         The type of timeseries being processed.

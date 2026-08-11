@@ -1,4 +1,4 @@
-"""Module for fetchning and processing NWM point data."""
+"""Module for fetching and processing NWM point data."""
 from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
 from dateutil.parser import parse
