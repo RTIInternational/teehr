@@ -70,8 +70,6 @@ def process_chunk_of_files(
     ds, read_mask = combine_and_open_kerchunk_refs(
         json_paths=valid_paths,
         ignore_missing_file=ignore_missing_file,
-        target_protocol="gcs",
-        target_options={"anon": True},
         storage_options={"target_options": {"anon": True}},
     )
     df_valid = df_valid[read_mask].reset_index(drop=True)

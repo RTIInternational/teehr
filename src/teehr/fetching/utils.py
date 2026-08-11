@@ -516,15 +516,41 @@ def gen_json(
     return outf
 
 
+def concat_reference_datasets(
+    refs: List[dict],
+    concat_dim: str,
+    storage_options: Optional[Dict],
+    ignore_missing_file: bool,
+    data_vars: str = "all"
+) -> xr.Dataset:
+    """Open each kerchunk reference dict individually and concatenate along concat_dim."""
+    def _open_ref(ref: dict) -> Optional[xr.Dataset]:
+        try:
+            return xr.open_dataset(
+                ref,
+                engine="kerchunk",
+                storage_options=storage_options
+            )
+        except Exception as e:
+            if not ignore_missing_file:
+                raise
+            logger.warning(f"Could not open reference dataset: {e}")
+            return None
+
+    with ThreadPoolExecutor(max_workers=min(64, len(refs))) as executor:
+        datasets = list(executor.map(_open_ref, refs))
+
+    datasets = [ds for ds in datasets if ds is not None]
+    if not datasets:
+        raise FileNotFoundError("No reference datasets could be opened.")
+    return xr.concat(datasets, dim=concat_dim, data_vars=data_vars)
+
+
 def combine_and_open_kerchunk_refs(
     json_paths: List[str],
     ignore_missing_file: bool = True,
-    target_protocol: str = "gcs",
-    target_options: Optional[Dict] = {"anon": True},
     concat_dims: Optional[List[str]] = ["time"],
-    identical_dims: Optional[List[str]] = ["crs"],
     storage_options: Optional[Dict] = {},
-    coo_map: Optional[Dict] = {"time": "cf:time"}
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Combine multiple kerchunk reference files into a single xarray Dataset.
 
@@ -534,18 +560,10 @@ def combine_and_open_kerchunk_refs(
         List of paths to kerchunk reference JSON files.
     ignore_missing_file : bool, optional
         Whether to ignore missing files, by default True.
-    target_protocol : str, optional
-        Protocol for accessing remote files, by default "gs".
-    target_options : Optional[Dict], optional
-        Options for the target protocol, by default {"anon": True}.
     concat_dims : Optional[List[str]], optional
         Dimensions to concatenate along, by default ["time"].
-    identical_dims : Optional[List[str]], optional
-        Dimensions that must be identical across all files, by default ["crs"].
     storage_options : Optional[Dict], optional
         Options for the storage backend, by default {}.
-    coo_map : Optional[Dict], optional
-        Mapping of coordinate variables for MultiZarrToZarr, by default {"time": "cf:time"}.
 
     Returns
     -------
@@ -589,19 +607,11 @@ def combine_and_open_kerchunk_refs(
             "No NWM reference files could be read for the specified configuration."
         )
 
-    mzz = MultiZarrToZarr(
+    ds = concat_reference_datasets(
         refs,
-        remote_protocol=target_protocol,
-        remote_options=target_options,
-        concat_dims=concat_dims,
-        identical_dims=identical_dims,
-        coo_map=coo_map
-    )
-    combined = mzz.translate()
-    ds = xr.open_dataset(
-        combined,
-        engine="kerchunk",
-        storage_options=storage_options,
+        concat_dims[0],
+        storage_options,
+        ignore_missing_file
     )
     return ds, read_mask
 
