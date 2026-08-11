@@ -452,7 +452,7 @@ def list_to_np(lst):
 
 def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
     """Check for existence of S3 files using a thread pool."""
-    fs = fsspec.filesystem("s3", anon=True, skip_instance_cache=True)
+    fs = fsspec.filesystem("s3", anon=True)
 
     def _check(path: str) -> tuple:
         return path, fs.exists(path)
