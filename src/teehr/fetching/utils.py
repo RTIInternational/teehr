@@ -564,6 +564,9 @@ def combine_and_open_kerchunk_refs(
         ``read_mask`` to keep any associated DataFrame in sync with the
         number of timesteps in the returned dataset.
     """
+    if not json_paths:
+        raise FileNotFoundError("No NWM reference files were provided.")
+
     def _read_ref(path: str) -> Optional[dict]:
         try:
             if path.startswith("s3://"):
