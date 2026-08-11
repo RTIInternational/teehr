@@ -432,7 +432,7 @@ def standard_deviation_of_timing(model: MetricsBasemodel) -> Callable:
 
             # Calculate SDoT
             SDoT_numerator = np.sum(p_nz * (WY_days_nz - CT)**2)
-            SDoT_denominator = sum_p_nz * (n_prime - 1)
+            SDoT_denominator = (sum_p_nz * (n_prime - 1))/n_prime
 
             if model.add_epsilon:
                 SDoT = np.sqrt(SDoT_numerator / (SDoT_denominator + EPSILON))

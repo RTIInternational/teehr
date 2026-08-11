@@ -110,8 +110,16 @@ def test_resops_signatures(module_scope_resops_signatures_test_warehouse):
     ev = module_scope_resops_signatures_test_warehouse
 
     # Now, metrics.
-    ct = Signatures.CenterOfTiming(primary_field_name='value')
-    sdot = Signatures.StandardDeviationOfTiming(primary_field_name='value')
+    min_days = 329
+    missing_day_threshold = 1 - (min_days / 365)
+    ct = Signatures.CenterOfTiming(
+        primary_field_name='value',
+        missing_day_threshold=missing_day_threshold
+    )
+    sdot = Signatures.StandardDeviationOfTiming(
+        primary_field_name='value',
+        missing_day_threshold=missing_day_threshold
+    )
 
     # execute using spark engine
     spark_df = ev.table(
@@ -150,7 +158,7 @@ def test_resops_signatures(module_scope_resops_signatures_test_warehouse):
     )
     assert np.isclose(
         spark_df.standard_deviation_of_timing.values[0],
-        3.928218
+        75.048500
     )
 
     # check python and spark engines give same result

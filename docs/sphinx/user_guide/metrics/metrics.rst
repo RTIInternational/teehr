@@ -335,7 +335,7 @@ Signatures operate on a single field to characterize timeseries properties.
    * - :material-regular:`check;1.5em;sd-text-success`
      - Standard Deviation of Timing
      - :math:`Std\ Dev\ of\ Timing`
-     - :math:`\sqrt{\frac{\sum(prim_i \cdot (t_i - CenterOfTiming)^2)}{\sum(prim_i)}}`
+     - :math:`\sqrt{\frac{\sum(prim_i \cdot (t_i - CenterOfTiming)^2)}{\frac{\sum(prim_i)\cdot(n^{\prime}-1)}{n^{\prime}}}}`
      - :class:`Standard Deviation of Timing <teehr.Signatures.StandardDeviationOfTiming>`
 
 
