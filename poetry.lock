@@ -2052,7 +2052,7 @@ description = "Google API client core library"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "python_full_version == \"3.14.0\""
+markers = "python_version == \"3.14\""
 files = [
     {file = "google_api_core-2.25.2-py3-none-any.whl", hash = "sha256:e9a8f62d363dc8424a8497f4c2a47d6bcda6c16514c935629c257ab5d10210e7"},
     {file = "google_api_core-2.25.2.tar.gz", hash = "sha256:1c63aa6af0d0d5e37966f157a77f9396d820fba59f9e43e9415bc3dc5baff300"},
@@ -2175,7 +2175,7 @@ description = "Google Cloud Storage API client library"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "python_full_version == \"3.14.0\""
+markers = "python_version == \"3.14\""
 files = [
     {file = "google_cloud_storage-3.4.1-py3-none-any.whl", hash = "sha256:972764cc0392aa097be8f49a5354e22eb47c3f62370067fb1571ffff4a1c1189"},
     {file = "google_cloud_storage-3.4.1.tar.gz", hash = "sha256:6f041a297e23a4b485fad8c305a7a6e6831855c208bcbe74d00332a909f82268"},
@@ -8513,5 +8513,5 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.11,<=3.14"
-content-hash = "f8d159650e093eae68137c0cd450c781259a6ba960b85afd4ac86b04b9c475fa"
+python-versions = ">=3.11,<3.15"
+content-hash = "cfc81b5b73f36ff966259d1b7cb6ae52862fd1567613a76bb34041fa43a15afb"
