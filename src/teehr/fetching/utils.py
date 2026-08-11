@@ -8,7 +8,6 @@ import logging
 import re
 import json
 from warnings import warn
-import asyncio
 
 from kerchunk.combine import MultiZarrToZarr
 import dask
@@ -164,38 +163,6 @@ def parse_nwm_json_paths(
     )
 
 
-def parse_nwm_forecast_gcs_paths(
-    gcs_paths: List[str],
-) -> pd.DataFrame:
-    """Parse day and z_hour from NWM file paths.
-
-    Works with any NWM file path type: GCS HDF5 (.nc), S3 or local kerchunk
-    JSON (.json), or VirtualiZarr parquet reference (.parq). Uses DAY_PATTERN
-    and TZ_PATTERN to extract day and z_hour; returns z_hour in 't00z' format
-    matching parse_nwm_json_paths.
-
-    Parameters
-    ----------
-    gcs_paths : List[str]
-        List of NWM file paths (GCS .nc, S3 .json, local .json, or local .parq).
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame with columns: day (YYYYMMDD str), z_hour ('t00z' str),
-        filepath (str).
-    """
-    logger.debug("Parsing day and z-hour from NWM file paths.")
-    days = []
-    z_hours = []
-    for path in gcs_paths:
-        filename = Path(path).name
-        res = re.search(DAY_PATTERN, path).group()
-        days.append(res.split(".")[1])
-        z_hours.append(re.search(TZ_PATTERN, filename).group())
-    return pd.DataFrame({"day": days, "z_hour": z_hours, "filepath": gcs_paths})
-
-
 def format_nwm_configuration_metadata(
     nwm_config_name: str,
     nwm_version: str
@@ -316,7 +283,7 @@ def generate_json_paths(
     elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = asyncio.run(check_if_files_exist(s3_path_list))
+        file_check_output = check_if_files_exist(s3_path_list)
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -327,7 +294,7 @@ def generate_json_paths(
     elif kerchunk_method == SupportedKerchunkMethod.auto:
         # Use whatever pre-builts exist, and create the missing
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = asyncio.run(check_if_files_exist(s3_path_list))
+        file_check_output = check_if_files_exist(s3_path_list)
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -338,7 +305,7 @@ def generate_json_paths(
         if len(missing_files) > 0:
             # Set back to gcs paths and strip the .json extension
             missing_files = [
-                path.replace(NWM_S3_JSON_PATH, "gcs:/").replace(".json", "") for path in missing_files
+                path.replace(NWM_S3_JSON_PATH, "gcs://").replace(".json", "") for path in missing_files
             ]
             json_paths.extend(
                 build_zarr_references(
@@ -483,19 +450,17 @@ def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
 
 
-async def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
-    """Check for existence of S3 files asynchronously.
+def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
+    """Check for existence of S3 files using a thread pool."""
+    fs = fsspec.filesystem("s3", anon=True, skip_instance_cache=True)
 
-    Creates a fresh async S3 filesystem inside the coroutine so the
-    aiohttp TCPConnector is bound to the same event loop as the
-    ``asyncio.run()`` caller.  Reusing a filesystem created outside the
-    coroutine attaches Futures to a different loop, causing errors when
-    the same process runs multiple fetches in sequence.
-    """
-    fs = fsspec.filesystem("s3", anon=True, asynchronous=True, skip_instance_cache=True)
-    tasks = [fs._exists(path) for path in file_path_list]
-    results = await asyncio.gather(*tasks)
-    return dict(zip(file_path_list, results))
+    def _check(path: str) -> tuple:
+        return path, fs.exists(path)
+
+    with ThreadPoolExecutor(max_workers=min(64, len(file_path_list))) as executor:
+        results = list(executor.map(_check, file_path_list))
+
+    return dict(results)
 
 
 @dask.delayed
@@ -659,8 +624,8 @@ def resolve_nwm_file_paths(
     - ``"local"``: check ``json_dir`` for ``.parq`` then ``.json``; fall back
       to the original GCS ``.nc`` path (VirtualiZarr will scan the HDF5 header
       and cache the result to ``json_dir``).
-    - ``"remote"``: check S3 for a pre-built kerchunk JSON using a single async
-      batch call; return ``None`` for files with no S3 JSON (they are skipped).
+    - ``"remote"``: check S3 for a pre-built kerchunk JSON;
+      return ``None`` for files with no S3 JSON (they are skipped).
     - ``"auto"``: check S3 first, then ``json_dir`` for ``.parq``/``.json``,
       then fall back to the GCS ``.nc`` path.
 
@@ -672,9 +637,6 @@ def resolve_nwm_file_paths(
         One of ``"local"``, ``"remote"``, or ``"auto"``.
     json_dir : Path
         Cache directory for local ``.json`` and ``.parq`` reference files.
-    ignore_missing_file : bool
-        Passed through for logging context; controls whether callers raise on
-        empty results.
 
     Returns
     -------
@@ -712,7 +674,7 @@ def resolve_nwm_file_paths(
         s3_paths = [
             f"{NWM_S3_JSON_PATH}/{p.split('://')[1]}.json" for p in gcs_paths
         ]
-        file_check = asyncio.run(check_if_files_exist(s3_paths))
+        file_check = check_if_files_exist(s3_paths)
         found = sum(1 for v in file_check.values() if v)
         logger.info(
             f"Mode: {kerchunk_method}. Found {found} pre-built jsons in s3,"
@@ -725,7 +687,7 @@ def resolve_nwm_file_paths(
         s3_paths = [
             f"{NWM_S3_JSON_PATH}/{p.split('://')[1]}.json" for p in gcs_paths
         ]
-        file_check = asyncio.run(check_if_files_exist(s3_paths))
+        file_check = check_if_files_exist(s3_paths)
         found = sum(1 for v in file_check.values() if v)
         logger.info(
             f"Mode: {kerchunk_method}. Found {found} pre-built jsons in s3,"

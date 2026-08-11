@@ -8,9 +8,6 @@ import pandas as pd
 import numpy as np
 import pytest
 
-# # Start up a local Dask cluster
-# from dask.distributed import Client
-# client = Client()
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEO_GAGES_FILEPATH = Path(

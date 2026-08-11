@@ -86,7 +86,7 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
 
         if model.summary_func is not None:
             if len(pivoted_dict["secondary"].shape) == 1:
-                # CRPS is just mean error for a deteministic forecast
+                # CRPS is just mean absolute error for a deterministic forecast
                 return model.summary_func(
                     _mean_error(pivoted_dict["primary"], pivoted_dict["secondary"])
                 )
@@ -100,7 +100,7 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
             )
         else:
             if len(pivoted_dict["secondary"].shape) == 1:
-                # CRPS is just mean error for a deteministic forecast
+                # CRPS is just mean absolute error for a deterministic forecast
                 return _mean_error(pivoted_dict["primary"], pivoted_dict["secondary"])
             return sr.crps_ensemble(
                 pivoted_dict["primary"],
