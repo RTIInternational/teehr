@@ -17,7 +17,6 @@ from kerchunk.hdf import SingleHdf5ToZarr
 import pandas as pd
 import numpy as np
 import xarray as xr
-import geopandas as gpd
 import pyarrow as pa
 import pandera
 
@@ -525,6 +524,7 @@ def combine_and_open_kerchunk_refs(
     concat_dims: Optional[List[str]] = ["time"],
     identical_dims: Optional[List[str]] = ["crs"],
     storage_options: Optional[Dict] = {},
+    coo_map: Optional[Dict] = {"time": "cf:time"}
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Combine multiple kerchunk reference files into a single xarray Dataset.
 
@@ -544,6 +544,8 @@ def combine_and_open_kerchunk_refs(
         Dimensions that must be identical across all files, by default ["crs"].
     storage_options : Optional[Dict], optional
         Options for the storage backend, by default {}.
+    coo_map : Optional[Dict], optional
+        Mapping of coordinate variables for MultiZarrToZarr, by default {"time": "cf:time"}.
 
     Returns
     -------
@@ -593,6 +595,7 @@ def combine_and_open_kerchunk_refs(
         remote_options=target_options,
         concat_dims=concat_dims,
         identical_dims=identical_dims,
+        coo_map=coo_map
     )
     combined = mzz.translate()
     ds = xr.open_dataset(
