@@ -172,9 +172,6 @@ def format_nwm_configuration_metadata(
     which is parsed from the NWM configuration name if it's an ensemble
     (ie., medium range or long range streamflow).
     """
-    logger.info(
-        f"Formatting configuration name for {nwm_config_name}."
-    )
     ev_member = None
     # Try to parse the member from the configuration name.
     if bool(re.search(r"_mem[0-9]+", nwm_config_name)):

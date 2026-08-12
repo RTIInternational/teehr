@@ -333,6 +333,11 @@ def nwm_to_parquet(
             gcs_component_paths=gcs_component_paths
         )
 
+        if len(gcs_component_paths) == 0:
+            raise ValueError(
+                "No NWM files found for the specified input arguments."
+            )
+
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(
             kerchunk_method,
