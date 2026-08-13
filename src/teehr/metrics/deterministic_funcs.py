@@ -231,7 +231,7 @@ def multiplicative_bias(model: MetricsBasemodel) -> Callable:
 def relative_mean(model: MetricsBasemodel) -> Callable:
     """Create the Relative Mean metric function.
 
-    :math:`RelMean=\frac{\mu_{sec}}{\mu_{prim}}`
+    :math:`RelMean=\\frac{\\mu_{sec}}{\\mu_{prim}}`
     """  # noqa
     logger.debug("Building the relative_mean metric function")
 
@@ -248,7 +248,7 @@ def relative_mean(model: MetricsBasemodel) -> Callable:
 def relative_median(model: MetricsBasemodel) -> Callable:
     """Create the Relative Median metric function.
 
-    :math:`RelMedian=\frac{median(sec)}{median(prim)}`
+    :math:`RelMedian=\\frac{median(sec)}{median(prim)}`
     """  # noqa
     logger.debug("Building the relative_median metric function")
 
@@ -265,7 +265,7 @@ def relative_median(model: MetricsBasemodel) -> Callable:
 def relative_minimum(model: MetricsBasemodel) -> Callable:
     """Create the Relative Minimum metric function.
 
-    :math:`RelMin=\frac{min(sec)}{min(prim)}`
+    :math:`RelMin=\\frac{min(sec)}{min(prim)}`
     """  # noqa
     logger.debug("Building the relative_minimum metric function")
 
@@ -282,7 +282,7 @@ def relative_minimum(model: MetricsBasemodel) -> Callable:
 def relative_maximum(model: MetricsBasemodel) -> Callable:
     """Create the Relative Maximum metric function.
 
-    :math:`RelMax=\frac{max(sec)}{max(prim)}`
+    :math:`RelMax=\\frac{max(sec)}{max(prim)}`
     """  # noqa
     logger.debug("Building the relative_maximum metric function")
 
@@ -299,7 +299,7 @@ def relative_maximum(model: MetricsBasemodel) -> Callable:
 def relative_standard_deviation(model: MetricsBasemodel) -> Callable:
     """Create the Relative Standard Deviation metric function.
 
-    :math:`RelStd=\frac{std(sec)}{std(prim)}`
+    :math:`RelStd=\\frac{std(sec)}{std(prim)}`
     """  # noqa
     logger.debug("Building the relative_standard_deviation metric function")
 

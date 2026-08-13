@@ -1,19 +1,19 @@
 """Module defining shared functions for processing NWM point data."""
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional
 import re
+import logging
 
-import dask
 import numpy as np
 import pandas as pd
 import pyarrow as pa
 
 from teehr.fetching.utils import (
-    get_dataset,
     write_timeseries_parquet_file,
     split_dataframe,
     format_nwm_configuration_metadata,
-    parse_nwm_json_paths
+    parse_nwm_json_paths,
+    combine_and_open_kerchunk_refs,
 )
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -24,71 +24,10 @@ from teehr.fetching.const import (
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME,
-    MEMBER
+    MEMBER,
 )
 
-
-@dask.delayed
-def file_chunk_loop(
-    row: Tuple,
-    location_ids: np.array,
-    variable_name: str,
-    configuration: str,
-    schema: pa.Schema,
-    ignore_missing_file: bool,
-    nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
-):
-    """Fetch NWM values and convert to tabular format for a single json."""
-    ds = get_dataset(
-        row.filepath,
-        ignore_missing_file,
-        target_options={'anon': True}
-    )
-    if not ds:
-        return None
-    ds = ds.sel(feature_id=location_ids)
-    vals = ds[variable_name].astype("float32").values
-    nwm_units = ds[variable_name].units
-
-    if variable_mapper is None:
-        teehr_variable_name = variable_name
-        teehr_units = nwm_units
-    else:
-        teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
-            variable_name, {}
-        ).get("name", variable_name)
-        teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, {}).get("name", nwm_units)
-
-    ref_time = pd.to_datetime(row.day) \
-        + pd.to_timedelta(int(row.z_hour[1:3]), unit="h")
-
-    valid_time = ds.time.values
-    feature_ids = ds.feature_id.values.astype(int)
-    teehr_location_ids = \
-        [f"{nwm_version}-{feat_id}" for feat_id in feature_ids]
-    num_vals = vals.size
-
-    teehr_config = format_nwm_configuration_metadata(
-        nwm_config_name=configuration,
-        nwm_version=nwm_version
-    )
-
-    output_table = pa.table(
-        {
-            VALUE: vals,
-            REFERENCE_TIME: np.full(vals.shape, ref_time),
-            LOCATION_ID: teehr_location_ids,
-            VALUE_TIME: np.full(vals.shape, valid_time),
-            CONFIGURATION_NAME: num_vals * [teehr_config["name"]],
-            VARIABLE_NAME: num_vals * [teehr_variable_name],
-            UNIT_NAME: num_vals * [teehr_units],
-            MEMBER: num_vals * [teehr_config["member"]]
-        },
-        schema=schema,
-    )
-
-    return output_table
+logger = logging.getLogger(__name__)
 
 
 def process_chunk_of_files(
@@ -103,7 +42,7 @@ def process_chunk_of_files(
     nwm_version: str,
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
-    drop_overlapping_assimilation_values: bool
+    drop_overlapping_assimilation_values: bool,
 ):
     """Assemble a table for a chunk of NWM files."""
     location_ids = np.array(location_ids).astype(int)
@@ -120,29 +59,65 @@ def process_chunk_of_files(
             (MEMBER, pa.string())
         ]
     )
+    valid_paths = [fp for fp in df.filepath.tolist() if fp is not None]
+    df_valid = df[[fp is not None for fp in df.filepath.tolist()]].reset_index(drop=True)
 
-    results = []
-    for row in df.itertuples():
-        results.append(
-            file_chunk_loop(
-                row,
-                location_ids,
-                variable_name,
-                configuration,
-                schema,
-                ignore_missing_file,
-                nwm_version,
-                variable_mapper
-            )
+    if not valid_paths:
+        raise FileNotFoundError(
+            "No NWM files for specified input configuration were found in GCS!"
         )
-    output = dask.compute(*results)
 
-    if not any(output):
-        raise FileNotFoundError("No NWM files for specified input "
-                                "configuration were found in GCS!")
+    ds, read_mask = combine_and_open_kerchunk_refs(
+        json_paths=valid_paths,
+        ignore_missing_file=ignore_missing_file,
+        storage_options={"target_options": {"anon": True}},
+    )
+    df_valid = df_valid[read_mask].reset_index(drop=True)
 
-    output = [tbl for tbl in output if tbl is not None]
-    output_table = pa.concat_tables(output)
+    ds = ds.sel(feature_id=location_ids)
+    vals = ds[variable_name].astype("float32").values
+    nwm_units = ds[variable_name].units
+    n_files, n_locations = vals.shape
+
+    if variable_mapper is None:
+        teehr_variable_name = variable_name
+        teehr_units = nwm_units
+    else:
+        teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
+            variable_name, {}
+        ).get("name", variable_name)
+        teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, {}).get("name", nwm_units)
+
+    ref_times = [
+        pd.to_datetime(r.day) + pd.to_timedelta(int(r.z_hour[1:3]), unit="h")
+        for r in df_valid.itertuples()
+    ]
+    ref_times_arr = np.repeat(ref_times, n_locations)
+    valid_times_arr = np.repeat(ds.time.values, n_locations)
+    teehr_location_ids = [
+        f"{nwm_version}-{fid}" for fid in ds.feature_id.values.astype(int)
+    ]
+    location_ids_tiled = np.tile(teehr_location_ids, n_files)
+
+    teehr_config = format_nwm_configuration_metadata(
+        nwm_config_name=configuration,
+        nwm_version=nwm_version,
+    )
+    num_vals = vals.size
+
+    output_table = pa.table(
+        {
+            VALUE: vals.flatten(),
+            REFERENCE_TIME: ref_times_arr,
+            LOCATION_ID: location_ids_tiled,
+            VALUE_TIME: valid_times_arr,
+            CONFIGURATION_NAME: num_vals * [teehr_config["name"]],
+            VARIABLE_NAME: num_vals * [teehr_variable_name],
+            UNIT_NAME: num_vals * [teehr_units],
+            MEMBER: num_vals * [teehr_config["member"]],
+        },
+        schema=schema,
+    )
 
     df.sort_values(by="filepath", inplace=True)
     if process_by_z_hour:
@@ -178,7 +153,7 @@ def process_chunk_of_files(
 
 
 def fetch_and_format_nwm_points(
-    json_paths: List[str],
+    file_paths: List[Optional[str]],
     location_ids: Iterable[int],
     configuration: str,
     variable_name: str,
@@ -190,18 +165,20 @@ def fetch_and_format_nwm_points(
     nwm_version: str,
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
-    drop_overlapping_assimilation_values: bool
+    drop_overlapping_assimilation_values: bool,
 ):
     """Fetch NWM point data and save as parquet files.
 
-    Read in previously generated Kerchunk reference jsons,
-    subset the NWM data based on provided location IDs, and format
-    and save to parquet files in the TEEHR data model using Dask.
+    Accepts a list of kerchunk reference file paths (S3/local .json, or local .parq)
+    as produced by ``generate_json_paths``. ``None`` entries are filtered out before
+    processing. Each chunk is combined into a single xarray Dataset via kerchunk.
+    Intended to be refactored to use VirtualiZarr in a future release.
 
     Parameters
     ----------
-    json_paths : list
-        List of the single json reference filepaths.
+    file_paths : List[Optional[str]]
+        Resolved file paths from ``generate_json_paths``. May contain
+        ``None`` entries for files that should be skipped.
     location_ids : Iterable[int]
         Array specifying NWM IDs of interest.
     configuration : str
@@ -225,7 +202,7 @@ def fetch_and_format_nwm_points(
         they already exist.  True = overwrite; False = fail.
     nwm_version : str
         Specified NWM version.
-    variable_mapper : Dict[str, Dict[str, str]]
+    variable_mapper : Dict[str, Dict[str, Dict[str, str]]]
         A mapping dictionary for variable names and units.
     timeseries_type : TimeseriesTypeEnum
         The type of timeseries being processed.
@@ -236,10 +213,14 @@ def fetch_and_format_nwm_points(
     if not output_parquet_dir.exists():
         output_parquet_dir.mkdir(parents=True)
 
-    # Format file list into a dataframe and group by specified method
-    df_refs = parse_nwm_json_paths(
-        json_paths=json_paths
-    )
+    # Filter None entries (files skipped for remote mode with no S3 JSON)
+    non_null_paths = [p for p in file_paths if p is not None]
+    if not non_null_paths:
+        raise FileNotFoundError(
+            "No NWM files could be resolved for the given configuration."
+        )
+
+    df_refs = parse_nwm_json_paths(non_null_paths)
 
     if process_by_z_hour:
         # Option #1. Groupby day and z_hour
@@ -248,6 +229,8 @@ def fetch_and_format_nwm_points(
     else:
         # Option #2. Chunk by some number of files
         dfs = split_dataframe(df_refs, stepsize)
+
+    logger.info(f"Processing {len(dfs)} chunks of files for configuration: {configuration}, variable: {variable_name}.")
 
     for df in dfs:
         process_chunk_of_files(
@@ -262,5 +245,5 @@ def fetch_and_format_nwm_points(
             nwm_version,
             variable_mapper,
             timeseries_type,
-            drop_overlapping_assimilation_values
+            drop_overlapping_assimilation_values,
         )

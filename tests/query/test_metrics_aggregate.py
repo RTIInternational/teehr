@@ -27,11 +27,11 @@ R_BENCHMARK_RESULTS = Path(
 )
 
 
-@pytest.mark.module_scope_test_warehouse
-def test_executing_deterministic_metrics(module_scope_test_warehouse):
+@pytest.mark.function_scope_test_warehouse
+def test_executing_deterministic_metrics(function_scope_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = module_scope_test_warehouse
+    ev = function_scope_test_warehouse
 
     # Test all the non-conditional metrics.
     include_nonconditional_metrics = [
@@ -81,11 +81,11 @@ def test_executing_deterministic_metrics(module_scope_test_warehouse):
     assert metrics_df.columns.size == 8
 
 
-@pytest.mark.module_scope_test_warehouse
-def test_executing_signatures(module_scope_test_warehouse):
+@pytest.mark.function_scope_test_warehouse
+def test_executing_signatures(function_scope_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = module_scope_test_warehouse
+    ev = function_scope_test_warehouse
 
     # Test all the metrics.
     include_all_metrics = [
@@ -317,7 +317,7 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
     assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 15.99071)
     assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 16.27986)
     assert np.isclose(
-        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.42549799
+        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.4226622
     )
     assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[2])
 

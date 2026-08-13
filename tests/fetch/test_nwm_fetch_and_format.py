@@ -41,7 +41,7 @@ def test_nwm22_point_fetch_and_format(tmpdir):
     ]
 
     fetch_and_format_nwm_points(
-        json_paths=json_paths,
+        file_paths=json_paths,
         location_ids=location_ids,
         configuration="short_range",
         variable_name="streamflow",
@@ -88,7 +88,7 @@ def test_nwm30_point_fetch_and_format(tmpdir):
     ]
 
     fetch_and_format_nwm_points(
-        json_paths=json_paths,
+        file_paths=json_paths,
         location_ids=location_ids,
         configuration="short_range_alaska",
         variable_name="streamflow",
@@ -133,7 +133,7 @@ def test_nwm30_point_fetch_and_format_medium_range_member(tmpdir):
     ]
 
     fetch_and_format_nwm_points(
-        json_paths=json_paths,
+        file_paths=json_paths,
         location_ids=location_ids,
         configuration="medium_range_mem1",
         variable_name="streamflow",
