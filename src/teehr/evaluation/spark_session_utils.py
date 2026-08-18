@@ -307,9 +307,9 @@ def _create_spark_base_session(
     base_packages = [
         f"org.apache.sedona:sedona-spark-shaded-{PYSPARK_VERSION}_{SCALA_VERSION}:{SEDONA_VERSION}",
         f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
-        # f"org.apache.iceberg:iceberg-core:{ICEBERG_VERSION}",
         "org.datasyslab:geotools-wrapper:1.8.0-33.1",
         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
+        "software.amazon.awssdk:bundle:2.24.6",
         "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for compatibility
         "com.amazonaws:aws-java-sdk-bundle:1.12.791",
         "org.xerial:sqlite-jdbc:3.42.0.0"
@@ -323,8 +323,7 @@ def _create_spark_base_session(
     # Set configurations
     conf.set("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
     conf.set("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
-    conf.set("spark.driver.userClassPathFirst", "true")
-    conf.set("spark.executor.userClassPathFirst", "true")
+
     conf.set("spark.sql.session.timeZone", "UTC")
     conf.set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
