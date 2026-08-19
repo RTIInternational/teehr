@@ -13,6 +13,7 @@ import rasterio
 import pandas as pd
 import dask
 import shapely
+import rioxarray  # noqa: F401 - needed to add rio accessors to xarray objects
 
 from teehr.fetching.nwm.grid_utils import update_location_id_prefix
 from teehr.loading.utils import read_spatial_file

@@ -809,7 +809,7 @@ def _compute_standard_deviation_of_timing_metric(
         F.col("_sum_pd2")
         - (F.col("_sum_pw") * F.col("_sum_pw") / F.col("_sum_p"))
     )
-    denominator = F.col("_sum_p") * (F.col("_n_prime") - F.lit(1))
+    denominator = (F.col("_sum_p") * (F.col("_n_prime") - F.lit(1))) / F.col("_n_prime")
     if metric.add_epsilon:
         denominator = denominator + F.lit(EPSILON)
 

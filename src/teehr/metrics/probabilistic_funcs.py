@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 from teehr.metrics.models.base import MetricsBasemodel
-# from teehr.metrics.deterministic_funcs import _transform
+from teehr.metrics.deterministic_funcs import _mean_error
 
 logger = logging.getLogger(__name__)
 
@@ -82,11 +82,14 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
         # lazy load scoringrules
         import scoringrules as sr
 
-        # p, s, value_time = _transform(p, s, model, value_time)
-        # pivoted_dict = _pivot_by_value_time(p, s, value_time)
         pivoted_dict = _pivot_by_member(p, s, members)
 
         if model.summary_func is not None:
+            if len(pivoted_dict["secondary"].shape) == 1:
+                # CRPS is just mean absolute error for a deterministic forecast
+                return model.summary_func(
+                    _mean_error(pivoted_dict["primary"], pivoted_dict["secondary"])
+                )
             return model.summary_func(
                 sr.crps_ensemble(
                     pivoted_dict["primary"],
@@ -96,6 +99,9 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
                 )
             )
         else:
+            if len(pivoted_dict["secondary"].shape) == 1:
+                # CRPS is just mean absolute error for a deterministic forecast
+                return _mean_error(pivoted_dict["primary"], pivoted_dict["secondary"])
             return sr.crps_ensemble(
                 pivoted_dict["primary"],
                 pivoted_dict["secondary"],

@@ -1,6 +1,7 @@
 """Module defining common utilities for fetching and processing NWM data."""
 from pathlib import Path
-from typing import Union, Optional, Iterable, List, Dict
+from typing import Union, Optional, Iterable, List, Dict, Tuple
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from datetime import timedelta
 import logging
@@ -8,6 +9,7 @@ import re
 import json
 from warnings import warn
 
+from kerchunk.combine import MultiZarrToZarr
 import dask
 import fsspec
 import ujson  # fast json
@@ -15,7 +17,6 @@ from kerchunk.hdf import SingleHdf5ToZarr
 import pandas as pd
 import numpy as np
 import xarray as xr
-import geopandas as gpd
 import pyarrow as pa
 import pandera
 
@@ -171,9 +172,6 @@ def format_nwm_configuration_metadata(
     which is parsed from the NWM configuration name if it's an ensemble
     (ie., medium range or long range streamflow).
     """
-    logger.info(
-        f"Formatting configuration name for {nwm_config_name}."
-    )
     ev_member = None
     # Try to parse the member from the configuration name.
     if bool(re.search(r"_mem[0-9]+", nwm_config_name)):
@@ -268,50 +266,49 @@ def generate_json_paths(
     List[str]
         List of filepaths to json files locally and/or in s3.
     """
-    logger.debug(f"Generating json paths. kerchunk_method: {kerchunk_method}")
+    logger.info(f"Generating json paths. kerchunk_method: {kerchunk_method}")
 
     if kerchunk_method == SupportedKerchunkMethod.local:
         # Create them manually first
-        json_paths = build_zarr_references(gcs_component_paths,
-                                           json_dir,
-                                           ignore_missing_file)
+        json_paths = build_zarr_references(
+            gcs_component_paths,
+            json_dir,
+            ignore_missing_file
+        )
 
     elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
-        fs = fsspec.filesystem("s3", anon=True)
-        results = []
-        for gcs_path in gcs_component_paths:
-            results.append(check_for_prebuilt_json_paths(fs, gcs_path))
-        json_paths = dask.compute(results)[0]
-        json_paths = [path for path in json_paths if path is not None]
+        s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
+        file_check_output = check_if_files_exist(s3_path_list)
+        json_paths = [path for path, exists in file_check_output.items() if exists]
+        missing_files = [path for path, exists in file_check_output.items() if not exists]
+        logger.info(
+            f"Mode: {kerchunk_method}. Found {len(json_paths)} pre-built jsons in s3,"
+            f" skipping {len(missing_files)} missing files."
+        )
 
     elif kerchunk_method == SupportedKerchunkMethod.auto:
         # Use whatever pre-builts exist, and create the missing
-        #  files, if any
-        fs = fsspec.filesystem("s3", anon=True)
-        results = []
-        for gcs_path in gcs_component_paths:
-            results.append(
-                check_for_prebuilt_json_paths(
-                    fs, gcs_path, return_gcs_path=True
-                )
-            )
-        s3_or_gcs_paths = dask.compute(results)[0]
+        s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
+        file_check_output = check_if_files_exist(s3_path_list)
+        json_paths = [path for path, exists in file_check_output.items() if exists]
+        missing_files = [path for path, exists in file_check_output.items() if not exists]
+        logger.info(
+            f"Mode: {kerchunk_method}. Found {len(json_paths)} pre-built jsons in s3,"
+            f" building references for {len(missing_files)} files."
+        )
 
-        # Build any jsons that do not already exist in s3
-        gcs_paths = []
-        json_paths = []
-        for path in s3_or_gcs_paths:
-            if path.split("://")[0] == "gcs":
-                gcs_paths.append(path)
-            else:
-                json_paths.append(path)
-
-        if len(gcs_paths) > 0:
+        if len(missing_files) > 0:
+            # Set back to gcs paths and strip the .json extension
+            missing_files = [
+                path.replace(NWM_S3_JSON_PATH, "gcs:/").replace(".json", "") for path in missing_files
+            ]
             json_paths.extend(
-                build_zarr_references(gcs_paths,
-                                      json_dir,
-                                      ignore_missing_file)
+                build_zarr_references(
+                    missing_files,
+                    json_dir,
+                    ignore_missing_file
+                )
             )
 
     return json_paths
@@ -413,48 +410,24 @@ def write_timeseries_parquet_file(
         )
 
 
-def parquet_to_gdf(parquet_filepath: str) -> gpd.GeoDataFrame:
-    """Read parquet as GeoDataFrame."""
-    gdf = gpd.read_parquet(parquet_filepath)
-    return gdf
-
-
-def np_to_list(t):
-    """Convert numpy array to list."""
-    return [a.tolist() for a in t]
-
-
 def get_dataset(
     filepath: str, ignore_missing_file: bool, **kwargs
 ) -> xr.Dataset:
-    """Retrieve a blob from the data service as xarray.Dataset.
-
-    Parameters
-    ----------
-    filepath : str
-        Path to the kerchunk json file. Can be local or remote.
-    ignore_missing_file : bool
-        Flag controlling whether to ignore missing files.
-
-    Returns
-    -------
-    xarray.Dataset
-        The data stored in the blob.
-    """
+    """Get an xarray dataset from a filepath."""
     logger.debug(f"Getting xarray dataset from: {filepath}")
-
     try:
-        m = fsspec.filesystem(
-            "reference", fo=filepath, **kwargs
-        ).get_mapper()
+        if filepath.startswith("s3://"):
+            s3 = fsspec.filesystem("s3", anon=True)
+            with s3.open(filepath, "rb") as f:
+                reference = ujson.load(f)
+            return xr.open_dataset(reference, engine="kerchunk", storage_options=kwargs)
+        return xr.open_dataset(filepath, engine="kerchunk", storage_options=kwargs)
     except FileNotFoundError as e:
         if not ignore_missing_file:
             raise e
-        else:
-            return None
+        return None
     except ValueError:
         raise ValueError(f"There was a problem reading {filepath}")
-    return xr.open_dataset(m, engine="zarr", consolidated=False)
 
 
 def list_to_np(lst):
@@ -462,39 +435,22 @@ def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
 
 
-@dask.delayed
-def check_for_prebuilt_json_paths(
-    fs: fsspec.filesystem, gcs_path: str, return_gcs_path=False
-) -> str:
-    """Check for existence of a pre-built kerchunk json in s3 based \
-    on its GCS path.
+def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
+    """Check for existence of S3 files using a thread pool."""
+    fs = fsspec.filesystem("s3", anon=True)
 
-    Parameters
-    ----------
-    fs : fsspec.filesystem
-        S3-based filesystem.
-    gcs_path : str
-        Path to the netcdf file in GCS.
-    return_gcs_path : bool, optional
-        Flag to return GCS path of s3 is missing, by default False.
+    def _check(path: str) -> tuple:
+        return path, fs.exists(path)
 
-    Returns
-    -------
-    str
-        Path to the json in s3 or netcdf file in GCS.
-    """
-    s3_path = f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json"
-    if fs.exists(s3_path):
-        return s3_path
-    else:
-        if return_gcs_path:
-            return gcs_path
+    with ThreadPoolExecutor(max_workers=min(64, len(file_path_list))) as executor:
+        results = list(executor.map(_check, file_path_list))
+
+    return dict(results)
 
 
 @dask.delayed
 def gen_json(
     remote_path: str,
-    fs: fsspec.filesystem,
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
 ) -> str:
@@ -504,8 +460,6 @@ def gen_json(
     ----------
     remote_path : str
         Path to the file in the remote location (ie, GCS bucket).
-    fs : fsspec.filesystem
-        Fsspec filesystem mapped to GCS.
     json_dir : str
         Directory for saving zarr reference json files.
 
@@ -520,6 +474,12 @@ def gen_json(
         default_fill_cache=False,
         default_cache_type="first",  # noqa
     )
+    fs = fsspec.filesystem(
+        "gcs",
+        token="anon",
+        skip_instance_cache=True,
+        use_listings_cache=False
+    )
     try:
         with fs.open(remote_path, **so) as infile:
             p = remote_path.split("/")
@@ -527,9 +487,12 @@ def gen_json(
             fname = p[5]
             outf = str(Path(json_dir, f"{date}.{fname}.json"))
             try:
-                h5chunks = SingleHdf5ToZarr(infile,
-                                            remote_path,
-                                            inline_threshold=300)
+                h5chunks = SingleHdf5ToZarr(
+                    infile,
+                    remote_path,
+                    inline_threshold=300
+                )
+                translated_dict = h5chunks.translate()
             except OSError as err:
                 if not ignore_missing_file:
                     raise Exception(f"Corrupt file: {remote_path}") from err
@@ -540,7 +503,7 @@ def gen_json(
                     )
                     return None
             with open(outf, "wb") as f:
-                f.write(ujson.dumps(h5chunks.translate()).encode())
+                f.write(ujson.dumps(translated_dict).encode())
     except FileNotFoundError as e:
         if not ignore_missing_file:
             raise e
@@ -548,6 +511,106 @@ def gen_json(
             logger.warning(f"A missing file was encountered: {remote_path}")
             return None
     return outf
+
+
+def concat_reference_datasets(
+    refs: List[dict],
+    concat_dim: str,
+    storage_options: Optional[Dict],
+    ignore_missing_file: bool,
+    data_vars: str = "all"
+) -> xr.Dataset:
+    """Open each kerchunk reference dict individually and concatenate along concat_dim."""
+    def _open_ref(ref: dict) -> Optional[xr.Dataset]:
+        try:
+            return xr.open_dataset(
+                ref,
+                engine="kerchunk",
+                storage_options=storage_options
+            )
+        except Exception as e:
+            if not ignore_missing_file:
+                raise
+            logger.warning(f"Could not open reference dataset: {e}")
+            return None
+
+    with ThreadPoolExecutor(max_workers=min(64, len(refs))) as executor:
+        datasets = list(executor.map(_open_ref, refs))
+
+    datasets = [ds for ds in datasets if ds is not None]
+    if not datasets:
+        raise FileNotFoundError("No reference datasets could be opened.")
+    return xr.concat(datasets, dim=concat_dim, data_vars=data_vars)
+
+
+def combine_and_open_kerchunk_refs(
+    json_paths: List[str],
+    ignore_missing_file: bool = True,
+    concat_dims: Optional[List[str]] = ["time"],
+    storage_options: Optional[Dict] = {},
+) -> Tuple[xr.Dataset, List[bool]]:
+    """Combine multiple kerchunk reference files into a single xarray Dataset.
+
+    Parameters
+    ----------
+    json_paths : List[str]
+        List of paths to kerchunk reference JSON files.
+    ignore_missing_file : bool, optional
+        Whether to ignore missing files, by default True.
+    concat_dims : Optional[List[str]], optional
+        Dimensions to concatenate along, by default ["time"].
+    storage_options : Optional[Dict], optional
+        Options for the storage backend, by default {}.
+
+    Returns
+    -------
+    Tuple[xr.Dataset, List[bool]]
+        ``(dataset, read_mask)`` where ``read_mask[i]`` is ``True`` if
+        ``json_paths[i]`` was read successfully.  Callers should use
+        ``read_mask`` to keep any associated DataFrame in sync with the
+        number of timesteps in the returned dataset.
+    """
+    if not json_paths:
+        raise FileNotFoundError("No NWM reference files were provided.")
+
+    def _read_ref(path: str) -> Optional[dict]:
+        try:
+            if path.startswith("s3://"):
+                with fsspec.open(path, "rb", anon=True) as f:
+                    return ujson.load(f)
+            if path.startswith(("gcs://", "gs://")):
+                with fsspec.open(path, "rb", token="anon") as f:
+                    return ujson.load(f)
+            return ujson.loads(Path(path).read_bytes())
+        except FileNotFoundError as e:
+            if not ignore_missing_file:
+                raise e
+            logger.warning(f"A missing reference file was encountered: {path}")
+            return None
+        except (OSError, ValueError) as e:
+            if not ignore_missing_file:
+                raise Exception(f"Corrupt reference file: {path}") from e
+            logger.warning(f"A potentially corrupt reference file was encountered: {path}")
+            return None
+
+    with ThreadPoolExecutor(max_workers=min(64, len(json_paths))) as executor:
+        results = list(executor.map(_read_ref, json_paths))
+
+    read_mask = [r is not None for r in results]
+    refs = [r for r in results if r is not None]
+
+    if not refs:
+        raise FileNotFoundError(
+            "No NWM reference files could be read for the specified configuration."
+        )
+
+    ds = concat_reference_datasets(
+        refs,
+        concat_dims[0],
+        storage_options,
+        ignore_missing_file
+    )
+    return ds, read_mask
 
 
 def build_zarr_references(
@@ -575,8 +638,6 @@ def build_zarr_references(
     if not json_dir_path.exists():
         json_dir_path.mkdir(parents=True)
 
-    fs = fsspec.filesystem("gcs", token="anon")
-
     # Check to see if the jsons already exist locally
     existing_jsons = []
     missing_paths = []
@@ -594,7 +655,7 @@ def build_zarr_references(
 
     results = []
     for path in missing_paths:
-        results.append(gen_json(path, fs, json_dir, ignore_missing_file))
+        results.append(gen_json(path, json_dir, ignore_missing_file))
     json_paths = dask.compute(results)[0]
     json_paths.extend(existing_jsons)
 
@@ -805,7 +866,7 @@ def build_remote_nwm_filelist(
     logger.debug("Building remote NWM file list from GCS.")
 
     gcs_dir = f"gcs://{NWM_BUCKET}"
-    fs = fsspec.filesystem("gcs", token="anon")
+    fs = fsspec.filesystem("gcs", token="anon", skip_instance_cache=True)
     if ingest_days is None:
         dates = pd.date_range(start=start_dt.date(), end=end_dt.date(), freq="1d")
     else:

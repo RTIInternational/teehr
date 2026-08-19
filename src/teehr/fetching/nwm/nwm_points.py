@@ -1,4 +1,4 @@
-"""Module for fetchning and processing NWM point data."""
+"""Module for fetching and processing NWM point data."""
 from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
 from dateutil.parser import parse
@@ -333,6 +333,11 @@ def nwm_to_parquet(
             gcs_component_paths=gcs_component_paths
         )
 
+        if len(gcs_component_paths) == 0:
+            raise ValueError(
+                "No NWM files found for the specified input arguments."
+            )
+
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(
             kerchunk_method,
@@ -343,17 +348,17 @@ def nwm_to_parquet(
 
         # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_points(
-            json_paths,
-            location_ids,
-            configuration,
-            variable_name,
-            output_parquet_dir,
-            process_by_z_hour,
-            stepsize,
-            ignore_missing_file,
-            overwrite_output,
-            nwm_version,
-            variable_mapper,
-            timeseries_type,
-            drop_overlapping_assimilation_values
+            file_paths=json_paths,
+            location_ids=location_ids,
+            configuration=configuration,
+            variable_name=variable_name,
+            output_parquet_dir=output_parquet_dir,
+            process_by_z_hour=process_by_z_hour,
+            stepsize=stepsize,
+            ignore_missing_file=ignore_missing_file,
+            overwrite_output=overwrite_output,
+            nwm_version=nwm_version,
+            variable_mapper=variable_mapper,
+            timeseries_type=timeseries_type,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,
         )

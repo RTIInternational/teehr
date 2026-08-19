@@ -55,10 +55,10 @@ class GumbootBootstrap(IIDBootstrap):
             self.boot_year_array = np.genfromtxt(
                 boot_year_file, delimiter=",", dtype=int
             )
-            if np.in1d(
+            if not np.isin(
                 np.unique(self.boot_year_array),
                 self.unique_water_years
-            ).all() is False:
+            ).all():
                 logger.error(
                     "Invalid boot year file: The provided boot year file "
                     "contains years outside of the range of the timeseries "

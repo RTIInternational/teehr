@@ -288,7 +288,7 @@ def nwm_retro_to_parquet(
         output_dir.mkdir(parents=True)
 
     da = xr.open_zarr(
-        fsspec.get_mapper(s3_zarr_url, anon=True), consolidated=True
+        fsspec.get_mapper(s3_zarr_url, anon=True, asynchronous=True), consolidated=True
     )[variable_name].sel(
         feature_id=location_ids, time=slice(start_date, end_date)
     )
