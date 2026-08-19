@@ -145,7 +145,7 @@ def create_spark_session(
     add_jars : List[str]
         Provided local jar paths will be added if they do not already exist.
         Default is None.
-        >>> add_jars=["/opt/spark/jars/teehr-authmanager.jar"]
+        >>> add_jars=["/path/to/custom-extension.jar"]
     update_configs : Dict[str, str]
         Provided Spark configurations will be added if they do not already
         exist, or overwritten if they do exist. Default is None.
@@ -259,7 +259,10 @@ def create_spark_session(
     # Build Polaris auth configs and merge with caller-provided update_configs.
     # Auth configs are the base; caller's configs take precedence.
     polaris_auth_configs = _build_polaris_auth_configs(polaris_token, use_authmanager)
-    authmanager_jars = _build_polaris_auth_jars(resolved_use_authmanager)
+    authmanager_packages = _build_polaris_auth_packages(resolved_use_authmanager)
+    authmanager_repositories = _build_polaris_auth_repositories(resolved_use_authmanager)
+    _append_csv_conf(conf, "spark.jars.packages", authmanager_packages)
+    _append_csv_conf(conf, "spark.jars.repositories", authmanager_repositories)
     resolved_package_jars = _collect_resolved_package_jars(conf)
 
     executor_env_configs = _build_executor_env_configs(
@@ -274,7 +277,7 @@ def create_spark_session(
     _update_configs_and_packages(
         conf=conf,
         update_configs=effective_configs or None,
-        add_jars=(add_jars or []) + authmanager_jars + resolved_package_jars,
+        add_jars=(add_jars or []) + resolved_package_jars,
         add_packages=add_packages
     )
 
@@ -737,8 +740,35 @@ def _update_configs_and_packages(
                 if merged_jars:
                     conf.set("spark.jars", ",".join(merged_jars))
                 continue
+            if key in {"spark.jars.packages", "spark.jars.repositories"}:
+                existing_values = conf.get(key).split(",") if conf.contains(key) else []
+                incoming_values = [v.strip() for v in str(value).split(",") if v.strip()]
+                merged_values = []
+                for item in existing_values + incoming_values:
+                    normalized = item.strip()
+                    if normalized and normalized not in merged_values:
+                        merged_values.append(normalized)
+                if merged_values:
+                    conf.set(key, ",".join(merged_values))
+                continue
             conf.set(key, value)
     return
+
+
+def _append_csv_conf(conf: SparkConf, key: str, values: List[str]) -> None:
+    """Append unique CSV values to a Spark conf key without clobbering existing values."""
+    if not values:
+        return
+
+    existing_values = conf.get(key).split(",") if conf.contains(key) else []
+    merged_values: List[str] = []
+    for item in existing_values + values:
+        normalized = item.strip() if isinstance(item, str) else ""
+        if normalized and normalized not in merged_values:
+            merged_values.append(normalized)
+
+    if merged_values:
+        conf.set(key, ",".join(merged_values))
 
 
 def _collect_resolved_package_jars(conf: SparkConf) -> List[str]:
@@ -1209,25 +1239,43 @@ def _build_polaris_auth_configs(
     return configs
 
 
-def _build_polaris_auth_jars(
+def _build_polaris_auth_packages(
     resolved_use_authmanager: bool,
 ) -> List[str]:
-    """Return additive jar paths needed by Polaris auth features."""
+    """Return Spark package coordinates for Polaris AuthManager."""
     if not resolved_use_authmanager:
         return []
 
-    jars_csv = os.getenv(
-        "POLARIS_AUTHMANAGER_JAR",
-        "/opt/spark/jars/teehr-authmanager.jar",
+    packages_csv = os.getenv(
+        "POLARIS_AUTHMANAGER_PACKAGE",
+        "org.rtiamanzi:teehr-iceberg-authmanager:0.0.1",
     )
-    jars = [j.strip() for j in jars_csv.split(",") if j.strip()]
+    packages = [p.strip() for p in packages_csv.split(",") if p.strip()]
 
-    unique_jars: List[str] = []
-    for jar in jars:
-        if jar not in unique_jars:
-            unique_jars.append(jar)
+    unique_packages: List[str] = []
+    for package in packages:
+        if package not in unique_packages:
+            unique_packages.append(package)
 
-    return unique_jars
+    return unique_packages
+
+
+def _build_polaris_auth_repositories(
+    resolved_use_authmanager: bool,
+) -> List[str]:
+    """Return repository URLs for package-based AuthManager resolution."""
+    if not resolved_use_authmanager:
+        return []
+
+    repositories_csv = os.getenv("POLARIS_AUTHMANAGER_REPOSITORIES", "")
+    repositories = [r.strip() for r in repositories_csv.split(",") if r.strip()]
+
+    unique_repositories: List[str] = []
+    for repository in repositories:
+        if repository not in unique_repositories:
+            unique_repositories.append(repository)
+
+    return unique_repositories
 
 
 def _build_executor_env_configs(
