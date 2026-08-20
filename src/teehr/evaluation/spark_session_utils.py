@@ -1248,7 +1248,7 @@ def _build_polaris_auth_packages(
 
     packages_csv = os.getenv(
         "POLARIS_AUTHMANAGER_PACKAGE",
-        "org.rtiamanzi:teehr-iceberg-authmanager:0.0.1",
+        "org.rtiamanzi:teehr-iceberg-authmanager:0.0.3",
     )
     packages = [p.strip() for p in packages_csv.split(",") if p.strip()]
 
