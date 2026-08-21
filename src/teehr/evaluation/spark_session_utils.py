@@ -183,6 +183,7 @@ def create_spark_session(
         use_authmanager if use_authmanager is not None
         else _as_bool_str(os.getenv("POLARIS_USE_AUTHMANAGER", "false")) == "true"
     )
+    resolved_use_sts = _as_bool_str(os.getenv("POLARIS_USE_STS", "false")) == "true"
     if force_recreate_session or resolved_use_authmanager:
         existing_session = SparkSession.getActiveSession()
         if existing_session is not None:
@@ -224,6 +225,7 @@ def create_spark_session(
         aws_session_token=aws_session_token,
         aws_region=aws_region,
         aws_profile=aws_profile,
+        use_sts=resolved_use_sts,
     )
 
     # Set GCS configuration if available
@@ -498,8 +500,16 @@ def _set_aws_credentials_in_spark(
     aws_session_token: str,
     aws_region: str,
     aws_profile: str = None,
+    use_sts: bool = False,
 ):
-    """Set AWS credentials in Spark configuration with multiple options."""
+    """Set AWS credentials in Spark configuration with multiple options.
+
+    When `use_sts` is True, Polaris vends short-lived, per-request S3
+    credentials for the Iceberg catalog via remote signing, so no static
+    credentials are set on the catalog itself here — only the Hadoop
+    `fs.s3a.*` credentials used for non-Iceberg S3 access (e.g. reading
+    external, non-warehouse buckets) are still resolved and set.
+    """
     logger.info("Setting Hadoop's default AWS credentials provider and AWS region")
     conf.set(
         "spark.hadoop.fs.s3a.aws.credentials.provider",
@@ -510,8 +520,9 @@ def _set_aws_credentials_in_spark(
     # Priority 1: Explicit credentials provided by user
     if aws_access_key_id and aws_secret_access_key:
         logger.info("🔑 Using user-provided AWS credentials")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
+        if not use_sts:
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
         conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
         conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
         return
@@ -519,7 +530,8 @@ def _set_aws_credentials_in_spark(
     # Priority 2: Explicit token
     if aws_session_token:
         logger.info("🔑 Using user-provided AWS session token")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
+        if not use_sts:
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
         conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
         return
 
@@ -539,13 +551,15 @@ def _set_aws_credentials_in_spark(
                         creds_session_token = config.get(aws_profile, "aws_session_token", fallback=None)
 
                         logger.info(f"🔑 Using AWS credentials from ~/.aws/credentials profile '{aws_profile}")
-                        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", creds_access_key)
-                        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", creds_secret_key)
+                        if not use_sts:
+                            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", creds_access_key)
+                            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", creds_secret_key)
                         conf.set("spark.hadoop.fs.s3a.access.key", creds_access_key)
                         conf.set("spark.hadoop.fs.s3a.secret.key", creds_secret_key)
 
                         if creds_session_token:
-                            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", creds_session_token)
+                            if not use_sts:
+                                conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", creds_session_token)
                             conf.set("spark.hadoop.fs.s3a.session.token", creds_session_token)
                         return
             except Exception as e:
@@ -557,15 +571,17 @@ def _set_aws_credentials_in_spark(
     # Priority 4: Check boto token
     if credentials and credentials.token:
         logger.info("🔑 Using AWS session token from boto3")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", credentials.token)
+        if not use_sts:
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", credentials.token)
         conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
         return
 
     # Priority 5: Check boto credentials
     if credentials and credentials.access_key and credentials.secret_key:
         logger.info("🔑 Using AWS credentials from boto3")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
+        if not use_sts:
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
         conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
         conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
         return
