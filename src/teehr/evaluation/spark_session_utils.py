@@ -260,9 +260,7 @@ def create_spark_session(
 
     # Build Polaris auth configs and merge with caller-provided update_configs.
     # Auth configs are the base; caller's configs take precedence.
-    polaris_auth_configs = _build_polaris_auth_configs(
-        polaris_token, use_authmanager, remote_catalog_uri
-    )
+    polaris_auth_configs = _build_polaris_auth_configs(polaris_token, use_authmanager)
     authmanager_packages = _build_polaris_auth_packages(resolved_use_authmanager)
     authmanager_repositories = _build_polaris_auth_repositories(resolved_use_authmanager)
     _append_csv_conf(conf, "spark.jars.packages", authmanager_packages)
@@ -1135,7 +1133,6 @@ def ensure_broker_session_token(
 def _build_polaris_auth_configs(
     polaris_token: Optional[str],
     use_authmanager: Optional[bool],
-    remote_catalog_uri: str,
 ) -> Dict[str, str]:
     """Build Spark configs for Polaris catalog authentication.
 
@@ -1251,10 +1248,13 @@ def _build_polaris_auth_configs(
             configs["spark.sql.catalog.iceberg.rest.auth.oauth2.credential"] = credential
 
     # STS credential vending: Polaris vends per-request S3 credentials via the catalog REST API.
+    # Polaris doesn't support Iceberg's "remote-signing" delegation mode (no /v1/aws/s3/sign
+    # route), so request "vended-credentials" instead — the mode Trino already uses against it.
     # When active, explicit S3 catalog credentials are superseded by Polaris-vended ones.
     if _as_bool_str(os.getenv("POLARIS_USE_STS", "false")) == "true":
-        configs["spark.sql.catalog.iceberg.s3.remote-signing-enabled"] = "true"
-        configs["spark.sql.catalog.iceberg.s3.signer.uri"] = remote_catalog_uri
+        configs["spark.sql.catalog.iceberg.header.X-Iceberg-Access-Delegation"] = (
+            "vended-credentials"
+        )
 
     return configs
 
