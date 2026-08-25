@@ -260,7 +260,9 @@ def create_spark_session(
 
     # Build Polaris auth configs and merge with caller-provided update_configs.
     # Auth configs are the base; caller's configs take precedence.
-    polaris_auth_configs = _build_polaris_auth_configs(polaris_token, use_authmanager)
+    polaris_auth_configs = _build_polaris_auth_configs(
+        polaris_token, use_authmanager, remote_catalog_uri
+    )
     authmanager_packages = _build_polaris_auth_packages(resolved_use_authmanager)
     authmanager_repositories = _build_polaris_auth_repositories(resolved_use_authmanager)
     _append_csv_conf(conf, "spark.jars.packages", authmanager_packages)
@@ -1133,6 +1135,7 @@ def ensure_broker_session_token(
 def _build_polaris_auth_configs(
     polaris_token: Optional[str],
     use_authmanager: Optional[bool],
+    remote_catalog_uri: str,
 ) -> Dict[str, str]:
     """Build Spark configs for Polaris catalog authentication.
 
@@ -1251,6 +1254,7 @@ def _build_polaris_auth_configs(
     # When active, explicit S3 catalog credentials are superseded by Polaris-vended ones.
     if _as_bool_str(os.getenv("POLARIS_USE_STS", "false")) == "true":
         configs["spark.sql.catalog.iceberg.s3.remote-signing-enabled"] = "true"
+        configs["spark.sql.catalog.iceberg.s3.signer.uri"] = remote_catalog_uri
 
     return configs
 
@@ -1388,7 +1392,3 @@ def create_minio_spark_session(
         update_configs=minio_configs,
         use_authmanager=use_authmanager,
     )
-
-
-
-
