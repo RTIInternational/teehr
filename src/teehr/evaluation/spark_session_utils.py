@@ -6,7 +6,6 @@ import logging
 import os
 import socket
 import time
-import glob
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urlsplit, urlunsplit
@@ -281,7 +280,6 @@ def create_spark_session(
     authmanager_repositories = _build_polaris_auth_repositories(resolved_use_authmanager)
     _append_csv_conf(conf, "spark.jars.packages", authmanager_packages)
     _append_csv_conf(conf, "spark.jars.repositories", authmanager_repositories)
-    resolved_package_jars = _collect_resolved_package_jars(conf)
 
     executor_env_configs = _build_executor_env_configs(
         resolved_use_authmanager=resolved_use_authmanager,
@@ -295,17 +293,13 @@ def create_spark_session(
     _update_configs_and_packages(
         conf=conf,
         update_configs=effective_configs or None,
-        add_jars=(add_jars or []) + resolved_package_jars,
+        add_jars=add_jars,
         add_packages=add_packages
     )
 
     logger.info("⚙️ All settings applied. Creating Spark session...")
     spark = SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
     sedona_spark = SedonaContext.create(spark)
-
-    # Apply runtime-settable configs to the live session (e.g., auth tokens)
-    if effective_configs:
-        _apply_runtime_spark_configs(sedona_spark, effective_configs)
 
     if debug_config:
         log_session_config(sedona_spark)
@@ -781,56 +775,6 @@ def _append_csv_conf(conf: SparkConf, key: str, values: List[str]) -> None:
         conf.set(key, ",".join(merged_values))
 
 
-def _collect_resolved_package_jars(conf: SparkConf) -> List[str]:
-    """Collect local jars resolved from spark.jars.packages."""
-    if not conf.contains("spark.jars.packages"):
-        return []
-
-    packages_csv = conf.get("spark.jars.packages")
-    if not packages_csv:
-        return []
-
-    ivy_dir = conf.get("spark.jars.ivy") if conf.contains("spark.jars.ivy") else "/tmp/.ivy2"
-
-    ivy_roots = [
-        Path(ivy_dir),
-        Path("/tmp/.ivy2"),
-        Path("/tmp/.ivy2.5.2"),
-        Path.home() / ".ivy2.5.2",
-        Path.home() / ".ivy2",
-    ]
-
-    discovered: List[str] = []
-
-    for package in [p.strip() for p in packages_csv.split(",") if p.strip()]:
-        try:
-            group, artifact, version = package.split(":", 2)
-        except ValueError:
-            continue
-
-        jar_name = f"{group}_{artifact}-{version}.jar"
-
-        for root in ivy_roots:
-            candidate = root / "jars" / jar_name
-            if candidate.exists():
-                jar_path = str(candidate)
-                if jar_path not in discovered:
-                    discovered.append(jar_path)
-                break
-
-        if not any(jar_name in path for path in discovered):
-            for match in glob.glob(f"/tmp/.ivy2*/jars/{jar_name}"):
-                if match not in discovered:
-                    discovered.append(match)
-
-    if discovered:
-        logger.info("Discovered %d Ivy package jars for spark.jars distribution", len(discovered))
-    else:
-        logger.info("No local Ivy package jars discovered for spark.jars distribution")
-
-    return discovered
-
-
 _SENSITIVE_CONFIG_KEY_MARKERS = ("token", "secret", "credential", "password")
 
 
@@ -1031,30 +975,6 @@ def ensure_fresh_polaris_user_token(
 def _as_bool_str(value: str, default: str = "true") -> str:
     normalized = (value or default).strip().lower()
     return "true" if normalized in ("1", "true", "t", "yes", "y", "on") else "false"
-
-
-def _apply_runtime_spark_configs(spark, configs: Dict[str, str]) -> None:
-    for key, value in configs.items():
-        if not key.startswith("spark."):
-            continue
-
-        # Spark 4+ enforces runtime immutability for many configs. Apply only
-        # keys that the active session reports as modifiable.
-        try:
-            is_modifiable = bool(spark.conf.isModifiable(key))
-        except Exception:
-            is_modifiable = False
-
-        if not is_modifiable:
-            logger.warning(
-                "Runtime Spark config %s is not modifiable on the active session — "
-                "if this key carries a refreshed auth token/credential, the catalog "
-                "client may keep using its stale, already-cached value.",
-                key,
-            )
-            continue
-
-        spark.conf.set(key, value)
 
 
 def _is_http_error_with_status(exc: Exception, status_code: int) -> bool:
