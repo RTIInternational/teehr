@@ -398,19 +398,19 @@ def _set_spark_cluster_configuration(
     k8s_api_server = f"https://{k8s_host}:{k8s_port_https}"
 
     # First try getting it from environment variable
-    if spark_namespace is None:
+    if not spark_namespace:
         spark_namespace = os.environ.get("TEEHR_NAMESPACE", "")
     logger.info(f"🔍 Initial spark namespace from ENV: {spark_namespace}")
 
-    if spark_namespace is None:
+    if not spark_namespace:
         # Then get it from here
         namespace_file = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
         if os.path.exists(namespace_file):
             with open(namespace_file, 'r') as f:
                 spark_namespace = f.read().strip()
 
-    # Finally get it here if still None
-    if spark_namespace is None:
+    # Finally get it here if still unresolved
+    if not spark_namespace:
         spark_namespace = "default"  # last resort, will probably fail
 
     logger.info(f"🔍 Connecting to Kubernetes API: {k8s_api_server}")
