@@ -181,9 +181,9 @@ def create_spark_session(
     # AuthManager requires a fresh JVM per user session to avoid static state leakage
     resolved_use_authmanager = (
         use_authmanager if use_authmanager is not None
-        else _as_bool_str(os.getenv("POLARIS_USE_AUTHMANAGER", "false")) == "true"
+        else _as_bool_str(os.getenv("POLARIS_USE_AUTHMANAGER", "false"), default="false") == "true"
     )
-    resolved_use_sts = _as_bool_str(os.getenv("POLARIS_USE_STS", "false")) == "true"
+    resolved_use_sts = _as_bool_str(os.getenv("POLARIS_USE_STS", "false"), default="false") == "true"
     if force_recreate_session or resolved_use_authmanager:
         existing_session = SparkSession.getActiveSession()
         if existing_session is not None:
@@ -717,12 +717,21 @@ def _configure_iceberg_catalogs(
     conf.set(f"spark.sql.catalog.{remote_catalog_name}.warehouse", remote_warehouse_dir)
     conf.set(f"spark.sql.catalog.{remote_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
 
+    # Optional S3 endpoint/path-style override for non-AWS S3-compatible endpoints
+    # (e.g. a custom S3-compatible store). Not needed for plain AWS S3, so this
+    # only applies when explicitly requested via REMOTE_CATALOG_S3_PATH_STYLE_ACCESS.
+    if _as_bool_str(os.getenv("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "false")) == "true":
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access", "true")
+        s3_endpoint = os.getenv("REMOTE_CATALOG_S3_ENDPOINT")
+        if s3_endpoint:
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint", s3_endpoint)
+
 
 def _update_configs_and_packages(
     conf: SparkConf,
     update_configs: Dict[str, str],
-    add_jars: List[str],
-    add_packages: List[str]
+    add_jars: Optional[List[str]] = None,
+    add_packages: Optional[List[str]] = None
 ) -> Dict[str, str]:
     """Update Spark configurations and packages."""
     # Add specified local jars
@@ -1151,7 +1160,7 @@ def _build_polaris_auth_configs(
 
     resolved_use_authmanager = (
         use_authmanager if use_authmanager is not None
-        else _as_bool_str(os.getenv("POLARIS_USE_AUTHMANAGER", "false")) == "true"
+        else _as_bool_str(os.getenv("POLARIS_USE_AUTHMANAGER", "false"), default="false") == "true"
     )
 
     configs: Dict[str, str] = {}
@@ -1251,7 +1260,7 @@ def _build_polaris_auth_configs(
     # Polaris doesn't support Iceberg's "remote-signing" delegation mode (no /v1/aws/s3/sign
     # route), so request "vended-credentials" instead — the mode Trino already uses against it.
     # When active, explicit S3 catalog credentials are superseded by Polaris-vended ones.
-    if _as_bool_str(os.getenv("POLARIS_USE_STS", "false")) == "true":
+    if _as_bool_str(os.getenv("POLARIS_USE_STS", "false"), default="false") == "true":
         configs["spark.sql.catalog.iceberg.header.X-Iceberg-Access-Delegation"] = (
             "vended-credentials"
         )
