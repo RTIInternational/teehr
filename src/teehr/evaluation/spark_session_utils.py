@@ -163,6 +163,11 @@ def create_spark_session(
         refresh during long-lived Spark sessions. When ``None`` (default),
         resolved from the ``POLARIS_USE_AUTHMANAGER`` environment variable.
         Requires ``POLARIS_REFRESH_TOKEN`` and a running teehr-api broker.
+        AuthManager requires a fresh JVM per user session, so when this
+        resolves ``True`` any other active Spark session in this process is
+        stopped as a side effect, even if ``force_recreate_session`` was not
+        explicitly set — code elsewhere in the same process holding a
+        reference to that session will see it become unusable.
 
     Returns
     -------
@@ -187,7 +192,16 @@ def create_spark_session(
     if force_recreate_session or resolved_use_authmanager:
         existing_session = SparkSession.getActiveSession()
         if existing_session is not None:
-            logger.info("♻️ Stopping the active Spark session before recreation")
+            if resolved_use_authmanager and not force_recreate_session:
+                logger.warning(
+                    "♻️ Stopping the active Spark session: AuthManager mode "
+                    "(POLARIS_USE_AUTHMANAGER) requires a fresh JVM per user "
+                    "session. Anything else in this process still holding a "
+                    "reference to the previous session will now see it as "
+                    "stopped/unusable."
+                )
+            else:
+                logger.info("♻️ Stopping the active Spark session before recreation")
             existing_session.stop()
 
     # Get the base configuration with common settings
@@ -260,7 +274,9 @@ def create_spark_session(
 
     # Build Polaris auth configs and merge with caller-provided update_configs.
     # Auth configs are the base; caller's configs take precedence.
-    polaris_auth_configs = _build_polaris_auth_configs(polaris_token, use_authmanager)
+    polaris_auth_configs = _build_polaris_auth_configs(
+        polaris_token, resolved_use_authmanager, resolved_use_sts
+    )
     authmanager_packages = _build_polaris_auth_packages(resolved_use_authmanager)
     authmanager_repositories = _build_polaris_auth_repositories(resolved_use_authmanager)
     _append_csv_conf(conf, "spark.jars.packages", authmanager_packages)
@@ -734,47 +750,16 @@ def _update_configs_and_packages(
     add_packages: Optional[List[str]] = None
 ) -> Dict[str, str]:
     """Update Spark configurations and packages."""
-    # Add specified local jars
-    if add_jars is not None:
-        current_jars = conf.get("spark.jars").split(",") if conf.contains("spark.jars") else []
-        for jar_path in add_jars:
-            if jar_path not in current_jars:
-                current_jars.append(jar_path)
-        if current_jars:
-            conf.set("spark.jars", ",".join(current_jars))
-
-    # Add specified packages
-    if add_packages is not None:
-        current_packages = conf.get("spark.jars.packages").split(",")
-        for package in add_packages:
-            if package not in current_packages:
-                current_packages.append(package)
-        conf.set("spark.jars.packages", ",".join(current_packages))
+    # Add specified local jars and packages, merged with whatever's already set.
+    _append_csv_conf(conf, "spark.jars", add_jars or [])
+    _append_csv_conf(conf, "spark.jars.packages", add_packages or [])
 
     # Update or add specified configs
     if update_configs is not None:
         for key, value in update_configs.items():
-            if key == "spark.jars":
-                # Merge jar lists to avoid clobbering jars gathered from packages.
-                existing_jars = conf.get("spark.jars").split(",") if conf.contains("spark.jars") else []
-                incoming_jars = [j for j in str(value).split(",") if j]
-                merged_jars = []
-                for jar in existing_jars + incoming_jars:
-                    if jar and jar not in merged_jars:
-                        merged_jars.append(jar)
-                if merged_jars:
-                    conf.set("spark.jars", ",".join(merged_jars))
-                continue
-            if key in {"spark.jars.packages", "spark.jars.repositories"}:
-                existing_values = conf.get(key).split(",") if conf.contains(key) else []
-                incoming_values = [v.strip() for v in str(value).split(",") if v.strip()]
-                merged_values = []
-                for item in existing_values + incoming_values:
-                    normalized = item.strip()
-                    if normalized and normalized not in merged_values:
-                        merged_values.append(normalized)
-                if merged_values:
-                    conf.set(key, ",".join(merged_values))
+            if key in {"spark.jars", "spark.jars.packages", "spark.jars.repositories"}:
+                # Merge to avoid clobbering jars/packages already gathered above.
+                _append_csv_conf(conf, key, str(value).split(","))
                 continue
             conf.set(key, value)
     return
@@ -846,6 +831,15 @@ def _collect_resolved_package_jars(conf: SparkConf) -> List[str]:
     return discovered
 
 
+_SENSITIVE_CONFIG_KEY_MARKERS = ("token", "secret", "credential", "password")
+
+
+def _is_sensitive_config_key(key: str) -> bool:
+    """Whether a Spark conf key's value looks like it carries a credential."""
+    lowered = key.lower()
+    return any(marker in lowered for marker in _SENSITIVE_CONFIG_KEY_MARKERS)
+
+
 def log_session_config(spark: SparkSession):
     """Log the current Spark session configuration for debugging.
 
@@ -857,12 +851,17 @@ def log_session_config(spark: SparkSession):
     Notes
     -----
     This function logs all Spark configuration properties to the
-    logger at INFO level for troubleshooting purposes.
+    logger at INFO level for troubleshooting purposes. Values for keys
+    that look credential-bearing (token/secret/credential/password) are
+    redacted rather than logged in plaintext.
     """
     logger.info("Final Spark configuration:")
     df = pd.DataFrame(list(spark.conf.getAll.items()), columns=["Key", "Value"])
     gps = df.groupby(by="Key")
     for key, group in gps:
+        if _is_sensitive_config_key(key):
+            logger.info(f" {key}: ***REDACTED***")
+            continue
         value = ",".join(group["Value"].tolist())
         values = value.split(",")
         if key.startswith("spark."):
@@ -1047,7 +1046,12 @@ def _apply_runtime_spark_configs(spark, configs: Dict[str, str]) -> None:
             is_modifiable = False
 
         if not is_modifiable:
-            logger.debug("Skipping non-modifiable runtime Spark config: %s", key)
+            logger.warning(
+                "Runtime Spark config %s is not modifiable on the active session — "
+                "if this key carries a refreshed auth token/credential, the catalog "
+                "client may keep using its stale, already-cached value.",
+                key,
+            )
             continue
 
         spark.conf.set(key, value)
@@ -1141,12 +1145,13 @@ def ensure_broker_session_token(
 
 def _build_polaris_auth_configs(
     polaris_token: Optional[str],
-    use_authmanager: Optional[bool],
+    resolved_use_authmanager: bool,
+    resolved_use_sts: bool,
 ) -> Dict[str, str]:
     """Build Spark configs for Polaris catalog authentication.
 
     Handles three auth paths:
-    1. AuthManager (use_authmanager=True or POLARIS_USE_AUTHMANAGER=true env var)
+    1. AuthManager (resolved_use_authmanager=True)
        Uses the teehr-api broker for token management — required for JupyterHub
        where tokens must be refreshed transparently during long sessions.
     2. Direct user token (polaris_token provided)
@@ -1154,14 +1159,13 @@ def _build_polaris_auth_configs(
     3. Service account client credentials (POLARIS_CLIENT_ID + POLARIS_CLIENT_SECRET)
        Used by Prefect batch jobs and other non-interactive service accounts.
 
+    ``resolved_use_authmanager``/``resolved_use_sts`` are resolved once by the
+    caller (``create_spark_session``) and passed in here rather than
+    re-derived from ``use_authmanager``/env vars, so the two can't drift.
+
     Returns an empty dict if none of the above are configured.
     """
     polaris_realm = os.getenv("POLARIS_DEFAULT_REALM", "teehr")
-
-    resolved_use_authmanager = (
-        use_authmanager if use_authmanager is not None
-        else _as_bool_str(os.getenv("POLARIS_USE_AUTHMANAGER", "false"), default="false") == "true"
-    )
 
     configs: Dict[str, str] = {}
 
@@ -1260,12 +1264,25 @@ def _build_polaris_auth_configs(
     # Polaris doesn't support Iceberg's "remote-signing" delegation mode (no /v1/aws/s3/sign
     # route), so request "vended-credentials" instead — the mode Trino already uses against it.
     # When active, explicit S3 catalog credentials are superseded by Polaris-vended ones.
-    if _as_bool_str(os.getenv("POLARIS_USE_STS", "false"), default="false") == "true":
+    if resolved_use_sts:
         configs["spark.sql.catalog.iceberg.header.X-Iceberg-Access-Delegation"] = (
             "vended-credentials"
         )
 
     return configs
+
+
+def _split_csv_env(env_var: str, default: str = "") -> List[str]:
+    """Read an env var as a CSV list, stripped and deduplicated in order."""
+    values_csv = os.getenv(env_var, default)
+    values = [v.strip() for v in values_csv.split(",") if v.strip()]
+
+    unique_values: List[str] = []
+    for value in values:
+        if value not in unique_values:
+            unique_values.append(value)
+
+    return unique_values
 
 
 def _build_polaris_auth_packages(
@@ -1275,18 +1292,10 @@ def _build_polaris_auth_packages(
     if not resolved_use_authmanager:
         return []
 
-    packages_csv = os.getenv(
+    return _split_csv_env(
         "POLARIS_AUTHMANAGER_PACKAGE",
-        "org.rtiamanzi:teehr-iceberg-authmanager:0.0.3",
+        default="org.rtiamanzi:teehr-iceberg-authmanager:0.0.3",
     )
-    packages = [p.strip() for p in packages_csv.split(",") if p.strip()]
-
-    unique_packages: List[str] = []
-    for package in packages:
-        if package not in unique_packages:
-            unique_packages.append(package)
-
-    return unique_packages
 
 
 def _build_polaris_auth_repositories(
@@ -1296,15 +1305,7 @@ def _build_polaris_auth_repositories(
     if not resolved_use_authmanager:
         return []
 
-    repositories_csv = os.getenv("POLARIS_AUTHMANAGER_REPOSITORIES", "")
-    repositories = [r.strip() for r in repositories_csv.split(",") if r.strip()]
-
-    unique_repositories: List[str] = []
-    for repository in repositories:
-        if repository not in unique_repositories:
-            unique_repositories.append(repository)
-
-    return unique_repositories
+    return _split_csv_env("POLARIS_AUTHMANAGER_REPOSITORIES")
 
 
 def _build_executor_env_configs(

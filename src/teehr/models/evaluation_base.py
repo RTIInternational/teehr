@@ -1,4 +1,5 @@
 """Base model for Evaluation class."""
+import os
 from pathlib import Path
 from typing import Dict, Any
 
@@ -46,11 +47,22 @@ class LocalCatalog(PydanticBaseModel):
 class RemoteCatalog(PydanticBaseModel):
     """Base model for remote catalog configuration."""
 
-    warehouse_dir: str | Path | None = Field(default=const.REMOTE_WAREHOUSE_IDENTIFIER)
+    # These three are read live from the environment at instantiation time
+    # (default_factory), not bound once at teehr.const's import time, so a
+    # value set/changed after import (tests, notebooks, broker-session flows)
+    # is reflected — matching the same env-var-at-call-time fix already
+    # applied in Evaluation.create_spark_session()/get_dataset().
+    warehouse_dir: str | Path | None = Field(
+        default_factory=lambda: os.environ.get("REMOTE_WAREHOUSE_IDENTIFIER", "")
+    )
     catalog_name: str | None = Field(default=const.REMOTE_CATALOG_NAME)
     namespace_name: str | None = Field(default=const.REMOTE_NAMESPACE_NAME)
-    catalog_type: str | None = Field(default=const.REMOTE_CATALOG_TYPE)
-    catalog_uri: str | None = Field(default=const.REMOTE_CATALOG_REST_URI)
+    catalog_type: str | None = Field(
+        default_factory=lambda: os.environ.get("REMOTE_CATALOG_TYPE", "rest")
+    )
+    catalog_uri: str | None = Field(
+        default_factory=lambda: os.environ.get("REMOTE_CATALOG_REST_URI", "")
+    )
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
