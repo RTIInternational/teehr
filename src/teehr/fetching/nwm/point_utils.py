@@ -74,7 +74,15 @@ def process_chunk_of_files(
     )
     df_valid = df_valid[read_mask].reset_index(drop=True)
 
-    ds = ds.sel(feature_id=location_ids)
+    try:
+        ds = ds.sel(feature_id=location_ids)
+    except KeyError as e:
+        missing = np.setdiff1d(location_ids, ds.feature_id.values.astype(int))
+        raise ValueError(
+            f"{missing.size} of {len(location_ids)} location_ids not found in the "
+            f"NWM '{configuration}' output: {missing[:10].tolist()}"
+        ) from e
+
     vals = ds[variable_name].astype("float32").values
     nwm_units = ds[variable_name].units
     n_files, n_locations = vals.shape

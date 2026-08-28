@@ -236,6 +236,12 @@ def nwm_to_parquet(
     """ # noqa
     logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
 
+    if len(location_ids) == 0:
+        raise ValueError(
+            "The 'location_ids' list cannot be empty. "
+            "Please provide at least one valid NWM ID."
+        )
+
     if isinstance(start_date, str):
         start_date = parse(start_date)
 

@@ -267,6 +267,12 @@ def nwm_retro_to_parquet(
         f"Fetching NWM retrospective point data, version: {nwm_version}."
     )
 
+    if len(location_ids) == 0:
+        raise ValueError(
+            "The 'location_ids' list cannot be empty. "
+            "Please provide at least one valid NWM ID."
+        )
+
     if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
         s3_zarr_url = "s3://noaa-nwm-retro-v2-zarr-pds"
     elif nwm_version == SupportedNWMRetroVersionsEnum.nwm21:

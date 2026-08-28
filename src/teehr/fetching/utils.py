@@ -9,8 +9,6 @@ import re
 import json
 from warnings import warn
 
-from kerchunk.combine import MultiZarrToZarr
-import dask
 import fsspec
 import ujson  # fast json
 from kerchunk.hdf import SingleHdf5ToZarr
@@ -45,6 +43,8 @@ import teehr.models.pandera_dataframe_schemas as schemas
 
 TZ_PATTERN = re.compile(r't[0-9]+z')
 DAY_PATTERN = re.compile(r'nwm.[0-9]+')
+
+MAX_WORKERS = 64
 
 
 logger = logging.getLogger(__name__)
@@ -442,13 +442,12 @@ def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
     def _check(path: str) -> tuple:
         return path, fs.exists(path)
 
-    with ThreadPoolExecutor(max_workers=min(64, len(file_path_list))) as executor:
+    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(file_path_list))) as executor:
         results = list(executor.map(_check, file_path_list))
 
     return dict(results)
 
 
-@dask.delayed
 def gen_json(
     remote_path: str,
     json_dir: Union[str, Path],
@@ -534,7 +533,7 @@ def concat_reference_datasets(
             logger.warning(f"Could not open reference dataset: {e}")
             return None
 
-    with ThreadPoolExecutor(max_workers=min(64, len(refs))) as executor:
+    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(refs))) as executor:
         datasets = list(executor.map(_open_ref, refs))
 
     datasets = [ds for ds in datasets if ds is not None]
@@ -593,7 +592,7 @@ def combine_and_open_kerchunk_refs(
             logger.warning(f"A potentially corrupt reference file was encountered: {path}")
             return None
 
-    with ThreadPoolExecutor(max_workers=min(64, len(json_paths))) as executor:
+    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(json_paths))) as executor:
         results = list(executor.map(_read_ref, json_paths))
 
     read_mask = [r is not None for r in results]
@@ -653,10 +652,13 @@ def build_zarr_references(
     if len(missing_paths) == 0:
         return sorted(existing_jsons)
 
-    results = []
-    for path in missing_paths:
-        results.append(gen_json(path, json_dir, ignore_missing_file))
-    json_paths = dask.compute(results)[0]
+    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(missing_paths))) as executor:
+        json_paths = list(
+            executor.map(
+                lambda path: gen_json(path, json_dir, ignore_missing_file),
+                missing_paths,
+            )
+        )
     json_paths.extend(existing_jsons)
 
     if not any(json_paths):
