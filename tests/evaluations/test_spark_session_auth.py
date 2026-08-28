@@ -55,7 +55,7 @@ def test_as_bool_str_unset_env_var_uses_os_getenv_default():
 
 def test_update_configs_and_packages_add_jars_is_optional():
     """add_jars must have a default -- it's not always supplied by callers."""
-    conf = SparkConf()
+    conf = SparkConf(loadDefaults=False)
     conf.set("spark.jars.packages", "")
     _update_configs_and_packages(
         conf=conf,
@@ -95,7 +95,7 @@ def test_build_polaris_auth_configs_no_auth_path_returns_empty():
 
 def test_configure_iceberg_catalogs_s3_endpoint_override_is_opt_in():
     """No REMOTE_CATALOG_S3_PATH_STYLE_ACCESS -> no s3.endpoint override."""
-    conf = SparkConf()
+    conf = SparkConf(loadDefaults=False)
     _configure_iceberg_catalogs(
         conf, "local", "sqlite", "/tmp/wh", "iceberg", "rest", "http://polaris:8181"
     )
@@ -106,7 +106,7 @@ def test_configure_iceberg_catalogs_s3_endpoint_override_applies_when_set(monkey
     """Setting REMOTE_CATALOG_S3_PATH_STYLE_ACCESS=true applies the override."""
     monkeypatch.setenv("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "true")
     monkeypatch.setenv("REMOTE_CATALOG_S3_ENDPOINT", "http://custom-s3:9000")
-    conf = SparkConf()
+    conf = SparkConf(loadDefaults=False)
     _configure_iceberg_catalogs(
         conf, "local", "sqlite", "/tmp/wh", "iceberg", "rest", "http://polaris:8181"
     )
@@ -116,7 +116,7 @@ def test_configure_iceberg_catalogs_s3_endpoint_override_applies_when_set(monkey
 
 def test_update_configs_and_packages_add_packages_when_key_unset():
     """add_packages must not crash when spark.jars.packages was never set."""
-    conf = SparkConf()
+    conf = SparkConf(loadDefaults=False)
     _update_configs_and_packages(
         conf=conf,
         update_configs=None,
@@ -127,7 +127,7 @@ def test_update_configs_and_packages_add_packages_when_key_unset():
 
 def test_update_configs_and_packages_add_jars_dedupes_and_strips_whitespace():
     """add_jars merging must strip/dedupe consistently (previously diverged)."""
-    conf = SparkConf()
+    conf = SparkConf(loadDefaults=False)
     _update_configs_and_packages(
         conf=conf,
         update_configs=None,
@@ -138,7 +138,7 @@ def test_update_configs_and_packages_add_jars_dedupes_and_strips_whitespace():
 
 def test_update_configs_and_packages_repositories_merge_dedupes():
     """update_configs' spark.jars.repositories merge path dedupes values."""
-    conf = SparkConf()
+    conf = SparkConf(loadDefaults=False)
     _update_configs_and_packages(
         conf=conf,
         update_configs={
