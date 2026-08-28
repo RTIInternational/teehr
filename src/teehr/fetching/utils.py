@@ -525,11 +525,20 @@ def concat_reference_datasets(
 ) -> xr.Dataset:
     """Open each kerchunk reference dict individually and concatenate along concat_dim."""
     def _open_ref(ref: dict) -> Optional[xr.Dataset]:
+        # Avoid sharing a single cached fsspec filesystem instance across threads.
+        merged_options = dict(storage_options or {})
+        merged_options.setdefault("skip_instance_cache", True)
+        for key in ("target_options", "remote_options"):
+            if isinstance(merged_options.get(key), dict):
+                merged_options[key] = {
+                    **merged_options[key],
+                    "skip_instance_cache": True
+                }
         try:
             return xr.open_dataset(
                 ref,
                 engine="kerchunk",
-                storage_options=storage_options
+                storage_options=merged_options
             )
         except Exception as e:
             if not ignore_missing_file:
@@ -583,10 +592,10 @@ def combine_and_open_kerchunk_refs(
     def _read_ref(path: str) -> Optional[dict]:
         try:
             if path.startswith("s3://"):
-                with fsspec.open(path, "rb", anon=True) as f:
+                with fsspec.open(path, "rb", anon=True, skip_instance_cache=True) as f:
                     return ujson.load(f)
             if path.startswith(("gcs://", "gs://")):
-                with fsspec.open(path, "rb", token="anon") as f:
+                with fsspec.open(path, "rb", token="anon", skip_instance_cache=True) as f:
                     return ujson.load(f)
             return ujson.loads(Path(path).read_bytes())
         except FileNotFoundError as e:
