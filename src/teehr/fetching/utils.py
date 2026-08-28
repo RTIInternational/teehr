@@ -1,7 +1,6 @@
 """Module defining common utilities for fetching and processing NWM data."""
 from pathlib import Path
 from typing import Union, Optional, Iterable, List, Dict, Tuple
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from datetime import timedelta
 import logging
@@ -9,6 +8,7 @@ import re
 import json
 from warnings import warn
 
+import dask
 import fsspec
 import ujson  # fast json
 from kerchunk.hdf import SingleHdf5ToZarr
@@ -44,7 +44,7 @@ import teehr.models.pandera_dataframe_schemas as schemas
 TZ_PATTERN = re.compile(r't[0-9]+z')
 DAY_PATTERN = re.compile(r'nwm.[0-9]+')
 
-MAX_WORKERS = 64
+MAX_WORKERS = 12
 
 
 logger = logging.getLogger(__name__)
@@ -436,14 +436,18 @@ def list_to_np(lst):
 
 
 def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
-    """Check for existence of S3 files using a thread pool."""
+    """Check for existence of S3 files using dask.delayed."""
     fs = fsspec.filesystem("s3", anon=True)
 
     def _check(path: str) -> tuple:
         return path, fs.exists(path)
 
-    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(file_path_list))) as executor:
-        results = list(executor.map(_check, file_path_list))
+    delayed_tasks = [dask.delayed(_check)(path) for path in file_path_list]
+    results = dask.compute(
+        *delayed_tasks,
+        scheduler="threads",
+        num_workers=min(MAX_WORKERS, len(file_path_list))
+    )
 
     return dict(results)
 
@@ -533,8 +537,12 @@ def concat_reference_datasets(
             logger.warning(f"Could not open reference dataset: {e}")
             return None
 
-    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(refs))) as executor:
-        datasets = list(executor.map(_open_ref, refs))
+    delayed_tasks = [dask.delayed(_open_ref)(ref) for ref in refs]
+    datasets = list(dask.compute(
+        *delayed_tasks,
+        scheduler="threads",
+        num_workers=min(MAX_WORKERS, len(refs))
+    ))
 
     datasets = [ds for ds in datasets if ds is not None]
     if not datasets:
@@ -592,8 +600,12 @@ def combine_and_open_kerchunk_refs(
             logger.warning(f"A potentially corrupt reference file was encountered: {path}")
             return None
 
-    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(json_paths))) as executor:
-        results = list(executor.map(_read_ref, json_paths))
+    delayed_tasks = [dask.delayed(_read_ref)(path) for path in json_paths]
+    results = list(dask.compute(
+        *delayed_tasks,
+        scheduler="threads",
+        num_workers=min(MAX_WORKERS, len(json_paths))
+    ))
 
     read_mask = [r is not None for r in results]
     refs = [r for r in results if r is not None]
@@ -652,13 +664,15 @@ def build_zarr_references(
     if len(missing_paths) == 0:
         return sorted(existing_jsons)
 
-    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(missing_paths))) as executor:
-        json_paths = list(
-            executor.map(
-                lambda path: gen_json(path, json_dir, ignore_missing_file),
-                missing_paths,
-            )
-        )
+    delayed_tasks = [
+        dask.delayed(gen_json)(path, json_dir, ignore_missing_file)
+        for path in missing_paths
+    ]
+    json_paths = list(dask.compute(
+        *delayed_tasks,
+        scheduler="threads",
+        num_workers=min(MAX_WORKERS, len(missing_paths))
+    ))
     json_paths.extend(existing_jsons)
 
     if not any(json_paths):
