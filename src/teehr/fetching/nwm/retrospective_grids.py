@@ -32,7 +32,8 @@ of data transferred over the network.
 """
 from datetime import datetime
 from pathlib import Path
-from typing import Union, Optional, Tuple, Dict
+from typing import Union, Optional, Tuple, Dict, List
+import asyncio
 import logging
 import numpy as np
 
@@ -41,7 +42,6 @@ import xarray as xr
 import fsspec
 from pydantic import validate_call, InstanceOf
 from geopandas import GeoDataFrame
-import dask
 
 from teehr.fetching.const import (
     VALUE_TIME,
@@ -65,6 +65,7 @@ from teehr.fetching.nwm.grid_utils import (
     read_and_validate_weights_file
 )
 from teehr.fetching.utils import (
+    CPU_MAX_WORKERS,
     write_timeseries_parquet_file,
     get_dataset,
     get_period_start_end_times,
@@ -77,6 +78,7 @@ from teehr.fetching.nwm.retrospective_points import (
     validate_retrospective_start_end_date,
 )
 from teehr.utilities.generate_weights import generate_weights_file
+from teehr.utils.utils import run_sync
 
 
 logger = logging.getLogger(__name__)
@@ -178,7 +180,6 @@ def construct_nwm21_json_paths(
     return paths_df
 
 
-@dask.delayed
 def process_single_nwm21_retro_grid_file(
     row: Tuple,
     variable_name: str,
@@ -410,11 +411,14 @@ def nwm_retro_grids_to_parquet(
             else:
                 df = nwm21_paths.copy()
 
-            # Process this chunk using dask delayed
-            results = []
-            for row in df.itertuples():
-                results.append(
-                    process_single_nwm21_retro_grid_file(
+            # Process this chunk of files concurrently.
+            rows = list(df.itertuples())
+            semaphore = asyncio.Semaphore(min(CPU_MAX_WORKERS, len(rows)))
+
+            async def _bounded(row) -> Optional[pd.DataFrame]:
+                async with semaphore:
+                    return await asyncio.to_thread(
+                        process_single_nwm21_retro_grid_file,
                         row=row,
                         variable_name=variable_name,
                         weights_filepath=zonal_weights_filepath,
@@ -423,8 +427,11 @@ def nwm_retro_grids_to_parquet(
                         location_id_prefix=location_id_prefix,
                         variable_mapper=variable_mapper
                     )
-                )
-            output = dask.compute(*results)
+
+            async def _process_chunk() -> List[Optional[pd.DataFrame]]:
+                return await asyncio.gather(*[_bounded(row) for row in rows])
+
+            output = run_sync(_process_chunk())
 
             output = [df for df in output if df is not None]
             if len(output) == 0:

@@ -3,15 +3,22 @@ from pathlib import Path
 from typing import Union, Optional, Iterable, List, Dict, Tuple
 from datetime import datetime
 from datetime import timedelta
+import asyncio
 import logging
+import os
 import re
 import json
 from warnings import warn
 
-import dask
 import fsspec
 import ujson  # fast json
 from kerchunk.hdf import SingleHdf5ToZarr
+from obstore.store import from_url
+from obspec_utils.registry import ObjectStoreRegistry
+from virtualizarr.manifests import ManifestStore
+from virtualizarr.manifests.manifest import validate_and_normalize_path_to_uri
+from virtualizarr.parsers import HDFParser
+from virtualizarr.parsers.kerchunk.translator import manifestgroup_from_kerchunk_refs
 import pandas as pd
 import numpy as np
 import xarray as xr
@@ -19,6 +26,7 @@ import pyarrow as pa
 import pandera
 
 from teehr.evaluation.write import Write as writer
+from teehr.utils.utils import run_sync
 from teehr.fetching.models.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
@@ -44,7 +52,12 @@ import teehr.models.pandera_dataframe_schemas as schemas
 TZ_PATTERN = re.compile(r't[0-9]+z')
 DAY_PATTERN = re.compile(r'nwm.[0-9]+')
 
-MAX_WORKERS = 12
+# Concurrency for I/O-bound work (remote existence checks, VirtualiZarr/obstore
+# reads), which mostly waits on network latency rather than the GIL.
+IO_MAX_WORKERS = int(os.environ.get("TEEHR_IO_MAX_WORKERS", 48))
+# Concurrency for CPU-bound work (parsing HDF5 metadata via SingleHdf5ToZarr),
+# which holds the GIL and scales with available cores, not I/O latency.
+CPU_MAX_WORKERS = int(os.environ.get("TEEHR_CPU_MAX_WORKERS", os.cpu_count() or 4))
 
 
 logger = logging.getLogger(__name__)
@@ -270,7 +283,7 @@ def generate_json_paths(
 
     if kerchunk_method == SupportedKerchunkMethod.local:
         # Create them manually first
-        json_paths = build_zarr_references(
+        json_paths = build_zarr_references_virtualizarr(
             gcs_component_paths,
             json_dir,
             ignore_missing_file
@@ -435,21 +448,37 @@ def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
 
 
-def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
-    """Check for existence of S3 files using dask.delayed."""
-    fs = fsspec.filesystem("s3", anon=True)
+async def _check_if_files_exist_async(file_path_list: List[str]) -> Dict[str, bool]:
+    """Async implementation backing :func:`check_if_files_exist`."""
+    stores: Dict[str, object] = {}
 
-    def _check(path: str) -> tuple:
-        return path, fs.exists(path)
+    def _resolve(path: str) -> Tuple[object, str]:
+        # e.g. "s3://bucket/some/key.json" -> store for "s3://bucket/", "some/key.json"
+        scheme, _, rest = path.partition("://")
+        bucket, _, key = rest.partition("/")
+        prefix = f"{scheme}://{bucket}/"
+        if prefix not in stores:
+            stores[prefix] = from_url(prefix, skip_signature=True)
+        return stores[prefix], key
 
-    delayed_tasks = [dask.delayed(_check)(path) for path in file_path_list]
-    results = dask.compute(
-        *delayed_tasks,
-        scheduler="threads",
-        num_workers=min(MAX_WORKERS, len(file_path_list))
-    )
+    semaphore = asyncio.Semaphore(min(IO_MAX_WORKERS, len(file_path_list)))
 
+    async def _check(path: str) -> tuple:
+        store, key = _resolve(path)
+        async with semaphore:
+            try:
+                await store.head_async(key)
+                return path, True
+            except FileNotFoundError:
+                return path, False
+
+    results = await asyncio.gather(*[_check(path) for path in file_path_list])
     return dict(results)
+
+
+def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
+    """Check for existence of S3 files."""
+    return run_sync(_check_if_files_exist_async(file_path_list))
 
 
 def gen_json(
@@ -516,58 +545,220 @@ def gen_json(
     return outf
 
 
-def concat_reference_datasets(
-    refs: List[dict],
-    concat_dim: str,
-    storage_options: Optional[Dict],
+def _json_path_to_url(path: str) -> str:
+    """Normalize a kerchunk reference path (local or remote) to a URL with a scheme."""
+    if path.startswith(("s3://", "gcs://", "gs://", "http://", "https://", "file://")):
+        return path
+    return Path(path).resolve().as_uri()
+
+
+def build_kerchunk_registry(json_paths: List[str]) -> ObjectStoreRegistry:
+    """Build an ObjectStoreRegistry covering both NWM buckets and any local ref dirs.
+
+    Registers the GCS bucket under both the "gcs://" and "gs://" schemes, since
+    kerchunk references built from GCS paths use "gcs://" while obstore/VirtualiZarr
+    expect "gs://". Also registers a local filesystem store for each distinct local
+    directory present in ``json_paths``, since remote (pre-built) and local (freshly
+    built) reference paths can be mixed in the same call.
+
+    Exposed publicly (rather than kept module-private) so a caller processing
+    many chunks in one run (e.g. ``fetch_and_format_nwm_points``) can build one
+    registry covering every file up front and pass it into each
+    ``combine_and_open_kerchunk_refs`` call, instead of a fresh registry (and
+    fresh obstore store/connection pool) being constructed per chunk.
+    """
+    gcs_store = from_url(f"gs://{NWM_BUCKET}/", skip_signature=True)
+    s3_bucket = NWM_S3_JSON_PATH.split("://")[1]
+    stores = {
+        f"gcs://{NWM_BUCKET}/": gcs_store,
+        f"gs://{NWM_BUCKET}/": gcs_store,
+        # some kerchunk references encode chunk locations via GCS's public HTTPS
+        # frontend rather than the "gcs://" scheme.
+        "https://storage.googleapis.com/": from_url("https://storage.googleapis.com/"),
+        f"s3://{s3_bucket}/": from_url(f"s3://{s3_bucket}/", skip_signature=True),
+    }
+
+    local_dirs = {
+        Path(path).resolve().parent
+        for path in json_paths
+        if not path.startswith(("s3://", "gcs://", "gs://", "http://", "https://"))
+    }
+    for local_dir in local_dirs:
+        stores[local_dir.as_uri() + "/"] = from_url(local_dir.as_uri() + "/")
+
+    return ObjectStoreRegistry(stores)
+
+
+def _resolve_kerchunk_templates(refs: Dict) -> Dict:
+    """Resolve kerchunk's legacy ``{{key}}`` path templates in a references dict.
+
+    Some pre-built NWM kerchunk-reference JSONs (e.g. those on the
+    ``ciroh-nwm-zarr-copy`` S3 bucket) use kerchunk's old templating scheme: a
+    top-level ``templates`` mapping (e.g. ``{"u": "https://.../file.nc"}``)
+    that chunk manifest entries reference via the literal string ``"{{u}}"``,
+    to keep repeated per-chunk paths short. VirtualiZarr's kerchunk translator
+    doesn't resolve this templating, so do it ourselves before handing the
+    refs off to VirtualiZarr.
+    """
+    templates = refs.get("templates")
+    if not templates:
+        return refs
+    for key, value in templates.items():
+        placeholder = "{{" + key + "}}"
+        for ref in refs["refs"].values():
+            if isinstance(ref, list) and ref and isinstance(ref[0], str):
+                ref[0] = ref[0].replace(placeholder, value)
+    return refs
+
+
+async def _open_kerchunk_manifest_store(
+    url: str,
+    registry: ObjectStoreRegistry,
+):
+    """Parse a single kerchunk reference JSON into a VirtualiZarr ManifestStore."""
+    filepath = validate_and_normalize_path_to_uri(url, fs_root=Path.cwd().as_uri())
+    store, path_after_prefix = registry.resolve(filepath)
+    resp = await store.get_async(path_after_prefix)
+    content = memoryview(await resp.buffer_async()).tobytes()
+    refs = _resolve_kerchunk_templates(ujson.loads(content))
+    manifestgroup = manifestgroup_from_kerchunk_refs(refs)
+    return ManifestStore(group=manifestgroup, registry=registry)
+
+
+async def _open_ref_virtualizarr(
+    url: str,
+    registry: ObjectStoreRegistry,
     ignore_missing_file: bool,
-    data_vars: str = "all"
-) -> xr.Dataset:
-    """Open each kerchunk reference dict individually and concatenate along concat_dim."""
-    def _open_ref(ref: dict) -> Optional[xr.Dataset]:
+    variable_name: str,
+    location_ids: np.ndarray,
+) -> Optional[xr.Dataset]:
+    """Open a single kerchunk reference via VirtualiZarr and subset it to ``location_ids``.
+
+    Only ``variable_name`` (plus the coordinate variables needed to index it) is
+    materialized; all other data variables in the file are left virtual and dropped.
+    ``location_ids`` selection happens immediately after materialization, so a full
+    per-file array (e.g. every NWM feature_id) is never held in memory once this
+    function returns—only the handful of requested locations are.
+
+    The reference JSON itself is fetched with obstore's async API directly on
+    this coroutine; materializing the manifest store (which involves its own,
+    separate synchronous I/O inside VirtualiZarr/zarr) is offloaded to a
+    thread via ``asyncio.to_thread`` so many files can be in flight at once
+    without blocking the event loop.
+    """
+    try:
+        manifest_store = await _open_kerchunk_manifest_store(url, registry)
+    except Exception as e:
+        if not ignore_missing_file:
+            raise
+        logger.warning(f"Could not open reference dataset: {e}")
+        return None
+
+    def _materialize() -> xr.Dataset:
+        # Cheap pass: only default (dimension) coordinate variables get materialized here.
+        probe_ds = manifest_store.to_virtual_dataset()
+        loadable_variables = [variable_name, *probe_ds.coords.keys()]
+        ds = manifest_store.to_virtual_dataset(
+            loadable_variables=loadable_variables,
+            decode_times=True,
+        )
+        keep_vars = [variable_name]
+        if "time" in ds.coords:
+            keep_vars.append("time")
+        ds = ds[keep_vars]
         try:
-            return xr.open_dataset(
-                ref,
-                engine="kerchunk",
-                storage_options=storage_options
+            return ds.sel(feature_id=location_ids)
+        except KeyError as e:
+            missing = np.setdiff1d(location_ids, ds.feature_id.values.astype(int))
+            raise ValueError(
+                f"{missing.size} of {len(location_ids)} location_ids not found in "
+                f"the NWM output: {missing[:10].tolist()}"
+            ) from e
+
+    return await asyncio.to_thread(_materialize)
+
+
+async def _combine_and_open_kerchunk_refs_async(
+    json_paths: List[str],
+    variable_name: str,
+    location_ids: np.ndarray,
+    ignore_missing_file: bool = True,
+    concat_dims: Optional[List[str]] = ["time"],
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> Tuple[xr.Dataset, List[bool]]:
+    """Async implementation backing :func:`combine_and_open_kerchunk_refs`."""
+    logger.info("Combining and opening kerchunk reference files.")
+    if not json_paths:
+        raise FileNotFoundError("No NWM reference files were provided.")
+
+    if registry is None:
+        registry = build_kerchunk_registry(json_paths)
+    urls = [_json_path_to_url(path) for path in json_paths]
+
+    semaphore = asyncio.Semaphore(min(IO_MAX_WORKERS, len(urls)))
+
+    async def _bounded_open(url: str) -> Optional[xr.Dataset]:
+        async with semaphore:
+            return await _open_ref_virtualizarr(
+                url, registry, ignore_missing_file, variable_name, location_ids
             )
-        except Exception as e:
-            if not ignore_missing_file:
-                raise
-            logger.warning(f"Could not open reference dataset: {e}")
-            return None
 
-    delayed_tasks = [dask.delayed(_open_ref)(ref) for ref in refs]
-    datasets = list(dask.compute(
-        *delayed_tasks,
-        scheduler="threads",
-        num_workers=min(MAX_WORKERS, len(refs))
-    ))
-
+    datasets = list(await asyncio.gather(*[_bounded_open(url) for url in urls]))
+    read_mask = [ds is not None for ds in datasets]
     datasets = [ds for ds in datasets if ds is not None]
+
     if not datasets:
-        raise FileNotFoundError("No reference datasets could be opened.")
-    return xr.concat(datasets, dim=concat_dim, data_vars=data_vars)
+        raise FileNotFoundError(
+            "No NWM reference files could be read for the specified configuration."
+        )
+
+    ds = xr.concat(datasets, dim=concat_dims[0], data_vars="all")
+    return ds, read_mask
 
 
 def combine_and_open_kerchunk_refs(
     json_paths: List[str],
+    variable_name: str,
+    location_ids: np.ndarray,
     ignore_missing_file: bool = True,
     concat_dims: Optional[List[str]] = ["time"],
     storage_options: Optional[Dict] = {},
+    registry: Optional[ObjectStoreRegistry] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Combine multiple kerchunk reference files into a single xarray Dataset.
+
+    Uses VirtualiZarr + an obstore-backed ObjectStoreRegistry rather than
+    fsspec/gcsfs/s3fs, avoiding the async filesystem lifecycle issues those
+    libraries can hit under zarr v3. Concurrency across files is handled with
+    asyncio (see :func:`_combine_and_open_kerchunk_refs_async`); this function
+    is a synchronous wrapper around that coroutine so existing callers (and
+    Jupyter/script usage) don't need to change.
 
     Parameters
     ----------
     json_paths : List[str]
-        List of paths to kerchunk reference JSON files.
+        List of paths (local or remote, may be mixed) to kerchunk reference
+        JSON files.
+    variable_name : str
+        Name of the single data variable to load from each file. Other data
+        variables are left virtual and never materialized.
+    location_ids : np.ndarray
+        NWM feature_ids to subset each file to immediately after loading
+        ``variable_name``, before results from all files are gathered.
     ignore_missing_file : bool, optional
         Whether to ignore missing files, by default True.
     concat_dims : Optional[List[str]], optional
         Dimensions to concatenate along, by default ["time"].
     storage_options : Optional[Dict], optional
-        Options for the storage backend, by default {}.
+        Unused; retained for backward compatibility with existing callers.
+        Anonymous remote access is configured directly on the registry's
+        stores instead.
+    registry : Optional[ObjectStoreRegistry], optional
+        A pre-built registry (see :func:`build_kerchunk_registry`) covering
+        ``json_paths``. Callers processing many chunks in one run should
+        build one registry up front and pass it to every call, so obstore's
+        stores/connection pools are reused across the whole run instead of
+        being rebuilt per chunk. Built fresh from ``json_paths`` if omitted.
 
     Returns
     -------
@@ -577,72 +768,24 @@ def combine_and_open_kerchunk_refs(
         ``read_mask`` to keep any associated DataFrame in sync with the
         number of timesteps in the returned dataset.
     """
-    if not json_paths:
-        raise FileNotFoundError("No NWM reference files were provided.")
-
-    def _read_ref(path: str) -> Optional[dict]:
-        try:
-            if path.startswith("s3://"):
-                with fsspec.open(path, "rb", anon=True, skip_instance_cache=True) as f:
-                    return ujson.load(f)
-            if path.startswith(("gcs://", "gs://")):
-                with fsspec.open(path, "rb", token="anon", skip_instance_cache=True) as f:
-                    return ujson.load(f)
-            return ujson.loads(Path(path).read_bytes())
-        except FileNotFoundError as e:
-            if not ignore_missing_file:
-                raise e
-            logger.warning(f"A missing reference file was encountered: {path}")
-            return None
-        except (OSError, ValueError) as e:
-            if not ignore_missing_file:
-                raise Exception(f"Corrupt reference file: {path}") from e
-            logger.warning(f"A potentially corrupt reference file was encountered: {path}")
-            return None
-
-    delayed_tasks = [dask.delayed(_read_ref)(path) for path in json_paths]
-    results = list(dask.compute(
-        *delayed_tasks,
-        scheduler="threads",
-        num_workers=min(MAX_WORKERS, len(json_paths))
-    ))
-
-    read_mask = [r is not None for r in results]
-    refs = [r for r in results if r is not None]
-
-    if not refs:
-        raise FileNotFoundError(
-            "No NWM reference files could be read for the specified configuration."
+    return run_sync(
+        _combine_and_open_kerchunk_refs_async(
+            json_paths,
+            variable_name,
+            location_ids,
+            ignore_missing_file,
+            concat_dims,
+            registry,
         )
-
-    ds = concat_reference_datasets(
-        refs,
-        concat_dims[0],
-        storage_options,
-        ignore_missing_file
     )
-    return ds, read_mask
 
 
-def build_zarr_references(
+async def _build_zarr_references_async(
     remote_paths: List[str],
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
 ) -> list[str]:
-    """Build the single file zarr json reference files using kerchunk.
-
-    Parameters
-    ----------
-    remote_paths : List[str]
-        List of remote filepaths.
-    json_dir : str or Path
-        Local directory for caching json files.
-
-    Returns
-    -------
-    list[str]
-        List of paths to the zarr reference json files.
-    """
+    """Async implementation backing :func:`build_zarr_references`."""
     logger.debug("Building zarr references.")
 
     json_dir_path = Path(json_dir)
@@ -664,15 +807,13 @@ def build_zarr_references(
     if len(missing_paths) == 0:
         return sorted(existing_jsons)
 
-    delayed_tasks = [
-        dask.delayed(gen_json)(path, json_dir, ignore_missing_file)
-        for path in missing_paths
-    ]
-    json_paths = list(dask.compute(
-        *delayed_tasks,
-        scheduler="threads",
-        num_workers=min(MAX_WORKERS, len(missing_paths))
-    ))
+    semaphore = asyncio.Semaphore(min(CPU_MAX_WORKERS, len(missing_paths)))
+
+    async def _build_one(path: str) -> Optional[str]:
+        async with semaphore:
+            return await asyncio.to_thread(gen_json, path, json_dir, ignore_missing_file)
+
+    json_paths = list(await asyncio.gather(*[_build_one(path) for path in missing_paths]))
     json_paths.extend(existing_jsons)
 
     if not any(json_paths):
@@ -683,6 +824,192 @@ def build_zarr_references(
     json_paths = [path for path in json_paths if path is not None]
 
     return sorted(json_paths)
+
+
+def build_zarr_references(
+    remote_paths: List[str],
+    json_dir: Union[str, Path],
+    ignore_missing_file: bool,
+) -> list[str]:
+    """Build the single file zarr json reference files using kerchunk.
+
+    Parameters
+    ----------
+    remote_paths : List[str]
+        List of remote filepaths.
+    json_dir : str or Path
+        Local directory for caching json files.
+
+    Returns
+    -------
+    list[str]
+        List of paths to the zarr reference json files.
+    """
+    return run_sync(
+        _build_zarr_references_async(remote_paths, json_dir, ignore_missing_file)
+    )
+
+
+def _build_gcs_source_registry() -> ObjectStoreRegistry:
+    """Build an ObjectStoreRegistry covering only the source NWM GCS bucket."""
+    return ObjectStoreRegistry({
+        f"gcs://{NWM_BUCKET}/": from_url(f"gs://{NWM_BUCKET}/", skip_signature=True),
+    })
+
+
+def _fix_scalar_chunk_keys(refs: Dict) -> Dict:
+    """Rewrite VirtualiZarr's chunk-key convention for 0-d (scalar) arrays.
+
+    Per the Zarr v2 spec, a 0-d array's chunk key is the empty string, and
+    VirtualiZarr's kerchunk writer (``to_kerchunk``) follows that literally
+    (e.g. a scalar ``crs`` grid-mapping variable gets the ref key ``"crs/"``).
+    But VirtualiZarr's own kerchunk-JSON reader/translator
+    (``manifestgroup_from_kerchunk_refs``, used by
+    ``_open_kerchunk_manifest_store``) can't parse that back
+    (``ValueError: Invalid format for chunk key: ''``). Classic kerchunk
+    (and community pre-built NWM references) instead use ``"0"`` for a
+    scalar array's chunk key, which VirtualiZarr's reader handles fine, so
+    rewrite newly-written refs to that convention here.
+    """
+    refs["refs"] = {
+        (key + "0" if key.endswith("/") else key): value
+        for key, value in refs["refs"].items()
+    }
+    return refs
+
+
+def gen_json_virtualizarr(
+    remote_path: str,
+    json_dir: Union[str, Path],
+    ignore_missing_file: bool,
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> Optional[str]:
+    """Create a single kerchunk reference JSON file using VirtualiZarr's HDFParser.
+
+    Prototype drop-in replacement for ``gen_json``: reads NWM NetCDF metadata
+    directly via obstore (no fsspec/gcsfs), matching the signature and output
+    (a kerchunk reference JSON at the same path convention) of ``gen_json``.
+
+    Parameters
+    ----------
+    remote_path : str
+        Path to the file in the remote location (ie, GCS bucket).
+    json_dir : str
+        Directory for saving zarr reference json files.
+    ignore_missing_file : bool
+        Whether to skip (return None) or raise on missing/corrupt files.
+    registry : Optional[ObjectStoreRegistry]
+        Registry covering the source bucket. Built fresh if not provided, so
+        callers processing many files in parallel should build one once and
+        pass it in to avoid re-registering a store per file.
+
+    Returns
+    -------
+    Optional[str]
+        Path to the local zarr reference json file, or None if the file was
+        missing/corrupt and ``ignore_missing_file`` is True.
+    """
+    if registry is None:
+        registry = _build_gcs_source_registry()
+
+    p = remote_path.split("/")
+    date = p[3]
+    fname = p[5]
+    outf = str(Path(json_dir, f"{date}.{fname}.json"))
+
+    try:
+        manifest_store = HDFParser()(url=remote_path, registry=registry)
+        vds = manifest_store.to_virtual_dataset()
+        refs = _fix_scalar_chunk_keys(vds.virtualize.to_kerchunk(format="dict"))
+        with open(outf, "w") as f:
+            ujson.dump(refs, f)
+    except Exception as err:
+        if not ignore_missing_file:
+            raise Exception(f"Corrupt or missing file: {remote_path}") from err
+        logger.warning(f"A missing or corrupt file was encountered: {remote_path}")
+        return None
+
+    return outf
+
+
+async def _build_zarr_references_virtualizarr_async(
+    remote_paths: List[str],
+    json_dir: Union[str, Path],
+    ignore_missing_file: bool,
+) -> list[str]:
+    """Async implementation backing :func:`build_zarr_references_virtualizarr`."""
+    logger.debug("Building zarr references via VirtualiZarr.")
+
+    json_dir_path = Path(json_dir)
+    if not json_dir_path.exists():
+        json_dir_path.mkdir(parents=True)
+
+    existing_jsons = []
+    missing_paths = []
+    for path in remote_paths:
+        p = path.split("/")
+        date = p[3]
+        fname = p[5]
+        local_path = Path(json_dir, f"{date}.{fname}.json")
+        if local_path.exists():
+            existing_jsons.append(str(local_path))
+        else:
+            missing_paths.append(path)
+    if len(missing_paths) == 0:
+        return sorted(existing_jsons)
+
+    registry = _build_gcs_source_registry()
+    semaphore = asyncio.Semaphore(min(CPU_MAX_WORKERS, len(missing_paths)))
+
+    async def _build_one(path: str) -> Optional[str]:
+        async with semaphore:
+            return await asyncio.to_thread(
+                gen_json_virtualizarr, path, json_dir, ignore_missing_file, registry
+            )
+
+    json_paths = list(await asyncio.gather(*[_build_one(path) for path in missing_paths]))
+    json_paths.extend(existing_jsons)
+
+    if not any(json_paths):
+        raise FileNotFoundError(
+            "No NWM files for specified input configuration were found in GCS!"
+        )
+
+    json_paths = [path for path in json_paths if path is not None]
+
+    return sorted(json_paths)
+
+
+def build_zarr_references_virtualizarr(
+    remote_paths: List[str],
+    json_dir: Union[str, Path],
+    ignore_missing_file: bool,
+) -> list[str]:
+    """VirtualiZarr/obstore-based prototype drop-in replacement for ``build_zarr_references``.
+
+    Avoids fsspec/gcsfs entirely (unlike ``build_zarr_references``, which relies
+    on ``gen_json``'s ``fsspec.filesystem("gcs", ...)`` usage), so the whole
+    reference-building step goes through the same obstore-backed I/O as
+    ``combine_and_open_kerchunk_refs``, and removes any dependency on
+    pre-built S3 kerchunk references.
+
+    Parameters
+    ----------
+    remote_paths : List[str]
+        List of remote filepaths.
+    json_dir : str or Path
+        Local directory for caching json files.
+
+    Returns
+    -------
+    list[str]
+        List of paths to the zarr reference json files.
+    """
+    return run_sync(
+        _build_zarr_references_virtualizarr_async(
+            remote_paths, json_dir, ignore_missing_file
+        )
+    )
 
 
 def construct_assim_paths(

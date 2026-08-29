@@ -1,21 +1,23 @@
 """Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
+import asyncio
 import logging
 
-import dask
 import numpy as np
 import pandas as pd
 import xarray as xr
 
 import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.fetching.utils import (
+    CPU_MAX_WORKERS,
     get_dataset,
     write_timeseries_parquet_file,
     parse_nwm_json_paths,
     format_nwm_configuration_metadata,
     convert_value_from_kelvin_to_celsius
 )
+from teehr.utils.utils import run_sync
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
@@ -110,7 +112,6 @@ def read_and_validate_weights_file(
     return schema.validate(weights_df)
 
 
-@dask.delayed
 def process_single_nwm_grid_file(
     row: Tuple,
     configuration_name: str,
@@ -215,10 +216,13 @@ def fetch_and_format_nwm_grids(
     for gp in gps:
         _, df = gp
 
-        results = []
-        for row in df.itertuples():
-            results.append(
-                process_single_nwm_grid_file(
+        rows = list(df.itertuples())
+        semaphore = asyncio.Semaphore(min(CPU_MAX_WORKERS, len(rows)))
+
+        async def _bounded(row) -> Optional[pd.DataFrame]:
+            async with semaphore:
+                return await asyncio.to_thread(
+                    process_single_nwm_grid_file,
                     row,
                     teehr_config["name"],
                     variable_name,
@@ -227,9 +231,11 @@ def fetch_and_format_nwm_grids(
                     location_id_prefix,
                     variable_mapper
                 )
-            )
 
-        output = dask.compute(*results)
+        async def _process_group() -> List[Optional[pd.DataFrame]]:
+            return await asyncio.gather(*[_bounded(row) for row in rows])
+
+        output = run_sync(_process_group())
 
         output = [df for df in output if df is not None]
         if len(output) == 0:

@@ -7,6 +7,7 @@ import logging
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+from obspec_utils.registry import ObjectStoreRegistry
 
 from teehr.fetching.utils import (
     write_timeseries_parquet_file,
@@ -14,6 +15,7 @@ from teehr.fetching.utils import (
     format_nwm_configuration_metadata,
     parse_nwm_json_paths,
     combine_and_open_kerchunk_refs,
+    build_kerchunk_registry,
 )
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -43,8 +45,15 @@ def process_chunk_of_files(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
+    registry: Optional[ObjectStoreRegistry] = None,
 ):
-    """Assemble a table for a chunk of NWM files."""
+    """Assemble a table for a chunk of NWM files.
+
+    ``registry`` should be a single ObjectStoreRegistry built once (via
+    ``build_kerchunk_registry``) covering every file across all chunks in the
+    run, so obstore's stores/connection pools are reused across chunks rather
+    than rebuilt per chunk. Built fresh from this chunk alone if omitted.
+    """
     location_ids = np.array(location_ids).astype(int)
 
     schema = pa.schema(
@@ -69,19 +78,13 @@ def process_chunk_of_files(
 
     ds, read_mask = combine_and_open_kerchunk_refs(
         json_paths=valid_paths,
+        variable_name=variable_name,
+        location_ids=location_ids,
         ignore_missing_file=ignore_missing_file,
         storage_options={"target_options": {"anon": True}},
+        registry=registry,
     )
     df_valid = df_valid[read_mask].reset_index(drop=True)
-
-    try:
-        ds = ds.sel(feature_id=location_ids)
-    except KeyError as e:
-        missing = np.setdiff1d(location_ids, ds.feature_id.values.astype(int))
-        raise ValueError(
-            f"{missing.size} of {len(location_ids)} location_ids not found in the "
-            f"NWM '{configuration}' output: {missing[:10].tolist()}"
-        ) from e
 
     vals = ds[variable_name].astype("float32").values
     nwm_units = ds[variable_name].units
@@ -160,6 +163,58 @@ def process_chunk_of_files(
     )
 
 
+def build_file_chunks(
+    file_paths: List[Optional[str]],
+    process_by_z_hour: bool,
+    stepsize: int,
+) -> List[pd.DataFrame]:
+    """Group resolved kerchunk reference file paths into chunks for processing.
+
+    Each returned dataframe is a chunk that can be passed to
+    ``process_chunk_of_files`` to fetch, format, and write a single output
+    parquet file. Exposed separately from ``fetch_and_format_nwm_points`` so
+    external callers (e.g. a Prefect flow) can build the chunk list once and
+    parallelize calls to ``process_chunk_of_files`` themselves.
+
+    Parameters
+    ----------
+    file_paths : List[Optional[str]]
+        Resolved file paths from ``generate_json_paths``. May contain
+        ``None`` entries for files that should be skipped.
+    process_by_z_hour : bool
+        A boolean flag that determines the method of grouping files
+        for processing. True groups by day and z_hour. False chunks
+        files sequentially into groups, whose size is determined by
+        stepsize.
+    stepsize : int
+        The number of json files to process at one time. Used if
+        process_by_z_hour is set to False.
+
+    Returns
+    -------
+    List[pd.DataFrame]
+        A list of dataframes, each representing one chunk of files to be
+        passed to ``process_chunk_of_files``.
+    """
+    non_null_paths = [p for p in file_paths if p is not None]
+    if not non_null_paths:
+        raise FileNotFoundError(
+            "No NWM files could be resolved for the given configuration."
+        )
+
+    df_refs = parse_nwm_json_paths(non_null_paths)
+
+    if process_by_z_hour:
+        # Option #1. Groupby day and z_hour
+        gps = df_refs.groupby(["day", "z_hour"])
+        dfs = [df for _, df in gps]
+    else:
+        # Option #2. Chunk by some number of files
+        dfs = split_dataframe(df_refs, stepsize)
+
+    return dfs
+
+
 def fetch_and_format_nwm_points(
     file_paths: List[Optional[str]],
     location_ids: Iterable[int],
@@ -221,22 +276,12 @@ def fetch_and_format_nwm_points(
     if not output_parquet_dir.exists():
         output_parquet_dir.mkdir(parents=True)
 
-    # Filter None entries (files skipped for remote mode with no S3 JSON)
+    dfs = build_file_chunks(file_paths, process_by_z_hour, stepsize)
+
+    # Built once from every file in the run (not per chunk) so obstore's
+    # stores/connection pools are reused across all chunks below.
     non_null_paths = [p for p in file_paths if p is not None]
-    if not non_null_paths:
-        raise FileNotFoundError(
-            "No NWM files could be resolved for the given configuration."
-        )
-
-    df_refs = parse_nwm_json_paths(non_null_paths)
-
-    if process_by_z_hour:
-        # Option #1. Groupby day and z_hour
-        gps = df_refs.groupby(["day", "z_hour"])
-        dfs = [df for _, df in gps]
-    else:
-        # Option #2. Chunk by some number of files
-        dfs = split_dataframe(df_refs, stepsize)
+    registry = build_kerchunk_registry(non_null_paths)
 
     logger.info(f"Processing {len(dfs)} chunks of files for configuration: {configuration}, variable: {variable_name}.")
 
@@ -254,4 +299,5 @@ def fetch_and_format_nwm_points(
             variable_mapper,
             timeseries_type,
             drop_overlapping_assimilation_values,
+            registry,
         )
