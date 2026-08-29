@@ -4,15 +4,16 @@ from typing import Union, Optional, Iterable, List, Dict, Tuple
 from datetime import datetime
 from datetime import timedelta
 import asyncio
+import base64
 import logging
 import os
 import re
 import json
+import struct
 from warnings import warn
 
 import fsspec
 import ujson  # fast json
-from kerchunk.hdf import SingleHdf5ToZarr
 from obstore.store import from_url
 from obspec_utils.registry import ObjectStoreRegistry
 from virtualizarr.manifests import ManifestStore
@@ -55,8 +56,8 @@ DAY_PATTERN = re.compile(r'nwm.[0-9]+')
 # Concurrency for I/O-bound work (remote existence checks, VirtualiZarr/obstore
 # reads), which mostly waits on network latency rather than the GIL.
 IO_MAX_WORKERS = int(os.environ.get("TEEHR_IO_MAX_WORKERS", 48))
-# Concurrency for CPU-bound work (parsing HDF5 metadata via SingleHdf5ToZarr),
-# which holds the GIL and scales with available cores, not I/O latency.
+# Concurrency for CPU-bound work (parsing HDF5 metadata via VirtualiZarr's
+# HDFParser), which holds the GIL and scales with available cores, not I/O latency.
 CPU_MAX_WORKERS = int(os.environ.get("TEEHR_CPU_MAX_WORKERS", os.cpu_count() or 4))
 
 
@@ -317,7 +318,7 @@ def generate_json_paths(
                 path.replace(NWM_S3_JSON_PATH, "gcs:/").replace(".json", "") for path in missing_files
             ]
             json_paths.extend(
-                build_zarr_references(
+                build_zarr_references_virtualizarr(
                     missing_files,
                     json_dir,
                     ignore_missing_file
@@ -479,70 +480,6 @@ async def _check_if_files_exist_async(file_path_list: List[str]) -> Dict[str, bo
 def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
     """Check for existence of S3 files."""
     return run_sync(_check_if_files_exist_async(file_path_list))
-
-
-def gen_json(
-    remote_path: str,
-    json_dir: Union[str, Path],
-    ignore_missing_file: bool,
-) -> str:
-    """Create a single kerchunk reference JSON file.
-
-    Parameters
-    ----------
-    remote_path : str
-        Path to the file in the remote location (ie, GCS bucket).
-    json_dir : str
-        Directory for saving zarr reference json files.
-
-    Returns
-    -------
-    str
-        Path to the local zarr reference json file.
-    """
-    so = dict(
-        mode="rb",
-        anon=True,
-        default_fill_cache=False,
-        default_cache_type="first",  # noqa
-    )
-    fs = fsspec.filesystem(
-        "gcs",
-        token="anon",
-        skip_instance_cache=True,
-        use_listings_cache=False
-    )
-    try:
-        with fs.open(remote_path, **so) as infile:
-            p = remote_path.split("/")
-            date = p[3]
-            fname = p[5]
-            outf = str(Path(json_dir, f"{date}.{fname}.json"))
-            try:
-                h5chunks = SingleHdf5ToZarr(
-                    infile,
-                    remote_path,
-                    inline_threshold=300
-                )
-                translated_dict = h5chunks.translate()
-            except OSError as err:
-                if not ignore_missing_file:
-                    raise Exception(f"Corrupt file: {remote_path}") from err
-                else:
-                    logger.warning(
-                        "A potentially corrupt file was encountered:"
-                        f"{remote_path}"
-                    )
-                    return None
-            with open(outf, "wb") as f:
-                f.write(ujson.dumps(translated_dict).encode())
-    except FileNotFoundError as e:
-        if not ignore_missing_file:
-            raise e
-        else:
-            logger.warning(f"A missing file was encountered: {remote_path}")
-            return None
-    return outf
 
 
 def _json_path_to_url(path: str) -> str:
@@ -780,76 +717,6 @@ def combine_and_open_kerchunk_refs(
     )
 
 
-async def _build_zarr_references_async(
-    remote_paths: List[str],
-    json_dir: Union[str, Path],
-    ignore_missing_file: bool,
-) -> list[str]:
-    """Async implementation backing :func:`build_zarr_references`."""
-    logger.debug("Building zarr references.")
-
-    json_dir_path = Path(json_dir)
-    if not json_dir_path.exists():
-        json_dir_path.mkdir(parents=True)
-
-    # Check to see if the jsons already exist locally
-    existing_jsons = []
-    missing_paths = []
-    for path in remote_paths:
-        p = path.split("/")
-        date = p[3]
-        fname = p[5]
-        local_path = Path(json_dir, f"{date}.{fname}.json")
-        if local_path.exists():
-            existing_jsons.append(str(local_path))
-        else:
-            missing_paths.append(path)
-    if len(missing_paths) == 0:
-        return sorted(existing_jsons)
-
-    semaphore = asyncio.Semaphore(min(CPU_MAX_WORKERS, len(missing_paths)))
-
-    async def _build_one(path: str) -> Optional[str]:
-        async with semaphore:
-            return await asyncio.to_thread(gen_json, path, json_dir, ignore_missing_file)
-
-    json_paths = list(await asyncio.gather(*[_build_one(path) for path in missing_paths]))
-    json_paths.extend(existing_jsons)
-
-    if not any(json_paths):
-        raise FileNotFoundError(
-            "No NWM files for specified input configuration were found in GCS!"
-        )
-
-    json_paths = [path for path in json_paths if path is not None]
-
-    return sorted(json_paths)
-
-
-def build_zarr_references(
-    remote_paths: List[str],
-    json_dir: Union[str, Path],
-    ignore_missing_file: bool,
-) -> list[str]:
-    """Build the single file zarr json reference files using kerchunk.
-
-    Parameters
-    ----------
-    remote_paths : List[str]
-        List of remote filepaths.
-    json_dir : str or Path
-        Local directory for caching json files.
-
-    Returns
-    -------
-    list[str]
-        List of paths to the zarr reference json files.
-    """
-    return run_sync(
-        _build_zarr_references_async(remote_paths, json_dir, ignore_missing_file)
-    )
-
-
 def _build_gcs_source_registry() -> ObjectStoreRegistry:
     """Build an ObjectStoreRegistry covering only the source NWM GCS bucket."""
     return ObjectStoreRegistry({
@@ -878,6 +745,59 @@ def _fix_scalar_chunk_keys(refs: Dict) -> Dict:
     return refs
 
 
+def _fix_fill_values(refs: Dict) -> Dict:
+    """Align each array's zarr ``fill_value`` with its CF fill-value attribute.
+
+    VirtualiZarr's HDF reader carries over the raw on-disk HDF5 storage fill
+    value (e.g. ``0``) into the zarr array's ``fill_value``, while the CF
+    ``_FillValue``/``missing_value`` attribute (e.g. ``-999900``) says what
+    actually represents missing data. When the two disagree, xarray's CF
+    decoding treats the variable as ambiguous and masks *every* value to NaN
+    (``SerializationWarning: variable 'x' has multiple fill values ...``) --
+    reproducible via ``xr.open_dataset(..., engine="kerchunk")``, which is
+    what ``get_dataset()`` uses for grid fetching. Classic kerchunk avoids
+    this by setting the zarr ``fill_value`` to match the CF attribute
+    directly, so do the same here. Note ``.zarray``/``.zattrs`` values in a
+    kerchunk refs dict are JSON-encoded strings, not nested dicts.
+
+    For some float-dtype variables (e.g. ``RAINRATE``), VirtualiZarr encodes
+    ``_FillValue`` as a base64 string wrapping the raw little-endian double
+    bytes of the value (rather than a plain JSON number), since not every
+    float value round-trips cleanly through JSON -- decode that back to a
+    number before using it, and skip entries that aren't a plain number or a
+    decodable base64 double, so we never write a value zarr can't parse.
+    """
+    for key in list(refs["refs"].keys()):
+        if not key.endswith("/.zattrs"):
+            continue
+        zarray_key = key[: -len(".zattrs")] + ".zarray"
+        if zarray_key not in refs["refs"]:
+            continue
+
+        zattrs = ujson.loads(refs["refs"][key])
+        cf_fill_value = zattrs.get("_FillValue", zattrs.get("missing_value"))
+        if cf_fill_value is None:
+            continue
+
+        if isinstance(cf_fill_value, str) and cf_fill_value not in ("NaN", "Infinity", "-Infinity"):
+            try:
+                decoded_bytes = base64.b64decode(cf_fill_value, validate=True)
+                if len(decoded_bytes) != 8:
+                    continue
+                cf_fill_value = struct.unpack("<d", decoded_bytes)[0]
+            except (ValueError, struct.error):
+                continue
+
+        zarray = ujson.loads(refs["refs"][zarray_key])
+        if zarray.get("dtype", "").lstrip("<>=|")[0] in ("i", "u"):
+            cf_fill_value = int(cf_fill_value)
+        if zarray.get("fill_value") != cf_fill_value:
+            zarray["fill_value"] = cf_fill_value
+            refs["refs"][zarray_key] = ujson.dumps(zarray)
+
+    return refs
+
+
 def gen_json_virtualizarr(
     remote_path: str,
     json_dir: Union[str, Path],
@@ -886,9 +806,7 @@ def gen_json_virtualizarr(
 ) -> Optional[str]:
     """Create a single kerchunk reference JSON file using VirtualiZarr's HDFParser.
 
-    Prototype drop-in replacement for ``gen_json``: reads NWM NetCDF metadata
-    directly via obstore (no fsspec/gcsfs), matching the signature and output
-    (a kerchunk reference JSON at the same path convention) of ``gen_json``.
+    Reads NWM NetCDF metadata directly via obstore (no fsspec/gcsfs).
 
     Parameters
     ----------
@@ -920,7 +838,9 @@ def gen_json_virtualizarr(
     try:
         manifest_store = HDFParser()(url=remote_path, registry=registry)
         vds = manifest_store.to_virtual_dataset()
-        refs = _fix_scalar_chunk_keys(vds.virtualize.to_kerchunk(format="dict"))
+        refs = vds.virtualize.to_kerchunk(format="dict")
+        refs = _fix_scalar_chunk_keys(refs)
+        refs = _fix_fill_values(refs)
         with open(outf, "w") as f:
             ujson.dump(refs, f)
     except Exception as err:
@@ -985,13 +905,11 @@ def build_zarr_references_virtualizarr(
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
 ) -> list[str]:
-    """VirtualiZarr/obstore-based prototype drop-in replacement for ``build_zarr_references``.
+    """Build the single-file zarr JSON reference files using VirtualiZarr.
 
-    Avoids fsspec/gcsfs entirely (unlike ``build_zarr_references``, which relies
-    on ``gen_json``'s ``fsspec.filesystem("gcs", ...)`` usage), so the whole
-    reference-building step goes through the same obstore-backed I/O as
-    ``combine_and_open_kerchunk_refs``, and removes any dependency on
-    pre-built S3 kerchunk references.
+    Avoids fsspec/gcsfs entirely, so the whole reference-building step goes
+    through the same obstore-backed I/O as ``combine_and_open_kerchunk_refs``,
+    and removes any dependency on pre-built S3 kerchunk references.
 
     Parameters
     ----------
