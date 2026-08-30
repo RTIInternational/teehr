@@ -32,8 +32,8 @@ of data transferred over the network.
 """
 from datetime import datetime
 from pathlib import Path
-from typing import Union, Optional, Tuple, Dict, List
-import asyncio
+from typing import Union, Optional, Tuple, Dict
+import functools
 import logging
 import numpy as np
 
@@ -68,6 +68,7 @@ from teehr.fetching.nwm.grid_utils import (
 from teehr.fetching.utils import (
     CPU_MAX_WORKERS,
     build_kerchunk_registry,
+    map_variable_and_unit_name,
     open_kerchunk_dataset,
     write_timeseries_parquet_file,
     get_period_start_end_times,
@@ -80,26 +81,10 @@ from teehr.fetching.nwm.retrospective_points import (
     validate_retrospective_start_end_date,
 )
 from teehr.utilities.generate_weights import generate_weights_file
-from teehr.utils.utils import run_sync
+from teehr.utils.utils import run_concurrent_map
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_nwm21_retro_grid_data(
-    var_da: xr.DataArray,
-    row_min: int,
-    col_min: int,
-    row_max: int,
-    col_max: int
-):
-    """Read a subset nwm21 retro grid data into memory from row/col bounds."""
-    logger.debug("Getting the nwm21 retro grid data")
-    grid_values = var_da.isel(
-        west_east=slice(col_min, col_max+1),
-        south_north=slice(row_min, row_max+1)
-    ).values
-    return grid_values
 
 
 def process_nwm30_retro_group(
@@ -141,14 +126,11 @@ def process_nwm30_retro_group(
 
     nwm_units = da_i.attrs["units"]
     chunk_df = pd.concat(hourly_dfs)
-    if not variable_mapper:
-        chunk_df.loc[:, UNIT_NAME] = nwm_units
-        chunk_df.loc[:, VARIABLE_NAME] = variable_name
-    else:
-        chunk_df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, {}).get("name", nwm_units)
-        chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, {}).get("name", variable_name)
+    teehr_variable_name, teehr_units = map_variable_and_unit_name(
+        variable_name, nwm_units, variable_mapper
+    )
+    chunk_df.loc[:, UNIT_NAME] = teehr_units
+    chunk_df.loc[:, VARIABLE_NAME] = teehr_variable_name
 
     chunk_df.loc[:, REFERENCE_TIME] = np.nan
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
@@ -214,12 +196,14 @@ def process_single_nwm21_retro_grid_file(
 
     weights_bounds = get_weights_row_col_stats(weights_df)
 
-    grid_arr = get_nwm21_retro_grid_data(
+    grid_arr = get_nwm_grid_data(
         da,
         weights_bounds["row_min"],
         weights_bounds["col_min"],
         weights_bounds["row_max"],
-        weights_bounds["col_max"]
+        weights_bounds["col_max"],
+        x_dim="west_east",
+        y_dim="south_north",
     )
     grid_values = grid_arr[
         weights_bounds["rows_norm"],
@@ -229,14 +213,11 @@ def process_single_nwm21_retro_grid_file(
     # Calculate mean areal of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    if not variable_mapper:
-        df.loc[:, UNIT_NAME] = nwm_units
-        df.loc[:, VARIABLE_NAME] = variable_name
-    else:
-        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, {}).get("name", nwm_units)
-        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, {}).get("name", variable_name)
+    teehr_variable_name, teehr_units = map_variable_and_unit_name(
+        variable_name, nwm_units, variable_mapper
+    )
+    df.loc[:, UNIT_NAME] = teehr_units
+    df.loc[:, VARIABLE_NAME] = teehr_variable_name
 
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = np.nan
@@ -422,26 +403,20 @@ def nwm_retro_grids_to_parquet(
 
             # Process this chunk of files concurrently.
             rows = list(df.itertuples())
-            semaphore = asyncio.Semaphore(min(CPU_MAX_WORKERS, len(rows)))
-
-            async def _bounded(row) -> Optional[pd.DataFrame]:
-                async with semaphore:
-                    return await asyncio.to_thread(
-                        process_single_nwm21_retro_grid_file,
-                        row=row,
-                        variable_name=variable_name,
-                        weights_filepath=zonal_weights_filepath,
-                        ignore_missing_file=False,
-                        nwm_version=nwm_version,
-                        location_id_prefix=location_id_prefix,
-                        variable_mapper=variable_mapper,
-                        registry=registry,
-                    )
-
-            async def _process_chunk() -> List[Optional[pd.DataFrame]]:
-                return await asyncio.gather(*[_bounded(row) for row in rows])
-
-            output = run_sync(_process_chunk())
+            output = run_concurrent_map(
+                functools.partial(
+                    process_single_nwm21_retro_grid_file,
+                    variable_name=variable_name,
+                    weights_filepath=zonal_weights_filepath,
+                    ignore_missing_file=False,
+                    nwm_version=nwm_version,
+                    location_id_prefix=location_id_prefix,
+                    variable_mapper=variable_mapper,
+                    registry=registry,
+                ),
+                rows,
+                CPU_MAX_WORKERS,
+            )
 
             output = [df for df in output if df is not None]
             if len(output) == 0:

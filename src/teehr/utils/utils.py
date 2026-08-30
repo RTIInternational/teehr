@@ -1,7 +1,7 @@
 """Module contains utility functions."""
 from pathlib import Path
 import shutil
-from typing import Union, TypeVar, Coroutine, Any
+from typing import Union, TypeVar, Coroutine, Callable, Iterable, List, Any
 import asyncio
 import threading
 import logging
@@ -40,6 +40,34 @@ def run_sync(coro: Coroutine[Any, Any, T]) -> T:
     if error:
         raise error[0]
     return result[0]
+
+
+def run_concurrent_map(
+    func: Callable[[Any], T],
+    items: Iterable[Any],
+    max_workers: int,
+) -> List[T]:
+    """Run ``func(item)`` for each item concurrently, bounded by ``max_workers``.
+
+    Each call is offloaded to a thread via ``asyncio.to_thread`` (so ``func``
+    can be an ordinary blocking function -- use ``functools.partial`` to bind
+    any additional fixed arguments), gathered in the same order as ``items``,
+    and driven synchronously via :func:`run_sync` so callers don't need to
+    manage an event loop themselves.
+    """
+    items = list(items)
+    if not items:
+        return []
+    semaphore = asyncio.Semaphore(min(max_workers, len(items)))
+
+    async def _bounded(item: Any) -> T:
+        async with semaphore:
+            return await asyncio.to_thread(func, item)
+
+    async def _run_all() -> List[T]:
+        return await asyncio.gather(*[_bounded(item) for item in items])
+
+    return list(run_sync(_run_all()))
 
 
 def path_to_spark(path: Union[str, Path], pattern: str = None) -> str:

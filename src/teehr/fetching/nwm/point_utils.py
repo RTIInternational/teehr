@@ -13,6 +13,7 @@ from teehr.fetching.utils import (
     write_timeseries_parquet_file,
     split_dataframe,
     format_nwm_configuration_metadata,
+    map_variable_and_unit_name,
     parse_nwm_json_paths,
     combine_and_open_kerchunk_refs,
     build_kerchunk_registry,
@@ -90,14 +91,9 @@ def process_chunk_of_files(
     nwm_units = ds[variable_name].units
     n_files, n_locations = vals.shape
 
-    if variable_mapper is None:
-        teehr_variable_name = variable_name
-        teehr_units = nwm_units
-    else:
-        teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
-            variable_name, {}
-        ).get("name", variable_name)
-        teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, {}).get("name", nwm_units)
+    teehr_variable_name, teehr_units = map_variable_and_unit_name(
+        variable_name, nwm_units, variable_mapper
+    )
 
     ref_times = [
         pd.to_datetime(r.day) + pd.to_timedelta(int(r.z_hour[1:3]), unit="h")

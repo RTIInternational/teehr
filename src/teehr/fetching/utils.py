@@ -46,7 +46,8 @@ from teehr.fetching.const import (
     NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
     NWM_CONFIGURATION_DESCRIPTIONS,
-    UNIT_NAME
+    UNIT_NAME,
+    VARIABLE_NAME
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
@@ -204,6 +205,27 @@ def format_nwm_configuration_metadata(
         "member": ev_member,
         "description": ev_config_desc
     }
+
+
+def map_variable_and_unit_name(
+    variable_name: str,
+    nwm_units: str,
+    variable_mapper: Optional[Dict[str, Dict[str, Dict[str, str]]]],
+) -> Tuple[str, str]:
+    """Map an NWM variable/unit name to TEEHR's names via ``variable_mapper``.
+
+    Falls back to the original NWM names for anything not found in the
+    mapper, or if no mapper is provided at all (``variable_mapper is None``).
+    Shared by point and grid fetching, which otherwise each reimplemented
+    this lookup slightly differently.
+    """
+    if variable_mapper is None:
+        return variable_name, nwm_units
+    teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
+        variable_name, {}
+    ).get("name", variable_name)
+    teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, {}).get("name", nwm_units)
+    return teehr_variable_name, teehr_units
 
 
 def get_nwm_variable_mapper(nwm_configuration: str) -> Dict[str, Dict[str, Dict[str, str]]]:

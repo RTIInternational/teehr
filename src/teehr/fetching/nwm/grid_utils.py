@@ -1,7 +1,7 @@
 """Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
-import asyncio
+import functools
 import logging
 
 import numpy as np
@@ -14,13 +14,14 @@ from obspec_utils.registry import ObjectStoreRegistry
 from teehr.fetching.utils import (
     CPU_MAX_WORKERS,
     build_kerchunk_registry,
+    map_variable_and_unit_name,
     open_kerchunk_dataset,
     write_timeseries_parquet_file,
     parse_nwm_json_paths,
     format_nwm_configuration_metadata,
     convert_value_from_kelvin_to_celsius
 )
-from teehr.utils.utils import run_sync
+from teehr.utils.utils import run_concurrent_map
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
@@ -59,11 +60,18 @@ def get_nwm_grid_data(
     row_min: int,
     col_min: int,
     row_max: int,
-    col_max: int
+    col_max: int,
+    x_dim: str = "x",
+    y_dim: str = "y",
 ):
-    """Read a subset nwm grid data into memory using row/col bounds."""
+    """Read a subset nwm grid data into memory using row/col bounds.
+
+    ``x_dim``/``y_dim`` default to NWM's usual "x"/"y" dimension names, but
+    can be overridden for grids that use different names (e.g. NWM v2.1
+    retrospective forcing's "west_east"/"south_north").
+    """
     grid_values = var_da.isel(
-        x=slice(col_min, col_max+1), y=slice(row_min, row_max+1)
+        **{x_dim: slice(col_min, col_max + 1), y_dim: slice(row_min, row_max + 1)}
     ).values
     return grid_values
 
@@ -168,14 +176,11 @@ def process_single_nwm_grid_file(
     # Calculate mean areal value of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    if variable_mapper is None:
-        df.loc[:, UNIT_NAME] = nwm_units
-        df.loc[:, VARIABLE_NAME] = variable_name
-    else:
-        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, {}).get("name", nwm_units)
-        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name).get("name")
+    teehr_variable_name, teehr_units = map_variable_and_unit_name(
+        variable_name, nwm_units, variable_mapper
+    )
+    df.loc[:, UNIT_NAME] = teehr_units
+    df.loc[:, VARIABLE_NAME] = teehr_variable_name
 
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = ref_time
@@ -232,26 +237,20 @@ def fetch_and_format_nwm_grids(
         _, df = gp
 
         rows = list(df.itertuples())
-        semaphore = asyncio.Semaphore(min(CPU_MAX_WORKERS, len(rows)))
-
-        async def _bounded(row) -> Optional[pd.DataFrame]:
-            async with semaphore:
-                return await asyncio.to_thread(
-                    process_single_nwm_grid_file,
-                    row,
-                    teehr_config["name"],
-                    variable_name,
-                    zonal_weights_filepath,
-                    ignore_missing_file,
-                    location_id_prefix,
-                    variable_mapper,
-                    registry,
-                )
-
-        async def _process_group() -> List[Optional[pd.DataFrame]]:
-            return await asyncio.gather(*[_bounded(row) for row in rows])
-
-        output = run_sync(_process_group())
+        output = run_concurrent_map(
+            functools.partial(
+                process_single_nwm_grid_file,
+                configuration_name=teehr_config["name"],
+                variable_name=variable_name,
+                weights_filepath=zonal_weights_filepath,
+                ignore_missing_file=ignore_missing_file,
+                location_id_prefix=location_id_prefix,
+                variable_mapper=variable_mapper,
+                registry=registry,
+            ),
+            rows,
+            CPU_MAX_WORKERS,
+        )
 
         output = [df for df in output if df is not None]
         if len(output) == 0:
