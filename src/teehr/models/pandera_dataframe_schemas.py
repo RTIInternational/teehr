@@ -28,6 +28,11 @@ def format_datetime64(s: pd.Series) -> pd.Series:
     # Convert to UTC.
     # if s.dt.tz is not None:
     #     s = s.dt.tz_convert("UTC")
+    if not pd.api.types.is_datetime64_any_dtype(s):
+        # Pandera defers dtype coercion of columns that define parsers until
+        # after the parser runs, so the series can still be object dtype here
+        # (eg. an all-null column added by the fetching code, or strings).
+        s = pd.to_datetime(s, utc=True)
     # Drop timezone information.
     s = s.dt.tz_localize(None)
     return s.astype("datetime64[ms]")
