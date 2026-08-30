@@ -66,7 +66,6 @@ from teehr.fetching.nwm.grid_utils import (
     read_and_validate_weights_file
 )
 from teehr.fetching.utils import (
-    CPU_MAX_WORKERS,
     build_kerchunk_registry,
     map_variable_and_unit_name,
     open_kerchunk_dataset,
@@ -81,7 +80,7 @@ from teehr.fetching.nwm.retrospective_points import (
     validate_retrospective_start_end_date,
 )
 from teehr.utilities.generate_weights import generate_weights_file
-from teehr.utils.utils import run_concurrent_map
+from teehr.utils.concurrency import resolve, run_concurrent_map
 
 
 logger = logging.getLogger(__name__)
@@ -415,7 +414,7 @@ def nwm_retro_grids_to_parquet(
                     registry=registry,
                 ),
                 rows,
-                CPU_MAX_WORKERS,
+                resolve().cpu,
             )
 
             output = [df for df in output if df is not None]

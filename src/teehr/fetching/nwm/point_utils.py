@@ -47,13 +47,22 @@ def process_chunk_of_files(
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
     registry: Optional[ObjectStoreRegistry] = None,
-):
+    io_concurrency: Optional[int] = None,
+) -> Optional[Path]:
     """Assemble a table for a chunk of NWM files.
 
     ``registry`` should be a single ObjectStoreRegistry built once (via
     ``build_kerchunk_registry``) covering every file across all chunks in the
     run, so obstore's stores/connection pools are reused across chunks rather
     than rebuilt per chunk. Built fresh from this chunk alone if omitted.
+
+    ``io_concurrency`` bounds how many reference files this chunk reads at
+    once, defaulting to the process-wide setting. Callers running several
+    chunks in parallel (e.g. mapped Prefect tasks) should divide the budget
+    among them, since the two levels of concurrency multiply.
+
+    Returns the path to the parquet file written for this chunk, or ``None``
+    if the chunk produced no data.
     """
     location_ids = np.array(location_ids).astype(int)
 
@@ -84,6 +93,7 @@ def process_chunk_of_files(
         ignore_missing_file=ignore_missing_file,
         storage_options={"target_options": {"anon": True}},
         registry=registry,
+        io_concurrency=io_concurrency,
     )
     df_valid = df_valid[read_mask].reset_index(drop=True)
 
@@ -151,7 +161,7 @@ def process_chunk_of_files(
         df_output.loc[:, REFERENCE_TIME] = pd.NaT
         output_table = pa.Table.from_pandas(df_output, schema=schema)
 
-    write_timeseries_parquet_file(
+    return write_timeseries_parquet_file(
         Path(output_parquet_dir, filename),
         overwrite_output,
         output_table,
@@ -225,7 +235,8 @@ def fetch_and_format_nwm_points(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-):
+    io_concurrency: Optional[int] = None,
+) -> List[Path]:
     """Fetch NWM point data and save as parquet files.
 
     Accepts a list of kerchunk reference file paths (S3/local .json, or local .parq)
@@ -267,6 +278,15 @@ def fetch_and_format_nwm_points(
         The type of timeseries being processed.
     drop_overlapping_assimilation_values : bool
         Whether to drop assimilation values that overlap in value_time.
+    io_concurrency : Optional[int]
+        Maximum reference files read at once, per chunk. Defaults to the
+        process-wide setting (see ``teehr.fetching.utils.set_concurrency``).
+
+    Returns
+    -------
+    List[Path]
+        Paths to the parquet files written, in chunk order. Chunks that
+        produced no data are omitted.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
@@ -281,8 +301,9 @@ def fetch_and_format_nwm_points(
 
     logger.info(f"Processing {len(dfs)} chunks of files for configuration: {configuration}, variable: {variable_name}.")
 
+    output_paths = []
     for df in dfs:
-        process_chunk_of_files(
+        filepath = process_chunk_of_files(
             df,
             location_ids,
             configuration,
@@ -296,4 +317,9 @@ def fetch_and_format_nwm_points(
             timeseries_type,
             drop_overlapping_assimilation_values,
             registry,
+            io_concurrency,
         )
+        if filepath is not None:
+            output_paths.append(filepath)
+
+    return output_paths

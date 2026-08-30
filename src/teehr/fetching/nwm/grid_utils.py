@@ -12,7 +12,6 @@ import teehr.models.pandera_dataframe_schemas as schemas
 from obspec_utils.registry import ObjectStoreRegistry
 
 from teehr.fetching.utils import (
-    CPU_MAX_WORKERS,
     build_kerchunk_registry,
     map_variable_and_unit_name,
     open_kerchunk_dataset,
@@ -21,7 +20,7 @@ from teehr.fetching.utils import (
     format_nwm_configuration_metadata,
     convert_value_from_kelvin_to_celsius
 )
-from teehr.utils.utils import run_concurrent_map
+from teehr.utils.concurrency import resolve, run_concurrent_map
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
@@ -249,7 +248,7 @@ def fetch_and_format_nwm_grids(
                 registry=registry,
             ),
             rows,
-            CPU_MAX_WORKERS,
+            resolve().cpu,
         )
 
         output = [df for df in output if df is not None]

@@ -3,10 +3,11 @@ from pathlib import Path
 from typing import Union, Optional, Iterable, List, Dict, Tuple
 from datetime import datetime
 from datetime import timedelta
+from concurrent.futures import Executor
+from functools import lru_cache
 import asyncio
 import base64
 import logging
-import os
 import re
 import json
 import struct
@@ -27,7 +28,15 @@ import pyarrow as pa
 import pandera
 
 from teehr.evaluation.write import Write as writer
-from teehr.utils.utils import run_sync
+from teehr.utils.concurrency import (
+    gather_bounded,
+    map_blocking,
+    resolve,
+    run_in_executor,
+    run_sync,
+    thread_pool,
+    use_process_pool,
+)
 from teehr.fetching.models.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
@@ -54,16 +63,7 @@ import teehr.models.pandera_dataframe_schemas as schemas
 TZ_PATTERN = re.compile(r't[0-9]+z')
 DAY_PATTERN = re.compile(r'nwm.[0-9]+')
 
-# Concurrency for I/O-bound work (remote existence checks, VirtualiZarr/obstore
-# reads), which mostly waits on network latency rather than the GIL.
-IO_MAX_WORKERS = int(os.environ.get("TEEHR_IO_MAX_WORKERS", 48))
-# Concurrency for CPU-bound work (parsing HDF5 metadata via VirtualiZarr's
-# HDFParser), which holds the GIL and scales with available cores, not I/O latency.
-CPU_MAX_WORKERS = int(os.environ.get("TEEHR_CPU_MAX_WORKERS", os.cpu_count() or 4))
-
-
 logger = logging.getLogger(__name__)
-
 
 def start_on_z_hour(
     start_z_hour: int,
@@ -281,7 +281,9 @@ def generate_json_paths(
     kerchunk_method: str,
     gcs_component_paths: List[str],
     json_dir: str,
-    ignore_missing_file: bool
+    ignore_missing_file: bool,
+    io_concurrency: Optional[int] = None,
+    parse_workers: Optional[int] = None,
 ) -> List[str]:
     """Generate file paths to Kerchunk reference json files.
 
@@ -296,6 +298,10 @@ def generate_json_paths(
     ignore_missing_file : bool
         Flag specifying whether or not to fail if a missing
         NWM file is encountered.
+    io_concurrency : Optional[int]
+        Checks in flight at once. See :mod:`teehr.utils.concurrency`.
+    parse_workers : Optional[int]
+        References built at once. See :mod:`teehr.utils.concurrency`.
 
     Returns
     -------
@@ -309,13 +315,14 @@ def generate_json_paths(
         json_paths = build_zarr_references_virtualizarr(
             gcs_component_paths,
             json_dir,
-            ignore_missing_file
+            ignore_missing_file,
+            parse_workers,
         )
 
     elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = check_if_files_exist(s3_path_list)
+        file_check_output = check_if_files_exist(s3_path_list, io_concurrency)
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -326,7 +333,7 @@ def generate_json_paths(
     elif kerchunk_method == SupportedKerchunkMethod.auto:
         # Use whatever pre-builts exist, and create the missing
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = check_if_files_exist(s3_path_list)
+        file_check_output = check_if_files_exist(s3_path_list, io_concurrency)
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -343,7 +350,8 @@ def generate_json_paths(
                 build_zarr_references_virtualizarr(
                     missing_files,
                     json_dir,
-                    ignore_missing_file
+                    ignore_missing_file,
+                    parse_workers,
                 )
             )
 
@@ -370,7 +378,7 @@ def write_timeseries_parquet_file(
     overwrite_output: bool,
     data: Union[pa.Table, pd.DataFrame],
     timeseries_type: TimeseriesTypeEnum
-):
+) -> Optional[Path]:
     """Write the output timeseries parquet file.
 
     Includes logic controlling whether or not to overwrite an existing file.
@@ -383,6 +391,15 @@ def write_timeseries_parquet_file(
         Flag controlling overwrite behavior.
     data : Union[pa.Table, pd.DataFrame]
         The output data as either a dataframe or pyarrow table.
+
+    Returns
+    -------
+    Optional[Path]
+        ``filepath`` if the file holds data afterwards -- whether this call
+        wrote it or it already existed and was left alone -- and ``None`` if
+        nothing was written because the data was empty or failed validation.
+        Callers driving this from a workflow can use the result to load only
+        what actually landed.
     """
     logger.debug(f"Writing parquet file: {filepath}")
 
@@ -398,7 +415,7 @@ def write_timeseries_parquet_file(
             f"The dataframe is empty after dropping NaN values; "
             f"skipping writing to {filepath.name}."
         )
-        return
+        return None
 
     if timeseries_type == TimeseriesTypeEnum.primary:
         schema = schemas.primary_timeseries_schema(type="pandas")
@@ -424,7 +441,7 @@ def write_timeseries_parquet_file(
             f"Validation error: {msg}"
             f"\nThis file '{filepath}' will be skipped."
         )
-        return
+        return None
 
     if not filepath.is_file():
         writer.to_cache(
@@ -445,13 +462,18 @@ def write_timeseries_parquet_file(
             " skipping"
         )
 
+    return filepath
+
 
 def list_to_np(lst):
     """Convert list to a tuple."""
     return tuple([np.array(a) for a in lst])
 
 
-async def _check_if_files_exist_async(file_path_list: List[str]) -> Dict[str, bool]:
+async def _check_if_files_exist_async(
+    file_path_list: List[str],
+    io_concurrency: Optional[int] = None,
+) -> Dict[str, bool]:
     """Async implementation backing :func:`check_if_files_exist`."""
     stores: Dict[str, object] = {}
 
@@ -464,24 +486,34 @@ async def _check_if_files_exist_async(file_path_list: List[str]) -> Dict[str, bo
             stores[prefix] = from_url(prefix, skip_signature=True)
         return stores[prefix], key
 
-    semaphore = asyncio.Semaphore(min(IO_MAX_WORKERS, len(file_path_list)))
-
     async def _check(path: str) -> tuple:
         store, key = _resolve(path)
-        async with semaphore:
-            try:
-                await store.head_async(key)
-                return path, True
-            except FileNotFoundError:
-                return path, False
+        try:
+            await store.head_async(key)
+            return path, True
+        except FileNotFoundError:
+            return path, False
 
-    results = await asyncio.gather(*[_check(path) for path in file_path_list])
+    results = await gather_bounded(
+        _check, file_path_list, limit=resolve(io=io_concurrency).io
+    )
     return dict(results)
 
 
-def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
-    """Check for existence of S3 files."""
-    return run_sync(_check_if_files_exist_async(file_path_list))
+def check_if_files_exist(
+    file_path_list: List[str],
+    io_concurrency: Optional[int] = None,
+) -> Dict[str, bool]:
+    """Check for existence of S3 files.
+
+    Parameters
+    ----------
+    file_path_list : List[str]
+        Remote paths to check.
+    io_concurrency : Optional[int]
+        Checks in flight at once. See :mod:`teehr.utils.concurrency`.
+    """
+    return run_sync(_check_if_files_exist_async(file_path_list, io_concurrency))
 
 
 def _json_path_to_url(path: str) -> str:
@@ -666,6 +698,7 @@ async def _open_ref_virtualizarr(
     ignore_missing_file: bool,
     variable_name: str,
     location_ids: np.ndarray,
+    executor: Optional[Executor] = None,
 ) -> Optional[xr.Dataset]:
     """Open a single kerchunk reference via VirtualiZarr and subset it to ``location_ids``.
 
@@ -675,11 +708,9 @@ async def _open_ref_virtualizarr(
     per-file array (e.g. every NWM feature_id) is never held in memory once this
     function returns—only the handful of requested locations are.
 
-    The reference JSON itself is fetched with obstore's async API directly on
-    this coroutine; materializing the manifest store (which involves its own,
-    separate synchronous I/O inside VirtualiZarr/zarr) is offloaded to a
-    thread via ``asyncio.to_thread`` so many files can be in flight at once
-    without blocking the event loop.
+    The reference JSON is downloaded on this coroutine; the parsing that
+    follows is blocking, so it runs in ``executor`` instead of on the event
+    loop.
     """
     try:
         manifest_store = await _open_kerchunk_manifest_store(url, registry)
@@ -710,7 +741,7 @@ async def _open_ref_virtualizarr(
                 f"the NWM output: {missing[:10].tolist()}"
             ) from e
 
-    return await asyncio.to_thread(_materialize)
+    return await run_in_executor(_materialize, executor)
 
 
 async def _open_kerchunk_dataset_async(
@@ -794,6 +825,8 @@ async def _combine_and_open_kerchunk_refs_async(
     ignore_missing_file: bool = True,
     concat_dims: Optional[List[str]] = ["time"],
     registry: Optional[ObjectStoreRegistry] = None,
+    io_concurrency: Optional[int] = None,
+    parse_workers: Optional[int] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Async implementation backing :func:`combine_and_open_kerchunk_refs`."""
     logger.info("Combining and opening kerchunk reference files.")
@@ -804,15 +837,19 @@ async def _combine_and_open_kerchunk_refs_async(
         registry = build_kerchunk_registry(json_paths)
     urls = [_json_path_to_url(path) for path in json_paths]
 
-    semaphore = asyncio.Semaphore(min(IO_MAX_WORKERS, len(urls)))
+    # Two budgets: many references download at once (network waits), while
+    # fewer are parsed at once (CPU work, and h5py mostly serializes it).
+    budget = resolve(io=io_concurrency, cpu=parse_workers)
 
-    async def _bounded_open(url: str) -> Optional[xr.Dataset]:
-        async with semaphore:
-            return await _open_ref_virtualizarr(
-                url, registry, ignore_missing_file, variable_name, location_ids
-            )
-
-    datasets = list(await asyncio.gather(*[_bounded_open(url) for url in urls]))
+    with thread_pool(budget.cpu, len(urls)) as executor:
+        datasets = await gather_bounded(
+            lambda url: _open_ref_virtualizarr(
+                url, registry, ignore_missing_file, variable_name,
+                location_ids, executor,
+            ),
+            urls,
+            limit=budget.io,
+        )
     read_mask = [ds is not None for ds in datasets]
     datasets = [ds for ds in datasets if ds is not None]
 
@@ -833,6 +870,8 @@ def combine_and_open_kerchunk_refs(
     concat_dims: Optional[List[str]] = ["time"],
     storage_options: Optional[Dict] = {},
     registry: Optional[ObjectStoreRegistry] = None,
+    io_concurrency: Optional[int] = None,
+    parse_workers: Optional[int] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Combine multiple kerchunk reference files into a single xarray Dataset.
 
@@ -868,6 +907,10 @@ def combine_and_open_kerchunk_refs(
         build one registry up front and pass it to every call, so obstore's
         stores/connection pools are reused across the whole run instead of
         being rebuilt per chunk. Built fresh from ``json_paths`` if omitted.
+    io_concurrency : Optional[int], optional
+        References downloaded at once. See :mod:`teehr.utils.concurrency`.
+    parse_workers : Optional[int], optional
+        References parsed at once. See :mod:`teehr.utils.concurrency`.
 
     Returns
     -------
@@ -885,12 +928,19 @@ def combine_and_open_kerchunk_refs(
             ignore_missing_file,
             concat_dims,
             registry,
+            io_concurrency,
+            parse_workers,
         )
     )
 
 
+@lru_cache(maxsize=1)
 def _build_gcs_source_registry() -> ObjectStoreRegistry:
-    """Build an ObjectStoreRegistry covering only the source NWM GCS bucket."""
+    """Return the registry for the source NWM GCS bucket.
+
+    Cached, so threads share one and each worker process builds its own on
+    first use rather than one per file.
+    """
     return ObjectStoreRegistry({
         f"gcs://{NWM_BUCKET}/": from_url(f"gs://{NWM_BUCKET}/", skip_signature=True),
     })
@@ -1029,6 +1079,7 @@ async def _build_zarr_references_virtualizarr_async(
     remote_paths: List[str],
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
+    parse_workers: Optional[int] = None,
 ) -> list[str]:
     """Async implementation backing :func:`build_zarr_references_virtualizarr`."""
     logger.debug("Building zarr references via VirtualiZarr.")
@@ -1051,16 +1102,25 @@ async def _build_zarr_references_virtualizarr_async(
     if len(missing_paths) == 0:
         return sorted(existing_jsons)
 
-    registry = _build_gcs_source_registry()
-    semaphore = asyncio.Semaphore(min(CPU_MAX_WORKERS, len(missing_paths)))
+    budget = resolve(cpu=parse_workers)
+    processes = (
+        budget.processes
+        if use_process_pool(len(missing_paths), budget.processes)
+        else 0
+    )
+    logger.info(
+        f"Building {len(missing_paths)} references in"
+        f" {processes or budget.cpu} {'processes' if processes else 'threads'}."
+    )
 
-    async def _build_one(path: str) -> Optional[str]:
-        async with semaphore:
-            return await asyncio.to_thread(
-                gen_json_virtualizarr, path, json_dir, ignore_missing_file, registry
-            )
-
-    json_paths = list(await asyncio.gather(*[_build_one(path) for path in missing_paths]))
+    json_paths = await map_blocking(
+        gen_json_virtualizarr,
+        missing_paths,
+        workers=budget.cpu,
+        args=(str(json_dir), ignore_missing_file),
+        processes=processes,
+    )
+    json_paths = list(json_paths)
     json_paths.extend(existing_jsons)
 
     if not any(json_paths):
@@ -1077,6 +1137,7 @@ def build_zarr_references_virtualizarr(
     remote_paths: List[str],
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
+    parse_workers: Optional[int] = None,
 ) -> list[str]:
     """Build the single-file zarr JSON reference files using VirtualiZarr.
 
@@ -1084,12 +1145,20 @@ def build_zarr_references_virtualizarr(
     through the same obstore-backed I/O as ``combine_and_open_kerchunk_refs``,
     and removes any dependency on pre-built S3 kerchunk references.
 
+    Files already cached in ``json_dir`` are skipped. The rest are built in
+    parallel -- in worker processes for big batches, threads otherwise; see
+    :mod:`teehr.utils.concurrency`.
+
     Parameters
     ----------
     remote_paths : List[str]
         List of remote filepaths.
     json_dir : str or Path
         Local directory for caching json files.
+    ignore_missing_file : bool
+        Whether to skip or raise on missing/corrupt files.
+    parse_workers : Optional[int]
+        References built at once. See :mod:`teehr.utils.concurrency`.
 
     Returns
     -------
@@ -1098,7 +1167,7 @@ def build_zarr_references_virtualizarr(
     """
     return run_sync(
         _build_zarr_references_virtualizarr_async(
-            remote_paths, json_dir, ignore_missing_file
+            remote_paths, json_dir, ignore_missing_file, parse_workers
         )
     )
 

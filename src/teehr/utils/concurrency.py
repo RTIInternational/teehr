@@ -1,0 +1,608 @@
+"""How much work runs at once, and where it runs.
+
+Any job that touches many things has two limits worth keeping separate:
+
+* **I/O** -- work that mostly waits (network requests, object-store reads).
+  Waiting is cheap, so hundreds can be in flight at once.
+* **CPU** -- work that mostly computes (parsing, regridding, statistics).
+  Bounded by cores, and by the GIL when the work holds it.
+
+:func:`resolve` turns those into a :class:`ConcurrencyBudget` for one
+operation; the helpers below do the running. Nothing here is specific to
+fetching -- any teehr code wanting parallelism can use it.
+
+Run a blocking function over many items::
+
+    from teehr.utils.concurrency import map_blocking, resolve
+
+    budget = resolve()
+    results = await map_blocking(convert_one, paths, workers=budget.cpu)
+
+The same thing from ordinary, non-async code::
+
+    from functools import partial
+    from teehr.utils.concurrency import resolve, run_concurrent_map
+
+    results = run_concurrent_map(
+        partial(convert_one, out_dir=out), paths, resolve().cpu
+    )
+
+Run many coroutines, N at a time::
+
+    from teehr.utils.concurrency import gather_bounded, resolve
+
+    rows = await gather_bounded(fetch_one, urls, limit=resolve().io)
+
+Mix the two -- download many at once, parse only a few::
+
+    budget = resolve()
+    with thread_pool(budget.cpu, len(urls)) as pool:
+        datasets = await gather_bounded(
+            lambda url: download_and_parse(url, pool), urls, limit=budget.io
+        )
+
+For CPU-heavy work, worker processes beat threads because they don't share a
+GIL -- but each costs ~3s to start and ~500MB, so it only pays off on big
+jobs. Let :func:`use_process_pool` decide::
+
+    budget = resolve()
+    results = await map_blocking(
+        parse_one, items, workers=budget.cpu,
+        processes=budget.processes
+        if use_process_pool(len(items), budget.processes) else 0,
+    )
+
+Two things to know before using processes. Its threshold is calibrated for
+items costing roughly a second each -- set ``TEEHR_PROCESS_MIN_ITEMS`` if
+yours are much cheaper or dearer. And anything expensive a worker needs (a
+client, a registry) should be built lazily inside the function and cached with
+``@lru_cache``, so every process builds its own once instead of pickling one
+across.
+
+Users can change the defaults for a whole session::
+
+    from teehr.utils.concurrency import set_concurrency
+    set_concurrency(io=8, cpu=2)
+
+**Calling teehr from something that already runs work in parallel** -- a
+Prefect flow mapping tasks, say -- means the budgets multiply: six callers at
+``io=48`` puts 288 requests in flight. Divide first::
+
+    set_concurrency(io=48 // n_tasks)
+"""
+from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+from pickle import PicklingError
+from typing import Any, Callable, Coroutine, Iterable, List, Optional, TypeVar, Union
+import ast
+import asyncio
+import logging
+import multiprocessing
+import os
+import sys
+import threading
+
+logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
+# Network waits, so this can be far above the core count.
+DEFAULT_IO_CONCURRENCY = 48
+MAX_IO_CONCURRENCY = 256
+
+# Parsing is CPU work; it defaults to the cores this process can actually use.
+MAX_CPU_WORKERS = 64
+
+# Worker processes are capped lower than threads: each holds its own
+# interpreter and libraries, ~500MB. Raise with TEEHR_MAX_PROCESSES.
+DEFAULT_MAX_PROCESSES = 8
+
+# Starting a worker costs ~3s (it has to import teehr), so processes only pay
+# off for bigger jobs. Measured break-even is ~24-32 files; below that they run
+# ~20% slower than threads. Tune with TEEHR_PROCESS_MIN_ITEMS.
+DEFAULT_PROCESS_MIN_ITEMS = 32
+
+# Set by set_concurrency(); None means "check the environment, then the
+# default". Resolved per call, not at import, so a notebook can change these
+# after `import teehr`.
+_io_concurrency: Optional[int] = None
+_cpu_workers: Optional[int] = None
+
+# Cached answer to "would worker processes re-run the caller's script?".
+_MAIN_IS_SPAWN_SAFE: Optional[bool] = None
+
+
+@dataclass(frozen=True)
+class ConcurrencyBudget:
+    """How much of each kind of work may run at once.
+
+    Attributes
+    ----------
+    io : int
+        Network operations in flight.
+    cpu : int
+        Compute-bound calls running at once, in threads or processes.
+    processes : int
+        Of ``cpu``, how many may be worker processes.
+    """
+
+    io: int
+    cpu: int
+    processes: int
+
+
+def _cgroup_cpu_quota(root: Union[str, Path] = "/sys/fs/cgroup") -> Optional[int]:
+    """Return this cgroup's CPU limit in whole cores, or None if unlimited.
+
+    Kubernetes caps CPU with a quota rather than by restricting which cores a
+    process may use, so nothing else reports it.
+
+    Parameters
+    ----------
+    root : str or Path
+        Root of the cgroup filesystem. Exposed for testing.
+    """
+    root = Path(root)
+    try:  # cgroup v2
+        quota, period = (root / "cpu.max").read_text().split()
+        if quota != "max":
+            return max(1, -(-int(quota) // int(period)))
+        return None
+    except (OSError, ValueError):
+        pass
+    try:  # cgroup v1
+        quota = int((root / "cpu" / "cpu.cfs_quota_us").read_text())
+        period = int((root / "cpu" / "cpu.cfs_period_us").read_text())
+        if quota > 0 and period > 0:
+            return max(1, -(-quota // period))
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+def available_cpus() -> int:
+    """Return how many CPUs this process can really use.
+
+    ``os.cpu_count()`` reports the whole machine, which over-counts badly
+    inside a container, so this also takes the affinity mask and cgroup quota
+    into account.
+    """
+    try:
+        cpus = len(os.sched_getaffinity(0))
+    except AttributeError:
+        # sched_getaffinity is Linux-only.
+        cpus = os.cpu_count() or 4
+
+    quota = _cgroup_cpu_quota()
+    return min(cpus, quota) if quota else cpus
+
+
+def _clamp(value: int, lo: int, hi: int, name: str) -> int:
+    """Clamp ``value`` into ``[lo, hi]``, warning if it was out of range."""
+    if value < lo or value > hi:
+        logger.warning(
+            f"{name}={value} is outside the supported range [{lo}, {hi}];"
+            f" using {min(max(value, lo), hi)} instead."
+        )
+    return min(max(value, lo), hi)
+
+
+def _int_from_env(*names: str) -> Optional[int]:
+    """Return the first of ``names`` set to an integer in the environment."""
+    for name in names:
+        raw = os.environ.get(name)
+        if raw is None:
+            continue
+        try:
+            return int(raw)
+        except ValueError:
+            logger.warning(f"Ignoring {name}={raw!r}; expected an integer.")
+    return None
+
+
+def resolve_io_concurrency(override: Optional[int] = None) -> int:
+    """Resolve how many network operations may be in flight.
+
+    In order: ``override``, then :func:`set_concurrency`, then
+    ``TEEHR_IO_CONCURRENCY`` (or the older ``TEEHR_IO_MAX_WORKERS``), then
+    :data:`DEFAULT_IO_CONCURRENCY`.
+    """
+    value = override
+    if value is None:
+        value = _io_concurrency
+    if value is None:
+        value = _int_from_env("TEEHR_IO_CONCURRENCY", "TEEHR_IO_MAX_WORKERS")
+    if value is None:
+        value = DEFAULT_IO_CONCURRENCY
+    return _clamp(int(value), 1, MAX_IO_CONCURRENCY, "io_concurrency")
+
+
+def resolve_cpu_workers(override: Optional[int] = None) -> int:
+    """Resolve how many compute-bound calls may run at once.
+
+    In order: ``override``, then :func:`set_concurrency`, then
+    ``TEEHR_CPU_WORKERS`` (or the older ``TEEHR_CPU_MAX_WORKERS``), then
+    :func:`available_cpus`.
+    """
+    value = override
+    if value is None:
+        value = _cpu_workers
+    if value is None:
+        value = _int_from_env("TEEHR_CPU_WORKERS", "TEEHR_CPU_MAX_WORKERS")
+    if value is None:
+        value = available_cpus()
+    return _clamp(int(value), 1, MAX_CPU_WORKERS, "cpu_workers")
+
+
+def resolve_cpu_processes(workers: Optional[int] = None) -> int:
+    """Resolve how many of the CPU workers may be separate processes.
+
+    Never more than :func:`resolve_cpu_workers`, and capped again by
+    ``TEEHR_MAX_PROCESSES`` because processes cost ~500MB each.
+
+    Parameters
+    ----------
+    workers : Optional[int]
+        CPU budget to cap; resolved from the process-wide setting if omitted.
+    """
+    workers = resolve_cpu_workers(workers)
+    ceiling = _int_from_env("TEEHR_MAX_PROCESSES")
+    if ceiling is None:
+        ceiling = DEFAULT_MAX_PROCESSES
+    return max(1, min(workers, ceiling))
+
+
+def resolve(
+    io: Optional[int] = None,
+    cpu: Optional[int] = None,
+) -> ConcurrencyBudget:
+    """Work out the budget for one operation.
+
+    Call this once at the top of an operation and pass the result down, rather
+    than re-resolving in each helper.
+
+    Parameters
+    ----------
+    io : Optional[int]
+        Override for network concurrency.
+    cpu : Optional[int]
+        Override for compute concurrency.
+
+    Examples
+    --------
+    >>> budget = resolve()          # process-wide defaults
+    >>> budget = resolve(io=8)      # ...but only 8 requests in flight
+    """
+    return ConcurrencyBudget(
+        io=resolve_io_concurrency(io),
+        cpu=resolve_cpu_workers(cpu),
+        processes=resolve_cpu_processes(cpu),
+    )
+
+
+def set_concurrency(
+    io: Optional[int] = None,
+    cpu: Optional[int] = None,
+) -> None:
+    """Change the defaults for the rest of this session.
+
+    Applies everywhere, so callers don't have to pass arguments through.
+    Anything left as ``None`` is unchanged; :func:`reset_concurrency` undoes it.
+
+    Parameters
+    ----------
+    io : Optional[int]
+        Network operations in flight. Lower this when something else is
+        already fetching in parallel -- the budgets multiply.
+    cpu : Optional[int]
+        Compute-bound calls running at once.
+
+    Examples
+    --------
+    >>> set_concurrency(io=8, cpu=2)
+    """
+    global _io_concurrency, _cpu_workers
+    if io is not None:
+        _io_concurrency = _clamp(int(io), 1, MAX_IO_CONCURRENCY, "io")
+    if cpu is not None:
+        _cpu_workers = _clamp(int(cpu), 1, MAX_CPU_WORKERS, "cpu")
+
+
+def reset_concurrency() -> None:
+    """Undo :func:`set_concurrency`, going back to the defaults."""
+    global _io_concurrency, _cpu_workers
+    _io_concurrency = None
+    _cpu_workers = None
+
+
+def get_concurrency() -> ConcurrencyBudget:
+    """Return the budget that would be used right now."""
+    return resolve()
+
+
+def _has_main_guard(path: Union[str, Path]) -> bool:
+    """Whether a script keeps its work behind ``if __name__ == "__main__"``.
+
+    Parameters
+    ----------
+    path : str or Path
+        Script to inspect.
+    """
+    try:
+        tree = ast.parse(Path(path).read_text())
+    except (OSError, SyntaxError, ValueError, UnicodeDecodeError):
+        # Can't prove it's guarded, so assume it isn't.
+        return False
+    return any(
+        isinstance(node, ast.If)
+        and isinstance(node.test, ast.Compare)
+        and isinstance(node.test.left, ast.Name)
+        and node.test.left.id == "__name__"
+        for node in tree.body
+    )
+
+
+def main_module_is_spawn_safe() -> bool:
+    """Whether starting worker processes would re-run the caller's own code.
+
+    Every worker re-imports whatever module was run as ``__main__``. That is
+    fine for a notebook, for ``python -m something``, or for a script that
+    keeps its work behind ``if __name__ == "__main__":``. In a plain unguarded
+    script it is not: the script would run again inside every worker. When that
+    is the case teehr stays on threads and says so once.
+    """
+    global _MAIN_IS_SPAWN_SAFE
+    if _MAIN_IS_SPAWN_SAFE is not None:
+        return _MAIN_IS_SPAWN_SAFE
+
+    main = sys.modules.get("__main__")
+    path = getattr(main, "__file__", None)
+    if getattr(main, "__spec__", None) is not None or path is None:
+        _MAIN_IS_SPAWN_SAFE = True
+    else:
+        _MAIN_IS_SPAWN_SAFE = _has_main_guard(path)
+        if not _MAIN_IS_SPAWN_SAFE:
+            logger.info(
+                f"Using threads instead of worker processes: {path} has no"
+                " `if __name__ == \"__main__\":` guard, so workers would re-run"
+                " it. Add one to get the faster path."
+            )
+    return _MAIN_IS_SPAWN_SAFE
+
+
+def use_process_pool(n_items: int, processes: int) -> bool:
+    """Whether a job this size is worth handing to worker processes.
+
+    Processes run compute-bound work roughly twice as fast as threads, but
+    each costs ~3s to start, so the trade only pays off above
+    :data:`DEFAULT_PROCESS_MIN_ITEMS` items -- a threshold calibrated for items
+    costing about a second each. Says no as well when workers would re-run the
+    caller's script (see :func:`main_module_is_spawn_safe`).
+
+    Parameters
+    ----------
+    n_items : int
+        How many items the job has.
+    processes : int
+        Worker processes available, from :attr:`ConcurrencyBudget.processes`.
+    """
+    if processes < 2 or n_items < 2:
+        return False
+    min_items = _int_from_env("TEEHR_PROCESS_MIN_ITEMS")
+    if min_items is None:
+        min_items = DEFAULT_PROCESS_MIN_ITEMS
+    if n_items < min_items:
+        return False
+    return main_module_is_spawn_safe()
+
+
+def run_sync(coro: Coroutine[Any, Any, T]) -> T:
+    """Run a coroutine to completion from ordinary, non-async code.
+
+    Works whether or not the calling thread already has an event loop running
+    (a notebook, say), so callers never have to think about it.
+    """
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        # No loop running in this thread; safe to drive the coroutine directly.
+        return asyncio.run(coro)
+
+    result: list = []
+    error: list = []
+
+    def _runner():
+        try:
+            result.append(asyncio.run(coro))
+        except BaseException as exc:
+            error.append(exc)
+
+    thread = threading.Thread(target=_runner)
+    thread.start()
+    thread.join()
+    if error:
+        raise error[0]
+    return result[0]
+
+
+@contextmanager
+def thread_pool(workers: int, n_items: int, name: str = "teehr-worker"):
+    """A thread pool sized for the job at hand.
+
+    Never makes more threads than there are items, and never borrows the event
+    loop's default pool, whose size ignores both our budget and the CPUs this
+    process was given.
+
+    Parameters
+    ----------
+    workers : int
+        Upper bound on threads, usually :attr:`ConcurrencyBudget.cpu`.
+    n_items : int
+        How many items will be submitted.
+    name : str
+        Thread name prefix, to make stack traces readable.
+    """
+    with ThreadPoolExecutor(
+        max_workers=max(1, min(workers, n_items)), thread_name_prefix=name
+    ) as pool:
+        yield pool
+
+
+async def run_in_executor(fn: Callable[[], T], executor: Optional[Executor] = None) -> T:
+    """Run one blocking call off the event loop.
+
+    Parameters
+    ----------
+    fn : Callable
+        Blocking callable taking no arguments; bind arguments with
+        ``functools.partial``.
+    executor : Optional[Executor]
+        Pool to run in, usually from :func:`thread_pool`. Without one this
+        falls back to the event loop's default pool.
+    """
+    if executor is None:
+        return await asyncio.to_thread(fn)
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, fn)
+
+
+async def gather_bounded(
+    factory: Callable[[Any], Coroutine[Any, Any, T]],
+    items: Iterable[Any],
+    *,
+    limit: int,
+) -> List[T]:
+    """Await ``factory(item)`` for every item, at most ``limit`` at a time.
+
+    Results come back in the order the items were given.
+
+    Parameters
+    ----------
+    factory : Callable
+        Called with each item; returns the coroutine to await.
+    items : Iterable
+        Items to process.
+    limit : int
+        How many may be in flight at once, usually
+        :attr:`ConcurrencyBudget.io`.
+
+    Examples
+    --------
+    >>> await gather_bounded(fetch_one, urls, limit=budget.io)
+    """
+    items = list(items)
+    if not items:
+        return []
+    semaphore = asyncio.Semaphore(max(1, min(limit, len(items))))
+
+    async def _one(item: Any) -> T:
+        async with semaphore:
+            return await factory(item)
+
+    return list(await asyncio.gather(*[_one(item) for item in items]))
+
+
+async def map_blocking(
+    fn: Callable[..., T],
+    items: Iterable[Any],
+    *,
+    workers: int,
+    args: tuple = (),
+    processes: int = 0,
+) -> List[T]:
+    """Run ``fn(item, *args)`` for every item, off the event loop.
+
+    Threads by default. Pass ``processes`` to run in that many worker processes
+    instead, which is worth it for CPU-heavy work on big jobs -- ask
+    :func:`use_process_pool` rather than deciding by hand. ``fn`` and ``args``
+    must be picklable in that case, and anything expensive that a worker needs
+    (a client, a registry) is best built lazily inside ``fn`` and cached, so
+    each worker makes its own once.
+
+    Falls back to threads if worker processes can't be started at all; errors
+    raised by ``fn`` itself propagate as usual.
+
+    Parameters
+    ----------
+    fn : Callable
+        Blocking callable, called as ``fn(item, *args)``.
+    items : Iterable
+        Items to process.
+    workers : int
+        Thread count, usually :attr:`ConcurrencyBudget.cpu`.
+    args : tuple
+        Extra arguments passed to every call.
+    processes : int
+        Worker processes to use instead of threads; 0 means threads.
+
+    Returns
+    -------
+    List
+        Results, in the order the items were given.
+
+    Examples
+    --------
+    >>> budget = resolve()
+    >>> await map_blocking(
+    ...     build_one, paths, workers=budget.cpu,
+    ...     processes=budget.processes if use_process_pool(
+    ...         len(paths), budget.processes) else 0,
+    ... )
+    """
+    items = list(items)
+    if not items:
+        return []
+    loop = asyncio.get_running_loop()
+
+    async def _run(pool: Executor) -> List[T]:
+        # The pool's size is the concurrency bound; no semaphore needed.
+        return list(await asyncio.gather(*[
+            loop.run_in_executor(pool, fn, item, *args) for item in items
+        ]))
+
+    if processes > 1:
+        try:
+            # "spawn", not "fork": callers often have threads running already
+            # (obstore, a Spark JVM, Jupyter), and forking those can deadlock.
+            pool = ProcessPoolExecutor(
+                max_workers=min(processes, len(items)),
+                mp_context=multiprocessing.get_context("spawn"),
+            )
+        except OSError as e:
+            logger.warning(f"Could not start worker processes ({e}); using threads.")
+        else:
+            try:
+                with pool:
+                    return await _run(pool)
+            except (BrokenProcessPool, PicklingError) as e:
+                logger.warning(
+                    f"Worker processes were unusable ({e}); using threads."
+                )
+
+    with thread_pool(workers, len(items)) as pool:
+        return await _run(pool)
+
+
+def run_concurrent_map(
+    func: Callable[[Any], T],
+    items: Iterable[Any],
+    max_workers: int,
+) -> List[T]:
+    """Run ``func(item)`` for every item in threads, from non-async code.
+
+    The blocking-code counterpart to :func:`map_blocking`; bind extra arguments
+    with ``functools.partial``.
+
+    Parameters
+    ----------
+    func : Callable
+        Blocking callable taking one item.
+    items : Iterable
+        Items to process.
+    max_workers : int
+        Thread count, usually :attr:`ConcurrencyBudget.cpu`.
+    """
+    return run_sync(map_blocking(func, items, workers=max_workers))
