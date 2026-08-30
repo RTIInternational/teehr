@@ -15,7 +15,7 @@ from teehr.fetching.utils import (
     validate_operational_start_end_date,
     start_on_z_hour,
     end_on_z_hour,
-    get_dataset,
+    open_kerchunk_dataset,
     get_end_date_from_ingest_days,
     log_temperature_conversion_message
 )
@@ -376,8 +376,9 @@ def nwm_grids_to_parquet(
                 )
 
             # Get a single timestep to use as a template grid.
-            template_ds = get_dataset(
+            template_ds = open_kerchunk_dataset(
                 json_paths[0],
+                loadable_variables=[variable_name, "x", "y", "crs"],
                 ignore_missing_file=False,
             )
 

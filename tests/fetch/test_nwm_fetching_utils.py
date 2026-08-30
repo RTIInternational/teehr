@@ -10,7 +10,7 @@ from teehr.fetching.utils import (
     validate_operational_start_end_date,
     build_remote_nwm_filelist,
     generate_json_paths,
-    get_dataset,
+    open_kerchunk_dataset,
     create_periods_based_on_chunksize,
     parse_nwm_json_paths,
     start_on_z_hour,
@@ -68,13 +68,17 @@ def test_point_zarr_reference_file(tmpdir):
         "nwm.20231101.nwm.t00z.short_range.channel_rt.f001.alaska.nc.json"
     )
 
-    test_ds = get_dataset(str(test_file), ignore_missing_file=False, remote_options={"token": "anon"})
-    built_ds = get_dataset(built_files[0], ignore_missing_file=False, remote_options={"token": "anon"})
+    all_vars = [
+        "streamflow", "nudge", "velocity", "qSfcLatRunoff", "qBucket",
+        "qBtmVertRunoff", "feature_id", "time", "reference_time", "crs",
+    ]
+    test_ds = open_kerchunk_dataset(str(test_file), loadable_variables=all_vars, ignore_missing_file=False)
+    built_ds = open_kerchunk_dataset(built_files[0], loadable_variables=all_vars, ignore_missing_file=False)
 
     # `crs` is a dummy CF grid-mapping placeholder variable -- only its
     # attributes are ever used (e.g. `esri_pe_string`); VirtualiZarr doesn't
-    # capture its on-disk scalar fill-value byte identically to classic
-    # kerchunk, so compare it by attributes only, and compare every other
+    # capture its on-disk scalar fill-value byte identically across builds,
+    # so compare it by attributes only, and compare every other
     # variable/coordinate for full equality (values, dtypes, and attrs).
     #
     # Two Datasets are identical if they have matching variables and

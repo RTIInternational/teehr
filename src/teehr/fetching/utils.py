@@ -424,26 +424,6 @@ def write_timeseries_parquet_file(
         )
 
 
-def get_dataset(
-    filepath: str, ignore_missing_file: bool, **kwargs
-) -> xr.Dataset:
-    """Get an xarray dataset from a filepath."""
-    logger.debug(f"Getting xarray dataset from: {filepath}")
-    try:
-        if filepath.startswith("s3://"):
-            s3 = fsspec.filesystem("s3", anon=True)
-            with s3.open(filepath, "rb") as f:
-                reference = ujson.load(f)
-            return xr.open_dataset(reference, engine="kerchunk", storage_options=kwargs)
-        return xr.open_dataset(filepath, engine="kerchunk", storage_options=kwargs)
-    except FileNotFoundError as e:
-        if not ignore_missing_file:
-            raise e
-        return None
-    except ValueError:
-        raise ValueError(f"There was a problem reading {filepath}")
-
-
 def list_to_np(lst):
     """Convert list to a tuple."""
     return tuple([np.array(a) for a in lst])
@@ -548,6 +528,100 @@ def _resolve_kerchunk_templates(refs: Dict) -> Dict:
     return refs
 
 
+def _is_null_or_nan(value) -> bool:
+    """Return True if ``value`` is JSON ``null`` or a raw (undecoded) float NaN."""
+    return value is None or (isinstance(value, float) and value != value)
+
+
+def _fix_kerchunk_fill_values(refs: Dict) -> Dict:
+    """Normalize a variable's fill-value metadata so VirtualiZarr can read it.
+
+    Handles two related problems seen across both classic-kerchunk-built and
+    VirtualiZarr-built references, both really about inconsistent/implicit
+    fill-value conventions that VirtualiZarr's stricter reading doesn't
+    tolerate the way xarray's classic (fsspec-based) kerchunk engine does:
+
+    1. **Missing CF attribute.** Some references never set a CF
+       ``_FillValue``/``missing_value`` attribute at all for a variable (e.g.
+       NWM forcing's ``RAINRATE`` in the community S3-hosted CONUS
+       references), relying on the reader falling back to the zarr array's
+       own ``fill_value`` for masking (xarray's classic zarr backend does
+       this via ``use_zarr_fill_value_as_mask``). VirtualiZarr's internal
+       ``xr.open_zarr(..., zarr_format=3, ...)`` call doesn't opt into that
+       fallback, so the real (and otherwise-correct) fill value is silently
+       dropped -- e.g. ``.rio.nodata`` then comes back ``None`` instead of
+       the correct value, breaking anything relying on it (such as
+       zonal-weights generation). Fix: copy the zarr fill_value into
+       ``_FillValue`` whenever neither CF attribute is already present.
+    2. **Undecodable float encoding.** For float-dtype arrays, xarray's zarr
+       backend requires the fill value to be represented as a string
+       wherever it appears -- but the *two* locations need two *different*
+       string encodings:
+
+       - ``.zarray``'s own ``fill_value`` is decoded by zarr-python's
+         ``ArrayV2Metadata.from_dict``, which accepts the literal string
+         ``"NaN"`` for a null/NaN value (and plain JSON numbers otherwise).
+       - ``.zattrs``'s ``_FillValue``/``missing_value`` is separately decoded
+         by xarray's ``FillValueCoder.decode``, which for float dtypes
+         *always* requires a base64-encoded little-endian double -- for any
+         value, not just NaN (matching how kerchunk itself already encodes
+         some float attribute values it can't represent natively in JSON,
+         e.g. NWM's ``RAINRATE`` again). A raw (undecoded) float or JSON
+         ``null`` in either location raises ``TypeError: Failed to decode
+         fill_value: expected str or bytes ...``; passing the wrong kind of
+         string (e.g. the literal ``"NaN"`` where base64 is expected)
+         instead raises ``binascii.Error: Incorrect padding``.
+    """
+    for key in list(refs["refs"].keys()):
+        if not key.endswith("/.zarray"):
+            continue
+        zattrs_key = key[: -len(".zarray")] + ".zattrs"
+        if zattrs_key not in refs["refs"]:
+            continue
+
+        zarray = ujson.loads(refs["refs"][key])
+        zattrs = ujson.loads(refs["refs"][zattrs_key])
+        zarray_changed = False
+        zattrs_changed = False
+
+        try:
+            dtype_kind = np.dtype(zarray.get("dtype")).kind
+        except TypeError:
+            # Structured/unrecognized dtype string; leave fill-value alone.
+            dtype_kind = None
+
+        # FillValueCoder.decode only supports numeric dtypes for a
+        # _FillValue attribute (raises for e.g. "|S1" byte-string arrays
+        # like NWM's "crs" grid-mapping variable, which never has -- and
+        # shouldn't get -- CF fill-value semantics).
+        if dtype_kind in ("f", "c", "b", "i", "u") \
+                and "_FillValue" not in zattrs and "missing_value" not in zattrs \
+                and zarray.get("fill_value") is not None:
+            zattrs["_FillValue"] = zarray["fill_value"]
+            zattrs_changed = True
+
+        if dtype_kind == "f":
+            if _is_null_or_nan(zarray.get("fill_value")):
+                zarray["fill_value"] = "NaN"
+                zarray_changed = True
+
+            for attr_name in ("_FillValue", "missing_value"):
+                value = zattrs.get(attr_name)
+                if isinstance(value, str) or attr_name not in zattrs:
+                    continue
+                as_double = float("nan") if _is_null_or_nan(value) else float(value)
+                zattrs[attr_name] = base64.standard_b64encode(
+                    struct.pack("<d", as_double)
+                ).decode()
+                zattrs_changed = True
+
+        if zarray_changed:
+            refs["refs"][key] = ujson.dumps(zarray)
+        if zattrs_changed:
+            refs["refs"][zattrs_key] = ujson.dumps(zattrs)
+    return refs
+
+
 async def _open_kerchunk_manifest_store(
     url: str,
     registry: ObjectStoreRegistry,
@@ -557,7 +631,9 @@ async def _open_kerchunk_manifest_store(
     store, path_after_prefix = registry.resolve(filepath)
     resp = await store.get_async(path_after_prefix)
     content = memoryview(await resp.buffer_async()).tobytes()
-    refs = _resolve_kerchunk_templates(ujson.loads(content))
+    refs = ujson.loads(content)
+    refs = _resolve_kerchunk_templates(refs)
+    refs = _fix_kerchunk_fill_values(refs)
     manifestgroup = manifestgroup_from_kerchunk_refs(refs)
     return ManifestStore(group=manifestgroup, registry=registry)
 
@@ -613,6 +689,80 @@ async def _open_ref_virtualizarr(
             ) from e
 
     return await asyncio.to_thread(_materialize)
+
+
+async def _open_kerchunk_dataset_async(
+    url: str,
+    registry: ObjectStoreRegistry,
+    ignore_missing_file: bool,
+    loadable_variables: List[str],
+) -> Optional[xr.Dataset]:
+    """Open a single kerchunk reference via VirtualiZarr, materializing ``loadable_variables``.
+
+    Unlike :func:`_open_ref_virtualizarr` (point fetching's ``location_ids``
+    label-based subsetting via ``.sel``), no selection is applied here --
+    callers needing a subset (e.g. grid fetching's row/col slicing via
+    ``.isel``, which only needs positions, not coordinate values) do so
+    themselves afterward.
+    """
+    try:
+        manifest_store = await _open_kerchunk_manifest_store(url, registry)
+    except Exception as e:
+        if not ignore_missing_file:
+            raise
+        logger.warning(f"Could not open reference dataset: {e}")
+        return None
+
+    def _materialize() -> xr.Dataset:
+        ds = manifest_store.to_virtual_dataset(
+            loadable_variables=loadable_variables,
+            decode_times=True,
+        )
+        return ds[[v for v in loadable_variables if v in ds.variables]]
+
+    return await asyncio.to_thread(_materialize)
+
+
+def open_kerchunk_dataset(
+    url: str,
+    loadable_variables: List[str],
+    ignore_missing_file: bool = True,
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> Optional[xr.Dataset]:
+    """Open a single kerchunk reference via VirtualiZarr, materializing ``loadable_variables``.
+
+    Used by grid fetching (see :func:`combine_and_open_kerchunk_refs` for the
+    point-fetching, ``location_ids``-subsetting analogue), which reads the
+    whole array for the requested variable(s) and subsets by row/col
+    position afterward rather than by coordinate label.
+
+    Parameters
+    ----------
+    url : str
+        Path (local or remote) to a kerchunk reference JSON file.
+    loadable_variables : List[str]
+        Names of the variables/coordinates to materialize (e.g.
+        ``[variable_name, "time"]``). Any not present in the file are
+        silently skipped.
+    ignore_missing_file : bool, optional
+        Whether to ignore missing files, by default True.
+    registry : Optional[ObjectStoreRegistry], optional
+        A pre-built registry (see :func:`build_kerchunk_registry`) covering
+        ``url``. Callers processing many files in one run should build one
+        registry up front and pass it to every call. Built fresh from
+        ``url`` alone if omitted.
+
+    Returns
+    -------
+    Optional[xr.Dataset]
+        The dataset with ``loadable_variables`` materialized, or None if the
+        file was missing and ``ignore_missing_file`` is True.
+    """
+    if registry is None:
+        registry = build_kerchunk_registry([url])
+    return run_sync(
+        _open_kerchunk_dataset_async(url, registry, ignore_missing_file, loadable_variables)
+    )
 
 
 async def _combine_and_open_kerchunk_refs_async(
@@ -754,11 +904,12 @@ def _fix_fill_values(refs: Dict) -> Dict:
     actually represents missing data. When the two disagree, xarray's CF
     decoding treats the variable as ambiguous and masks *every* value to NaN
     (``SerializationWarning: variable 'x' has multiple fill values ...``) --
-    reproducible via ``xr.open_dataset(..., engine="kerchunk")``, which is
-    what ``get_dataset()`` uses for grid fetching. Classic kerchunk avoids
-    this by setting the zarr ``fill_value`` to match the CF attribute
-    directly, so do the same here. Note ``.zarray``/``.zattrs`` values in a
-    kerchunk refs dict are JSON-encoded strings, not nested dicts.
+    reproducible via ``xr.open_dataset(..., engine="kerchunk")`` (classic
+    kerchunk's xarray backend, formerly used for grid fetching before it
+    moved to VirtualiZarr too). Classic kerchunk avoids this by setting the
+    zarr ``fill_value`` to match the CF attribute directly, so do the same
+    here. Note ``.zarray``/``.zattrs`` values in a kerchunk refs dict are
+    JSON-encoded strings, not nested dicts.
 
     For some float-dtype variables (e.g. ``RAINRATE``), VirtualiZarr encodes
     ``_FillValue`` as a base64 string wrapping the raw little-endian double

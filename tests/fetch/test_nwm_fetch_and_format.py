@@ -260,9 +260,11 @@ def test_nwm30_grid_fetch_and_format_virtualizarr_built_reference(tmpdir):
     carries over the raw on-disk HDF5 storage fill value into the zarr
     array's ``fill_value``, while the CF ``_FillValue``/``missing_value``
     attribute says what actually represents missing data. When those two
-    disagree, ``get_dataset()`` (``xr.open_dataset(..., engine="kerchunk")``,
-    which grid fetching uses) treats the variable as ambiguous and silently
-    masks every value to NaN -- exercised here since grid fetching's
+    disagree, VirtualiZarr's dataset construction (which grid fetching's
+    ``open_kerchunk_dataset`` uses) treats the variable as ambiguous and
+    fails to decode it (or, historically, silently masked every value to
+    NaN under the classic kerchunk engine grid fetching used before it moved
+    to VirtualiZarr too) -- exercised here since grid fetching's
     ``kerchunk_method="local"``/``"auto"`` build their references via
     VirtualiZarr (``build_zarr_references_virtualizarr``), not classic
     kerchunk. The other grid tests above never catch this because they hand

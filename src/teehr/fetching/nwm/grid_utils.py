@@ -9,9 +9,12 @@ import pandas as pd
 import xarray as xr
 
 import teehr.models.pandera_dataframe_schemas as schemas
+from obspec_utils.registry import ObjectStoreRegistry
+
 from teehr.fetching.utils import (
     CPU_MAX_WORKERS,
-    get_dataset,
+    build_kerchunk_registry,
+    open_kerchunk_dataset,
     write_timeseries_parquet_file,
     parse_nwm_json_paths,
     format_nwm_configuration_metadata,
@@ -119,14 +122,22 @@ def process_single_nwm_grid_file(
     weights_filepath: str,
     ignore_missing_file: bool,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
+    registry: Optional[ObjectStoreRegistry] = None,
 ) -> pd.DataFrame:
     """Fetch data for a single reference file and compute weighted average."""
-    ds = get_dataset(
+    # get_nwm_grid_data's .isel(x=..., y=...) only needs positions, not real
+    # x/y coordinate values -- but xarray's .isel() still re-indexes the x/y
+    # coordinate variables themselves to keep them aligned with the sliced
+    # data, which fails if they're still virtual (unmaterialized) arrays, so
+    # x/y must be materialized here even though their values are unused.
+    ds = open_kerchunk_dataset(
         row.filepath,
-        ignore_missing_file
+        loadable_variables=[variable_name, "time", "x", "y"],
+        ignore_missing_file=ignore_missing_file,
+        registry=registry,
     )
-    if not ds:
+    if ds is None:
         return None
     yrmoday = row.day
     z_hour = row.z_hour[1:3]
@@ -213,6 +224,10 @@ def fetch_and_format_nwm_grids(
         nwm_version=nwm_version
     )
 
+    # Built once from every file in the run (not per group) so obstore's
+    # stores/connection pools are reused across all groups below.
+    registry = build_kerchunk_registry(json_paths)
+
     for gp in gps:
         _, df = gp
 
@@ -229,7 +244,8 @@ def fetch_and_format_nwm_grids(
                     zonal_weights_filepath,
                     ignore_missing_file,
                     location_id_prefix,
-                    variable_mapper
+                    variable_mapper,
+                    registry,
                 )
 
         async def _process_group() -> List[Optional[pd.DataFrame]]:

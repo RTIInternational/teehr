@@ -42,6 +42,7 @@ import xarray as xr
 import fsspec
 from pydantic import validate_call, InstanceOf
 from geopandas import GeoDataFrame
+from obspec_utils.registry import ObjectStoreRegistry
 
 from teehr.fetching.const import (
     VALUE_TIME,
@@ -66,8 +67,9 @@ from teehr.fetching.nwm.grid_utils import (
 )
 from teehr.fetching.utils import (
     CPU_MAX_WORKERS,
+    build_kerchunk_registry,
+    open_kerchunk_dataset,
     write_timeseries_parquet_file,
-    get_dataset,
     get_period_start_end_times,
     create_periods_based_on_chunksize,
     convert_value_from_kelvin_to_celsius,
@@ -187,18 +189,20 @@ def process_single_nwm21_retro_grid_file(
     ignore_missing_file: bool,
     nwm_version: str,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
+    registry: Optional[ObjectStoreRegistry] = None,
 ):
     """Compute the zonal mean for a single json reference file.
 
     Results are formatted to a dataframe using the TEEHR data model.
     """
-    ds = get_dataset(
+    ds = open_kerchunk_dataset(
         row.filepath,
-        ignore_missing_file,
-        target_options={'anon': True}
+        loadable_variables=[variable_name],
+        ignore_missing_file=ignore_missing_file,
+        registry=registry,
     )
-    if not ds:
+    if ds is None:
         return None
 
     nwm_units = ds[variable_name].attrs["units"]
@@ -347,6 +351,10 @@ def nwm_retro_grids_to_parquet(
         # Construct Kerchunk-json paths within the selected time
         nwm21_paths = construct_nwm21_json_paths(start_date, end_date)
 
+        # Built once from every file in the run (not per chunk) so obstore's
+        # stores/connection pools are reused across all chunks below.
+        registry = build_kerchunk_registry(nwm21_paths.filepath.tolist())
+
         # If specified, generate zonal weights file here.
         if calculate_zonal_weights:
             if zone_polygons is None:
@@ -357,10 +365,11 @@ def nwm_retro_grids_to_parquet(
                 )
 
             # Get a single timestep to use as a template grid.
-            template_ds = get_dataset(
+            template_ds = open_kerchunk_dataset(
                 nwm21_paths.filepath[0],
+                loadable_variables=[variable_name],
                 ignore_missing_file=False,
-                target_options={'anon': True}
+                registry=registry,
             )
 
             # Get spatial information from the zarr store. (limited data)
@@ -425,7 +434,8 @@ def nwm_retro_grids_to_parquet(
                         ignore_missing_file=False,
                         nwm_version=nwm_version,
                         location_id_prefix=location_id_prefix,
-                        variable_mapper=variable_mapper
+                        variable_mapper=variable_mapper,
+                        registry=registry,
                     )
 
             async def _process_chunk() -> List[Optional[pd.DataFrame]]:
