@@ -5,7 +5,10 @@ from dateutil.parser import parse
 import tempfile
 import pytest
 
+import numpy as np
+
 from teehr.fetching.utils import (
+    _feature_id_positions,
     build_zarr_references_virtualizarr,
     validate_operational_start_end_date,
     build_remote_nwm_filelist,
@@ -476,6 +479,44 @@ def test_reading_nwm_operational_from_gcs():
     assert "filepath" in nc_sdf.columns
 
 
+def test_feature_id_positions_sorted():
+    """Requested ids map to their positions, in the order requested."""
+    feature_ids = np.array([10, 20, 30, 40, 50])
+    positions = _feature_id_positions(feature_ids, np.array([40, 10, 30]))
+    assert np.array_equal(positions, [3, 0, 2])
+    assert np.array_equal(feature_ids[positions], [40, 10, 30])
+
+
+def test_feature_id_positions_unsorted_coordinate():
+    """An out-of-order coordinate still maps correctly rather than silently wrong."""
+    feature_ids = np.array([50, 10, 40, 30, 20])
+    positions = _feature_id_positions(feature_ids, np.array([30, 50]))
+    assert np.array_equal(feature_ids[positions], [30, 50])
+
+
+def test_feature_id_positions_duplicated_request():
+    """The same id can be requested more than once."""
+    feature_ids = np.array([10, 20, 30])
+    positions = _feature_id_positions(feature_ids, np.array([20, 20, 10]))
+    assert np.array_equal(feature_ids[positions], [20, 20, 10])
+
+
+def test_feature_id_positions_missing_id_raises():
+    """A location that isn't in the file is an error, not a silent drop."""
+    feature_ids = np.array([10, 20, 30])
+    with pytest.raises(ValueError, match="location_ids not found"):
+        _feature_id_positions(feature_ids, np.array([20, 999]))
+
+
+def test_feature_id_positions_beyond_range_raises():
+    """Ids past either end of the coordinate are reported, not clipped."""
+    feature_ids = np.array([10, 20, 30])
+    with pytest.raises(ValueError, match="location_ids not found"):
+        _feature_id_positions(feature_ids, np.array([1]))
+    with pytest.raises(ValueError, match="location_ids not found"):
+        _feature_id_positions(feature_ids, np.array([99]))
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
         test_parsing_remote_json_paths(tempdir)
@@ -496,3 +537,8 @@ if __name__ == "__main__":
     test_start_end_z_hours()
     test_nwm_configuration_metadata()
     test_reading_nwm_operational_from_gcs()
+    test_feature_id_positions_sorted()
+    test_feature_id_positions_unsorted_coordinate()
+    test_feature_id_positions_duplicated_request()
+    test_feature_id_positions_missing_id_raises()
+    test_feature_id_positions_beyond_range_raises()

@@ -740,7 +740,8 @@ class Fetch:
         ending_z_hour: Optional[int] = None,
         write_mode: str = "append",
         drop_duplicates: bool = True,
-        drop_overlapping_assimilation_values: Optional[bool] = True
+        drop_overlapping_assimilation_values: Optional[bool] = True,
+        chunk_workers: Optional[int] = None
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -853,6 +854,11 @@ class Fetch:
             keeping those with the most recent reference_time. In this case, all
             reference_time values are set to None. If False, overlapping values are
             kept and reference_time is retained.
+        chunk_workers : Optional[int]
+            Number of worker processes used to process chunks of files.
+            Default is 1, which processes them one at a time. Likely only
+            worth raising when fetching a long time period on a machine with
+            many cores.
 
 
 
@@ -963,7 +969,8 @@ class Fetch:
             timeseries_type=timeseries_type,
             starting_z_hour=starting_z_hour,
             ending_z_hour=ending_z_hour,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
+            chunk_workers=chunk_workers
         )
 
         if (

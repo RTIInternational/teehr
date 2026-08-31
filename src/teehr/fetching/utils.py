@@ -8,6 +8,7 @@ from functools import lru_cache
 import asyncio
 import base64
 import logging
+import os
 import re
 import json
 import struct
@@ -31,7 +32,7 @@ from teehr.evaluation.write import Write as writer
 from teehr.utils.concurrency import (
     gather_bounded,
     map_blocking,
-    resolve,
+    resolve_budget,
     run_in_executor,
     run_sync,
     thread_pool,
@@ -64,6 +65,7 @@ TZ_PATTERN = re.compile(r't[0-9]+z')
 DAY_PATTERN = re.compile(r'nwm.[0-9]+')
 
 logger = logging.getLogger(__name__)
+
 
 def start_on_z_hour(
     start_z_hour: int,
@@ -282,8 +284,6 @@ def generate_json_paths(
     gcs_component_paths: List[str],
     json_dir: str,
     ignore_missing_file: bool,
-    io_concurrency: Optional[int] = None,
-    parse_workers: Optional[int] = None,
 ) -> List[str]:
     """Generate file paths to Kerchunk reference json files.
 
@@ -298,10 +298,6 @@ def generate_json_paths(
     ignore_missing_file : bool
         Flag specifying whether or not to fail if a missing
         NWM file is encountered.
-    io_concurrency : Optional[int]
-        Checks in flight at once. See :mod:`teehr.utils.concurrency`.
-    parse_workers : Optional[int]
-        References built at once. See :mod:`teehr.utils.concurrency`.
 
     Returns
     -------
@@ -316,13 +312,12 @@ def generate_json_paths(
             gcs_component_paths,
             json_dir,
             ignore_missing_file,
-            parse_workers,
         )
 
     elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = check_if_files_exist(s3_path_list, io_concurrency)
+        file_check_output = check_if_files_exist(s3_path_list)
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -333,7 +328,7 @@ def generate_json_paths(
     elif kerchunk_method == SupportedKerchunkMethod.auto:
         # Use whatever pre-builts exist, and create the missing
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = check_if_files_exist(s3_path_list, io_concurrency)
+        file_check_output = check_if_files_exist(s3_path_list)
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -351,7 +346,6 @@ def generate_json_paths(
                     missing_files,
                     json_dir,
                     ignore_missing_file,
-                    parse_workers,
                 )
             )
 
@@ -371,6 +365,41 @@ def _drop_nan_values(
         if df.index.size == 0:
             return None
     return df
+
+
+def _write_parquet_atomically(
+    df: pd.DataFrame,
+    filepath: Path,
+    write_schema: pa.Schema,
+) -> None:
+    """Write a cache file so a partial one can never be left behind.
+
+    Writing straight to ``filepath`` means an interruption -- a cancelled
+    chunk, an OOM kill, a Ctrl-C -- leaves a truncated parquet file there. A
+    later run would then skip it as already written and fail to read it, or
+    quietly load partial data. Writing beside it and renaming into place makes
+    the file appear complete or not at all, since rename is atomic within a
+    directory.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Validated data to write.
+    filepath : Path
+        Final destination.
+    write_schema : pa.Schema
+        Arrow schema to write with.
+    """
+    tmp = filepath.with_name(f".{filepath.name}.{os.getpid()}.tmp")
+    try:
+        writer.to_cache(
+            source_data=df,
+            cache_filepath=tmp,
+            write_schema=write_schema,
+        )
+        os.replace(tmp, filepath)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def write_timeseries_parquet_file(
@@ -443,24 +472,17 @@ def write_timeseries_parquet_file(
         )
         return None
 
-    if not filepath.is_file():
-        writer.to_cache(
-            source_data=validated_df,
-            cache_filepath=filepath,
-            write_schema=write_schema
-        )
-    elif filepath.is_file() and overwrite_output:
-        logger.info(f"Overwriting {filepath.name}")
-        writer.to_cache(
-            source_data=validated_df,
-            cache_filepath=filepath,
-            write_schema=write_schema
-        )
-    elif filepath.is_file() and not overwrite_output:
+    if filepath.is_file() and not overwrite_output:
         logger.info(
             f"{filepath.name} already exists and overwrite_output=False;"
             " skipping"
         )
+        return filepath
+
+    if filepath.is_file():
+        logger.info(f"Overwriting {filepath.name}")
+
+    _write_parquet_atomically(validated_df, filepath, write_schema)
 
     return filepath
 
@@ -472,7 +494,6 @@ def list_to_np(lst):
 
 async def _check_if_files_exist_async(
     file_path_list: List[str],
-    io_concurrency: Optional[int] = None,
 ) -> Dict[str, bool]:
     """Async implementation backing :func:`check_if_files_exist`."""
     stores: Dict[str, object] = {}
@@ -495,25 +516,23 @@ async def _check_if_files_exist_async(
             return path, False
 
     results = await gather_bounded(
-        _check, file_path_list, limit=resolve(io=io_concurrency).io
+        _check, file_path_list, limit=resolve_budget().io
     )
     return dict(results)
 
 
-def check_if_files_exist(
-    file_path_list: List[str],
-    io_concurrency: Optional[int] = None,
-) -> Dict[str, bool]:
+def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
     """Check for existence of S3 files.
+
+    How many checks run at once comes from
+    :mod:`teehr.utils.concurrency`.
 
     Parameters
     ----------
     file_path_list : List[str]
         Remote paths to check.
-    io_concurrency : Optional[int]
-        Checks in flight at once. See :mod:`teehr.utils.concurrency`.
     """
-    return run_sync(_check_if_files_exist_async(file_path_list, io_concurrency))
+    return run_sync(_check_if_files_exist_async(file_path_list))
 
 
 def _json_path_to_url(path: str) -> str:
@@ -676,20 +695,80 @@ def _fix_kerchunk_fill_values(refs: Dict) -> Dict:
     return refs
 
 
-async def _open_kerchunk_manifest_store(
-    url: str,
-    registry: ObjectStoreRegistry,
-):
-    """Parse a single kerchunk reference JSON into a VirtualiZarr ManifestStore."""
+async def _download_kerchunk_refs(url: str, registry: ObjectStoreRegistry) -> bytes:
+    """Download a single kerchunk reference JSON."""
     filepath = validate_and_normalize_path_to_uri(url, fs_root=Path.cwd().as_uri())
     store, path_after_prefix = registry.resolve(filepath)
     resp = await store.get_async(path_after_prefix)
-    content = memoryview(await resp.buffer_async()).tobytes()
+    return memoryview(await resp.buffer_async()).tobytes()
+
+
+def _feature_id_positions(
+    feature_ids: np.ndarray,
+    location_ids: np.ndarray,
+) -> np.ndarray:
+    """Find where each requested location sits in a file's feature_id coordinate.
+
+    Selecting by position (``.isel``) rather than by label (``.sel``) avoids
+    building a pandas index over every feature in the file -- 2.7M of them for
+    CONUS -- once per file, which dominated the cost of reading a chunk.
+
+    Parameters
+    ----------
+    feature_ids : np.ndarray
+        The file's full feature_id coordinate.
+    location_ids : np.ndarray
+        Requested NWM feature ids.
+
+    Returns
+    -------
+    np.ndarray
+        Positions into ``feature_ids``, in the order of ``location_ids``.
+
+    Raises
+    ------
+    ValueError
+        If any requested id is not in the file.
+    """
+    feature_ids = np.asarray(feature_ids).astype(np.int64, copy=False)
+    location_ids = np.asarray(location_ids).astype(np.int64, copy=False)
+
+    # NWM output happens to be sorted, but don't rely on it: an unsorted file
+    # would otherwise map to the wrong rows rather than fail.
+    sorter = None
+    if not np.all(feature_ids[:-1] <= feature_ids[1:]):
+        sorter = np.argsort(feature_ids)
+
+    positions = np.searchsorted(feature_ids, location_ids, sorter=sorter)
+    positions = np.clip(positions, 0, feature_ids.size - 1)
+    if sorter is not None:
+        positions = sorter[positions]
+
+    found = feature_ids[positions] == location_ids
+    if not found.all():
+        missing = location_ids[~found]
+        raise ValueError(
+            f"{missing.size} of {len(location_ids)} location_ids not found in "
+            f"the NWM output: {missing[:10].tolist()}"
+        )
+    return positions
+
+
+def _manifest_store_from_refs(
+    content: bytes,
+    registry: ObjectStoreRegistry,
+) -> ManifestStore:
+    """Turn a downloaded kerchunk reference JSON into a ManifestStore.
+
+    Blocking and CPU-bound -- these references run to tens of MB, so this must
+    not run on the event loop. VirtualiZarr's own ``KerchunkJSONParser`` covers
+    the same ground but can't expand the ``{{u}}`` templates the pre-built
+    community references use, hence :func:`_resolve_kerchunk_templates`.
+    """
     refs = ujson.loads(content)
     refs = _resolve_kerchunk_templates(refs)
     refs = _fix_kerchunk_fill_values(refs)
-    manifestgroup = manifestgroup_from_kerchunk_refs(refs)
-    return ManifestStore(group=manifestgroup, registry=registry)
+    return ManifestStore(group=manifestgroup_from_kerchunk_refs(refs), registry=registry)
 
 
 async def _open_ref_virtualizarr(
@@ -702,45 +781,43 @@ async def _open_ref_virtualizarr(
 ) -> Optional[xr.Dataset]:
     """Open a single kerchunk reference via VirtualiZarr and subset it to ``location_ids``.
 
-    Only ``variable_name`` (plus the coordinate variables needed to index it) is
-    materialized; all other data variables in the file are left virtual and dropped.
-    ``location_ids`` selection happens immediately after materialization, so a full
-    per-file array (e.g. every NWM feature_id) is never held in memory once this
-    function returns—only the handful of requested locations are.
+    Only ``variable_name`` and the coordinates needed to index it are
+    materialized; every other data variable stays virtual and is dropped, and
+    the requested locations are selected immediately, so a full per-file array
+    (2.7M values for CONUS) is never held once this returns.
 
-    The reference JSON is downloaded on this coroutine; the parsing that
-    follows is blocking, so it runs in ``executor`` instead of on the event
-    loop.
+    Only the download happens on this coroutine. Parsing the reference and
+    reading the data are both blocking and CPU-heavy -- these JSONs run to tens
+    of MB -- so they run in ``executor``, leaving the loop free to keep other
+    downloads moving.
     """
     try:
-        manifest_store = await _open_kerchunk_manifest_store(url, registry)
+        content = await _download_kerchunk_refs(url, registry)
     except Exception as e:
         if not ignore_missing_file:
             raise
-        logger.warning(f"Could not open reference dataset: {e}")
+        logger.warning(f"Could not download reference file: {e}")
         return None
 
     def _materialize() -> xr.Dataset:
-        # Cheap pass: only default (dimension) coordinate variables get materialized here.
-        probe_ds = manifest_store.to_virtual_dataset()
-        loadable_variables = [variable_name, *probe_ds.coords.keys()]
+        manifest_store = _manifest_store_from_refs(content, registry)
+        # reference_time is deliberately not loaded: nothing downstream reads
+        # it (reference times come from the file path), and it is another
+        # full-width array per file.
         ds = manifest_store.to_virtual_dataset(
-            loadable_variables=loadable_variables,
+            loadable_variables=[variable_name, "time", "feature_id"],
             decode_times=True,
         )
         keep_vars = [variable_name]
         if "time" in ds.coords:
             keep_vars.append("time")
         ds = ds[keep_vars]
-        try:
-            return ds.sel(feature_id=location_ids)
-        except KeyError as e:
-            missing = np.setdiff1d(location_ids, ds.feature_id.values.astype(int))
-            raise ValueError(
-                f"{missing.size} of {len(location_ids)} location_ids not found in "
-                f"the NWM output: {missing[:10].tolist()}"
-            ) from e
+        return ds.isel(
+            feature_id=_feature_id_positions(ds.feature_id.values, location_ids)
+        )
 
+    # Not guarded by ignore_missing_file: a location_id that isn't in the file
+    # is a bad request, not a missing file, and must not be skipped silently.
     return await run_in_executor(_materialize, executor)
 
 
@@ -752,28 +829,33 @@ async def _open_kerchunk_dataset_async(
 ) -> Optional[xr.Dataset]:
     """Open a single kerchunk reference via VirtualiZarr, materializing ``loadable_variables``.
 
-    Unlike :func:`_open_ref_virtualizarr` (point fetching's ``location_ids``
-    label-based subsetting via ``.sel``), no selection is applied here --
-    callers needing a subset (e.g. grid fetching's row/col slicing via
-    ``.isel``, which only needs positions, not coordinate values) do so
-    themselves afterward.
+    Unlike :func:`_open_ref_virtualizarr` (point fetching, which subsets to
+    ``location_ids``), no selection is applied here -- callers needing a subset
+    (e.g. grid fetching's row/col slicing) do so themselves afterward.
     """
     try:
-        manifest_store = await _open_kerchunk_manifest_store(url, registry)
+        content = await _download_kerchunk_refs(url, registry)
     except Exception as e:
         if not ignore_missing_file:
             raise
-        logger.warning(f"Could not open reference dataset: {e}")
+        logger.warning(f"Could not download reference file: {e}")
         return None
 
     def _materialize() -> xr.Dataset:
+        manifest_store = _manifest_store_from_refs(content, registry)
         ds = manifest_store.to_virtual_dataset(
             loadable_variables=loadable_variables,
             decode_times=True,
         )
         return ds[[v for v in loadable_variables if v in ds.variables]]
 
-    return await asyncio.to_thread(_materialize)
+    try:
+        return await asyncio.to_thread(_materialize)
+    except Exception as e:
+        if not ignore_missing_file:
+            raise
+        logger.warning(f"Could not open reference dataset: {e}")
+        return None
 
 
 def open_kerchunk_dataset(
@@ -825,11 +907,14 @@ async def _combine_and_open_kerchunk_refs_async(
     ignore_missing_file: bool = True,
     concat_dims: Optional[List[str]] = ["time"],
     registry: Optional[ObjectStoreRegistry] = None,
-    io_concurrency: Optional[int] = None,
-    parse_workers: Optional[int] = None,
+    max_concurrent_files: Optional[int] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Async implementation backing :func:`combine_and_open_kerchunk_refs`."""
-    logger.info("Combining and opening kerchunk reference files.")
+    # Debug, not info: this runs once per chunk, and the caller is better
+    # placed to report progress across the whole run.
+    logger.debug(
+        f"Combining and opening {len(json_paths)} virtualized reference files."
+    )
     if not json_paths:
         raise FileNotFoundError("No NWM reference files were provided.")
 
@@ -839,7 +924,7 @@ async def _combine_and_open_kerchunk_refs_async(
 
     # Two budgets: many references download at once (network waits), while
     # fewer are parsed at once (CPU work, and h5py mostly serializes it).
-    budget = resolve(io=io_concurrency, cpu=parse_workers)
+    budget = resolve_budget(io=max_concurrent_files)
 
     with thread_pool(budget.cpu, len(urls)) as executor:
         datasets = await gather_bounded(
@@ -870,8 +955,7 @@ def combine_and_open_kerchunk_refs(
     concat_dims: Optional[List[str]] = ["time"],
     storage_options: Optional[Dict] = {},
     registry: Optional[ObjectStoreRegistry] = None,
-    io_concurrency: Optional[int] = None,
-    parse_workers: Optional[int] = None,
+    max_concurrent_files: Optional[int] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Combine multiple kerchunk reference files into a single xarray Dataset.
 
@@ -907,10 +991,10 @@ def combine_and_open_kerchunk_refs(
         build one registry up front and pass it to every call, so obstore's
         stores/connection pools are reused across the whole run instead of
         being rebuilt per chunk. Built fresh from ``json_paths`` if omitted.
-    io_concurrency : Optional[int], optional
-        References downloaded at once. See :mod:`teehr.utils.concurrency`.
-    parse_workers : Optional[int], optional
-        References parsed at once. See :mod:`teehr.utils.concurrency`.
+    max_concurrent_files : Optional[int], optional
+        How many of ``json_paths`` to read at once. Defaults to the
+        process-wide budget -- the same number ``set_concurrency(io=...)``
+        sets; divide it among callers when several run at the same time.
 
     Returns
     -------
@@ -928,8 +1012,7 @@ def combine_and_open_kerchunk_refs(
             ignore_missing_file,
             concat_dims,
             registry,
-            io_concurrency,
-            parse_workers,
+            max_concurrent_files,
         )
     )
 
@@ -954,7 +1037,7 @@ def _fix_scalar_chunk_keys(refs: Dict) -> Dict:
     (e.g. a scalar ``crs`` grid-mapping variable gets the ref key ``"crs/"``).
     But VirtualiZarr's own kerchunk-JSON reader/translator
     (``manifestgroup_from_kerchunk_refs``, used by
-    ``_open_kerchunk_manifest_store``) can't parse that back
+    ``_manifest_store_from_refs``) can't parse that back
     (``ValueError: Invalid format for chunk key: ''``). Classic kerchunk
     (and community pre-built NWM references) instead use ``"0"`` for a
     scalar array's chunk key, which VirtualiZarr's reader handles fine, so
@@ -1079,7 +1162,6 @@ async def _build_zarr_references_virtualizarr_async(
     remote_paths: List[str],
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
-    parse_workers: Optional[int] = None,
 ) -> list[str]:
     """Async implementation backing :func:`build_zarr_references_virtualizarr`."""
     logger.debug("Building zarr references via VirtualiZarr.")
@@ -1102,7 +1184,7 @@ async def _build_zarr_references_virtualizarr_async(
     if len(missing_paths) == 0:
         return sorted(existing_jsons)
 
-    budget = resolve(cpu=parse_workers)
+    budget = resolve_budget()
     processes = (
         budget.processes
         if use_process_pool(len(missing_paths), budget.processes)
@@ -1137,7 +1219,6 @@ def build_zarr_references_virtualizarr(
     remote_paths: List[str],
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
-    parse_workers: Optional[int] = None,
 ) -> list[str]:
     """Build the single-file zarr JSON reference files using VirtualiZarr.
 
@@ -1157,8 +1238,6 @@ def build_zarr_references_virtualizarr(
         Local directory for caching json files.
     ignore_missing_file : bool
         Whether to skip or raise on missing/corrupt files.
-    parse_workers : Optional[int]
-        References built at once. See :mod:`teehr.utils.concurrency`.
 
     Returns
     -------
@@ -1167,7 +1246,7 @@ def build_zarr_references_virtualizarr(
     """
     return run_sync(
         _build_zarr_references_virtualizarr_async(
-            remote_paths, json_dir, ignore_missing_file, parse_workers
+            remote_paths, json_dir, ignore_missing_file
         )
     )
 

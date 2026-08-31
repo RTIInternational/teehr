@@ -20,7 +20,7 @@ from teehr.fetching.utils import (
     format_nwm_configuration_metadata,
     convert_value_from_kelvin_to_celsius
 )
-from teehr.utils.concurrency import resolve, run_concurrent_map
+from teehr.utils.concurrency import resolve_budget, run_concurrent_map
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
@@ -248,7 +248,7 @@ def fetch_and_format_nwm_grids(
                 registry=registry,
             ),
             rows,
-            resolve().cpu,
+            resolve_budget().cpu,
         )
 
         output = [df for df in output if df is not None]

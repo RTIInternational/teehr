@@ -14,23 +14,22 @@ from teehr.utils.concurrency import (
     MAX_IO_CONCURRENCY,
     MAX_CPU_WORKERS,
     available_cpus,
-    get_concurrency,
+    available_memory,
     reset_concurrency,
-    resolve,
+    resolve_budget,
     resolve_io_concurrency,
     resolve_cpu_processes,
     resolve_cpu_workers,
     set_concurrency,
     _cgroup_cpu_quota,
+    _cgroup_memory_limit,
     _has_main_guard,
     use_process_pool,
 )
 
 ENV_VARS = [
     "TEEHR_IO_CONCURRENCY",
-    "TEEHR_IO_MAX_WORKERS",
     "TEEHR_CPU_WORKERS",
-    "TEEHR_CPU_MAX_WORKERS",
     "TEEHR_PROCESS_MIN_ITEMS",
     "TEEHR_MAX_PROCESSES",
 ]
@@ -38,19 +37,25 @@ ENV_VARS = [
 
 @pytest.fixture(autouse=True)
 def clean_concurrency_state(monkeypatch):
-    """Keep per-process concurrency settings from leaking between tests."""
+    """Keep per-process concurrency settings from leaking between tests.
+
+    The spawn-safety answer is cached, and a cached value survives monkeypatch
+    undoing whatever made it, so clear it too.
+    """
     for name in ENV_VARS:
         monkeypatch.delenv(name, raising=False)
     reset_concurrency()
+    concurrency.main_module_is_spawn_safe.cache_clear()
     yield
     reset_concurrency()
+    concurrency.main_module_is_spawn_safe.cache_clear()
 
 
 def test_concurrency_defaults():
     """Defaults are used when nothing is set."""
     assert resolve_io_concurrency() == DEFAULT_IO_CONCURRENCY
     assert resolve_cpu_workers() == available_cpus()
-    assert get_concurrency() == resolve()
+    assert resolve_budget().cpu == available_cpus()
 
 
 def test_available_cpus_is_positive():
@@ -92,21 +97,6 @@ def test_env_vars_are_read_at_call_time(monkeypatch):
 
     monkeypatch.setenv("TEEHR_IO_CONCURRENCY", "20")
     assert resolve_io_concurrency() == 20
-
-
-def test_legacy_env_var_names_still_work(monkeypatch):
-    """The pre-rename environment variables are still honored."""
-    monkeypatch.setenv("TEEHR_IO_MAX_WORKERS", "7")
-    monkeypatch.setenv("TEEHR_CPU_MAX_WORKERS", "5")
-    assert resolve_io_concurrency() == 7
-    assert resolve_cpu_workers() == 5
-
-
-def test_new_env_var_wins_over_legacy(monkeypatch):
-    """The current name takes precedence over its legacy alias."""
-    monkeypatch.setenv("TEEHR_IO_CONCURRENCY", "9")
-    monkeypatch.setenv("TEEHR_IO_MAX_WORKERS", "7")
-    assert resolve_io_concurrency() == 9
 
 
 def test_unparseable_env_var_falls_back(monkeypatch):
@@ -154,11 +144,71 @@ def test_values_are_clamped_to_supported_range():
     assert resolve_cpu_workers(10_000) == MAX_CPU_WORKERS
 
 
-def test_process_count_is_capped_below_worker_count():
+def test_process_count_is_capped_below_worker_count(monkeypatch):
     """Processes get their own, lower ceiling because they cost memory."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 512 * 1024**3)
     set_concurrency(cpu=MAX_CPU_WORKERS)
     assert resolve_cpu_workers() == MAX_CPU_WORKERS
     assert resolve_cpu_processes() == DEFAULT_MAX_PROCESSES
+
+
+def test_memory_limits_the_process_count(monkeypatch):
+    """A machine short on memory runs fewer workers, not the full CPU count."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 4 * 1024**3)
+    set_concurrency(cpu=32)
+    # 4GB at 1.4GB budgeted per worker -> 2
+    assert resolve_cpu_processes() == 2
+
+
+def test_bigger_machine_gets_more_processes(monkeypatch):
+    """The large notebook profile should use more workers than the small one."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 127 * 1024**3)
+    set_concurrency(cpu=16)
+    large = resolve_cpu_processes()
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 32 * 1024**3)
+    set_concurrency(cpu=4)
+    small = resolve_cpu_processes()
+    assert large == 16 and small == 4
+
+
+def test_memory_cap_ignored_when_overridden(monkeypatch):
+    """An explicit TEEHR_MAX_PROCESSES wins over the memory estimate."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 2 * 1024**3)
+    monkeypatch.setenv("TEEHR_MAX_PROCESSES", "12")
+    set_concurrency(cpu=32)
+    assert resolve_cpu_processes() == 12
+
+
+def test_cgroup_v2_memory_limit(tmp_path):
+    """A cgroup v2 memory limit is read in bytes."""
+    (tmp_path / "memory.max").write_text("34359738368\n")
+    assert _cgroup_memory_limit(tmp_path) == 34359738368
+
+
+def test_cgroup_v2_memory_unlimited(tmp_path):
+    """"max" means no limit."""
+    (tmp_path / "memory.max").write_text("max\n")
+    assert _cgroup_memory_limit(tmp_path) is None
+
+
+def test_cgroup_v1_memory_limit(tmp_path):
+    """cgroup v1 is read when no v2 file exists."""
+    (tmp_path / "memory").mkdir()
+    (tmp_path / "memory" / "memory.limit_in_bytes").write_text("8589934592")
+    assert _cgroup_memory_limit(tmp_path) == 8589934592
+
+
+def test_cgroup_v1_memory_sentinel_is_unlimited(tmp_path):
+    """v1 signals "unlimited" with a huge number rather than a word."""
+    (tmp_path / "memory").mkdir()
+    (tmp_path / "memory" / "memory.limit_in_bytes").write_text(str(2**63 - 1))
+    assert _cgroup_memory_limit(tmp_path) is None
+
+
+def test_available_memory_is_positive_or_unknown():
+    """Whatever this machine reports must be usable or absent."""
+    memory = available_memory()
+    assert memory is None or memory > 0
 
 
 def test_process_count_never_exceeds_worker_count():
@@ -204,7 +254,7 @@ def test_unreadable_script_is_treated_as_unguarded(tmp_path):
 
 def test_module_run_main_is_spawn_safe(monkeypatch):
     """`python -m pkg` re-imports by name, so there is nothing to re-run."""
-    monkeypatch.setattr(concurrency, "_MAIN_IS_SPAWN_SAFE", None)
+    concurrency.main_module_is_spawn_safe.cache_clear()
     main = types.SimpleNamespace(__spec__=object(), __file__="/tmp/whatever.py")
     monkeypatch.setitem(sys.modules, "__main__", main)
     assert concurrency.main_module_is_spawn_safe() is True
@@ -212,7 +262,7 @@ def test_module_run_main_is_spawn_safe(monkeypatch):
 
 def test_interactive_main_is_spawn_safe(monkeypatch):
     """A notebook or REPL has no script behind __main__."""
-    monkeypatch.setattr(concurrency, "_MAIN_IS_SPAWN_SAFE", None)
+    concurrency.main_module_is_spawn_safe.cache_clear()
     main = types.SimpleNamespace(__spec__=None)
     monkeypatch.setitem(sys.modules, "__main__", main)
     assert concurrency.main_module_is_spawn_safe() is True
@@ -222,7 +272,7 @@ def test_unguarded_main_is_not_spawn_safe(monkeypatch, tmp_path):
     """An unguarded script must not start workers that would re-run it."""
     script = tmp_path / "unguarded.py"
     script.write_text("print('side effect')\n")
-    monkeypatch.setattr(concurrency, "_MAIN_IS_SPAWN_SAFE", None)
+    concurrency.main_module_is_spawn_safe.cache_clear()
     main = types.SimpleNamespace(__spec__=None, __file__=str(script))
     monkeypatch.setitem(sys.modules, "__main__", main)
     assert concurrency.main_module_is_spawn_safe() is False
@@ -232,7 +282,7 @@ def test_process_pool_refused_for_unguarded_main(monkeypatch, tmp_path):
     """The gate declines processes rather than re-running the caller."""
     script = tmp_path / "unguarded.py"
     script.write_text("print('side effect')\n")
-    monkeypatch.setattr(concurrency, "_MAIN_IS_SPAWN_SAFE", None)
+    concurrency.main_module_is_spawn_safe.cache_clear()
     main = types.SimpleNamespace(__spec__=None, __file__=str(script))
     monkeypatch.setitem(sys.modules, "__main__", main)
     assert use_process_pool(n_items=64, processes=8) is False
@@ -271,12 +321,12 @@ def test_building_references_in_processes(tmpdir, monkeypatch, caplog):
         "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f002.alaska.nc",  # noqa
     ]
 
+    set_concurrency(cpu=2)
     with caplog.at_level("INFO", logger="teehr"):
         built_files = build_zarr_references_virtualizarr(
             remote_paths=remote_paths,
             json_dir=tmpdir,
             ignore_missing_file=False,
-            parse_workers=2,
         )
 
     assert len(built_files) == 2
@@ -307,3 +357,16 @@ def test_already_built_references_are_reused(tmpdir):
 
     assert second == first
     assert Path(second[0]).stat().st_mtime_ns == mtime
+
+
+def test_spawn_safety_answer_is_cached(monkeypatch, tmp_path):
+    """The script is parsed once, not on every call."""
+    script = tmp_path / "guarded.py"
+    script.write_text("if __name__ == '__main__':\n    pass\n")
+    concurrency.main_module_is_spawn_safe.cache_clear()
+    main = types.SimpleNamespace(__spec__=None, __file__=str(script))
+    monkeypatch.setitem(sys.modules, "__main__", main)
+
+    assert concurrency.main_module_is_spawn_safe() is True
+    script.unlink()  # gone, but the cached answer stands
+    assert concurrency.main_module_is_spawn_safe() is True

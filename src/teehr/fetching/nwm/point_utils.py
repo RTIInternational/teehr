@@ -19,6 +19,12 @@ from teehr.fetching.utils import (
     build_kerchunk_registry,
 )
 from teehr.fetching.models.utils import TimeseriesTypeEnum
+from teehr.utils.concurrency import (
+    map_blocking,
+    resolve_budget,
+    run_sync,
+    use_process_pool,
+)
 from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,
@@ -47,7 +53,7 @@ def process_chunk_of_files(
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
     registry: Optional[ObjectStoreRegistry] = None,
-    io_concurrency: Optional[int] = None,
+    max_concurrent_files: Optional[int] = None,
 ) -> Optional[Path]:
     """Assemble a table for a chunk of NWM files.
 
@@ -56,10 +62,11 @@ def process_chunk_of_files(
     run, so obstore's stores/connection pools are reused across chunks rather
     than rebuilt per chunk. Built fresh from this chunk alone if omitted.
 
-    ``io_concurrency`` bounds how many reference files this chunk reads at
-    once, defaulting to the process-wide setting. Callers running several
-    chunks in parallel (e.g. mapped Prefect tasks) should divide the budget
-    among them, since the two levels of concurrency multiply.
+    ``max_concurrent_files`` bounds how many of this chunk's reference files
+    are read at once. It defaults to the process-wide budget -- the same number
+    ``set_concurrency(io=...)`` sets. Callers running several chunks at the
+    same time (mapped Prefect tasks, say) should divide that budget among
+    them, since the two levels multiply.
 
     Returns the path to the parquet file written for this chunk, or ``None``
     if the chunk produced no data.
@@ -93,7 +100,7 @@ def process_chunk_of_files(
         ignore_missing_file=ignore_missing_file,
         storage_options={"target_options": {"anon": True}},
         registry=registry,
-        io_concurrency=io_concurrency,
+        max_concurrent_files=max_concurrent_files,
     )
     df_valid = df_valid[read_mask].reset_index(drop=True)
 
@@ -235,14 +242,15 @@ def fetch_and_format_nwm_points(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-    io_concurrency: Optional[int] = None,
+    chunk_workers: Optional[int] = None,
 ) -> List[Path]:
     """Fetch NWM point data and save as parquet files.
 
-    Accepts a list of kerchunk reference file paths (S3/local .json, or local .parq)
-    as produced by ``generate_json_paths``. ``None`` entries are filtered out before
-    processing. Each chunk is combined into a single xarray Dataset via kerchunk.
-    Intended to be refactored to use VirtualiZarr in a future release.
+    Accepts reference file paths (local or S3 .json) as produced by
+    ``generate_json_paths``; ``None`` entries are filtered out first. Files are
+    grouped into chunks, and each chunk is read through VirtualiZarr into one
+    xarray Dataset, subset to ``location_ids``, and written as a single parquet
+    file.
 
     Parameters
     ----------
@@ -278,9 +286,11 @@ def fetch_and_format_nwm_points(
         The type of timeseries being processed.
     drop_overlapping_assimilation_values : bool
         Whether to drop assimilation values that overlap in value_time.
-    io_concurrency : Optional[int]
-        Maximum reference files read at once, per chunk. Defaults to the
-        process-wide setting (see ``teehr.fetching.utils.set_concurrency``).
+    chunk_workers : Optional[int]
+        Number of worker processes used to process chunks of files. Default is
+        1, which processes them one at a time. Likely only worth raising when
+        fetching a long time period on a machine with many cores. Ignored when
+        already running inside a worker process.
 
     Returns
     -------
@@ -294,32 +304,83 @@ def fetch_and_format_nwm_points(
 
     dfs = build_file_chunks(file_paths, process_by_z_hour, stepsize)
 
-    # Built once from every file in the run (not per chunk) so obstore's
-    # stores/connection pools are reused across all chunks below.
-    non_null_paths = [p for p in file_paths if p is not None]
-    registry = build_kerchunk_registry(non_null_paths)
+    budget = resolve_budget()
+    # Off by default: measured break-even is ~144 files and no better than
+    # sequential past it. Reading each chunk is already parallel across its
+    # files, and that work waits on the network rather than the GIL, so extra
+    # processes add startup and memory without adding throughput. Kept as an
+    # option because that balance depends on the machine and the data.
+    workers = chunk_workers if chunk_workers is not None else 1
+    n_files = int(sum(len(df) for df in dfs))
+    in_processes = (
+        workers > 1
+        and len(dfs) > 1
+        and use_process_pool(n_files, workers, min_items=2)
+    )
+    workers = min(workers, len(dfs)) if in_processes else 1
 
-    logger.info(f"Processing {len(dfs)} chunks of files for configuration: {configuration}, variable: {variable_name}.")
+    logger.info(
+        f"Processing {n_files} files in {len(dfs)} chunks for configuration:"
+        f" {configuration}, variable: {variable_name}"
+        f"{f' across {workers} processes' if in_processes else ''}."
+    )
 
-    output_paths = []
-    for df in dfs:
-        filepath = process_chunk_of_files(
-            df,
-            location_ids,
-            configuration,
-            variable_name,
-            output_parquet_dir,
-            process_by_z_hour,
-            ignore_missing_file,
-            overwrite_output,
-            nwm_version,
-            variable_mapper,
-            timeseries_type,
-            drop_overlapping_assimilation_values,
-            registry,
-            io_concurrency,
-        )
-        if filepath is not None:
+    if in_processes:
+        # Each worker builds its own registry (they can't share connection
+        # pools), and the io budget is split so the workers together stay
+        # within the same request budget one process would have used.
+        output_paths = run_sync(map_blocking(
+            process_chunk_of_files,
+            dfs,
+            workers=workers,
+            processes=workers,
+            args=(
+                location_ids,
+                configuration,
+                variable_name,
+                str(output_parquet_dir),
+                process_by_z_hour,
+                ignore_missing_file,
+                overwrite_output,
+                nwm_version,
+                variable_mapper,
+                timeseries_type,
+                drop_overlapping_assimilation_values,
+                None,
+                max(1, budget.io // workers),
+            ),
+        ))
+    else:
+        # Built once from every file in the run (not per chunk) so obstore's
+        # stores/connection pools are reused across all chunks below.
+        non_null_paths = [p for p in file_paths if p is not None]
+        registry = build_kerchunk_registry(non_null_paths)
+        output_paths = []
+        for number, df in enumerate(dfs, start=1):
+            filepath = process_chunk_of_files(
+                df,
+                location_ids,
+                configuration,
+                variable_name,
+                output_parquet_dir,
+                process_by_z_hour,
+                ignore_missing_file,
+                overwrite_output,
+                nwm_version,
+                variable_mapper,
+                timeseries_type,
+                drop_overlapping_assimilation_values,
+                registry,
+            )
+            logger.info(
+                f"Chunk {number} of {len(dfs)} ({len(df)} files) -> "
+                f"{Path(filepath).name if filepath is not None else 'no data'}"
+            )
             output_paths.append(filepath)
 
-    return output_paths
+    written = [path for path in output_paths if path is not None]
+    if in_processes:
+        # Worker logs don't reach this process, so report once at the end.
+        logger.info(f"Wrote {len(written)} files from {len(dfs)} chunks.")
+
+    return written

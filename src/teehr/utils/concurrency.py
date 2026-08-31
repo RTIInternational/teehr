@@ -7,35 +7,35 @@ Any job that touches many things has two limits worth keeping separate:
 * **CPU** -- work that mostly computes (parsing, regridding, statistics).
   Bounded by cores, and by the GIL when the work holds it.
 
-:func:`resolve` turns those into a :class:`ConcurrencyBudget` for one
+:func:`resolve_budget` turns those into a :class:`ConcurrencyBudget` for one
 operation; the helpers below do the running. Nothing here is specific to
 fetching -- any teehr code wanting parallelism can use it.
 
 Run a blocking function over many items::
 
-    from teehr.utils.concurrency import map_blocking, resolve
+    from teehr.utils.concurrency import map_blocking, resolve_budget
 
-    budget = resolve()
+    budget = resolve_budget()
     results = await map_blocking(convert_one, paths, workers=budget.cpu)
 
 The same thing from ordinary, non-async code::
 
     from functools import partial
-    from teehr.utils.concurrency import resolve, run_concurrent_map
+    from teehr.utils.concurrency import resolve_budget, run_concurrent_map
 
     results = run_concurrent_map(
-        partial(convert_one, out_dir=out), paths, resolve().cpu
+        partial(convert_one, out_dir=out), paths, resolve_budget().cpu
     )
 
 Run many coroutines, N at a time::
 
-    from teehr.utils.concurrency import gather_bounded, resolve
+    from teehr.utils.concurrency import gather_bounded, resolve_budget
 
-    rows = await gather_bounded(fetch_one, urls, limit=resolve().io)
+    rows = await gather_bounded(fetch_one, urls, limit=resolve_budget().io)
 
 Mix the two -- download many at once, parse only a few::
 
-    budget = resolve()
+    budget = resolve_budget()
     with thread_pool(budget.cpu, len(urls)) as pool:
         datasets = await gather_bounded(
             lambda url: download_and_parse(url, pool), urls, limit=budget.io
@@ -45,7 +45,7 @@ For CPU-heavy work, worker processes beat threads because they don't share a
 GIL -- but each costs ~3s to start and ~500MB, so it only pays off on big
 jobs. Let :func:`use_process_pool` decide::
 
-    budget = resolve()
+    budget = resolve_budget()
     results = await map_blocking(
         parse_one, items, workers=budget.cpu,
         processes=budget.processes
@@ -74,6 +74,7 @@ from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from pickle import PicklingError
 from typing import Any, Callable, Coroutine, Iterable, List, Optional, TypeVar, Union
@@ -96,9 +97,14 @@ MAX_IO_CONCURRENCY = 256
 # Parsing is CPU work; it defaults to the cores this process can actually use.
 MAX_CPU_WORKERS = 64
 
-# Worker processes are capped lower than threads: each holds its own
-# interpreter and libraries, ~500MB. Raise with TEEHR_MAX_PROCESSES.
-DEFAULT_MAX_PROCESSES = 8
+# Worker processes are capped below the core count for two reasons: each holds
+# its own interpreter and libraries (~500MB measured, so the cap also follows
+# available memory), and throughput flattens out past roughly this many -- 16
+# workers measured only ~8-27% faster than 8. Raise with TEEHR_MAX_PROCESSES.
+DEFAULT_MAX_PROCESSES = 16
+# Budget per worker process: ~700MB measured, doubled because the parent holds
+# the combined result and the OS still needs page cache for the files read.
+MEMORY_PER_PROCESS = 1400 * 1024**2
 
 # Starting a worker costs ~3s (it has to import teehr), so processes only pay
 # off for bigger jobs. Measured break-even is ~24-32 files; below that they run
@@ -110,9 +116,6 @@ DEFAULT_PROCESS_MIN_ITEMS = 32
 # after `import teehr`.
 _io_concurrency: Optional[int] = None
 _cpu_workers: Optional[int] = None
-
-# Cached answer to "would worker processes re-run the caller's script?".
-_MAIN_IS_SPAWN_SAFE: Optional[bool] = None
 
 
 @dataclass(frozen=True)
@@ -163,6 +166,57 @@ def _cgroup_cpu_quota(root: Union[str, Path] = "/sys/fs/cgroup") -> Optional[int
     return None
 
 
+def _cgroup_memory_limit(
+    root: Union[str, Path] = "/sys/fs/cgroup",
+) -> Optional[int]:
+    """Return this cgroup's memory limit in bytes, or None if unlimited.
+
+    Parameters
+    ----------
+    root : str or Path
+        Root of the cgroup filesystem. Exposed for testing.
+    """
+    root = Path(root)
+    try:  # cgroup v2
+        raw = (root / "memory.max").read_text().strip()
+        return None if raw == "max" else int(raw)
+    except (OSError, ValueError):
+        pass
+    try:  # cgroup v1, which uses a huge sentinel rather than "max"
+        value = int((root / "memory" / "memory.limit_in_bytes").read_text())
+        if 0 < value < 2**62:
+            return value
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+def _meminfo_available() -> Optional[int]:
+    """Return MemAvailable in bytes, or None if it can't be read."""
+    try:
+        for line in Path("/proc/meminfo").read_text().splitlines():
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) * 1024
+    except (OSError, ValueError, IndexError):
+        pass
+    return None
+
+
+def available_memory() -> Optional[int]:
+    """Return the memory this process can expect to use, in bytes.
+
+    Takes the smaller of any cgroup limit and what the machine reports free,
+    so a container gets its own allowance rather than the host's. Returns None
+    when neither can be read (e.g. macOS), in which case callers should fall
+    back to bounding by CPU alone.
+    """
+    candidates = [
+        value for value in (_cgroup_memory_limit(), _meminfo_available())
+        if value
+    ]
+    return min(candidates) if candidates else None
+
+
 def available_cpus() -> int:
     """Return how many CPUs this process can really use.
 
@@ -190,31 +244,30 @@ def _clamp(value: int, lo: int, hi: int, name: str) -> int:
     return min(max(value, lo), hi)
 
 
-def _int_from_env(*names: str) -> Optional[int]:
-    """Return the first of ``names`` set to an integer in the environment."""
-    for name in names:
-        raw = os.environ.get(name)
-        if raw is None:
-            continue
-        try:
-            return int(raw)
-        except ValueError:
-            logger.warning(f"Ignoring {name}={raw!r}; expected an integer.")
-    return None
+def _int_from_env(name: str) -> Optional[int]:
+    """Return ``name`` from the environment as an integer, or None."""
+    raw = os.environ.get(name)
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        logger.warning(f"Ignoring {name}={raw!r}; expected an integer.")
+        return None
 
 
 def resolve_io_concurrency(override: Optional[int] = None) -> int:
     """Resolve how many network operations may be in flight.
 
     In order: ``override``, then :func:`set_concurrency`, then
-    ``TEEHR_IO_CONCURRENCY`` (or the older ``TEEHR_IO_MAX_WORKERS``), then
+    ``TEEHR_IO_CONCURRENCY``, then
     :data:`DEFAULT_IO_CONCURRENCY`.
     """
     value = override
     if value is None:
         value = _io_concurrency
     if value is None:
-        value = _int_from_env("TEEHR_IO_CONCURRENCY", "TEEHR_IO_MAX_WORKERS")
+        value = _int_from_env("TEEHR_IO_CONCURRENCY")
     if value is None:
         value = DEFAULT_IO_CONCURRENCY
     return _clamp(int(value), 1, MAX_IO_CONCURRENCY, "io_concurrency")
@@ -224,14 +277,14 @@ def resolve_cpu_workers(override: Optional[int] = None) -> int:
     """Resolve how many compute-bound calls may run at once.
 
     In order: ``override``, then :func:`set_concurrency`, then
-    ``TEEHR_CPU_WORKERS`` (or the older ``TEEHR_CPU_MAX_WORKERS``), then
+    ``TEEHR_CPU_WORKERS``, then
     :func:`available_cpus`.
     """
     value = override
     if value is None:
         value = _cpu_workers
     if value is None:
-        value = _int_from_env("TEEHR_CPU_WORKERS", "TEEHR_CPU_MAX_WORKERS")
+        value = _int_from_env("TEEHR_CPU_WORKERS")
     if value is None:
         value = available_cpus()
     return _clamp(int(value), 1, MAX_CPU_WORKERS, "cpu_workers")
@@ -240,8 +293,11 @@ def resolve_cpu_workers(override: Optional[int] = None) -> int:
 def resolve_cpu_processes(workers: Optional[int] = None) -> int:
     """Resolve how many of the CPU workers may be separate processes.
 
-    Never more than :func:`resolve_cpu_workers`, and capped again by
-    ``TEEHR_MAX_PROCESSES`` because processes cost ~500MB each.
+    Never more than :func:`resolve_cpu_workers`, and capped again by however
+    many :func:`available_memory` can hold at ~700MB apiece, then by
+    :data:`DEFAULT_MAX_PROCESSES`. So a bigger machine gets more workers
+    without anyone configuring it, and a memory-starved one gets fewer.
+    ``TEEHR_MAX_PROCESSES`` overrides the lot.
 
     Parameters
     ----------
@@ -252,10 +308,14 @@ def resolve_cpu_processes(workers: Optional[int] = None) -> int:
     ceiling = _int_from_env("TEEHR_MAX_PROCESSES")
     if ceiling is None:
         ceiling = DEFAULT_MAX_PROCESSES
+        memory = available_memory()
+        if memory:
+            # Scale down on a small machine rather than risking an OOM kill.
+            ceiling = min(ceiling, max(1, memory // MEMORY_PER_PROCESS))
     return max(1, min(workers, ceiling))
 
 
-def resolve(
+def resolve_budget(
     io: Optional[int] = None,
     cpu: Optional[int] = None,
 ) -> ConcurrencyBudget:
@@ -273,8 +333,8 @@ def resolve(
 
     Examples
     --------
-    >>> budget = resolve()          # process-wide defaults
-    >>> budget = resolve(io=8)      # ...but only 8 requests in flight
+    >>> budget = resolve_budget()          # process-wide defaults
+    >>> budget = resolve_budget(io=8)      # ...only 8 requests in flight
     """
     return ConcurrencyBudget(
         io=resolve_io_concurrency(io),
@@ -318,11 +378,6 @@ def reset_concurrency() -> None:
     _cpu_workers = None
 
 
-def get_concurrency() -> ConcurrencyBudget:
-    """Return the budget that would be used right now."""
-    return resolve()
-
-
 def _has_main_guard(path: Union[str, Path]) -> bool:
     """Whether a script keeps its work behind ``if __name__ == "__main__"``.
 
@@ -345,6 +400,7 @@ def _has_main_guard(path: Union[str, Path]) -> bool:
     )
 
 
+@lru_cache(maxsize=1)
 def main_module_is_spawn_safe() -> bool:
     """Whether starting worker processes would re-run the caller's own code.
 
@@ -354,33 +410,43 @@ def main_module_is_spawn_safe() -> bool:
     script it is not: the script would run again inside every worker. When that
     is the case teehr stays on threads and says so once.
     """
-    global _MAIN_IS_SPAWN_SAFE
-    if _MAIN_IS_SPAWN_SAFE is not None:
-        return _MAIN_IS_SPAWN_SAFE
-
     main = sys.modules.get("__main__")
     path = getattr(main, "__file__", None)
     if getattr(main, "__spec__", None) is not None or path is None:
-        _MAIN_IS_SPAWN_SAFE = True
-    else:
-        _MAIN_IS_SPAWN_SAFE = _has_main_guard(path)
-        if not _MAIN_IS_SPAWN_SAFE:
-            logger.info(
-                f"Using threads instead of worker processes: {path} has no"
-                " `if __name__ == \"__main__\":` guard, so workers would re-run"
-                " it. Add one to get the faster path."
-            )
-    return _MAIN_IS_SPAWN_SAFE
+        return True
+    if _has_main_guard(path):
+        return True
+    logger.info(
+        f"Using threads instead of worker processes: {path} has no"
+        " `if __name__ == \"__main__\":` guard, so workers would re-run it."
+        " Add one to get the faster path."
+    )
+    return False
 
 
-def use_process_pool(n_items: int, processes: int) -> bool:
+def in_worker_process() -> bool:
+    """Whether this code is already running inside a worker process.
+
+    Used to avoid nesting a pool inside a pool: if something above us -- an
+    orchestrator's process-based task runner, or another teehr pool -- already
+    put us in a worker, spawning more processes here multiplies the load
+    instead of dividing the work.
+    """
+    return multiprocessing.parent_process() is not None
+
+
+def use_process_pool(
+    n_items: int,
+    processes: int,
+    min_items: Optional[int] = None,
+) -> bool:
     """Whether a job this size is worth handing to worker processes.
 
-    Processes run compute-bound work roughly twice as fast as threads, but
-    each costs ~3s to start, so the trade only pays off above
-    :data:`DEFAULT_PROCESS_MIN_ITEMS` items -- a threshold calibrated for items
-    costing about a second each. Says no as well when workers would re-run the
-    caller's script (see :func:`main_module_is_spawn_safe`).
+    Processes run compute-bound work roughly twice as fast as threads, but each
+    costs ~3s to start, so the trade only pays off once there is enough work to
+    repay that. Says no as well when we are already inside a worker
+    (:func:`in_worker_process`), or when workers would re-run the caller's
+    script (:func:`main_module_is_spawn_safe`).
 
     Parameters
     ----------
@@ -388,13 +454,25 @@ def use_process_pool(n_items: int, processes: int) -> bool:
         How many items the job has.
     processes : int
         Worker processes available, from :attr:`ConcurrencyBudget.processes`.
+    min_items : Optional[int]
+        Fewest items worth starting processes for. Defaults to
+        ``TEEHR_PROCESS_MIN_ITEMS`` or :data:`DEFAULT_PROCESS_MIN_ITEMS`, which
+        is calibrated for items costing about a second each -- pass something
+        lower for chunkier work.
     """
     if processes < 2 or n_items < 2:
         return False
-    min_items = _int_from_env("TEEHR_PROCESS_MIN_ITEMS")
+    if min_items is None:
+        min_items = _int_from_env("TEEHR_PROCESS_MIN_ITEMS")
     if min_items is None:
         min_items = DEFAULT_PROCESS_MIN_ITEMS
     if n_items < min_items:
+        return False
+    if in_worker_process():
+        logger.debug(
+            "Already inside a worker process; leaving parallelism to whatever"
+            " started it."
+        )
         return False
     return main_module_is_spawn_safe()
 
@@ -545,7 +623,7 @@ async def map_blocking(
 
     Examples
     --------
-    >>> budget = resolve()
+    >>> budget = resolve_budget()
     >>> await map_blocking(
     ...     build_one, paths, workers=budget.cpu,
     ...     processes=budget.processes if use_process_pool(
@@ -575,12 +653,22 @@ async def map_blocking(
             logger.warning(f"Could not start worker processes ({e}); using threads.")
         else:
             try:
-                with pool:
-                    return await _run(pool)
+                result = await _run(pool)
             except (BrokenProcessPool, PicklingError) as e:
+                pool.shutdown(wait=False, cancel_futures=True)
                 logger.warning(
                     f"Worker processes were unusable ({e}); using threads."
                 )
+            except BaseException:
+                # Fail fast: drop queued work rather than making the caller
+                # wait out the rest of a job whose result they can't use.
+                # Items already running can't be interrupted, so this stops
+                # within one item per busy worker.
+                pool.shutdown(wait=False, cancel_futures=True)
+                raise
+            else:
+                pool.shutdown(wait=True)
+                return result
 
     with thread_pool(workers, len(items)) as pool:
         return await _run(pool)

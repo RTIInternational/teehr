@@ -59,7 +59,8 @@ def nwm_to_parquet(
     timeseries_type: TimeseriesTypeEnum = "secondary",
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
-    drop_overlapping_assimilation_values: Optional[bool] = True
+    drop_overlapping_assimilation_values: Optional[bool] = True,
+    chunk_workers: Optional[int] = None
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -172,6 +173,10 @@ def nwm_to_parquet(
         keeping those with the most recent reference_time. In this case, all
         reference_time values are set to None. If False, overlapping values are
         kept and reference_time is retained.
+    chunk_workers : Optional[int]
+        Number of worker processes used to process chunks of files. Default is
+        1, which processes them one at a time. Likely only worth raising when
+        fetching a long time period on a machine with many cores.
 
     Notes
     -----
@@ -367,4 +372,5 @@ def nwm_to_parquet(
             variable_mapper=variable_mapper,
             timeseries_type=timeseries_type,
             drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,
+            chunk_workers=chunk_workers,
         )

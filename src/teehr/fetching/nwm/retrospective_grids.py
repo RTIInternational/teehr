@@ -80,7 +80,7 @@ from teehr.fetching.nwm.retrospective_points import (
     validate_retrospective_start_end_date,
 )
 from teehr.utilities.generate_weights import generate_weights_file
-from teehr.utils.concurrency import resolve, run_concurrent_map
+from teehr.utils.concurrency import resolve_budget, run_concurrent_map
 
 
 logger = logging.getLogger(__name__)
@@ -414,7 +414,7 @@ def nwm_retro_grids_to_parquet(
                     registry=registry,
                 ),
                 rows,
-                resolve().cpu,
+                resolve_budget().cpu,
             )
 
             output = [df for df in output if df is not None]
