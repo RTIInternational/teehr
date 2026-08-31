@@ -590,6 +590,9 @@ async def map_blocking(
     workers: int,
     args: tuple = (),
     processes: int = 0,
+    initializer: Optional[Callable[..., None]] = None,
+    initargs: tuple = (),
+    on_complete: Optional[Callable[[int, T], None]] = None,
 ) -> List[T]:
     """Run ``fn(item, *args)`` for every item, off the event loop.
 
@@ -615,6 +618,15 @@ async def map_blocking(
         Extra arguments passed to every call.
     processes : int
         Worker processes to use instead of threads; 0 means threads.
+    initializer : Optional[Callable]
+        Run once in each worker process before any item, e.g. to give it its
+        share of the budget. Must be picklable, as must ``initargs``.
+    initargs : tuple
+        Arguments for ``initializer``.
+    on_complete : Optional[Callable]
+        Called in *this* process as each item finishes, with its index and
+        result. Worker logs don't reach the parent, so this is how a caller
+        reports progress.
 
     Returns
     -------
@@ -637,9 +649,17 @@ async def map_blocking(
 
     async def _run(pool: Executor) -> List[T]:
         # The pool's size is the concurrency bound; no semaphore needed.
-        return list(await asyncio.gather(*[
-            loop.run_in_executor(pool, fn, item, *args) for item in items
-        ]))
+        async def _one(index: int, item: Any) -> T:
+            result = await loop.run_in_executor(pool, fn, item, *args)
+            if on_complete is not None:
+                # Report as this item lands rather than going quiet until the
+                # whole batch finishes; gather still returns items in order.
+                on_complete(index, result)
+            return result
+
+        return list(await asyncio.gather(
+            *[_one(index, item) for index, item in enumerate(items)]
+        ))
 
     if processes > 1:
         try:
@@ -648,6 +668,8 @@ async def map_blocking(
             pool = ProcessPoolExecutor(
                 max_workers=min(processes, len(items)),
                 mp_context=multiprocessing.get_context("spawn"),
+                initializer=initializer,
+                initargs=initargs,
             )
         except OSError as e:
             logger.warning(f"Could not start worker processes ({e}); using threads.")
@@ -657,7 +679,10 @@ async def map_blocking(
             except (BrokenProcessPool, PicklingError) as e:
                 pool.shutdown(wait=False, cancel_futures=True)
                 logger.warning(
-                    f"Worker processes were unusable ({e}); using threads."
+                    f"Worker processes were unusable"
+                    f" ({type(e).__name__}: {e}); using threads instead."
+                    " A worker killed for memory reports as BrokenProcessPool"
+                    " -- check the pod for an OOMKilled event."
                 )
             except BaseException:
                 # Fail fast: drop queued work rather than making the caller

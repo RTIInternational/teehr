@@ -23,6 +23,7 @@ from teehr.utils.concurrency import (
     map_blocking,
     resolve_budget,
     run_sync,
+    set_concurrency,
     use_process_pool,
 )
 from teehr.fetching.const import (
@@ -324,16 +325,35 @@ def fetch_and_format_nwm_points(
         f" {configuration}, variable: {variable_name}"
         f"{f' across {workers} processes' if in_processes else ''}."
     )
+    if in_processes:
+        logger.info(
+            f"Each process reads up to {max(1, budget.io // workers)} files at"
+            f" once using {max(1, budget.cpu // workers)} threads."
+        )
 
     if in_processes:
-        # Each worker builds its own registry (they can't share connection
-        # pools), and the io budget is split so the workers together stay
-        # within the same request budget one process would have used.
+        # Both budgets are split, not just the network one: each worker reads
+        # its chunk with its own thread pool, and an undivided cpu budget means
+        # workers x cpu threads each holding a parsed reference -- enough memory
+        # to get the workers killed. Workers also build their own registries,
+        # since obstore pools can't cross a process boundary.
+        io_share = max(1, budget.io // workers)
+        cpu_share = max(1, budget.cpu // workers)
+
+        def _log_chunk(index: int, filepath: Optional[Path]) -> None:
+            logger.info(
+                f"Chunk {index + 1} of {len(dfs)}: "
+                f"{Path(filepath).name if filepath else 'no data'}"
+            )
+
         output_paths = run_sync(map_blocking(
             process_chunk_of_files,
             dfs,
             workers=workers,
             processes=workers,
+            initializer=set_concurrency,
+            initargs=(io_share, cpu_share),
+            on_complete=_log_chunk,
             args=(
                 location_ids,
                 configuration,
@@ -347,7 +367,7 @@ def fetch_and_format_nwm_points(
                 timeseries_type,
                 drop_overlapping_assimilation_values,
                 None,
-                max(1, budget.io // workers),
+                io_share,
             ),
         ))
     else:
