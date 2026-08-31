@@ -357,6 +357,12 @@ def fetch_and_format_nwm_points(
         registry = build_kerchunk_registry(non_null_paths)
         output_paths = []
         for number, df in enumerate(dfs, start=1):
+            # Logged before the work, not after: a chunk takes a while, and
+            # silence until it finishes looks like a hang.
+            logger.info(
+                f"Chunk {number} of {len(dfs)}: reading {len(df)} files"
+                f" starting {df.day.iloc[0]} {df.z_hour.iloc[0]}"
+            )
             filepath = process_chunk_of_files(
                 df,
                 location_ids,
@@ -372,15 +378,13 @@ def fetch_and_format_nwm_points(
                 drop_overlapping_assimilation_values,
                 registry,
             )
-            logger.info(
-                f"Chunk {number} of {len(dfs)} ({len(df)} files) -> "
-                f"{Path(filepath).name if filepath is not None else 'no data'}"
-            )
+            if filepath is None:
+                logger.info(f"Chunk {number} of {len(dfs)} produced no data.")
+            else:
+                logger.debug(f"Chunk {number} wrote {Path(filepath).name}")
             output_paths.append(filepath)
 
     written = [path for path in output_paths if path is not None]
-    if in_processes:
-        # Worker logs don't reach this process, so report once at the end.
-        logger.info(f"Wrote {len(written)} files from {len(dfs)} chunks.")
+    logger.info(f"Wrote {len(written)} files from {len(dfs)} chunks.")
 
     return written
