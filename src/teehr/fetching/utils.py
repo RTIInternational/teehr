@@ -12,6 +12,7 @@ import os
 import re
 import json
 import struct
+import warnings
 from warnings import warn
 
 import fsspec
@@ -22,6 +23,7 @@ from virtualizarr.manifests import ManifestStore
 from virtualizarr.manifests.manifest import validate_and_normalize_path_to_uri
 from virtualizarr.parsers import HDFParser
 from virtualizarr.parsers.kerchunk.translator import manifestgroup_from_kerchunk_refs
+from zarr.errors import UnstableSpecificationWarning
 import pandas as pd
 import numpy as np
 import xarray as xr
@@ -63,6 +65,13 @@ import teehr.models.pandera_dataframe_schemas as schemas
 
 TZ_PATTERN = re.compile(r't[0-9]+z')
 DAY_PATTERN = re.compile(r'nwm.[0-9]+')
+
+# NWM files carry `crs` as a one-byte char variable, and zarr warns that the
+# dtype has no stable Zarr V3 specification every time it builds one -- a few
+# thousand times over a large fetch. Nothing here writes zarr arrays: the dtype
+# comes from the source files and the variable is dropped immediately after
+# reading, so the warning is noise no caller can act on.
+warnings.filterwarnings("ignore", category=UnstableSpecificationWarning)
 
 logger = logging.getLogger(__name__)
 
