@@ -4,6 +4,7 @@ from typing import Union, Optional, Iterable, List, Dict, Tuple
 from datetime import datetime
 from datetime import timedelta
 from concurrent.futures import Executor
+from dataclasses import dataclass
 from functools import lru_cache
 import asyncio
 import base64
@@ -74,6 +75,14 @@ DAY_PATTERN = re.compile(r'nwm.[0-9]+')
 warnings.filterwarnings("ignore", category=UnstableSpecificationWarning)
 
 logger = logging.getLogger(__name__)
+
+# Coordinates embedded in a reference file rather than pointed at. Small enough
+# that inlining costs little and saves the read path a round trip per file:
+# time and reference_time are scalars, and the grid axes run a few thousand
+# values. feature_id is deliberately absent -- 2.7M values for CONUS, and the
+# same in every file of a configuration (see FeatureIdSelection). Names not
+# present in a given file are ignored, so this covers point and gridded output.
+INLINE_COORDINATES = ["time", "reference_time", "x", "y"]
 
 
 def start_on_z_hour(
@@ -763,21 +772,214 @@ def _feature_id_positions(
     return positions
 
 
+def _parse_kerchunk_refs(content: bytes) -> Dict:
+    """Parse a downloaded kerchunk reference JSON into a refs dict.
+
+    Blocking and CPU-bound, so this must not run on the event loop.
+    VirtualiZarr's own ``KerchunkJSONParser`` covers the same ground but can't
+    expand the ``{{u}}`` templates the pre-built community references use,
+    hence :func:`_resolve_kerchunk_templates`.
+    """
+    refs = ujson.loads(content)
+    refs = _resolve_kerchunk_templates(refs)
+    return _fix_kerchunk_fill_values(refs)
+
+
+def _manifest_store_from_parsed(
+    refs: Dict,
+    registry: ObjectStoreRegistry,
+) -> ManifestStore:
+    """Build a ManifestStore from an already-parsed refs dict."""
+    return ManifestStore(group=manifestgroup_from_kerchunk_refs(refs), registry=registry)
+
+
 def _manifest_store_from_refs(
     content: bytes,
     registry: ObjectStoreRegistry,
 ) -> ManifestStore:
     """Turn a downloaded kerchunk reference JSON into a ManifestStore.
 
-    Blocking and CPU-bound -- these references run to tens of MB, so this must
-    not run on the event loop. VirtualiZarr's own ``KerchunkJSONParser`` covers
-    the same ground but can't expand the ``{{u}}`` templates the pre-built
-    community references use, hence :func:`_resolve_kerchunk_templates`.
+    Blocking and CPU-bound -- see :func:`_parse_kerchunk_refs`. Callers that
+    also need the parsed refs (to fingerprint a coordinate, say) should use
+    :func:`_parse_kerchunk_refs` and :func:`_manifest_store_from_parsed`
+    instead, rather than parsing twice.
     """
-    refs = ujson.loads(content)
-    refs = _resolve_kerchunk_templates(refs)
-    refs = _fix_kerchunk_fill_values(refs)
-    return ManifestStore(group=manifestgroup_from_kerchunk_refs(refs), registry=registry)
+    return _manifest_store_from_parsed(_parse_kerchunk_refs(content), registry)
+
+
+def _feature_id_fingerprint(refs: Dict) -> Tuple[int, Optional[Tuple[int, ...]]]:
+    """Summarize a reference's feature_id coordinate cheaply enough to check per file.
+
+    Both parts come straight out of the refs dict the caller already parsed, so
+    this costs nothing: the coordinate's length, plus each chunk's compressed
+    byte length when the chunks are byte ranges into the source NetCDF.
+
+    References written before ``feature_id`` stopped being inlined carry base64
+    data rather than byte ranges; those report ``None`` for the chunk lengths
+    and are checked on length alone.
+
+    Returns
+    -------
+    Tuple[int, Optional[Tuple[int, ...]]]
+        ``(length, chunk_byte_lengths)``. ``length`` is -1 if the reference has
+        no feature_id coordinate at all.
+    """
+    inner = refs.get("refs", refs)
+
+    length = -1
+    zarray = inner.get("feature_id/.zarray")
+    if zarray is not None:
+        if isinstance(zarray, (str, bytes)):
+            zarray = ujson.loads(zarray)
+        shape = zarray.get("shape") or []
+        if shape:
+            length = int(shape[0])
+
+    lengths = []
+    for key, value in inner.items():
+        if not key.startswith("feature_id/") or "." in key.split("/")[-1]:
+            continue
+        if not isinstance(value, (list, tuple)) or len(value) != 3:
+            # Inlined base64 data rather than a byte range (legacy reference).
+            return length, None
+        lengths.append(int(value[2]))
+
+    return length, tuple(lengths) if lengths else None
+
+
+# eq=False: the generated __eq__/__hash__ would compare and hash the numpy
+# fields, which raises. Nothing needs value equality here, and identity
+# semantics keep it safe to pass as a task parameter.
+@dataclass(frozen=True, eq=False)
+class FeatureIdSelection:
+    """Where a run's requested locations sit in the NWM feature_id coordinate.
+
+    NWM writes the same feature_id array into every file of a configuration --
+    2.7M values for CONUS -- so resolving requested locations to positions is
+    run-level work, not per-file work. Building this once and passing it to
+    every chunk keeps ``feature_id`` from being read (or stored) 666 times for
+    a 666-file fetch.
+
+    Cheap to pickle (two arrays sized by the request, not by the file), so it
+    can be built once and handed to mapped tasks in another process.
+    """
+
+    positions: np.ndarray
+    """Positions into the file's feature_id coordinate, in request order."""
+
+    location_ids: np.ndarray
+    """The ids ``positions`` land on, used to relabel the subset coordinate."""
+
+    fingerprint: Tuple[int, Optional[Tuple[int, ...]]]
+    """feature_id summary of the file this was built from.
+
+    See :func:`_feature_id_fingerprint`.
+    """
+
+    def validate(self, fingerprint: Tuple[int, Optional[Tuple[int, ...]]], url: str):
+        """Raise if a file's feature_id coordinate isn't the one behind ``positions``.
+
+        Positions from one file are only valid for another if both share a
+        feature_id coordinate. Comparing the cheap fingerprint rather than the
+        values keeps this free, and a changed channel network changes the
+        coordinate's length, so the case that matters is caught.
+        """
+        length, lengths = fingerprint
+        expected_length, expected_lengths = self.fingerprint
+        if length != expected_length or (
+            lengths is not None
+            and expected_lengths is not None
+            and lengths != expected_lengths
+        ):
+            raise ValueError(
+                "The NWM feature_id coordinate changed partway through this"
+                f" fetch, so cached location positions no longer apply: {url}"
+                f" has feature_id length {length}, expected {expected_length}."
+                " Fetch each NWM version and configuration separately."
+            )
+
+
+async def _build_feature_id_selection_async(
+    json_path: str,
+    location_ids: np.ndarray,
+    registry: ObjectStoreRegistry,
+) -> FeatureIdSelection:
+    """Async implementation backing :func:`build_feature_id_selection`."""
+    url = _json_path_to_url(json_path)
+    content = await _download_kerchunk_refs(url, registry)
+
+    def _resolve() -> FeatureIdSelection:
+        refs = _parse_kerchunk_refs(content)
+        fingerprint = _feature_id_fingerprint(refs)
+        store = _manifest_store_from_parsed(refs, registry)
+        # The inlined coordinates come along for free, and leaving any of them
+        # virtual draws a warning about time's oversized chunk that has nothing
+        # to do with what this reads.
+        ds = store.to_virtual_dataset(
+            loadable_variables=[*INLINE_COORDINATES, "feature_id"]
+        )
+        # Reaches the source NetCDF for references that no longer inline
+        # feature_id -- roughly half a second, paid once per run rather than
+        # once per file. Cast explicitly: a _FillValue attribute makes CF
+        # decoding hand back float64 here, and ids must compare as integers.
+        feature_ids = np.asarray(ds.feature_id.values).astype(np.int64)
+        ids = np.asarray(location_ids).astype(np.int64)
+        return FeatureIdSelection(
+            positions=_feature_id_positions(feature_ids, ids),
+            location_ids=ids,
+            fingerprint=fingerprint,
+        )
+
+    return await run_in_executor(_resolve)
+
+
+def build_feature_id_selection(
+    json_path: str,
+    location_ids: Iterable[int],
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> FeatureIdSelection:
+    """Resolve requested locations to feature_id positions, once for a whole run.
+
+    Reads the feature_id coordinate from a single reference file and works out
+    where each requested location sits in it. NWM repeats that coordinate in
+    every file of a configuration, so the result applies to all of them; pass
+    it to every chunk instead of letting each one resolve its own.
+
+    Parameters
+    ----------
+    json_path : str
+        Any one of the run's reference files (local or remote).
+    location_ids : Iterable[int]
+        Requested NWM feature ids.
+    registry : Optional[ObjectStoreRegistry]
+        Registry covering ``json_path`` and the source NWM bucket. Built fresh
+        if omitted.
+
+    Returns
+    -------
+    FeatureIdSelection
+        Positions, requested ids, and the coordinate fingerprint each chunk is
+        checked against.
+
+    Raises
+    ------
+    ValueError
+        If any requested id is not in the NWM output.
+
+    Examples
+    --------
+    >>> selection = build_feature_id_selection(json_paths[0], location_ids)
+    >>> ds, mask = combine_and_open_kerchunk_refs(
+    ...     json_paths, "streamflow", location_ids, selection=selection
+    ... )
+    """
+    if registry is None:
+        registry = build_kerchunk_registry([json_path])
+    return run_sync(
+        _build_feature_id_selection_async(
+            json_path, np.asarray(location_ids), registry
+        )
+    )
 
 
 async def _open_ref_virtualizarr(
@@ -785,20 +987,23 @@ async def _open_ref_virtualizarr(
     registry: ObjectStoreRegistry,
     ignore_missing_file: bool,
     variable_name: str,
-    location_ids: np.ndarray,
+    selection: FeatureIdSelection,
     executor: Optional[Executor] = None,
 ) -> Optional[xr.Dataset]:
-    """Open a single kerchunk reference via VirtualiZarr and subset it to ``location_ids``.
+    """Open a single kerchunk reference via VirtualiZarr and subset it to ``selection``.
 
-    Only ``variable_name`` and the coordinates needed to index it are
-    materialized; every other data variable stays virtual and is dropped, and
-    the requested locations are selected immediately, so a full per-file array
-    (2.7M values for CONUS) is never held once this returns.
+    Only ``variable_name`` and the scalar time coordinates are materialized;
+    every other data variable stays virtual and is dropped, and the requested
+    locations are selected immediately, so a full per-file array (2.7M values
+    for CONUS) is never held once this returns.
+
+    ``feature_id`` is deliberately not materialized -- ``selection`` already
+    carries the positions, resolved once for the whole run -- so reading a
+    chunk never touches that coordinate.
 
     Only the download happens on this coroutine. Parsing the reference and
-    reading the data are both blocking and CPU-heavy -- these JSONs run to tens
-    of MB -- so they run in ``executor``, leaving the loop free to keep other
-    downloads moving.
+    reading the data are both blocking and CPU-heavy, so they run in
+    ``executor``, leaving the loop free to keep other downloads moving.
     """
     try:
         content = await _download_kerchunk_refs(url, registry)
@@ -809,21 +1014,28 @@ async def _open_ref_virtualizarr(
         return None
 
     def _materialize() -> xr.Dataset:
-        manifest_store = _manifest_store_from_refs(content, registry)
+        refs = _parse_kerchunk_refs(content)
+        selection.validate(_feature_id_fingerprint(refs), url)
+        manifest_store = _manifest_store_from_parsed(refs, registry)
         # reference_time is deliberately not loaded: nothing downstream reads
         # it (reference times come from the file path), and it is another
         # full-width array per file.
         ds = manifest_store.to_virtual_dataset(
-            loadable_variables=[variable_name, "time", "feature_id"],
+            loadable_variables=[variable_name, "time"],
             decode_times=True,
         )
         keep_vars = [variable_name]
         if "time" in ds.coords:
             keep_vars.append("time")
         ds = ds[keep_vars]
-        return ds.isel(
-            feature_id=_feature_id_positions(ds.feature_id.values, location_ids)
-        )
+        # feature_id is still attached as a *virtual* coordinate, and
+        # VirtualiZarr refuses to subset a ManifestArray -- the requested
+        # locations don't fall on chunk boundaries, so it would have to split a
+        # chunk. Drop it and relabel from the ids the positions were built to
+        # land on, which build_feature_id_selection has already verified.
+        ds = ds.drop_vars("feature_id", errors="ignore")
+        ds = ds.isel(feature_id=selection.positions)
+        return ds.assign_coords(feature_id=selection.location_ids)
 
     # Not guarded by ignore_missing_file: a location_id that isn't in the file
     # is a bad request, not a missing file, and must not be skipped silently.
@@ -917,6 +1129,7 @@ async def _combine_and_open_kerchunk_refs_async(
     concat_dims: Optional[List[str]] = ["time"],
     registry: Optional[ObjectStoreRegistry] = None,
     max_concurrent_files: Optional[int] = None,
+    selection: Optional[FeatureIdSelection] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Async implementation backing :func:`combine_and_open_kerchunk_refs`."""
     # Debug, not info: this runs once per chunk, and the caller is better
@@ -931,6 +1144,15 @@ async def _combine_and_open_kerchunk_refs_async(
         registry = build_kerchunk_registry(json_paths)
     urls = [_json_path_to_url(path) for path in json_paths]
 
+    if selection is None:
+        # Resolving locations needs the feature_id coordinate, which is no
+        # longer inlined in the references, so this reaches the source NetCDF.
+        # Callers processing more than one chunk should build the selection
+        # once and pass it in rather than paying that per chunk.
+        selection = await _build_feature_id_selection_async(
+            json_paths[0], np.asarray(location_ids), registry
+        )
+
     # Two budgets: many references download at once (network waits), while
     # fewer are parsed at once (CPU work, and h5py mostly serializes it).
     budget = resolve_budget(io=max_concurrent_files)
@@ -939,7 +1161,7 @@ async def _combine_and_open_kerchunk_refs_async(
         datasets = await gather_bounded(
             lambda url: _open_ref_virtualizarr(
                 url, registry, ignore_missing_file, variable_name,
-                location_ids, executor,
+                selection, executor,
             ),
             urls,
             limit=budget.io,
@@ -965,6 +1187,7 @@ def combine_and_open_kerchunk_refs(
     storage_options: Optional[Dict] = {},
     registry: Optional[ObjectStoreRegistry] = None,
     max_concurrent_files: Optional[int] = None,
+    selection: Optional[FeatureIdSelection] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Combine multiple kerchunk reference files into a single xarray Dataset.
 
@@ -1004,6 +1227,12 @@ def combine_and_open_kerchunk_refs(
         How many of ``json_paths`` to read at once. Defaults to the
         process-wide budget -- the same number ``set_concurrency(io=...)``
         sets; divide it among callers when several run at the same time.
+    selection : Optional[FeatureIdSelection], optional
+        Precomputed positions of ``location_ids`` in the NWM feature_id
+        coordinate (see :func:`build_feature_id_selection`). Resolved from
+        ``json_paths[0]`` if omitted, which costs one read of that coordinate
+        from the source NetCDF; callers processing many chunks should build it
+        once and pass it to every call.
 
     Returns
     -------
@@ -1022,6 +1251,7 @@ def combine_and_open_kerchunk_refs(
             concat_dims,
             registry,
             max_concurrent_files,
+            selection,
         )
     )
 
@@ -1152,7 +1382,22 @@ def gen_json_virtualizarr(
 
     try:
         manifest_store = HDFParser()(url=remote_path, registry=registry)
-        vds = manifest_store.to_virtual_dataset()
+        # Materialize only the coordinates small enough to be worth embedding.
+        # Left to its default, to_virtual_dataset loads every *indexed*
+        # coordinate, and a loaded variable has no byte range left to point at,
+        # so it must be inlined here as base64. For NWM point output that means
+        # feature_id: a 103KB compressed array inflated to 29.7MB, making the
+        # reference 2.4x the size of the NetCDF it stands in for. feature_id is
+        # identical in every file of a configuration, so it is resolved once
+        # per run instead (see FeatureIdSelection).
+        #
+        # The grid coordinates stay on the list: x and y run a few thousand
+        # values, cost ~90KB inlined, and keeping them here saves the gridded
+        # read path a round trip per file. Names absent from a given file are
+        # ignored, so one list covers point and gridded output.
+        vds = manifest_store.to_virtual_dataset(
+            loadable_variables=INLINE_COORDINATES
+        )
         refs = vds.virtualize.to_kerchunk(format="dict")
         refs = _fix_scalar_chunk_keys(refs)
         refs = _fix_fill_values(refs)

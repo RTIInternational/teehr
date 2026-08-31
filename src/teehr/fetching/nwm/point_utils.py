@@ -17,6 +17,8 @@ from teehr.fetching.utils import (
     parse_nwm_json_paths,
     combine_and_open_kerchunk_refs,
     build_kerchunk_registry,
+    build_feature_id_selection,
+    FeatureIdSelection,
 )
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.utils.concurrency import (
@@ -62,6 +64,7 @@ def process_chunk_of_files(
     drop_overlapping_assimilation_values: bool,
     registry: Optional[ObjectStoreRegistry] = None,
     max_concurrent_files: Optional[int] = None,
+    selection: Optional[FeatureIdSelection] = None,
 ) -> Optional[Path]:
     """Assemble a table for a chunk of NWM files.
 
@@ -75,6 +78,11 @@ def process_chunk_of_files(
     ``set_concurrency(io=...)`` sets. Callers running several chunks at the
     same time (mapped Prefect tasks, say) should divide that budget among
     them, since the two levels multiply.
+
+    ``selection`` carries where ``location_ids`` sit in the NWM feature_id
+    coordinate (see ``build_feature_id_selection``). It is the same for every
+    chunk in a run, so callers processing more than one should build it once
+    and pass it in; resolved from this chunk's first file if omitted.
 
     Returns the path to the parquet file written for this chunk, or ``None``
     if the chunk produced no data.
@@ -109,6 +117,7 @@ def process_chunk_of_files(
         storage_options={"target_options": {"anon": True}},
         registry=registry,
         max_concurrent_files=max_concurrent_files,
+        selection=selection,
     )
     df_valid = df_valid[read_mask].reset_index(drop=True)
 
@@ -351,6 +360,19 @@ def fetch_and_format_nwm_points(
             f" once using {max(1, budget.cpu // workers)} threads."
         )
 
+    # Resolved once for the whole run rather than per chunk: NWM writes the
+    # same feature_id coordinate into every file of a configuration, and it now
+    # takes a read of the source NetCDF to get it.
+    non_null_paths = [path for path in file_paths if path is not None]
+    if not non_null_paths:
+        raise FileNotFoundError(
+            "No NWM files for specified input configuration were found in GCS!"
+        )
+    registry = build_kerchunk_registry(non_null_paths)
+    selection = build_feature_id_selection(
+        non_null_paths[0], location_ids, registry
+    )
+
     if in_processes:
         # Both budgets are split, not just the network one: each worker reads
         # its chunk with its own thread pool, and an undivided cpu budget means
@@ -388,13 +410,12 @@ def fetch_and_format_nwm_points(
                 drop_overlapping_assimilation_values,
                 None,
                 io_share,
+                selection,
             ),
         ))
     else:
-        # Built once from every file in the run (not per chunk) so obstore's
-        # stores/connection pools are reused across all chunks below.
-        non_null_paths = [p for p in file_paths if p is not None]
-        registry = build_kerchunk_registry(non_null_paths)
+        # The registry built above is reused across all chunks below, so
+        # obstore's stores/connection pools are not rebuilt per chunk.
         output_paths = []
         for number, df in enumerate(dfs, start=1):
             # Logged before the work, not after: a chunk takes a while, and
@@ -417,6 +438,8 @@ def fetch_and_format_nwm_points(
                 timeseries_type,
                 drop_overlapping_assimilation_values,
                 registry,
+                None,
+                selection,
             )
             if filepath is None:
                 logger.info(f"Chunk {number} of {len(dfs)} produced no data.")
