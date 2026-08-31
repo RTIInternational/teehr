@@ -42,11 +42,10 @@ from teehr.fetching.const import (
 
 logger = logging.getLogger(__name__)
 
-# Measured peak for one worker reading an 18-file chunk against ~10k locations:
-# 2.0-2.9GB, most of it references in flight. Workers get half of what is free
-# so the parent -- which holds a Spark session and the loaded data -- keeps the
-# rest.
-CHUNK_MEMORY_PER_WORKER = 2500 * 1024**2
+# Rough peak for one worker reading a chunk of files. Workers get half of what
+# is free so the parent -- which may hold a Spark session and the loaded data --
+# keeps the rest.
+CHUNK_MEMORY_PER_WORKER = 1200 * 1024**2
 
 
 def process_chunk_of_files(
