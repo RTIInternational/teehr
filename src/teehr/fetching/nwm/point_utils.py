@@ -20,6 +20,7 @@ from teehr.fetching.utils import (
 )
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.utils.concurrency import (
+    available_memory,
     map_blocking,
     resolve_budget,
     run_sync,
@@ -38,6 +39,12 @@ from teehr.fetching.const import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Measured peak for one worker reading an 18-file chunk against ~10k locations:
+# 2.0-2.9GB, most of it references in flight. Workers get half of what is free
+# so the parent -- which holds a Spark session and the loaded data -- keeps the
+# rest.
+CHUNK_MEMORY_PER_WORKER = 2500 * 1024**2
 
 
 def process_chunk_of_files(
@@ -312,6 +319,19 @@ def fetch_and_format_nwm_points(
     # processes add startup and memory without adding throughput. Kept as an
     # option because that balance depends on the machine and the data.
     workers = chunk_workers if chunk_workers is not None else 1
+    memory = available_memory()
+    if workers > 1 and memory:
+        affordable = max(1, int(memory * 0.5) // CHUNK_MEMORY_PER_WORKER)
+        if affordable < workers:
+            # Exceeding this gets workers killed with no traceback, so cap it
+            # rather than let the run die halfway through.
+            logger.warning(
+                f"Reducing chunk_workers from {workers} to {affordable}:"
+                f" a worker peaks near"
+                f" {CHUNK_MEMORY_PER_WORKER // 1024**2}MB and only"
+                f" {memory // 1024**2}MB is free."
+            )
+            workers = affordable
     n_files = int(sum(len(df) for df in dfs))
     in_processes = (
         workers > 1
