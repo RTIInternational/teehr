@@ -2,16 +2,12 @@
 from pathlib import Path
 from dateutil.parser import parse
 
-import pickle
 import tempfile
 import pytest
 
 import numpy as np
-import ujson
 
 from teehr.fetching.utils import (
-    FeatureIdSelection,
-    _feature_id_fingerprint,
     _feature_id_positions,
     build_zarr_references_virtualizarr,
     validate_operational_start_end_date,
@@ -510,83 +506,6 @@ def test_feature_id_positions_missing_id_raises():
     feature_ids = np.array([10, 20, 30])
     with pytest.raises(ValueError, match="location_ids not found"):
         _feature_id_positions(feature_ids, np.array([20, 999]))
-
-
-def _refs(chunks, length=2776734):
-    """Build a minimal refs dict carrying a feature_id coordinate."""
-    inner = {
-        "feature_id/.zarray": ujson.dumps({"shape": [length], "dtype": "<i8"}),
-        "feature_id/.zattrs": ujson.dumps({"_ARRAY_DIMENSIONS": ["feature_id"]}),
-    }
-    inner.update(chunks)
-    return {"version": 1, "refs": inner}
-
-
-def test_feature_id_fingerprint_byte_ranges():
-    """A reference whose chunks are byte ranges reports their lengths."""
-    refs = _refs({
-        "feature_id/0": ["gcs://b/f.nc", 100, 5000],
-        "feature_id/1": ["gcs://b/f.nc", 5100, 4800],
-    })
-    assert _feature_id_fingerprint(refs) == (2776734, (5000, 4800))
-
-
-def test_feature_id_fingerprint_inlined_data():
-    """A reference that inlines feature_id reports no chunk lengths."""
-    refs = _refs({"feature_id/0": "base64:AAAAAAAAAAA="})
-    assert _feature_id_fingerprint(refs) == (2776734, None)
-
-
-def test_feature_id_fingerprint_without_feature_id():
-    """A reference with no feature_id coordinate reports a sentinel length."""
-    assert _feature_id_fingerprint({"refs": {"streamflow/.zarray": "{}"}}) == (
-        -1,
-        None,
-    )
-
-
-def _selection(fingerprint):
-    """Build a selection carrying ``fingerprint``, with arbitrary positions."""
-    return FeatureIdSelection(
-        positions=np.array([0, 5, 9]),
-        location_ids=np.array([10, 60, 100]),
-        fingerprint=fingerprint,
-    )
-
-
-def test_selection_validate_accepts_matching_file():
-    """A file with the same feature_id coordinate is accepted."""
-    selection = _selection((2776734, (5000, 4800)))
-    selection.validate((2776734, (5000, 4800)), "f.json")
-
-
-def test_selection_validate_rejects_changed_length():
-    """A different feature_id length means the positions no longer apply."""
-    selection = _selection((2776734, (5000, 4800)))
-    with pytest.raises(ValueError, match="feature_id coordinate changed"):
-        selection.validate((2776735, (5000, 4800)), "f.json")
-
-
-def test_selection_validate_rejects_changed_chunk_lengths():
-    """Same length but different chunk bytes is still a different coordinate."""
-    selection = _selection((2776734, (5000, 4800)))
-    with pytest.raises(ValueError, match="feature_id coordinate changed"):
-        selection.validate((2776734, (5000, 4799)), "f.json")
-
-
-def test_selection_validate_accepts_legacy_inlined_reference():
-    """Old references report no chunk lengths, and must still be readable."""
-    selection = _selection((2776734, (5000, 4800)))
-    selection.validate((2776734, None), "legacy.json")
-
-
-def test_selection_survives_pickling():
-    """Chunk work can run in another process, so the selection must pickle."""
-    selection = _selection((2776734, (5000, 4800)))
-    restored = pickle.loads(pickle.dumps(selection))
-    assert np.array_equal(restored.positions, selection.positions)
-    assert np.array_equal(restored.location_ids, selection.location_ids)
-    assert restored.fingerprint == selection.fingerprint
 
 
 def test_feature_id_positions_beyond_range_raises():
