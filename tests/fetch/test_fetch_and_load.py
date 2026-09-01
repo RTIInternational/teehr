@@ -121,7 +121,9 @@ def test_fetch_and_load_nwm_retro_grids(function_scope_evaluation_template):
             'updated_at'
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
-    assert np.isclose(ts_df.value.sum(), np.float32(0.00028349122))
+    # Was 0.00028349122 before weight generation moved to exactextract; the
+    # old path clipped the grid and dropped boundary pixels.
+    assert np.isclose(ts_df.value.sum(), np.float32(0.00028337786))
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 10:00:00")
 

@@ -99,16 +99,67 @@ def compute_weighted_average(
     grid_values: np.ndarray,
     weights_df: pd.DataFrame
 ) -> pd.DataFrame:
-    """Compute weighted average of pixels for given zones and weights."""
-    weights_df.loc[:, "weighted_value"] = grid_values * \
-        weights_df.weight.values
+    """Coverage-weighted mean of grid pixels for each zone.
 
-    # Compute weighted average
-    df = weights_df.groupby(
-        by=LOCATION_ID, as_index=False)[["weighted_value", "weight"]].sum()
-    df.loc[:, VALUE] = df.weighted_value/df.weight
+    Parameters
+    ----------
+    grid_values : np.ndarray
+        Pixel values aligned row-for-row with ``weights_df``. Either
+        ``(n_pixels,)`` for one timestep or ``(n_times, n_pixels)`` for several.
+    weights_df : pd.DataFrame
+        Weights with ``location_id`` and ``weight`` columns.
 
-    return df[[LOCATION_ID, VALUE]].copy()
+    Returns
+    -------
+    pd.DataFrame
+        ``location_id`` and ``value``, plus ``time_index`` when
+        ``grid_values`` is 2-D.
+
+    Raises
+    ------
+    ValueError
+        If a zone's weights sum to zero, which would make the mean undefined.
+    """
+    values = np.asarray(grid_values)
+    single_step = values.ndim == 1
+    if single_step:
+        values = values[np.newaxis, :]
+
+    # Factorize (hash-based) rather than sorting the label column, then sort
+    # only the unique labels and remap -- sorting millions of location strings
+    # dominates otherwise.
+    codes, unique_locations = pd.factorize(weights_df[LOCATION_ID].to_numpy())
+    label_order = np.argsort(unique_locations)
+    rank = np.empty_like(label_order)
+    rank[label_order] = np.arange(label_order.size)
+    codes = rank[codes]
+    unique_locations = unique_locations[label_order]
+    weights = weights_df["weight"].to_numpy("float64")
+
+    n_zones = len(unique_locations)
+    total_weight = np.bincount(codes, weights=weights, minlength=n_zones)
+    if not (total_weight > 0).all():
+        empty = unique_locations[total_weight <= 0]
+        raise ValueError(
+            f"Total coverage weight is 0 for {empty.size} location(s), "
+            f"e.g. {empty[:5].tolist()}."
+        )
+
+    # Accumulate in float64; the weights and values are float32 and a zone can
+    # cover thousands of pixels.
+    weighted = np.stack([
+        np.bincount(codes, weights=weights * step, minlength=n_zones)
+        for step in values.astype("float64")
+    ])
+    means = weighted / total_weight
+
+    if single_step:
+        return pd.DataFrame({LOCATION_ID: unique_locations, VALUE: means[0]})
+    return pd.DataFrame({
+        "time_index": np.repeat(np.arange(means.shape[0]), n_zones),
+        LOCATION_ID: np.tile(unique_locations, means.shape[0]),
+        VALUE: means.ravel(),
+    })
 
 
 def read_and_validate_weights_file(
