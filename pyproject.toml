@@ -40,7 +40,6 @@ lxml = ">=6.0,<7"
 obstore = ">=0.11.0,<0.12"
 virtualizarr = ">=2.7.1,<2.8"
 obspec-utils = ">=0.9.0,<0.10"
-bokeh = ">=3.7.3,<4"
 protobuf = "5.28.3"
 psutil = ">=7.0.0,<8"
 baseflow = ">=0.1.0,<0.2"
@@ -71,6 +70,9 @@ sphinx-autobuild = ">=2024.10.3"
 tomli = ">=2.2.1"
 geoviews = ">=1.14.1,<2"
 hvplot = ">=0.12.0,<1"
+# Imported directly by the example notebooks (hv.extension("bokeh"));
+# nothing in teehr itself uses it.
+bokeh = ">=3.7.3,<4"
 
 
 [tool.numpydoc_validation]

@@ -105,7 +105,6 @@ def process_chunk_of_files(
         variable_name=variable_name,
         location_ids=location_ids,
         ignore_missing_file=ignore_missing_file,
-        storage_options={"target_options": {"anon": True}},
         registry=registry,
         max_concurrent_files=max_concurrent_files,
     )
@@ -355,8 +354,6 @@ def fetch_and_format_nwm_points(
         raise FileNotFoundError(
             "No NWM files for specified input configuration were found in GCS!"
         )
-    registry = build_kerchunk_registry(non_null_paths)
-
     if in_processes:
         # Both budgets are split, not just the network one: each worker reads
         # its chunk with its own thread pool, and an undivided cpu budget means
@@ -397,8 +394,9 @@ def fetch_and_format_nwm_points(
             ),
         ))
     else:
-        # The registry built above is reused across all chunks below, so
-        # obstore's stores/connection pools are not rebuilt per chunk.
+        # Built once and reused across every chunk, so obstore's stores and
+        # connection pools are not rebuilt per chunk.
+        registry = build_kerchunk_registry(non_null_paths)
         output_paths = []
         for number, df in enumerate(dfs, start=1):
             # Logged before the work, not after: a chunk takes a while, and

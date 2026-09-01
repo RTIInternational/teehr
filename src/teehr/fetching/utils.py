@@ -75,13 +75,11 @@ warnings.filterwarnings("ignore", category=UnstableSpecificationWarning)
 
 logger = logging.getLogger(__name__)
 
-# Coordinates embedded in a reference file rather than pointed at. Small enough
-# that inlining costs little and saves the read path a round trip per file:
-# time and reference_time are scalars, and the grid axes run a few thousand
-# values. feature_id is deliberately absent -- 2.7M values for CONUS, and the
-# same in every file of a configuration, and is resolved per file against that
-# file's own coordinate when a chunk is read. Names not
-# present in a given file are ignored, so this covers point and gridded output.
+# Coordinates embedded in a reference rather than pointed at: scalars and the
+# grid axes are small, and inlining them saves the read path a round trip per
+# file. feature_id is deliberately absent -- 2.7M values for CONUS -- and is
+# read from the source file when a chunk is opened. Names absent from a given
+# file are ignored, so one list covers point and gridded output.
 INLINE_COORDINATES = ["time", "reference_time", "x", "y"]
 
 
@@ -681,11 +679,15 @@ def _fix_kerchunk_fill_values(refs: Dict) -> Dict:
             # Structured/unrecognized dtype string; leave fill-value alone.
             dtype_kind = None
 
-        # FillValueCoder.decode only supports numeric dtypes for a
-        # _FillValue attribute (raises for e.g. "|S1" byte-string arrays
-        # like NWM's "crs" grid-mapping variable, which never has -- and
-        # shouldn't get -- CF fill-value semantics).
-        if dtype_kind in ("f", "c", "b", "i", "u") \
+        # Coordinates are skipped: their zarr fill_value is HDF5's storage
+        # default rather than a missing marker, and masking against it
+        # promotes the array to float (feature_id becomes float64) and calls a
+        # real id missing. Data variables do need it -- NWM packs forcing as
+        # scaled integers whose nodata sentinel lives only in fill_value.
+        # Byte-string dtypes are excluded because FillValueCoder.decode raises
+        # on them (NWM's "crs" variable).
+        is_coordinate = zattrs.get("_ARRAY_DIMENSIONS") == [key.split("/")[0]]
+        if dtype_kind in ("f", "c", "b", "i", "u") and not is_coordinate \
                 and "_FillValue" not in zattrs and "missing_value" not in zattrs \
                 and zarray.get("fill_value") is not None:
             zattrs["_FillValue"] = zarray["fill_value"]
@@ -977,7 +979,6 @@ def combine_and_open_kerchunk_refs(
     location_ids: np.ndarray,
     ignore_missing_file: bool = True,
     concat_dims: Optional[List[str]] = ["time"],
-    storage_options: Optional[Dict] = {},
     registry: Optional[ObjectStoreRegistry] = None,
     max_concurrent_files: Optional[int] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
@@ -1005,10 +1006,6 @@ def combine_and_open_kerchunk_refs(
         Whether to ignore missing files, by default True.
     concat_dims : Optional[List[str]], optional
         Dimensions to concatenate along, by default ["time"].
-    storage_options : Optional[Dict], optional
-        Unused; retained for backward compatibility with existing callers.
-        Anonymous remote access is configured directly on the registry's
-        stores instead.
     registry : Optional[ObjectStoreRegistry], optional
         A pre-built registry (see :func:`build_kerchunk_registry`) covering
         ``json_paths``. Callers processing many chunks in one run should
