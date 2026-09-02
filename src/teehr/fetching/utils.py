@@ -300,6 +300,8 @@ def generate_json_paths(
     gcs_component_paths: List[str],
     json_dir: str,
     ignore_missing_file: bool,
+    io_concurrency: Optional[int] = None,
+    cpu_workers: Optional[int] = None,
 ) -> List[str]:
     """Generate file paths to Kerchunk reference json files.
 
@@ -314,6 +316,10 @@ def generate_json_paths(
     ignore_missing_file : bool
         Flag specifying whether or not to fail if a missing
         NWM file is encountered.
+    io_concurrency : Optional[int]
+        Bounds the s3 check for pre-built references.
+    cpu_workers : Optional[int]
+        Bounds building the references that are missing.
 
     Returns
     -------
@@ -328,12 +334,13 @@ def generate_json_paths(
             gcs_component_paths,
             json_dir,
             ignore_missing_file,
+            cpu_workers,
         )
 
     elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = check_if_files_exist(s3_path_list)
+        file_check_output = check_if_files_exist(s3_path_list, io_concurrency)
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -344,7 +351,7 @@ def generate_json_paths(
     elif kerchunk_method == SupportedKerchunkMethod.auto:
         # Use whatever pre-builts exist, and create the missing
         s3_path_list = [f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json" for gcs_path in gcs_component_paths]
-        file_check_output = check_if_files_exist(s3_path_list)
+        file_check_output = check_if_files_exist(s3_path_list, io_concurrency)
         json_paths = [path for path, exists in file_check_output.items() if exists]
         missing_files = [path for path, exists in file_check_output.items() if not exists]
         logger.info(
@@ -362,6 +369,7 @@ def generate_json_paths(
                     missing_files,
                     json_dir,
                     ignore_missing_file,
+                    cpu_workers,
                 )
             )
 
@@ -510,6 +518,7 @@ def list_to_np(lst):
 
 async def _check_if_files_exist_async(
     file_path_list: List[str],
+    io_concurrency: Optional[int] = None,
 ) -> Dict[str, bool]:
     """Async implementation backing :func:`check_if_files_exist`."""
     stores: Dict[str, object] = {}
@@ -532,23 +541,27 @@ async def _check_if_files_exist_async(
             return path, False
 
     results = await gather_bounded(
-        _check, file_path_list, limit=resolve_budget().io
+        _check, file_path_list, limit=resolve_budget(io=io_concurrency).io
     )
     return dict(results)
 
 
-def check_if_files_exist(file_path_list: List[str]) -> Dict[str, bool]:
+def check_if_files_exist(
+    file_path_list: List[str],
+    io_concurrency: Optional[int] = None,
+) -> Dict[str, bool]:
     """Check for existence of S3 files.
-
-    How many checks run at once comes from
-    :mod:`teehr.utils.concurrency`.
 
     Parameters
     ----------
     file_path_list : List[str]
         Remote paths to check.
+    io_concurrency : Optional[int]
+        Checks to run at once. Defaults to the process-wide budget.
     """
-    return run_sync(_check_if_files_exist_async(file_path_list))
+    return run_sync(
+        _check_if_files_exist_async(file_path_list, io_concurrency)
+    )
 
 
 def _json_path_to_url(path: str) -> str:
@@ -934,6 +947,7 @@ async def _combine_and_open_kerchunk_refs_async(
     concat_dims: Optional[List[str]] = ["time"],
     registry: Optional[ObjectStoreRegistry] = None,
     max_concurrent_files: Optional[int] = None,
+    cpu_workers: Optional[int] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Async implementation backing :func:`combine_and_open_kerchunk_refs`."""
     # Debug, not info: this runs once per chunk, and the caller is better
@@ -950,7 +964,7 @@ async def _combine_and_open_kerchunk_refs_async(
 
     # Two budgets: many references download at once (network waits), while
     # fewer are parsed at once (CPU work, and h5py mostly serializes it).
-    budget = resolve_budget(io=max_concurrent_files)
+    budget = resolve_budget(io=max_concurrent_files, cpu=cpu_workers)
 
     with thread_pool(budget.cpu, len(urls)) as executor:
         datasets = await gather_bounded(
@@ -981,6 +995,7 @@ def combine_and_open_kerchunk_refs(
     concat_dims: Optional[List[str]] = ["time"],
     registry: Optional[ObjectStoreRegistry] = None,
     max_concurrent_files: Optional[int] = None,
+    cpu_workers: Optional[int] = None,
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Combine multiple kerchunk reference files into a single xarray Dataset.
 
@@ -1014,8 +1029,9 @@ def combine_and_open_kerchunk_refs(
         being rebuilt per chunk. Built fresh from ``json_paths`` if omitted.
     max_concurrent_files : Optional[int], optional
         How many of ``json_paths`` to read at once. Defaults to the
-        process-wide budget -- the same number ``set_concurrency(io=...)``
-        sets; divide it among callers when several run at the same time.
+        process-wide budget; divide it among callers running at the same time.
+    cpu_workers : Optional[int]
+        How many of those reads may be parsed at once. Defaults the same way.
 
     Returns
     -------
@@ -1034,6 +1050,7 @@ def combine_and_open_kerchunk_refs(
             concat_dims,
             registry,
             max_concurrent_files,
+            cpu_workers,
         )
     )
 
@@ -1198,6 +1215,7 @@ async def _build_zarr_references_virtualizarr_async(
     remote_paths: List[str],
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
+    cpu_workers: Optional[int] = None,
 ) -> list[str]:
     """Async implementation backing :func:`build_zarr_references_virtualizarr`."""
     logger.debug("Building zarr references via VirtualiZarr.")
@@ -1220,7 +1238,7 @@ async def _build_zarr_references_virtualizarr_async(
     if len(missing_paths) == 0:
         return sorted(existing_jsons)
 
-    budget = resolve_budget()
+    budget = resolve_budget(cpu=cpu_workers)
     processes = (
         budget.processes
         if use_process_pool(len(missing_paths), budget.processes)
@@ -1255,6 +1273,7 @@ def build_zarr_references_virtualizarr(
     remote_paths: List[str],
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
+    cpu_workers: Optional[int] = None,
 ) -> list[str]:
     """Build the single-file zarr JSON reference files using VirtualiZarr.
 
@@ -1274,6 +1293,9 @@ def build_zarr_references_virtualizarr(
         Local directory for caching json files.
     ignore_missing_file : bool
         Whether to skip or raise on missing/corrupt files.
+    cpu_workers : Optional[int]
+        References built at once. Compute-bound (h5py parses each file), so
+        this takes the cpu budget rather than the io one.
 
     Returns
     -------
@@ -1282,7 +1304,7 @@ def build_zarr_references_virtualizarr(
     """
     return run_sync(
         _build_zarr_references_virtualizarr_async(
-            remote_paths, json_dir, ignore_missing_file
+            remote_paths, json_dir, ignore_missing_file, cpu_workers
         )
     )
 

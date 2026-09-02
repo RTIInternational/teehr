@@ -104,6 +104,8 @@ MAX_CPU_WORKERS = 64
 DEFAULT_MAX_PROCESSES = 16
 # Budget per worker process: ~700MB measured, doubled because the parent holds
 # the combined result and the OS still needs page cache for the files read.
+# The only place a worker's memory footprint is defined; callers sizing their
+# own pools cap by ConcurrencyBudget.processes rather than repeating it.
 MEMORY_PER_PROCESS = 1400 * 1024**2
 
 # Starting a worker costs ~3s (it has to import teehr), so processes only pay
@@ -702,7 +704,7 @@ async def map_blocking(
 def run_concurrent_map(
     func: Callable[[Any], T],
     items: Iterable[Any],
-    max_workers: int,
+    max_workers: Optional[int] = None,
 ) -> List[T]:
     """Run ``func(item)`` for every item in threads, from non-async code.
 
@@ -715,7 +717,10 @@ def run_concurrent_map(
         Blocking callable taking one item.
     items : Iterable
         Items to process.
-    max_workers : int
-        Thread count, usually :attr:`ConcurrencyBudget.cpu`.
+    max_workers : Optional[int]
+        Thread count. Defaults to the cpu budget, which is what callers
+        wanting anything other than a deliberate override should use.
     """
-    return run_sync(map_blocking(func, items, workers=max_workers))
+    return run_sync(
+        map_blocking(func, items, workers=resolve_cpu_workers(max_workers))
+    )

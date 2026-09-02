@@ -76,7 +76,9 @@ def plan_nwm_point_fetch(
     ignore_missing_file: Optional[bool] = True,
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
-    drop_overlapping_assimilation_values: Optional[bool] = True
+    drop_overlapping_assimilation_values: Optional[bool] = True,
+    io_concurrency: Optional[int] = None,
+    cpu_workers: Optional[int] = None
 ) -> NwmPointFetchPlan:
     """Work out which reference files a point fetch needs, without reading them.
 
@@ -123,6 +125,11 @@ def plan_nwm_point_fetch(
         Last z-hour to include; defaults to the hour of ``end_date``.
     drop_overlapping_assimilation_values : Optional[bool]
         Drop assimilation values that overlap in value_time.
+    io_concurrency : Optional[int]
+        Remote reads in flight at once. Defaults to 48; lower it when
+        something else is fetching in parallel.
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available.
 
     Returns
     -------
@@ -249,7 +256,9 @@ def plan_nwm_point_fetch(
             kerchunk_method,
             gcs_component_paths,
             json_dir,
-            ignore_missing_file
+            ignore_missing_file,
+            io_concurrency,
+            cpu_workers
         )
 
     return NwmPointFetchPlan(
@@ -285,7 +294,8 @@ def nwm_to_parquet(
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     drop_overlapping_assimilation_values: Optional[bool] = True,
-    chunk_workers: Optional[int] = None
+    io_concurrency: Optional[int] = None,
+    cpu_workers: Optional[int] = None
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -398,10 +408,11 @@ def nwm_to_parquet(
         keeping those with the most recent reference_time. In this case, all
         reference_time values are set to None. If False, overlapping values are
         kept and reference_time is retained.
-    chunk_workers : Optional[int]
-        Number of worker processes used to process chunks of files. Default is
-        1, which processes them one at a time. Likely only worth raising when
-        fetching a long time period on a machine with many cores.
+    io_concurrency : Optional[int]
+        Remote reads in flight at once. Defaults to 48; lower it when
+        something else is fetching in parallel.
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available.
 
     Notes
     -----
@@ -489,6 +500,8 @@ def nwm_to_parquet(
         starting_z_hour=starting_z_hour,
         ending_z_hour=ending_z_hour,
         drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
+        io_concurrency=io_concurrency,
+        cpu_workers=cpu_workers,
     )
 
     # Fetch the data, saving to parquet files based on TEEHR data model
@@ -506,5 +519,6 @@ def nwm_to_parquet(
         variable_mapper=variable_mapper,
         timeseries_type=timeseries_type,
         drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
-        chunk_workers=chunk_workers,
+        io_concurrency=io_concurrency,
+        cpu_workers=cpu_workers,
     )

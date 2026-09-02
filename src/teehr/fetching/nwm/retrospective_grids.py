@@ -80,7 +80,7 @@ from teehr.fetching.nwm.retrospective_points import (
     validate_retrospective_start_end_date,
 )
 from teehr.utilities.generate_weights import generate_weights_file
-from teehr.utils.concurrency import resolve_budget, run_concurrent_map
+from teehr.utils.concurrency import run_concurrent_map
 
 
 logger = logging.getLogger(__name__)
@@ -246,6 +246,7 @@ def nwm_retro_grids_to_parquet(
     zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
     unique_zone_id: Optional[str] = None,
     convert_k_to_c: bool = True,
+    cpu_workers: Optional[int] = None,
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -299,6 +300,9 @@ def nwm_retro_grids_to_parquet(
         If True, convert temperature values from Kelvin to Celsius by
         subtracting 273.15. The unit_name field will be set to "C".
         Note: this argument is only valid when variable_name is "T2D".
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available. This path
+        has no io budget -- it reads a zarr store rather than checking s3.
 
     Notes
     -----
@@ -414,7 +418,7 @@ def nwm_retro_grids_to_parquet(
                     registry=registry,
                 ),
                 rows,
-                resolve_budget().cpu,
+                cpu_workers,
             )
 
             output = [df for df in output if df is not None]

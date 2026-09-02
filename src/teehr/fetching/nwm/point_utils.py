@@ -19,14 +19,7 @@ from teehr.fetching.utils import (
     build_kerchunk_registry,
 )
 from teehr.fetching.models.utils import TimeseriesTypeEnum
-from teehr.utils.concurrency import (
-    available_memory,
-    map_blocking,
-    resolve_budget,
-    run_sync,
-    set_concurrency,
-    use_process_pool,
-)
+from teehr.utils.concurrency import resolve_budget
 from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,
@@ -39,11 +32,6 @@ from teehr.fetching.const import (
 )
 
 logger = logging.getLogger(__name__)
-
-# Rough peak for one worker reading a chunk of files. Workers get half of what
-# is free so the parent -- which may hold a Spark session and the loaded data --
-# keeps the rest.
-CHUNK_MEMORY_PER_WORKER = 1200 * 1024**2
 
 
 def process_chunk_of_files(
@@ -61,6 +49,7 @@ def process_chunk_of_files(
     drop_overlapping_assimilation_values: bool,
     registry: Optional[ObjectStoreRegistry] = None,
     max_concurrent_files: Optional[int] = None,
+    cpu_workers: Optional[int] = None,
 ) -> Optional[Path]:
     """Assemble a table for a chunk of NWM files.
 
@@ -69,11 +58,10 @@ def process_chunk_of_files(
     run, so obstore's stores/connection pools are reused across chunks rather
     than rebuilt per chunk. Built fresh from this chunk alone if omitted.
 
-    ``max_concurrent_files`` bounds how many of this chunk's reference files
-    are read at once. It defaults to the process-wide budget -- the same number
-    ``set_concurrency(io=...)`` sets. Callers running several chunks at the
-    same time (mapped Prefect tasks, say) should divide that budget among
-    them, since the two levels multiply.
+    ``max_concurrent_files`` bounds how many of this chunk's files are read
+    at once and ``cpu_workers`` how many are parsed at once. Both default to
+    the process-wide budget; divide them among callers running several chunks
+    at the same time, since the two levels multiply.
 
     Returns the path to the parquet file written for this chunk, or ``None``
     if the chunk produced no data.
@@ -107,6 +95,7 @@ def process_chunk_of_files(
         ignore_missing_file=ignore_missing_file,
         registry=registry,
         max_concurrent_files=max_concurrent_files,
+        cpu_workers=cpu_workers,
     )
     df_valid = df_valid[read_mask].reset_index(drop=True)
 
@@ -248,7 +237,8 @@ def fetch_and_format_nwm_points(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-    chunk_workers: Optional[int] = None,
+    io_concurrency: Optional[int] = None,
+    cpu_workers: Optional[int] = None,
 ) -> List[Path]:
     """Fetch NWM point data and save as parquet files.
 
@@ -292,11 +282,11 @@ def fetch_and_format_nwm_points(
         The type of timeseries being processed.
     drop_overlapping_assimilation_values : bool
         Whether to drop assimilation values that overlap in value_time.
-    chunk_workers : Optional[int]
-        Number of worker processes used to process chunks of files. Default is
-        1, which processes them one at a time. Likely only worth raising when
-        fetching a long time period on a machine with many cores. Ignored when
-        already running inside a worker process.
+    io_concurrency : Optional[int]
+        Remote reads in flight at once. Defaults to 48; lower it when
+        something else is fetching in parallel.
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available.
 
     Returns
     -------
@@ -310,121 +300,58 @@ def fetch_and_format_nwm_points(
 
     dfs = build_file_chunks(file_paths, process_by_z_hour, stepsize)
 
-    budget = resolve_budget()
-    # Off by default: measured break-even is ~144 files and no better than
-    # sequential past it. Reading each chunk is already parallel across its
-    # files, and that work waits on the network rather than the GIL, so extra
-    # processes add startup and memory without adding throughput. Kept as an
-    # option because that balance depends on the machine and the data.
-    workers = chunk_workers if chunk_workers is not None else 1
-    memory = available_memory()
-    if workers > 1 and memory:
-        affordable = max(1, int(memory * 0.5) // CHUNK_MEMORY_PER_WORKER)
-        if affordable < workers:
-            # Exceeding this gets workers killed with no traceback, so cap it
-            # rather than let the run die halfway through.
-            logger.warning(
-                f"Reducing chunk_workers from {workers} to {affordable}:"
-                f" a worker peaks near"
-                f" {CHUNK_MEMORY_PER_WORKER // 1024**2}MB and only"
-                f" {memory // 1024**2}MB is free."
-            )
-            workers = affordable
+    budget = resolve_budget(io=io_concurrency, cpu=cpu_workers)
     n_files = int(sum(len(df) for df in dfs))
-    in_processes = (
-        workers > 1
-        and len(dfs) > 1
-        and use_process_pool(n_files, workers, min_items=2)
-    )
-    workers = min(workers, len(dfs)) if in_processes else 1
-
     logger.info(
         f"Processing {n_files} files in {len(dfs)} chunks for configuration:"
-        f" {configuration}, variable: {variable_name}"
-        f"{f' across {workers} processes' if in_processes else ''}."
+        f" {configuration}, variable: {variable_name}. Reading up to"
+        f" {budget.io} files at once using {budget.cpu} threads."
     )
-    if in_processes:
-        logger.info(
-            f"Each process reads up to {max(1, budget.io // workers)} files at"
-            f" once using {max(1, budget.cpu // workers)} threads."
-        )
 
     non_null_paths = [path for path in file_paths if path is not None]
     if not non_null_paths:
         raise FileNotFoundError(
             "No NWM files for specified input configuration were found in GCS!"
         )
-    if in_processes:
-        # Both budgets are split, not just the network one: each worker reads
-        # its chunk with its own thread pool, and an undivided cpu budget means
-        # workers x cpu threads each holding a parsed reference -- enough memory
-        # to get the workers killed. Workers also build their own registries,
-        # since obstore pools can't cross a process boundary.
-        io_share = max(1, budget.io // workers)
-        cpu_share = max(1, budget.cpu // workers)
-
-        def _log_chunk(index: int, filepath: Optional[Path]) -> None:
-            logger.info(
-                f"Chunk {index + 1} of {len(dfs)}: "
-                f"{Path(filepath).name if filepath else 'no data'}"
-            )
-
-        output_paths = run_sync(map_blocking(
-            process_chunk_of_files,
-            dfs,
-            workers=workers,
-            processes=workers,
-            initializer=set_concurrency,
-            initargs=(io_share, cpu_share),
-            on_complete=_log_chunk,
-            args=(
-                location_ids,
-                configuration,
-                variable_name,
-                str(output_parquet_dir),
-                process_by_z_hour,
-                ignore_missing_file,
-                overwrite_output,
-                nwm_version,
-                variable_mapper,
-                timeseries_type,
-                drop_overlapping_assimilation_values,
-                None,
-                io_share,
-            ),
-        ))
-    else:
-        # Built once and reused across every chunk, so obstore's stores and
-        # connection pools are not rebuilt per chunk.
-        registry = build_kerchunk_registry(non_null_paths)
-        output_paths = []
-        for number, df in enumerate(dfs, start=1):
-            # Logged before the work, not after: a chunk takes a while, and
-            # silence until it finishes looks like a hang.
-            logger.info(
-                f"Chunk {number} of {len(dfs)}: reading {len(df)} files"
-                f" starting {df.day.iloc[0]} {df.z_hour.iloc[0]}"
-            )
-            filepath = process_chunk_of_files(
-                df,
-                location_ids,
-                configuration,
-                variable_name,
-                output_parquet_dir,
-                process_by_z_hour,
-                ignore_missing_file,
-                overwrite_output,
-                nwm_version,
-                variable_mapper,
-                timeseries_type,
-                drop_overlapping_assimilation_values,
-                registry,
-            )
-            if filepath is None:
-                logger.info(f"Chunk {number} of {len(dfs)} produced no data.")
-            else:
-                logger.debug(f"Chunk {number} wrote {Path(filepath).name}")
-            output_paths.append(filepath)
+    # Chunks run one at a time: reading one is already parallel across its
+    # files, and that work waits on the network rather than the GIL, so worker
+    # processes measured no faster (0.72-1.01x at 36-144 files). Callers
+    # wanting chunks in parallel should map them themselves -- see
+    # build_file_chunks and process_chunk_of_files.
+    #
+    # The registry is built once and reused across every chunk, so obstore's
+    # stores and connection pools are not rebuilt per chunk.
+    registry = build_kerchunk_registry(non_null_paths)
+    output_paths = []
+    for number, df in enumerate(dfs, start=1):
+        # Logged before the work, not after: a chunk takes a while, and
+        # silence until it finishes looks like a hang.
+        logger.info(
+            f"Chunk {number} of {len(dfs)}: reading {len(df)} files"
+            f" starting {df.day.iloc[0]} {df.z_hour.iloc[0]}"
+        )
+        filepath = process_chunk_of_files(
+            df,
+            location_ids,
+            configuration,
+            variable_name,
+            output_parquet_dir,
+            process_by_z_hour,
+            ignore_missing_file,
+            overwrite_output,
+            nwm_version,
+            variable_mapper,
+            timeseries_type,
+            drop_overlapping_assimilation_values,
+            registry,
+            budget.io,
+            budget.cpu,
+        )
+        if filepath is None:
+            logger.info(f"Chunk {number} of {len(dfs)} produced no data.")
+        else:
+            logger.debug(f"Chunk {number} wrote {Path(filepath).name}")
+        output_paths.append(filepath)
 
     written = [path for path in output_paths if path is not None]
     logger.info(f"Wrote {len(written)} files from {len(dfs)} chunks.")

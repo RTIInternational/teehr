@@ -126,21 +126,27 @@ def test_min_items_argument_overrides_default(monkeypatch):
     assert use_process_pool(n_items=4, processes=8, min_items=3) is True
 
 
-def test_chunk_workers_reaches_the_chunk_loop(monkeypatch):
-    """chunk_workers must survive the trip from nwm_to_parquet downwards."""
+def test_concurrency_args_reach_the_chunk_loop(monkeypatch):
+    """io_concurrency and cpu_workers must survive the trip from
+    nwm_to_parquet down to the chunk loop, and to the planning step."""
     import teehr.fetching.nwm.nwm_points as nwm_points
 
     seen = {}
+    planned = {}
 
     def fake_fetch(**kwargs):
         seen.update(kwargs)
         return []
 
+    def fake_json_paths(*args):
+        # Positional, matching generate_json_paths' signature tail.
+        planned["io"], planned["cpu"] = args[4], args[5]
+        return [f"{gcs}.json"]
+
     monkeypatch.setattr(nwm_points, "fetch_and_format_nwm_points", fake_fetch)
     gcs = ("gcs://national-water-model/nwm.20240101/short_range/"
            "nwm.t00z.short_range.channel_rt.f001.conus.nc")
-    monkeypatch.setattr(
-        nwm_points, "generate_json_paths", lambda *a, **k: [f"{gcs}.json"])
+    monkeypatch.setattr(nwm_points, "generate_json_paths", fake_json_paths)
     monkeypatch.setattr(
         nwm_points, "build_remote_nwm_filelist", lambda *a, **k: [gcs])
 
@@ -154,18 +160,12 @@ def test_chunk_workers_reaches_the_chunk_loop(monkeypatch):
         nwm_version="nwm30",
         start_date="2024-01-01",
         ingest_days=1,
-        chunk_workers=4,
+        io_concurrency=7,
+        cpu_workers=3,
     )
 
-    assert seen["chunk_workers"] == 4
-
-
-def test_chunk_workers_defaults_to_sequential():
-    """Left alone, chunks are processed one at a time."""
-    import inspect
-    from teehr.fetching.nwm.point_utils import fetch_and_format_nwm_points
-
-    default = inspect.signature(
-        fetch_and_format_nwm_points).parameters["chunk_workers"].default
-    assert default is None  # resolved to 1 inside
-    assert use_process_pool(n_items=1000, processes=1) is False
+    assert seen["io_concurrency"] == 7
+    assert seen["cpu_workers"] == 3
+    # Reference building and the s3 check happen before any chunk exists, so
+    # they take the budget too.
+    assert (planned["io"], planned["cpu"]) == (7, 3)

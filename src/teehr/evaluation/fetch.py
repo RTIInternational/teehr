@@ -508,6 +508,7 @@ class Fetch:
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
         convert_k_to_c: bool = True,
+        cpu_workers: Optional[int] = None,
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -589,6 +590,9 @@ class Fetch:
             If True, convert temperature values from Kelvin to Celsius by
             subtracting 273.15. The unit_name field will be set to "C".
             Note: this argument is only valid when variable_name is "T2D".
+        cpu_workers : Optional[int]
+            Files processed at once. Defaults to the cpus available. This path
+            has no io budget -- it reads a zarr store rather than checking s3.
 
         Examples
         --------
@@ -686,7 +690,8 @@ class Fetch:
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
             zone_polygons=locations_gdf,
-            convert_k_to_c=convert_k_to_c
+            convert_k_to_c=convert_k_to_c,
+            cpu_workers=cpu_workers
         )
 
         if (
@@ -741,7 +746,8 @@ class Fetch:
         write_mode: str = "append",
         drop_duplicates: bool = True,
         drop_overlapping_assimilation_values: Optional[bool] = True,
-        chunk_workers: Optional[int] = None
+        io_concurrency: Optional[int] = None,
+        cpu_workers: Optional[int] = None
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -854,13 +860,11 @@ class Fetch:
             keeping those with the most recent reference_time. In this case, all
             reference_time values are set to None. If False, overlapping values are
             kept and reference_time is retained.
-        chunk_workers : Optional[int]
-            Number of worker processes used to process chunks of files.
-            Default is 1, which processes them one at a time. Likely only
-            worth raising when fetching a long time period on a machine with
-            many cores.
-
-
+        io_concurrency : Optional[int]
+            Remote reads in flight at once. Defaults to 48; lower it when
+            something else is fetching in parallel.
+        cpu_workers : Optional[int]
+            Files processed at once. Defaults to the cpus available.
 
         .. note::
 
@@ -970,7 +974,8 @@ class Fetch:
             starting_z_hour=starting_z_hour,
             ending_z_hour=ending_z_hour,
             drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
-            chunk_workers=chunk_workers
+            io_concurrency=io_concurrency,
+            cpu_workers=cpu_workers
         )
 
         if (
@@ -1045,6 +1050,8 @@ class Fetch:
         drop_duplicates: bool = True,
         drop_overlapping_assimilation_values: bool = True,
         convert_k_to_c: bool = True,
+        io_concurrency: Optional[int] = None,
+        cpu_workers: Optional[int] = None,
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -1168,7 +1175,11 @@ class Fetch:
             If True, convert temperature values from Kelvin to Celsius by
             subtracting 273.15. The unit_name field will be set to "C".
             Note: this argument is only valid when variable_name is "T2D".
-
+        io_concurrency : Optional[int]
+            Remote reads in flight at once. Defaults to 48; lower it when
+            something else is fetching in parallel.
+        cpu_workers : Optional[int]
+            Files processed at once. Defaults to the cpus available.
 
         .. note::
 
@@ -1312,7 +1323,9 @@ class Fetch:
             zone_polygons=locations_gdf,
             timeseries_type=timeseries_type,
             drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
-            convert_k_to_c=convert_k_to_c
+            convert_k_to_c=convert_k_to_c,
+            io_concurrency=io_concurrency,
+            cpu_workers=cpu_workers
         )
 
         if (

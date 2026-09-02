@@ -20,7 +20,7 @@ from teehr.fetching.utils import (
     format_nwm_configuration_metadata,
     convert_value_from_kelvin_to_celsius
 )
-from teehr.utils.concurrency import resolve_budget, run_concurrent_map
+from teehr.utils.concurrency import run_concurrent_map
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
@@ -255,13 +255,17 @@ def fetch_and_format_nwm_grids(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-    convert_k_to_c: bool = True
+    convert_k_to_c: bool = True,
+    cpu_workers: Optional[int] = None
 ):
     """Compute weighted average, grouping by reference time.
 
     Group a list of json files by reference time and compute the weighted
     average of the variable values for each zone. The results are saved to
     parquet files using TEEHR data model.
+
+    ``cpu_workers`` bounds how many files are processed at once -- one file
+    per worker, so it is the only budget that applies here.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
@@ -299,7 +303,7 @@ def fetch_and_format_nwm_grids(
                 registry=registry,
             ),
             rows,
-            resolve_budget().cpu,
+            cpu_workers,
         )
 
         output = [df for df in output if df is not None]
