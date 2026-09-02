@@ -17,6 +17,10 @@ python = ">=3.12,<3.15"
 geopandas = ">=1,<2"
 pydantic = ">=2.4.2,<3"
 exactextract = ">=0.3,<1"
+# xarray needs a chunk manager for the lazy zarr reads in
+# retrospective_grids/points (xr.open_zarr with chunks). Not the
+# distributed extra -- teehr never starts a cluster.
+dask = ">=2026"
 fsspec = ">=2023.10.0,<2026"
 ujson = ">=5.8.0,<6"
 gcsfs = ">=2023.10.0,<2026"

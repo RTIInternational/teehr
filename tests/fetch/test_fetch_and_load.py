@@ -3,7 +3,6 @@ from pathlib import Path
 from datetime import datetime
 
 from teehr.fetching.nwm.nwm_points import nwm_to_parquet
-from teehr import LocalReadWriteEvaluation
 import pandas as pd
 import numpy as np
 import pytest
