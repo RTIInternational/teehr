@@ -1,4 +1,12 @@
-"""Test how concurrency is configured and bounded."""
+"""Test how concurrency is configured and bounded.
+
+Inside a container, ``os.cpu_count()`` and ``/proc/meminfo`` report the *host*
+machine, not the slice the container is allowed to use -- so teehr would happily
+start 64 threads on a 4-CPU pod. The real limits live in the kernel's cgroup
+files, which is what ``_cgroup_cpu_quota`` and ``_cgroup_memory_limit`` read.
+There are two on-disk layouts (cgroup v1 and v2) and each has its own way of
+saying "no limit", hence the cases below.
+"""
 from pathlib import Path
 
 import sys
@@ -53,39 +61,30 @@ def clean_concurrency_state(monkeypatch):
 
 def test_concurrency_defaults():
     """Defaults are used when nothing is set."""
+    assert available_cpus() >= 1
     assert resolve_io_concurrency() == DEFAULT_IO_CONCURRENCY
     assert resolve_cpu_workers() == available_cpus()
     assert resolve_budget().cpu == available_cpus()
 
 
-def test_available_cpus_is_positive():
-    """The CPU count used for defaults is always usable."""
-    assert available_cpus() >= 1
-
-
-def test_cgroup_v2_quota_is_read(tmp_path):
-    """A cgroup v2 CPU limit is reported in whole cores, rounded up."""
-    (tmp_path / "cpu.max").write_text("350000 100000")
-    assert _cgroup_cpu_quota(tmp_path) == 4
-
-
-def test_cgroup_v2_unlimited_quota(tmp_path):
-    """An unlimited cgroup v2 quota reports no limit."""
-    (tmp_path / "cpu.max").write_text("max 100000")
-    assert _cgroup_cpu_quota(tmp_path) is None
-
-
-def test_cgroup_v1_quota_is_read(tmp_path):
-    """A cgroup v1 CPU limit is read when no v2 file is present."""
-    (tmp_path / "cpu").mkdir()
-    (tmp_path / "cpu" / "cpu.cfs_quota_us").write_text("200000")
-    (tmp_path / "cpu" / "cpu.cfs_period_us").write_text("100000")
-    assert _cgroup_cpu_quota(tmp_path) == 2
-
-
-def test_missing_cgroup_files_report_no_limit(tmp_path):
-    """No cgroup files (e.g. macOS) means no limit rather than an error."""
-    assert _cgroup_cpu_quota(tmp_path) is None
+@pytest.mark.parametrize("files, expected_cores", [
+    # v2: "quota period" in microseconds -> 3.5 cores, rounded up.
+    ({"cpu.max": "350000 100000"}, 4),
+    # v2 says unlimited with the word "max".
+    ({"cpu.max": "max 100000"}, None),
+    # v1 splits quota and period across two files.
+    ({"cpu/cpu.cfs_quota_us": "200000",
+      "cpu/cpu.cfs_period_us": "100000"}, 2),
+    # No cgroup files at all (macOS, bare metal) is not an error.
+    ({}, None),
+])
+def test_cpu_limit_is_read_from_cgroup(tmp_path, files, expected_cores):
+    """The container's CPU allowance, or None when it is unlimited."""
+    for name, text in files.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+    assert _cgroup_cpu_quota(tmp_path) == expected_cores
 
 
 def test_env_vars_are_read_at_call_time(monkeypatch):
@@ -144,8 +143,8 @@ def test_values_are_clamped_to_supported_range():
     assert resolve_cpu_workers(10_000) == MAX_CPU_WORKERS
 
 
-def test_process_count_is_capped_below_worker_count(monkeypatch):
-    """Processes get their own, lower ceiling because they cost memory."""
+def test_process_count_has_its_own_ceiling(monkeypatch):
+    """Even with memory to spare, processes stop at DEFAULT_MAX_PROCESSES."""
     monkeypatch.setattr(concurrency, "available_memory", lambda: 512 * 1024**3)
     set_concurrency(cpu=MAX_CPU_WORKERS)
     assert resolve_cpu_workers() == MAX_CPU_WORKERS
@@ -171,38 +170,37 @@ def test_bigger_machine_gets_more_processes(monkeypatch):
     assert large == 16 and small == 4
 
 
-def test_memory_cap_ignored_when_overridden(monkeypatch):
-    """An explicit TEEHR_MAX_PROCESSES wins over the memory estimate."""
+def test_max_processes_env_var_overrides_both_caps(monkeypatch):
+    """TEEHR_MAX_PROCESSES beats the default ceiling and the memory estimate."""
+    monkeypatch.setenv("TEEHR_MAX_PROCESSES", "16")
+    set_concurrency(cpu=32)
+    assert resolve_cpu_processes() == 16
+
+    # Still honoured when memory alone would have allowed only one.
     monkeypatch.setattr(concurrency, "available_memory", lambda: 2 * 1024**3)
     monkeypatch.setenv("TEEHR_MAX_PROCESSES", "12")
-    set_concurrency(cpu=32)
     assert resolve_cpu_processes() == 12
 
 
-def test_cgroup_v2_memory_limit(tmp_path):
-    """A cgroup v2 memory limit is read in bytes."""
-    (tmp_path / "memory.max").write_text("34359738368\n")
-    assert _cgroup_memory_limit(tmp_path) == 34359738368
-
-
-def test_cgroup_v2_memory_unlimited(tmp_path):
-    """"max" means no limit."""
-    (tmp_path / "memory.max").write_text("max\n")
-    assert _cgroup_memory_limit(tmp_path) is None
-
-
-def test_cgroup_v1_memory_limit(tmp_path):
-    """cgroup v1 is read when no v2 file exists."""
-    (tmp_path / "memory").mkdir()
-    (tmp_path / "memory" / "memory.limit_in_bytes").write_text("8589934592")
-    assert _cgroup_memory_limit(tmp_path) == 8589934592
-
-
-def test_cgroup_v1_memory_sentinel_is_unlimited(tmp_path):
-    """v1 signals "unlimited" with a huge number rather than a word."""
-    (tmp_path / "memory").mkdir()
-    (tmp_path / "memory" / "memory.limit_in_bytes").write_text(str(2**63 - 1))
-    assert _cgroup_memory_limit(tmp_path) is None
+@pytest.mark.parametrize("files, expected_bytes", [
+    # v2 states the limit in bytes.
+    ({"memory.max": "34359738368\n"}, 34359738368),
+    # v2 says unlimited with the word "max".
+    ({"memory.max": "max\n"}, None),
+    # v1 uses a different filename.
+    ({"memory/memory.limit_in_bytes": "8589934592"}, 8589934592),
+    # v1 says unlimited with a huge sentinel number instead of a word.
+    ({"memory/memory.limit_in_bytes": str(2**63 - 1)}, None),
+    # No cgroup files at all.
+    ({}, None),
+])
+def test_memory_limit_is_read_from_cgroup(tmp_path, files, expected_bytes):
+    """The container's memory allowance, or None when it is unlimited."""
+    for name, text in files.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+    assert _cgroup_memory_limit(tmp_path) == expected_bytes
 
 
 def test_available_memory_is_positive_or_unknown():
@@ -211,17 +209,10 @@ def test_available_memory_is_positive_or_unknown():
     assert memory is None or memory > 0
 
 
-def test_process_count_never_exceeds_worker_count():
-    """Lowering the parse budget lowers the process count with it."""
+def test_process_count_follows_the_cpu_budget():
+    """Fewer CPU workers means fewer processes; a process needs a worker."""
     set_concurrency(cpu=2)
     assert resolve_cpu_processes() == 2
-
-
-def test_process_cap_is_configurable(monkeypatch):
-    """The process ceiling can be raised for machines with the memory."""
-    monkeypatch.setenv("TEEHR_MAX_PROCESSES", "16")
-    set_concurrency(cpu=32)
-    assert resolve_cpu_processes() == 16
 
 
 def test_guarded_script_is_detected(tmp_path):
