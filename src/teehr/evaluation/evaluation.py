@@ -1,5 +1,6 @@
 """Evaluation module."""
 import tempfile
+import os
 from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import Union, List
@@ -26,8 +27,6 @@ from teehr.const import (
     LOCAL_NAMESPACE_NAME,
     LOCAL_CATALOG_DB_NAME,
     CACHE_DIR,
-    REMOTE_CATALOG_REST_URI,
-    REMOTE_WAREHOUSE_S3_PATH,
     REMOTE_NAMESPACE_NAME
 )
 from teehr.utils.utils import remove_dir_if_exists
@@ -1037,8 +1036,10 @@ class RemoteReadOnlyEvaluation(BaseEvaluation):
         cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir = cache_dir
 
-        # Check the configuration for remote catalog access
-        if REMOTE_CATALOG_REST_URI == "" or REMOTE_WAREHOUSE_S3_PATH == "":
+        # Check the configuration for remote catalog access.
+        remote_catalog_rest_uri = os.getenv("REMOTE_CATALOG_REST_URI", "")
+        remote_warehouse_identifier = os.getenv("REMOTE_WAREHOUSE_IDENTIFIER", "")
+        if remote_catalog_rest_uri == "" or remote_warehouse_identifier == "":
             raise ValueError(
                 "Currently you must be in the TEEHR-Hub environment to use the "
                 "RemoteReadOnlyEvaluation and RemoteReadWriteEvaluation classes. "
