@@ -75,12 +75,6 @@ warnings.filterwarnings("ignore", category=UnstableSpecificationWarning)
 
 logger = logging.getLogger(__name__)
 
-# Coordinates embedded in a reference rather than pointed at: scalars and the
-# grid axes are small, and inlining them saves the read path a round trip per
-# file. feature_id is deliberately absent -- 2.7M values for CONUS -- and is
-# read from the source file when a chunk is opened. Names absent from a given
-# file are ignored, so one list covers point and gridded output.
-INLINE_COORDINATES = ["time", "reference_time", "x", "y"]
 
 
 def start_on_z_hour(
@@ -1181,22 +1175,15 @@ def gen_json_virtualizarr(
 
     try:
         manifest_store = HDFParser()(url=remote_path, registry=registry)
-        # Materialize only the coordinates small enough to be worth embedding.
-        # Left to its default, to_virtual_dataset loads every *indexed*
-        # coordinate, and a loaded variable has no byte range left to point at,
-        # so it must be inlined here as base64. For NWM point output that means
-        # feature_id: a 103KB compressed array inflated to 29.7MB, making the
-        # reference 2.4x the size of the NetCDF it stands in for. feature_id is
-        # read from the source file's byte range when a chunk is read, which
-        # costs little since those chunks are fetched alongside the data.
-        #
-        # The grid coordinates stay on the list: x and y run a few thousand
-        # values, cost ~90KB inlined, and keeping them here saves the gridded
-        # read path a round trip per file. Names absent from a given file are
-        # ignored, so one list covers point and gridded output.
-        vds = manifest_store.to_virtual_dataset(
-            loadable_variables=INLINE_COORDINATES
-        )
+        # Every variable stays a byte-range pointer, coordinates included.
+        # ManifestStore.to_virtual_dataset() would be the obvious call, but it
+        # runs the store through xr.open_zarr to inline whichever coordinates
+        # are asked for, and that eagerly opens and indexes *all* of them --
+        # 439ms of the 574ms spent per file, for base64 the readers do not
+        # need, since they fetch coordinates alongside the data anyway. Going
+        # to the group directly is 3-4.6x faster and measured byte-identical
+        # results through both the point and grid read paths.
+        vds = manifest_store._group.to_virtual_dataset()
         refs = vds.virtualize.to_kerchunk(format="dict")
         refs = _fix_scalar_chunk_keys(refs)
         refs = _fix_fill_values(refs)
