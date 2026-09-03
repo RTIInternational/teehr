@@ -42,22 +42,22 @@ Mix the two -- download many at once, parse only a few::
         )
 
 For CPU-heavy work, worker processes beat threads because they don't share a
-GIL -- but each costs ~3s to start and ~500MB, so it only pays off on big
-jobs. Let :func:`use_process_pool` decide::
+GIL -- but each costs seconds to start and hundreds of MB, so it only pays
+off on big jobs. Let :func:`use_process_pool` decide, and tell
+:func:`resolve_budget` what a worker costs so the count fits in memory::
 
-    budget = resolve_budget()
+    budget = resolve_budget(memory_per_process=700 * 1024**2)
     results = await map_blocking(
         parse_one, items, workers=budget.cpu,
         processes=budget.processes
-        if use_process_pool(len(items), budget.processes) else 0,
+        if use_process_pool(len(items), budget.processes, min_items=32) else 0,
     )
 
-Two things to know before using processes. Its threshold is calibrated for
-items costing roughly a second each -- set ``TEEHR_PROCESS_MIN_ITEMS`` if
-yours are much cheaper or dearer. And anything expensive a worker needs (a
-client, a registry) should be built lazily inside the function and cached with
-``@lru_cache``, so every process builds its own once instead of pickling one
-across.
+Two things to know before using processes. ``min_items`` is yours to
+measure -- it is what repays the startup cost for *your* per-item work. And
+anything expensive a worker needs (a client, a registry) should be built
+lazily inside the function and cached with ``@lru_cache``, so every process
+builds its own once instead of pickling one across.
 
 Users can change the defaults for a whole session::
 
@@ -90,28 +90,16 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-# Network waits, so this can be far above the core count.
+# Network waits, so this can be far above the core count. A round default
+# rather than a measured one, and the only budget that never consults the
+# machine -- pass io= if you know what your link and object store can take.
 DEFAULT_IO_CONCURRENCY = 48
 MAX_IO_CONCURRENCY = 256
 
-# Parsing is CPU work; it defaults to the cores this process can actually use.
+# Sanity ceilings on an explicit override, not tuning -- they only guard
+# against a mistyped budget. MAX_CPU_WORKERS bounds worker *processes* too,
+# since resolve_cpu_processes never exceeds the cpu budget.
 MAX_CPU_WORKERS = 64
-
-# Worker processes are capped below the core count for two reasons: each holds
-# its own interpreter and libraries (~500MB measured, so the cap also follows
-# available memory), and throughput flattens out past roughly this many -- 16
-# workers measured only ~8-27% faster than 8. Raise with TEEHR_MAX_PROCESSES.
-DEFAULT_MAX_PROCESSES = 16
-# Budget per worker process: ~700MB measured, doubled because the parent holds
-# the combined result and the OS still needs page cache for the files read.
-# The only place a worker's memory footprint is defined; callers sizing their
-# own pools cap by ConcurrencyBudget.processes rather than repeating it.
-MEMORY_PER_PROCESS = 1400 * 1024**2
-
-# Starting a worker costs ~3s (it has to import teehr), so processes only pay
-# off for bigger jobs. Measured break-even is ~24-32 files; below that they run
-# ~20% slower than threads. Tune with TEEHR_PROCESS_MIN_ITEMS.
-DEFAULT_PROCESS_MIN_ITEMS = 32
 
 # Set by set_concurrency(); None means "check the environment, then the
 # default". Resolved per call, not at import, so a notebook can change these
@@ -292,34 +280,37 @@ def resolve_cpu_workers(override: Optional[int] = None) -> int:
     return _clamp(int(value), 1, MAX_CPU_WORKERS, "cpu_workers")
 
 
-def resolve_cpu_processes(workers: Optional[int] = None) -> int:
+def resolve_cpu_processes(
+    workers: Optional[int] = None,
+    memory_per_process: Optional[int] = None,
+) -> int:
     """Resolve how many of the CPU workers may be separate processes.
 
-    Never more than :func:`resolve_cpu_workers`, and capped again by however
-    many :func:`available_memory` can hold at ~700MB apiece, then by
-    :data:`DEFAULT_MAX_PROCESSES`. So a bigger machine gets more workers
-    without anyone configuring it, and a memory-starved one gets fewer.
-    ``TEEHR_MAX_PROCESSES`` overrides the lot.
+    Never more than :func:`resolve_cpu_workers`. Callers who know what a
+    worker costs pass ``memory_per_process`` and get a count that also fits in
+    :func:`available_memory`, so a bigger machine gets more workers without
+    anyone configuring it and a memory-starved one gets fewer.
 
     Parameters
     ----------
     workers : Optional[int]
         CPU budget to cap; resolved from the process-wide setting if omitted.
+    memory_per_process : Optional[int]
+        Bytes one worker is expected to peak at, measured by the caller for
+        its own work. Omit to bound by CPU alone.
     """
     workers = resolve_cpu_workers(workers)
-    ceiling = _int_from_env("TEEHR_MAX_PROCESSES")
-    if ceiling is None:
-        ceiling = DEFAULT_MAX_PROCESSES
-        memory = available_memory()
-        if memory:
-            # Scale down on a small machine rather than risking an OOM kill.
-            ceiling = min(ceiling, max(1, memory // MEMORY_PER_PROCESS))
-    return max(1, min(workers, ceiling))
+    memory = available_memory()
+    if memory_per_process and memory:
+        # Scale down on a small machine rather than risking an OOM kill.
+        workers = min(workers, max(1, memory // memory_per_process))
+    return max(1, workers)
 
 
 def resolve_budget(
     io: Optional[int] = None,
     cpu: Optional[int] = None,
+    memory_per_process: Optional[int] = None,
 ) -> ConcurrencyBudget:
     """Work out the budget for one operation.
 
@@ -332,6 +323,9 @@ def resolve_budget(
         Override for network concurrency.
     cpu : Optional[int]
         Override for compute concurrency.
+    memory_per_process : Optional[int]
+        Bytes one worker process is expected to peak at. Only affects
+        ``processes``; omit unless you intend to use them.
 
     Examples
     --------
@@ -341,7 +335,7 @@ def resolve_budget(
     return ConcurrencyBudget(
         io=resolve_io_concurrency(io),
         cpu=resolve_cpu_workers(cpu),
-        processes=resolve_cpu_processes(cpu),
+        processes=resolve_cpu_processes(cpu, memory_per_process),
     )
 
 
@@ -440,15 +434,15 @@ def in_worker_process() -> bool:
 def use_process_pool(
     n_items: int,
     processes: int,
-    min_items: Optional[int] = None,
+    min_items: int,
 ) -> bool:
     """Whether a job this size is worth handing to worker processes.
 
-    Processes run compute-bound work roughly twice as fast as threads, but each
-    costs ~3s to start, so the trade only pays off once there is enough work to
-    repay that. Says no as well when we are already inside a worker
-    (:func:`in_worker_process`), or when workers would re-run the caller's
-    script (:func:`main_module_is_spawn_safe`).
+    Processes escape the GIL, but each costs seconds to start, so the trade
+    only pays off once there is enough work to repay that. Says no as well
+    when we are already inside a worker (:func:`in_worker_process`), or when
+    workers would re-run the caller's script
+    (:func:`main_module_is_spawn_safe`).
 
     Parameters
     ----------
@@ -456,18 +450,12 @@ def use_process_pool(
         How many items the job has.
     processes : int
         Worker processes available, from :attr:`ConcurrencyBudget.processes`.
-    min_items : Optional[int]
-        Fewest items worth starting processes for. Defaults to
-        ``TEEHR_PROCESS_MIN_ITEMS`` or :data:`DEFAULT_PROCESS_MIN_ITEMS`, which
-        is calibrated for items costing about a second each -- pass something
-        lower for chunkier work.
+    min_items : int
+        Fewest items worth starting processes for. No default: it is
+        ``startup_cost / per_item_cost``, which only the caller can measure.
     """
     if processes < 2 or n_items < 2:
         return False
-    if min_items is None:
-        min_items = _int_from_env("TEEHR_PROCESS_MIN_ITEMS")
-    if min_items is None:
-        min_items = DEFAULT_PROCESS_MIN_ITEMS
     if n_items < min_items:
         return False
     if in_worker_process():
@@ -641,7 +629,7 @@ async def map_blocking(
     >>> await map_blocking(
     ...     build_one, paths, workers=budget.cpu,
     ...     processes=budget.processes if use_process_pool(
-    ...         len(paths), budget.processes) else 0,
+    ...         len(paths), budget.processes, min_items=32) else 0,
     ... )
     """
     items = list(items)

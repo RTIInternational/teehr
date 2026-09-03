@@ -7,18 +7,21 @@ files, which is what ``_cgroup_cpu_quota`` and ``_cgroup_memory_limit`` read.
 There are two on-disk layouts (cgroup v1 and v2) and each has its own way of
 saying "no limit", hence the cases below.
 """
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-
+import multiprocessing
 import sys
 import types
 
 import pytest
 
 import teehr.utils.concurrency as concurrency
-from teehr.fetching.utils import build_zarr_references_virtualizarr
+from teehr.fetching.utils import (
+    REFERENCE_WORKER_MEMORY,
+    build_zarr_references_virtualizarr,
+)
 from teehr.utils.concurrency import (
     DEFAULT_IO_CONCURRENCY,
-    DEFAULT_MAX_PROCESSES,
     MAX_IO_CONCURRENCY,
     MAX_CPU_WORKERS,
     available_cpus,
@@ -38,8 +41,6 @@ from teehr.utils.concurrency import (
 ENV_VARS = [
     "TEEHR_IO_CONCURRENCY",
     "TEEHR_CPU_WORKERS",
-    "TEEHR_PROCESS_MIN_ITEMS",
-    "TEEHR_MAX_PROCESSES",
 ]
 
 
@@ -143,43 +144,41 @@ def test_values_are_clamped_to_supported_range():
     assert resolve_cpu_workers(10_000) == MAX_CPU_WORKERS
 
 
-def test_process_count_has_its_own_ceiling(monkeypatch):
-    """Even with memory to spare, processes stop at DEFAULT_MAX_PROCESSES."""
+def test_process_count_is_bounded_by_cpu_not_a_fixed_ceiling(monkeypatch):
+    """With memory to spare, processes follow the cpu budget."""
     monkeypatch.setattr(concurrency, "available_memory", lambda: 512 * 1024**3)
     set_concurrency(cpu=MAX_CPU_WORKERS)
     assert resolve_cpu_workers() == MAX_CPU_WORKERS
-    assert resolve_cpu_processes() == DEFAULT_MAX_PROCESSES
+    assert resolve_cpu_processes(memory_per_process=1400 * 1024**2) == (
+        MAX_CPU_WORKERS
+    )
 
 
 def test_memory_limits_the_process_count(monkeypatch):
     """A machine short on memory runs fewer workers, not the full CPU count."""
     monkeypatch.setattr(concurrency, "available_memory", lambda: 4 * 1024**3)
     set_concurrency(cpu=32)
-    # 4GB at 1.4GB budgeted per worker -> 2
-    assert resolve_cpu_processes() == 2
+    # 4GB at the 1.4GB the caller budgets per worker -> 2
+    assert resolve_cpu_processes(memory_per_process=1400 * 1024**2) == 2
+
+
+def test_no_memory_budget_means_no_memory_cap(monkeypatch):
+    """A caller that does not say what a worker costs is bounded by cpu."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 1 * 1024**3)
+    set_concurrency(cpu=8)
+    assert resolve_cpu_processes() == 8
 
 
 def test_bigger_machine_gets_more_processes(monkeypatch):
     """The large notebook profile should use more workers than the small one."""
+    budget = 1400 * 1024**2
     monkeypatch.setattr(concurrency, "available_memory", lambda: 127 * 1024**3)
     set_concurrency(cpu=16)
-    large = resolve_cpu_processes()
+    large = resolve_cpu_processes(memory_per_process=budget)
     monkeypatch.setattr(concurrency, "available_memory", lambda: 32 * 1024**3)
     set_concurrency(cpu=4)
-    small = resolve_cpu_processes()
+    small = resolve_cpu_processes(memory_per_process=budget)
     assert large == 16 and small == 4
-
-
-def test_max_processes_env_var_overrides_both_caps(monkeypatch):
-    """TEEHR_MAX_PROCESSES beats the default ceiling and the memory estimate."""
-    monkeypatch.setenv("TEEHR_MAX_PROCESSES", "16")
-    set_concurrency(cpu=32)
-    assert resolve_cpu_processes() == 16
-
-    # Still honoured when memory alone would have allowed only one.
-    monkeypatch.setattr(concurrency, "available_memory", lambda: 2 * 1024**3)
-    monkeypatch.setenv("TEEHR_MAX_PROCESSES", "12")
-    assert resolve_cpu_processes() == 12
 
 
 @pytest.mark.parametrize("files, expected_bytes", [
@@ -276,37 +275,36 @@ def test_process_pool_refused_for_unguarded_main(monkeypatch, tmp_path):
     concurrency.main_module_is_spawn_safe.cache_clear()
     main = types.SimpleNamespace(__spec__=None, __file__=str(script))
     monkeypatch.setitem(sys.modules, "__main__", main)
-    assert use_process_pool(n_items=64, processes=8) is False
+    assert use_process_pool(n_items=64, processes=8, min_items=32) is False
 
 
 def test_process_pool_is_skipped_for_small_jobs():
     """Small batches stay in threads, where they are faster."""
-    assert use_process_pool(n_items=8, processes=8) is False
-    assert use_process_pool(n_items=1, processes=8) is False
+    assert use_process_pool(n_items=8, processes=8, min_items=32) is False
+    assert use_process_pool(n_items=1, processes=8, min_items=32) is False
 
 
 def test_process_pool_is_used_for_large_jobs():
     """Large batches amortize the cost of starting workers."""
-    assert use_process_pool(n_items=64, processes=8) is True
+    assert use_process_pool(n_items=64, processes=8, min_items=32) is True
 
 
 def test_process_pool_needs_more_than_one_worker():
     """A single worker gains nothing from a separate process."""
-    assert use_process_pool(n_items=64, processes=1) is False
+    assert use_process_pool(n_items=64, processes=1, min_items=32) is False
 
 
-def test_process_pool_threshold_is_configurable(monkeypatch):
-    """The threshold can be tuned, including forcing processes on."""
-    monkeypatch.setenv("TEEHR_PROCESS_MIN_ITEMS", "0")
-    assert use_process_pool(n_items=2, processes=8) is True
-
-    monkeypatch.setenv("TEEHR_PROCESS_MIN_ITEMS", "1000000")
-    assert use_process_pool(n_items=64, processes=8) is False
+def test_process_pool_threshold_is_the_callers_to_set():
+    """The caller's min_items decides, including forcing processes on."""
+    assert use_process_pool(n_items=2, processes=8, min_items=0) is True
+    assert use_process_pool(n_items=64, processes=8, min_items=1000000) is False
 
 
 def test_building_references_in_processes(tmpdir, monkeypatch, caplog):
     """References build correctly when the process pool is used."""
-    monkeypatch.setenv("TEEHR_PROCESS_MIN_ITEMS", "0")
+    monkeypatch.setattr(
+        "teehr.fetching.utils.REFERENCE_BUILD_MIN_ITEMS", 0
+    )
     remote_paths = [
         "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f001.alaska.nc",  # noqa
         "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f002.alaska.nc",  # noqa
@@ -348,6 +346,57 @@ def test_already_built_references_are_reused(tmpdir):
 
     assert second == first
     assert Path(second[0]).stat().st_mtime_ns == mtime
+
+
+def _worker_peak_bytes(args):
+    """Build references, then report this worker's own peak RSS.
+
+    Runs in a spawned worker, so it must be importable at module level.
+    """
+    paths, json_dir = args
+    from teehr.fetching.utils import gen_json_virtualizarr
+
+    for path in paths:
+        gen_json_virtualizarr(path, json_dir, True)
+    for line in Path("/proc/self/status").read_text().splitlines():
+        if line.startswith("VmHWM:"):
+            return int(line.split()[1]) * 1024
+    return 0
+
+
+@pytest.mark.skipif(
+    not Path("/proc/self/status").exists(), reason="needs procfs"
+)
+def test_reference_worker_memory_is_budgeted(tmpdir):
+    """REFERENCE_WORKER_MEMORY must bracket what a worker really peaks at.
+
+    Both bounds matter. Too low and workers get OOM-killed, which shows up
+    only as a silent fallback to threads. Too high and the process count is
+    capped below what the machine could run, with no error at all -- that is
+    how this constant came to be 3x the real figure.
+    """
+    remote_paths = [
+        "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f001.alaska.nc",  # noqa
+        "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f002.alaska.nc",  # noqa
+    ]
+    with ProcessPoolExecutor(
+        max_workers=2, mp_context=multiprocessing.get_context("spawn")
+    ) as pool:
+        peaks = list(pool.map(
+            _worker_peak_bytes,
+            [([path], str(tmpdir)) for path in remote_paths],
+        ))
+    peak = max(peaks)
+
+    assert peak < REFERENCE_WORKER_MEMORY, (
+        f"a worker peaked at {peak / 1024**2:.0f}MB, over the budgeted"
+        f" {REFERENCE_WORKER_MEMORY / 1024**2:.0f}MB"
+    )
+    assert peak > REFERENCE_WORKER_MEMORY / 4, (
+        f"a worker peaked at only {peak / 1024**2:.0f}MB against a budgeted"
+        f" {REFERENCE_WORKER_MEMORY / 1024**2:.0f}MB; over-budgeting caps the"
+        f" process count for no reason"
+    )
 
 
 def test_spawn_safety_answer_is_cached(monkeypatch, tmp_path):

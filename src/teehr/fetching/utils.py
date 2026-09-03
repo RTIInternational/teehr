@@ -76,6 +76,14 @@ warnings.filterwarnings("ignore", category=UnstableSpecificationWarning)
 
 logger = logging.getLogger(__name__)
 
+# Caps the reference-building worker count so it fits in RAM. ~440MB measured
+# per worker, doubled to leave the parent room. Guarded by
+# test_reference_worker_memory_is_budgeted.
+REFERENCE_WORKER_MEMORY = 900 * 1024**2
+
+# Fewest files worth the ~3s per worker startup; measured break-even.
+REFERENCE_BUILD_MIN_ITEMS = 32
+
 # Coordinates embedded in a reference rather than pointed at: scalars and the
 # grid axes are small, and inlining them saves the read path a round trip per
 # file. feature_id is deliberately absent -- 2.7M values for CONUS -- and is
@@ -1239,10 +1247,14 @@ async def _build_zarr_references_virtualizarr_async(
     if len(missing_paths) == 0:
         return sorted(existing_jsons)
 
-    budget = resolve_budget(cpu=cpu_workers)
+    budget = resolve_budget(
+        cpu=cpu_workers, memory_per_process=REFERENCE_WORKER_MEMORY
+    )
     processes = (
         budget.processes
-        if use_process_pool(len(missing_paths), budget.processes)
+        if use_process_pool(
+            len(missing_paths), budget.processes, REFERENCE_BUILD_MIN_ITEMS
+        )
         else 0
     )
     logger.info(

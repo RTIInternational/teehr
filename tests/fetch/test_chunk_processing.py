@@ -119,10 +119,10 @@ def test_process_pool_declined_inside_worker():
         assert list(pool.map(_would_nest, [0])) == [False]
 
 
-def test_min_items_argument_overrides_default(monkeypatch):
-    """Chunky work can opt into processes sooner than the default threshold."""
+def test_min_items_gates_the_process_pool(monkeypatch):
+    """Chunky work can opt into processes sooner than leaner work."""
     monkeypatch.setattr(concurrency, "main_module_is_spawn_safe", lambda: True)
-    assert use_process_pool(n_items=4, processes=8) is False
+    assert use_process_pool(n_items=4, processes=8, min_items=32) is False
     assert use_process_pool(n_items=4, processes=8, min_items=3) is True
 
 
