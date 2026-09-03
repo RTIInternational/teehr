@@ -76,10 +76,12 @@ warnings.filterwarnings("ignore", category=UnstableSpecificationWarning)
 
 logger = logging.getLogger(__name__)
 
-# Caps the reference-building worker count so it fits in RAM. ~440MB measured
-# per worker, doubled to leave the parent room. Guarded by
-# test_reference_worker_memory_is_budgeted.
-REFERENCE_WORKER_MEMORY = 900 * 1024**2
+# Caps the reference-building worker count so it fits in RAM. Worker peaks vary
+# with the interpreter and wheel set -- ~440MB on py3.14, ~1180MB in CI -- so
+# this covers the larger with room for the parent. Re-measure on the target
+# image if the count looks wrong; test_reference_work_memory_is_bounded guards
+# only the part teehr controls.
+REFERENCE_WORKER_MEMORY = 2000 * 1024**2
 
 # Fewest files worth the ~3s per worker startup; measured break-even.
 REFERENCE_BUILD_MIN_ITEMS = 32

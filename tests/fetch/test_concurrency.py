@@ -16,10 +16,7 @@ import types
 import pytest
 
 import teehr.utils.concurrency as concurrency
-from teehr.fetching.utils import (
-    REFERENCE_WORKER_MEMORY,
-    build_zarr_references_virtualizarr,
-)
+from teehr.fetching.utils import build_zarr_references_virtualizarr
 from teehr.utils.concurrency import (
     DEFAULT_IO_CONCURRENCY,
     MAX_IO_CONCURRENCY,
@@ -348,32 +345,43 @@ def test_already_built_references_are_reused(tmpdir):
     assert Path(second[0]).stat().st_mtime_ns == mtime
 
 
-def _worker_peak_bytes(args):
-    """Build references, then report this worker's own peak RSS.
+def _worker_memory_report(args):
+    """Build references, reporting RSS after import and at peak.
 
     Runs in a spawned worker, so it must be importable at module level.
     """
     paths, json_dir = args
     from teehr.fetching.utils import gen_json_virtualizarr
 
+    def vmhwm():
+        for line in Path("/proc/self/status").read_text().splitlines():
+            if line.startswith("VmHWM:"):
+                return int(line.split()[1]) * 1024
+        return 0
+
+    after_import = vmhwm()
     for path in paths:
         gen_json_virtualizarr(path, json_dir, True)
-    for line in Path("/proc/self/status").read_text().splitlines():
-        if line.startswith("VmHWM:"):
-            return int(line.split()[1]) * 1024
-    return 0
+    return after_import, vmhwm()
+
+
+# Generous next to the ~80MB measured, but a re-inlined coordinate would add
+# tens of MB per file and blow straight through it.
+MAX_WORK_MEMORY = 300 * 1024**2
 
 
 @pytest.mark.skipif(
     not Path("/proc/self/status").exists(), reason="needs procfs"
 )
-def test_reference_worker_memory_is_budgeted(tmpdir):
-    """REFERENCE_WORKER_MEMORY must bracket what a worker really peaks at.
+def test_reference_work_memory_is_bounded(tmpdir):
+    """Building a reference must not hold much beyond the import footprint.
 
-    Both bounds matter. Too low and workers get OOM-killed, which shows up
-    only as a silent fallback to threads. Too high and the process count is
-    capped below what the machine could run, with no error at all -- that is
-    how this constant came to be 3x the real figure.
+    Asserts the *delta*, not peak RSS: the import footprint swings with the
+    interpreter and wheel set (~360MB on py3.14, far more elsewhere), so an
+    absolute bound would only measure the runner. The delta is the part teehr
+    controls, and it is what a regression -- inlining a large coordinate,
+    say -- would show up in. REFERENCE_WORKER_MEMORY has to cover
+    import + delta on the *deployment* image, which no CI run can check.
     """
     remote_paths = [
         "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f001.alaska.nc",  # noqa
@@ -382,20 +390,16 @@ def test_reference_worker_memory_is_budgeted(tmpdir):
     with ProcessPoolExecutor(
         max_workers=2, mp_context=multiprocessing.get_context("spawn")
     ) as pool:
-        peaks = list(pool.map(
-            _worker_peak_bytes,
+        reports = list(pool.map(
+            _worker_memory_report,
             [([path], str(tmpdir)) for path in remote_paths],
         ))
-    peak = max(peaks)
+    worst = max(peak - after_import for after_import, peak in reports)
 
-    assert peak < REFERENCE_WORKER_MEMORY, (
-        f"a worker peaked at {peak / 1024**2:.0f}MB, over the budgeted"
-        f" {REFERENCE_WORKER_MEMORY / 1024**2:.0f}MB"
-    )
-    assert peak > REFERENCE_WORKER_MEMORY / 4, (
-        f"a worker peaked at only {peak / 1024**2:.0f}MB against a budgeted"
-        f" {REFERENCE_WORKER_MEMORY / 1024**2:.0f}MB; over-budgeting caps the"
-        f" process count for no reason"
+    assert worst < MAX_WORK_MEMORY, (
+        f"building a reference added {worst / 1024**2:.0f}MB per worker, over"
+        f" the {MAX_WORK_MEMORY / 1024**2:.0f}MB allowed; peaks were"
+        f" {[f'{p / 1024**2:.0f}MB after {a / 1024**2:.0f}MB import' for a, p in reports]}"
     )
 
 
