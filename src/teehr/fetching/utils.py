@@ -11,11 +11,12 @@ import logging
 import os
 import re
 import json
+import fnmatch
 import struct
 import warnings
 from warnings import warn
 
-import fsspec
+import obstore
 import ujson  # fast json
 from obstore.store import from_url
 from obspec_utils.registry import ObjectStoreRegistry
@@ -1506,7 +1507,6 @@ def build_remote_nwm_filelist(
     logger.debug("Building remote NWM file list from GCS.")
 
     gcs_dir = f"gcs://{NWM_BUCKET}"
-    fs = fsspec.filesystem("gcs", token="anon", skip_instance_cache=True)
     if ingest_days is None:
         dates = pd.date_range(start=start_dt.date(), end=end_dt.date(), freq="1d")
     else:
@@ -1557,16 +1557,23 @@ def build_remote_nwm_filelist(
             )
             component_paths = dropped_df["filepath"].tolist()
     else:
+        store = from_url(f"gs://{NWM_BUCKET}/", skip_signature=True)
         component_paths = []
         for dt in dates:
             dt_str = dt.strftime("%Y%m%d")
-            file_path = (
-                f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.*.{output_type}*"
-            )
-            result = fs.glob(file_path)
+            prefix = f"nwm.{dt_str}/{configuration}/"
+            pattern = f"{prefix}nwm.*.{output_type}*"
+            keys = [
+                meta["path"]
+                for batch in obstore.list(store, prefix)
+                for meta in batch
+            ]
+            result = [key for key in keys if fnmatch.fnmatch(key, pattern)]
             if (len(result) == 0) & (not ignore_missing_file):
-                raise FileNotFoundError(f"No NWM files found in {file_path}")
-            component_paths.extend(result)
+                raise FileNotFoundError(
+                    f"No NWM files found in {gcs_dir}/{pattern}"
+                )
+            component_paths.extend(f"{NWM_BUCKET}/{key}" for key in result)
         component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
         if "assim" in configuration:
