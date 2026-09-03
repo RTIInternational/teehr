@@ -53,6 +53,7 @@ from teehr.fetching.const import (
     NWM_BUCKET,
     NWM_HAWAII_VARIABLE_MAPPER,
     NWM_S3_JSON_PATH,
+    NWM_S3_JSON_REGION,
     NWM30_START_DATE,
     NWM21_START_DATE,
     NWM20_START_DATE,
@@ -527,6 +528,15 @@ def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
 
 
+def _public_store(url: str):
+    """Anonymous store for ``url``, pinned to its region where we know it."""
+    if url.startswith(NWM_S3_JSON_PATH):
+        return from_url(
+            url, skip_signature=True, region=NWM_S3_JSON_REGION
+        )
+    return from_url(url, skip_signature=True)
+
+
 async def _check_if_files_exist_async(
     file_path_list: List[str],
     io_concurrency: Optional[int] = None,
@@ -540,7 +550,7 @@ async def _check_if_files_exist_async(
         bucket, _, key = rest.partition("/")
         prefix = f"{scheme}://{bucket}/"
         if prefix not in stores:
-            stores[prefix] = from_url(prefix, skip_signature=True)
+            stores[prefix] = _public_store(prefix)
         return stores[prefix], key
 
     async def _check(path: str) -> tuple:
@@ -605,7 +615,7 @@ def build_kerchunk_registry(json_paths: List[str]) -> ObjectStoreRegistry:
         # some kerchunk references encode chunk locations via GCS's public HTTPS
         # frontend rather than the "gcs://" scheme.
         "https://storage.googleapis.com/": from_url("https://storage.googleapis.com/"),
-        f"s3://{s3_bucket}/": from_url(f"s3://{s3_bucket}/", skip_signature=True),
+        f"s3://{s3_bucket}/": _public_store(f"s3://{s3_bucket}/"),
     }
 
     local_dirs = {

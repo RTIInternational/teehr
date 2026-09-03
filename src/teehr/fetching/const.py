@@ -23,6 +23,9 @@ NWM20_START_DATE = datetime(2019, 6, 19, 0)
 NWM12_START_DATE = datetime(2018, 9, 17, 0)
 
 NWM_S3_JSON_PATH = "s3://ciroh-nwm-zarr-copy"
+# The bucket's own region, wherever teehr runs. Without it obstore uses the
+# ambient AWS_REGION and a bucket elsewhere answers with a bare 301.
+NWM_S3_JSON_REGION = "us-east-1"
 
 USGS_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
