@@ -169,3 +169,49 @@ def test_concurrency_args_reach_the_chunk_loop(monkeypatch):
     # Reference building and the s3 check happen before any chunk exists, so
     # they take the budget too.
     assert (planned["io"], planned["cpu"]) == (7, 3)
+
+
+def test_zarr_version_lookup_is_warmed_before_the_readers_start(monkeypatch):
+    """xarray resolves zarr's version inside every open_zarr, and that walk of
+    sys.path is slow while cold. It has to be done before the pool exists: a
+    pool's worth of workers all missing the cold cache at once is what turned
+    it into a multi-minute stall."""
+    import teehr.fetching.utils as fetch_utils
+
+    order = []
+
+    fetch_utils._warm_zarr_version_lookup.cache_clear()
+    monkeypatch.setattr(
+        fetch_utils, "_warm_zarr_version_lookup", lambda: order.append("warm")
+    )
+
+    def fake_thread_pool(*args, **kwargs):
+        order.append("pool")
+        raise RuntimeError("stop here")
+
+    monkeypatch.setattr(fetch_utils, "thread_pool", fake_thread_pool)
+
+    with pytest.raises(RuntimeError, match="stop here"):
+        concurrency.run_sync(
+            fetch_utils._combine_and_open_kerchunk_refs_async(
+                json_paths=["s3://bucket/a.json"],
+                variable_name="streamflow",
+                location_ids=[101],
+                registry=object(),
+            )
+        )
+
+    assert order == ["warm", "pool"], (
+        "the version lookup must be resolved before the readers start"
+    )
+
+
+def test_zarr_version_lookup_runs_once():
+    """It is only worth doing up front if repeat calls are free."""
+    import teehr.fetching.utils as fetch_utils
+
+    fetch_utils._warm_zarr_version_lookup.cache_clear()
+    fetch_utils._warm_zarr_version_lookup()
+    fetch_utils._warm_zarr_version_lookup()
+    info = fetch_utils._warm_zarr_version_lookup.cache_info()
+    assert (info.misses, info.hits) == (1, 1)

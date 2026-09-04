@@ -5,6 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 from concurrent.futures import Executor
 from functools import lru_cache
+from importlib.metadata import PackageNotFoundError, version
 import asyncio
 import base64
 import logging
@@ -808,6 +809,29 @@ def _feature_id_positions(
     return positions
 
 
+@lru_cache(maxsize=1)
+def _warm_zarr_version_lookup() -> None:
+    """Resolve zarr's version once, before any pool of readers starts.
+
+    xarray's ``_zarr_v3`` is uncached, so every ``open_zarr`` -- and therefore
+    every reference read -- calls ``importlib.metadata.version("zarr")``, which
+    walks each ``sys.path`` entry. pyspark puts every jar it resolves on that
+    path, and the aws bundles have tens of thousands of entries, so a cold
+    lookup can take seconds. Workers all miss the cold cache at once and
+    redundantly walk the same jars, holding the GIL: measured at 105s for one
+    18-file chunk in a notebook with a spark session, and ~0 once warm.
+
+    Call this before starting the workers, not inside them -- ``lru_cache`` is
+    not atomic, so they would still race through the miss together.
+    """
+    try:
+        version("zarr")
+    except PackageNotFoundError:
+        # zarr is a hard dependency, so this should not happen; if it somehow
+        # does, xarray's own lookup will raise where it matters.
+        logger.debug("Could not resolve zarr's version to warm the lookup.")
+
+
 def _manifest_store_from_refs(
     content: bytes,
     registry: ObjectStoreRegistry,
@@ -986,6 +1010,9 @@ async def _combine_and_open_kerchunk_refs_async(
     # Two budgets: many references download at once (network waits), while
     # fewer are parsed at once (CPU work, and h5py mostly serializes it).
     budget = resolve_budget(io=max_concurrent_files, cpu=cpu_workers)
+
+    # Must happen before the pool exists; see the function's docstring.
+    _warm_zarr_version_lookup()
 
     with thread_pool(budget.cpu, len(urls)) as executor:
         datasets = await gather_bounded(
@@ -1274,12 +1301,18 @@ async def _build_zarr_references_virtualizarr_async(
         f" {processes or budget.cpu} {'processes' if processes else 'threads'}."
     )
 
+    # Reference building opens each file with xarray too, so warm the lookup
+    # here as well. As an initializer it also runs in each worker process,
+    # which starts with a cold cache of its own.
+    _warm_zarr_version_lookup()
+
     json_paths = await map_blocking(
         gen_json_virtualizarr,
         missing_paths,
         workers=budget.cpu,
         args=(str(json_dir), ignore_missing_file),
         processes=processes,
+        initializer=_warm_zarr_version_lookup,
     )
     json_paths = list(json_paths)
     json_paths.extend(existing_jsons)
