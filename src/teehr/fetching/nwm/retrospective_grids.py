@@ -39,7 +39,6 @@ import numpy as np
 
 import pandas as pd
 import xarray as xr
-import fsspec
 from pydantic import validate_call, InstanceOf
 from geopandas import GeoDataFrame
 from obspec_utils.registry import ObjectStoreRegistry
@@ -66,6 +65,7 @@ from teehr.fetching.nwm.grid_utils import (
     read_and_validate_weights_file
 )
 from teehr.fetching.utils import (
+    public_zarr_store,
     build_kerchunk_registry,
     map_variable_and_unit_name,
     open_kerchunk_dataset,
@@ -358,7 +358,7 @@ def nwm_retro_grids_to_parquet(
 
             # Get spatial information from the zarr store. (limited data)
             tmp_s3_zarr_url = "s3://noaa-nwm-retrospective-2-1-zarr-pds/precip.zarr"
-            tmp_ds = xr.open_zarr(fsspec.get_mapper(tmp_s3_zarr_url, anon=True, asynchronous=True))
+            tmp_ds = xr.open_zarr(public_zarr_store(tmp_s3_zarr_url))
             nwm21_crs = tmp_ds.crs.attrs["esri_pe_string"]
             x_dim = tmp_ds.x.values
             y_dim = tmp_ds.y.values
@@ -459,9 +459,10 @@ def nwm_retro_grids_to_parquet(
             f"zarr/forcing/{zarr_name}.zarr"
         )
 
+        # No chunks=: obstore fetches the chunks of a selection concurrently
+        # on its own, so xarray's dask chunk manager buys nothing here.
         ds = xr.open_zarr(
-            fsspec.get_mapper(s3_zarr_url, anon=True, asynchronous=True),
-            chunks={}, consolidated=True
+            public_zarr_store(s3_zarr_url), consolidated=True
         ).sel(time=slice(start_date, end_date))
 
         # If specified, generate zonal weights file here.

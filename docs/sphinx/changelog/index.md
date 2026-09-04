@@ -27,27 +27,32 @@
 ### Changed
 - **Upgraded to Zarr v3.** NWM data is now read through Zarr v3, and `kerchunk` is no longer
   needed. Pre-built community reference files are still read as before.
-- **NWM fetching now uses obstore and VirtualiZarr** in place of fsspec, gcsfs, and kerchunk.
-  This avoids the async filesystem lifecycle problems those libraries hit under Zarr v3, and
-  file listing uses obstore as well.
-- **Dask is no longer used in the fetching pipeline**, replaced by the new concurrency module.
-  It remains a dependency only as xarray's chunk manager for lazy retrospective reads.
+- **All fetching now uses obstore and VirtualiZarr** in place of fsspec, gcsfs, s3fs, and
+  kerchunk. This avoids the async filesystem lifecycle problems those libraries hit under
+  Zarr v3, and covers file listing and the retrospective Zarr reads as well. Every public
+  bucket is now addressed in its own region, which a wrong region reports only as
+  "Received redirect without LOCATION".
+- **Dask is no longer needed at all.** The fetching pipeline uses the new concurrency
+  module, and the retrospective reads no longer ask xarray for a chunk manager, since
+  obstore fetches the chunks of a selection concurrently by itself.
 - **Grid weight generation uses exactextract** instead of vectorizing the grid and overlaying
   it, which removed a large amount of code along with its dask dependency. Existing
   `grid_pixel_coverage_weights` tables stay valid; regenerating them will shift weights
   slightly, since coverage is now measured directly rather than through polygon overlay.
 - Faster zonal weighted averages, and faster label-based `feature_id` selection when reading
   point data.
-- The region of the CIROH reference-json bucket is now explicit, so reads work from any
-  region.
 - Fetching raises a clear error when the location id list is empty.
 
 ### Fixed
 - None
 
 ### Dependencies
-- Added `obstore`, `virtualizarr`, `obspec-utils`, and `exactextract`.
-- Removed `kerchunk`.
+- Added `obstore`, `virtualizarr`, `obspec-utils`, `exactextract`, and `botocore`
+  (imported directly for AWS credential resolution, previously pulled in by `s3fs`).
+- Removed `kerchunk`, `dask`, `fsspec`, `gcsfs`, `s3fs`, and `pyiceberg`. `gcsfs`, `s3fs`,
+  and `pyiceberg` were never imported by TEEHR at all: Iceberg is accessed through Spark's
+  JVM catalog and `S3FileIO`, and every object-store read now goes through obstore.
+  `fsspec` remains installed as a transitive dependency of VirtualiZarr.
 - `zarr` >=3.0, `pyarrow` >=21.0, `lxml` >=6.0, and `python` >=3.12,<3.15.
 - `bokeh` moved to a development dependency; it is only used by the example notebooks.
 

@@ -23,9 +23,20 @@ NWM20_START_DATE = datetime(2019, 6, 19, 0)
 NWM12_START_DATE = datetime(2018, 9, 17, 0)
 
 NWM_S3_JSON_PATH = "s3://ciroh-nwm-zarr-copy"
-# The bucket's own region, wherever teehr runs. Without it obstore uses the
-# ambient AWS_REGION and a bucket elsewhere answers with a bare 301.
-NWM_S3_JSON_REGION = "us-east-1"
+
+# Each public bucket teehr reads, and the region it actually lives in. A wrong
+# entry surfaces as "Received redirect without LOCATION" rather than anything
+# mentioning regions, so verify against the bucket before adding one.
+S3_BUCKET_REGIONS = {
+    "ciroh-nwm-zarr-copy": "us-east-1",
+    "ciroh-nwm-zarr-retrospective-data-copy": "us-east-1",
+    "noaa-nwm-retro-v2-zarr-pds": "us-west-2",
+    "noaa-nwm-retrospective-2-1-zarr-pds": "us-east-1",
+    "noaa-nwm-retrospective-3-0-pds": "us-east-1",
+}
+# Buckets we have not pinned fall back to this, which is right for most of
+# NOAA's open data.
+DEFAULT_S3_REGION = "us-east-1"
 
 USGS_VARIABLE_MAPPER = {
     VARIABLE_NAME: {

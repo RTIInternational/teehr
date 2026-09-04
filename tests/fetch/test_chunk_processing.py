@@ -247,3 +247,31 @@ def test_remote_stores_retry_for_longer_than_two_seconds():
     for store in stores:
         assert store.retry_config is not None, f"{store} has obstore's 2s default"
         assert store.retry_config["backoff"]["init_backoff"] >= timedelta(seconds=1)
+
+
+def test_public_buckets_are_pinned_to_their_own_region():
+    """Every public bucket teehr reads has to be addressed in its own region.
+    A wrong or missing pin surfaces as "Received redirect without LOCATION",
+    which says nothing about regions -- so the map is worth asserting. The
+    v2.0 retrospective bucket is the one that is not us-east-1."""
+    from teehr.fetching.const import S3_BUCKET_REGIONS
+    from teehr.fetching.utils import _s3_region
+
+    assert S3_BUCKET_REGIONS["noaa-nwm-retro-v2-zarr-pds"] == "us-west-2"
+    assert _s3_region("s3://noaa-nwm-retro-v2-zarr-pds") == "us-west-2"
+    assert _s3_region(
+        "s3://noaa-nwm-retrospective-3-0-pds/CONUS/zarr/chrtout.zarr"
+    ) == "us-east-1"
+    assert _s3_region("s3://ciroh-nwm-zarr-copy/some/key.json") == "us-east-1"
+    # An unknown bucket still gets a region rather than the ambient one.
+    assert _s3_region("s3://some-other-bucket/x") == "us-east-1"
+
+
+def test_public_zarr_store_carries_region_and_retries():
+    """The retrospective reads go through the same store as everything else."""
+    from datetime import timedelta
+
+    from teehr.fetching.utils import _public_store
+
+    store = _public_store("s3://noaa-nwm-retro-v2-zarr-pds/")
+    assert store.retry_config["backoff"]["init_backoff"] >= timedelta(seconds=1)

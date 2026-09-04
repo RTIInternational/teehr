@@ -26,6 +26,7 @@ from virtualizarr.manifests.manifest import validate_and_normalize_path_to_uri
 from virtualizarr.parsers import HDFParser
 from virtualizarr.parsers.kerchunk.translator import manifestgroup_from_kerchunk_refs
 from zarr.errors import UnstableSpecificationWarning
+from zarr.storage import ObjectStore
 import pandas as pd
 import numpy as np
 import xarray as xr
@@ -51,10 +52,11 @@ from teehr.fetching.models.utils import (
     NWMChunkByEnum
 )
 from teehr.fetching.const import (
+    DEFAULT_S3_REGION,
     NWM_BUCKET,
     NWM_HAWAII_VARIABLE_MAPPER,
     NWM_S3_JSON_PATH,
-    NWM_S3_JSON_REGION,
+    S3_BUCKET_REGIONS,
     NWM30_START_DATE,
     NWM21_START_DATE,
     NWM20_START_DATE,
@@ -535,18 +537,35 @@ def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
 
 
+def _s3_region(url: str) -> str:
+    """The region an s3 bucket lives in, from :data:`S3_BUCKET_REGIONS`."""
+    bucket = url.split("://", 1)[-1].split("/", 1)[0]
+    return S3_BUCKET_REGIONS.get(bucket, DEFAULT_S3_REGION)
+
+
 def _public_store(url: str):
-    """Anonymous store for ``url``, pinned to its region where we know it."""
-    if url.startswith(NWM_S3_JSON_PATH):
-        return from_url(
-            url,
-            skip_signature=True,
-            region=NWM_S3_JSON_REGION,
-            retry_config=REMOTE_RETRY_CONFIG,
-        )
-    return from_url(
-        url, skip_signature=True, retry_config=REMOTE_RETRY_CONFIG
-    )
+    """Anonymous store for ``url``, pinned to its bucket's own region.
+
+    Pinning matters wherever teehr runs: without it obstore uses the ambient
+    AWS_REGION, and a bucket elsewhere answers with a bare 301 that surfaces
+    as "Received redirect without LOCATION".
+    """
+    kwargs = {"skip_signature": True, "retry_config": REMOTE_RETRY_CONFIG}
+    if url.startswith("s3://"):
+        kwargs["region"] = _s3_region(url)
+    return from_url(url, **kwargs)
+
+
+def public_zarr_store(url: str) -> ObjectStore:
+    """A read-only zarr store for a public s3 zarr, backed by obstore.
+
+    Used instead of ``fsspec.get_mapper`` so the retrospective reads go
+    through the same object store, region pinning, and retry budget as the
+    rest of fetching. obstore fetches chunks concurrently on its own, so
+    callers do not need ``chunks=`` (and the dask chunk manager it requires)
+    to read a selection in parallel.
+    """
+    return ObjectStore(_public_store(url), read_only=True)
 
 
 async def _check_if_files_exist_async(
