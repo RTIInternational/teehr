@@ -3,7 +3,6 @@ from pathlib import Path
 from datetime import datetime
 
 from teehr.fetching.nwm.nwm_points import nwm_to_parquet
-from teehr import LocalReadWriteEvaluation
 import pandas as pd
 import numpy as np
 import pytest
@@ -121,7 +120,9 @@ def test_fetch_and_load_nwm_retro_grids(function_scope_evaluation_template):
             'updated_at'
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
-    assert np.isclose(ts_df.value.sum(), np.float32(0.00028349122))
+    # Was 0.00028349122 before weight generation moved to exactextract; the
+    # old path clipped the grid and dropped boundary pixels.
+    assert np.isclose(ts_df.value.sum(), np.float32(0.00028337786))
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 10:00:00")
 
@@ -184,10 +185,10 @@ def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_templat
     assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
 
 
-@pytest.mark.skip(reason="This one takes a long time, test manually as needed.")
-def test_fetch_and_load_nwm_operational_grids(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_fetch_and_load_nwm_operational_grids(function_scope_evaluation_template):
     """Test the NWM forecast grids fetch and load."""
-    ev = LocalReadWriteEvaluation(dir_path=tmpdir, create_dir=True)
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 

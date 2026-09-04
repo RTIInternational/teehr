@@ -5,12 +5,15 @@ from dateutil.parser import parse
 import tempfile
 import pytest
 
+import numpy as np
+
 from teehr.fetching.utils import (
-    build_zarr_references,
+    _feature_id_positions,
+    build_zarr_references_virtualizarr,
     validate_operational_start_end_date,
     build_remote_nwm_filelist,
     generate_json_paths,
-    get_dataset,
+    open_kerchunk_dataset,
     create_periods_based_on_chunksize,
     parse_nwm_json_paths,
     start_on_z_hour,
@@ -58,7 +61,7 @@ def test_point_zarr_reference_file(tmpdir):
         "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f001.alaska.nc" # noqa
     ]
 
-    built_files = build_zarr_references(
+    built_files = build_zarr_references_virtualizarr(
         remote_paths=component_paths,
         json_dir=tmpdir,
         ignore_missing_file=False
@@ -68,13 +71,24 @@ def test_point_zarr_reference_file(tmpdir):
         "nwm.20231101.nwm.t00z.short_range.channel_rt.f001.alaska.nc.json"
     )
 
-    test_ds = get_dataset(str(test_file), ignore_missing_file=False, remote_options={"token": "anon"})
-    built_ds = get_dataset(built_files[0], ignore_missing_file=False, remote_options={"token": "anon"})
+    all_vars = [
+        "streamflow", "nudge", "velocity", "qSfcLatRunoff", "qBucket",
+        "qBtmVertRunoff", "feature_id", "time", "reference_time", "crs",
+    ]
+    test_ds = open_kerchunk_dataset(str(test_file), loadable_variables=all_vars, ignore_missing_file=False)
+    built_ds = open_kerchunk_dataset(built_files[0], loadable_variables=all_vars, ignore_missing_file=False)
 
+    # `crs` is a dummy CF grid-mapping placeholder variable -- only its
+    # attributes are ever used (e.g. `esri_pe_string`); VirtualiZarr doesn't
+    # capture its on-disk scalar fill-value byte identically across builds,
+    # so compare it by attributes only, and compare every other
+    # variable/coordinate for full equality (values, dtypes, and attrs).
+    #
     # Two Datasets are identical if they have matching variables and
     # coordinates, all of which are equal, and all dataset attributes
     # and the attributes on all variables and coordinates are equal.
-    assert test_ds.identical(built_ds)
+    assert test_ds.crs.attrs == built_ds.crs.attrs
+    assert test_ds.drop_vars("crs").identical(built_ds.drop_vars("crs"))
 
 
 def test_dates_and_nwm30_version():
@@ -465,6 +479,44 @@ def test_reading_nwm_operational_from_gcs():
     assert "filepath" in nc_sdf.columns
 
 
+def test_feature_id_positions_sorted():
+    """Requested ids map to their positions, in the order requested."""
+    feature_ids = np.array([10, 20, 30, 40, 50])
+    positions = _feature_id_positions(feature_ids, np.array([40, 10, 30]))
+    assert np.array_equal(positions, [3, 0, 2])
+    assert np.array_equal(feature_ids[positions], [40, 10, 30])
+
+
+def test_feature_id_positions_unsorted_coordinate():
+    """An out-of-order coordinate still maps correctly rather than silently wrong."""
+    feature_ids = np.array([50, 10, 40, 30, 20])
+    positions = _feature_id_positions(feature_ids, np.array([30, 50]))
+    assert np.array_equal(feature_ids[positions], [30, 50])
+
+
+def test_feature_id_positions_duplicated_request():
+    """The same id can be requested more than once."""
+    feature_ids = np.array([10, 20, 30])
+    positions = _feature_id_positions(feature_ids, np.array([20, 20, 10]))
+    assert np.array_equal(feature_ids[positions], [20, 20, 10])
+
+
+def test_feature_id_positions_missing_id_raises():
+    """A location that isn't in the file is an error, not a silent drop."""
+    feature_ids = np.array([10, 20, 30])
+    with pytest.raises(ValueError, match="location_ids not found"):
+        _feature_id_positions(feature_ids, np.array([20, 999]))
+
+
+def test_feature_id_positions_beyond_range_raises():
+    """Ids past either end of the coordinate are reported, not clipped."""
+    feature_ids = np.array([10, 20, 30])
+    with pytest.raises(ValueError, match="location_ids not found"):
+        _feature_id_positions(feature_ids, np.array([1]))
+    with pytest.raises(ValueError, match="location_ids not found"):
+        _feature_id_positions(feature_ids, np.array([99]))
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
         test_parsing_remote_json_paths(tempdir)
@@ -485,3 +537,8 @@ if __name__ == "__main__":
     test_start_end_z_hours()
     test_nwm_configuration_metadata()
     test_reading_nwm_operational_from_gcs()
+    test_feature_id_positions_sorted()
+    test_feature_id_positions_unsorted_coordinate()
+    test_feature_id_positions_duplicated_request()
+    test_feature_id_positions_missing_id_raises()
+    test_feature_id_positions_beyond_range_raises()

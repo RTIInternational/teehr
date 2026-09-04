@@ -48,7 +48,6 @@ from teehr.evaluation.spark_session_utils import (
 import pandas as pd
 import re
 import warnings
-from fsspec.implementations.local import LocalFileSystem
 from teehr.utilities import apply_migrations
 from teehr.models.evaluation_base import (
     EvaluationBaseModel,
@@ -883,9 +882,8 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             # check for version file in evaluation dir:
             version_dir = self.dir_path
 
-        fs = LocalFileSystem()
         version_file = Path(version_dir, "version")
-        if not fs.exists(version_file):
+        if not version_file.exists():
             err_msg = (
                 f"No version file was found in {version_dir}."
                 " Please first upgrade to v0.5 or create a text file named"
@@ -894,8 +892,7 @@ class LocalReadWriteEvaluation(BaseEvaluation):
             logger.error(err_msg)
             raise ValueError(err_msg)
         else:
-            with fs.open(version_file) as f:
-                version_txt = str(f.read().strip())
+            version_txt = version_file.read_text().strip()
             match = re.findall(r'(\d+\.\d+\.\d+)', version_txt)  # Assumes semantic versioning
             if len(match) != 1:
                 err_msg = f"Invalid version format in {version_dir}: {version_txt}"

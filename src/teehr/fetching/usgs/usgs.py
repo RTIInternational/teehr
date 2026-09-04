@@ -381,6 +381,13 @@ def usgs_to_parquet(
     >>> )
     """  # noqa
     logger.info("Fetching USGS streamflow data.")
+
+    if len(sites) == 0:
+        raise ValueError(
+            "The 'sites' list cannot be empty. "
+            "Please provide at least one valid USGS site ID."
+        )
+
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 

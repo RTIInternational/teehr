@@ -33,15 +33,15 @@ of data transferred over the network.
 from datetime import datetime
 from pathlib import Path
 from typing import Union, Optional, Tuple, Dict
+import functools
 import logging
 import numpy as np
 
 import pandas as pd
 import xarray as xr
-import fsspec
 from pydantic import validate_call, InstanceOf
 from geopandas import GeoDataFrame
-import dask
+from obspec_utils.registry import ObjectStoreRegistry
 
 from teehr.fetching.const import (
     VALUE_TIME,
@@ -65,8 +65,11 @@ from teehr.fetching.nwm.grid_utils import (
     read_and_validate_weights_file
 )
 from teehr.fetching.utils import (
+    public_zarr_store,
+    build_kerchunk_registry,
+    map_variable_and_unit_name,
+    open_kerchunk_dataset,
     write_timeseries_parquet_file,
-    get_dataset,
     get_period_start_end_times,
     create_periods_based_on_chunksize,
     convert_value_from_kelvin_to_celsius,
@@ -77,25 +80,10 @@ from teehr.fetching.nwm.retrospective_points import (
     validate_retrospective_start_end_date,
 )
 from teehr.utilities.generate_weights import generate_weights_file
+from teehr.utils.concurrency import run_concurrent_map
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_nwm21_retro_grid_data(
-    var_da: xr.DataArray,
-    row_min: int,
-    col_min: int,
-    row_max: int,
-    col_max: int
-):
-    """Read a subset nwm21 retro grid data into memory from row/col bounds."""
-    logger.debug("Getting the nwm21 retro grid data")
-    grid_values = var_da.isel(
-        west_east=slice(col_min, col_max+1),
-        south_north=slice(row_min, row_max+1)
-    ).values
-    return grid_values
 
 
 def process_nwm30_retro_group(
@@ -137,14 +125,11 @@ def process_nwm30_retro_group(
 
     nwm_units = da_i.attrs["units"]
     chunk_df = pd.concat(hourly_dfs)
-    if not variable_mapper:
-        chunk_df.loc[:, UNIT_NAME] = nwm_units
-        chunk_df.loc[:, VARIABLE_NAME] = variable_name
-    else:
-        chunk_df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, {}).get("name", nwm_units)
-        chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, {}).get("name", variable_name)
+    teehr_variable_name, teehr_units = map_variable_and_unit_name(
+        variable_name, nwm_units, variable_mapper
+    )
+    chunk_df.loc[:, UNIT_NAME] = teehr_units
+    chunk_df.loc[:, VARIABLE_NAME] = teehr_variable_name
 
     chunk_df.loc[:, REFERENCE_TIME] = np.nan
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
@@ -178,7 +163,6 @@ def construct_nwm21_json_paths(
     return paths_df
 
 
-@dask.delayed
 def process_single_nwm21_retro_grid_file(
     row: Tuple,
     variable_name: str,
@@ -186,18 +170,20 @@ def process_single_nwm21_retro_grid_file(
     ignore_missing_file: bool,
     nwm_version: str,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
+    registry: Optional[ObjectStoreRegistry] = None,
 ):
     """Compute the zonal mean for a single json reference file.
 
     Results are formatted to a dataframe using the TEEHR data model.
     """
-    ds = get_dataset(
+    ds = open_kerchunk_dataset(
         row.filepath,
-        ignore_missing_file,
-        target_options={'anon': True}
+        loadable_variables=[variable_name],
+        ignore_missing_file=ignore_missing_file,
+        registry=registry,
     )
-    if not ds:
+    if ds is None:
         return None
 
     nwm_units = ds[variable_name].attrs["units"]
@@ -209,12 +195,14 @@ def process_single_nwm21_retro_grid_file(
 
     weights_bounds = get_weights_row_col_stats(weights_df)
 
-    grid_arr = get_nwm21_retro_grid_data(
+    grid_arr = get_nwm_grid_data(
         da,
         weights_bounds["row_min"],
         weights_bounds["col_min"],
         weights_bounds["row_max"],
-        weights_bounds["col_max"]
+        weights_bounds["col_max"],
+        x_dim="west_east",
+        y_dim="south_north",
     )
     grid_values = grid_arr[
         weights_bounds["rows_norm"],
@@ -224,14 +212,11 @@ def process_single_nwm21_retro_grid_file(
     # Calculate mean areal of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    if not variable_mapper:
-        df.loc[:, UNIT_NAME] = nwm_units
-        df.loc[:, VARIABLE_NAME] = variable_name
-    else:
-        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, {}).get("name", nwm_units)
-        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, {}).get("name", variable_name)
+    teehr_variable_name, teehr_units = map_variable_and_unit_name(
+        variable_name, nwm_units, variable_mapper
+    )
+    df.loc[:, UNIT_NAME] = teehr_units
+    df.loc[:, VARIABLE_NAME] = teehr_variable_name
 
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = np.nan
@@ -261,6 +246,7 @@ def nwm_retro_grids_to_parquet(
     zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
     unique_zone_id: Optional[str] = None,
     convert_k_to_c: bool = True,
+    cpu_workers: Optional[int] = None,
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -314,6 +300,9 @@ def nwm_retro_grids_to_parquet(
         If True, convert temperature values from Kelvin to Celsius by
         subtracting 273.15. The unit_name field will be set to "C".
         Note: this argument is only valid when variable_name is "T2D".
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available. This path
+        has no io budget -- it reads a zarr store rather than checking s3.
 
     Notes
     -----
@@ -346,6 +335,10 @@ def nwm_retro_grids_to_parquet(
         # Construct Kerchunk-json paths within the selected time
         nwm21_paths = construct_nwm21_json_paths(start_date, end_date)
 
+        # Built once from every file in the run (not per chunk) so obstore's
+        # stores/connection pools are reused across all chunks below.
+        registry = build_kerchunk_registry(nwm21_paths.filepath.tolist())
+
         # If specified, generate zonal weights file here.
         if calculate_zonal_weights:
             if zone_polygons is None:
@@ -356,15 +349,16 @@ def nwm_retro_grids_to_parquet(
                 )
 
             # Get a single timestep to use as a template grid.
-            template_ds = get_dataset(
+            template_ds = open_kerchunk_dataset(
                 nwm21_paths.filepath[0],
+                loadable_variables=[variable_name],
                 ignore_missing_file=False,
-                target_options={'anon': True}
+                registry=registry,
             )
 
             # Get spatial information from the zarr store. (limited data)
             tmp_s3_zarr_url = "s3://noaa-nwm-retrospective-2-1-zarr-pds/precip.zarr"
-            tmp_ds = xr.open_zarr(fsspec.get_mapper(tmp_s3_zarr_url, anon=True, asynchronous=True))
+            tmp_ds = xr.open_zarr(public_zarr_store(tmp_s3_zarr_url))
             nwm21_crs = tmp_ds.crs.attrs["esri_pe_string"]
             x_dim = tmp_ds.x.values
             y_dim = tmp_ds.y.values
@@ -410,21 +404,22 @@ def nwm_retro_grids_to_parquet(
             else:
                 df = nwm21_paths.copy()
 
-            # Process this chunk using dask delayed
-            results = []
-            for row in df.itertuples():
-                results.append(
-                    process_single_nwm21_retro_grid_file(
-                        row=row,
-                        variable_name=variable_name,
-                        weights_filepath=zonal_weights_filepath,
-                        ignore_missing_file=False,
-                        nwm_version=nwm_version,
-                        location_id_prefix=location_id_prefix,
-                        variable_mapper=variable_mapper
-                    )
-                )
-            output = dask.compute(*results)
+            # Process this chunk of files concurrently.
+            rows = list(df.itertuples())
+            output = run_concurrent_map(
+                functools.partial(
+                    process_single_nwm21_retro_grid_file,
+                    variable_name=variable_name,
+                    weights_filepath=zonal_weights_filepath,
+                    ignore_missing_file=False,
+                    nwm_version=nwm_version,
+                    location_id_prefix=location_id_prefix,
+                    variable_mapper=variable_mapper,
+                    registry=registry,
+                ),
+                rows,
+                cpu_workers,
+            )
 
             output = [df for df in output if df is not None]
             if len(output) == 0:
@@ -464,9 +459,10 @@ def nwm_retro_grids_to_parquet(
             f"zarr/forcing/{zarr_name}.zarr"
         )
 
+        # No chunks=: obstore fetches the chunks of a selection concurrently
+        # on its own, so xarray's dask chunk manager buys nothing here.
         ds = xr.open_zarr(
-            fsspec.get_mapper(s3_zarr_url, anon=True, asynchronous=True),
-            chunks={}, consolidated=True
+            public_zarr_store(s3_zarr_url), consolidated=True
         ).sel(time=slice(start_date, end_date))
 
         # If specified, generate zonal weights file here.

@@ -15,7 +15,7 @@ from teehr.fetching.utils import (
     validate_operational_start_end_date,
     start_on_z_hour,
     end_on_z_hour,
-    get_dataset,
+    open_kerchunk_dataset,
     get_end_date_from_ingest_days,
     log_temperature_conversion_message
 )
@@ -61,7 +61,9 @@ def nwm_grids_to_parquet(
     zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
     unique_zone_id: Optional[str] = None,
     drop_overlapping_assimilation_values: Optional[bool] = True,
-    convert_k_to_c: bool = True
+    convert_k_to_c: bool = True,
+    io_concurrency: Optional[int] = None,
+    cpu_workers: Optional[int] = None
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -179,7 +181,11 @@ def nwm_grids_to_parquet(
         If True, convert temperature values from Kelvin to Celsius by
         subtracting 273.15. The unit_name field will be set to "C".
         Note: this argument is only valid when variable_name is "T2D".
-
+    io_concurrency : Optional[int]
+        Remote reads in flight at once. Defaults to 48; lower it when
+        something else is fetching in parallel.
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available.
 
     See Also
     --------
@@ -363,7 +369,9 @@ def nwm_grids_to_parquet(
             kerchunk_method,
             gcs_component_paths,
             json_dir,
-            ignore_missing_file
+            ignore_missing_file,
+            io_concurrency,
+            cpu_workers
         )
 
         # If specified, generate zonal weights file here.
@@ -376,8 +384,9 @@ def nwm_grids_to_parquet(
                 )
 
             # Get a single timestep to use as a template grid.
-            template_ds = get_dataset(
+            template_ds = open_kerchunk_dataset(
                 json_paths[0],
+                loadable_variables=[variable_name, "x", "y", "crs"],
                 ignore_missing_file=False,
             )
 
@@ -405,5 +414,6 @@ def nwm_grids_to_parquet(
             variable_mapper=variable_mapper,
             timeseries_type=timeseries_type,
             drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,
-            convert_k_to_c=convert_k_to_c
+            convert_k_to_c=convert_k_to_c,
+            cpu_workers=cpu_workers
         )

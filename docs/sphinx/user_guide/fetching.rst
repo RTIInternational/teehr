@@ -215,6 +215,50 @@ Forcing variables available:
 - ``PSFC`` - Surface pressure
 
 
+Tuning NWM Fetching Performance
+-------------------------------
+
+The defaults are derived from the machine TEEHR is running on, so start by
+leaving them alone. If a fetch is slower than expected, these are the knobs:
+
+``io_concurrency``
+    How many remote files are read at once. Defaults to 48; raise it on a fast
+    network, and lower it when several fetches run at the same time, since the
+    budgets multiply.
+
+``cpu_workers``
+    How many files are processed at once. Defaults to the number of CPUs
+    available; setting it higher than that measures slower, not faster.
+
+``process_by_z_hour``
+    ``True`` (the default) puts one forecast cycle in each chunk, so a
+    ``short_range`` chunk holds 18 files. ``False`` uses ``stepsize`` instead.
+
+``stepsize``
+    How many files go in each chunk when ``process_by_z_hour=False``. Defaults
+    to 100.
+
+Two things that are easy to miss:
+
+- Each chunk is read in one go, so an ``io_concurrency`` above the chunk size
+  does nothing for the read step. To make a higher value reachable, set
+  ``process_by_z_hour=False`` with a larger ``stepsize``.
+- Larger chunks need more memory, because every file in a chunk is held at once.
+
+Not every method takes both: ``nwm_operational_points`` and
+``nwm_operational_grids`` accept ``io_concurrency`` and ``cpu_workers``,
+``nwm_retrospective_grids`` accepts only ``cpu_workers``, and
+``process_by_z_hour`` and ``stepsize`` apply to ``nwm_operational_points``.
+
+To set the concurrency once for a whole session rather than per call:
+
+.. code-block:: python
+
+    from teehr.utils.concurrency import set_concurrency
+
+    set_concurrency(io=24, cpu=8)
+
+
 Downloading from TEEHR Warehouse
 ================================
 

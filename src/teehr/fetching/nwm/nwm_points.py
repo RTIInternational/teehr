@@ -3,6 +3,7 @@ from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
 from dateutil.parser import parse
 from pathlib import Path
+from dataclasses import dataclass
 import logging
 import pandas as pd
 
@@ -35,6 +36,239 @@ from teehr.fetching.const import (
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class NwmPointFetchPlan:
+    """What a point fetch resolved to: which files to read, under which names.
+
+    Attributes
+    ----------
+    json_paths : List[str]
+        Reference files to read, local or S3, ready for ``build_file_chunks``.
+    configuration : str
+        Configuration name after validation, which can differ from the
+        requested one for ensemble members.
+    output_type : str
+        Validated output type.
+    variable_name : str
+        Validated variable name.
+    """
+
+    json_paths: List[str]
+    configuration: str
+    output_type: str
+    variable_name: str
+
+
+@validate_call(config=dict(arbitrary_types_allowed=True))
+def plan_nwm_point_fetch(
+    configuration: str,
+    output_type: str,
+    variable_name: str,
+    json_dir: Union[str, Path],
+    nwm_version: SupportedNWMOperationalVersionsEnum,
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
+    ingest_days: Optional[int] = None,
+    data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
+    kerchunk_method: Optional[SupportedKerchunkMethod] = "auto",
+    prioritize_analysis_value_time: Optional[bool] = False,
+    t_minus_hours: Optional[List[int]] = None,
+    ignore_missing_file: Optional[bool] = True,
+    starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    drop_overlapping_assimilation_values: Optional[bool] = True,
+    io_concurrency: Optional[int] = None,
+    cpu_workers: Optional[int] = None
+) -> NwmPointFetchPlan:
+    """Work out which reference files a point fetch needs, without reading them.
+
+    Everything :func:`nwm_to_parquet` does before it touches data: validating
+    the configuration and dates, listing the NWM files in GCS, trimming to the
+    requested z-hours, and resolving or building their kerchunk references.
+
+    Split out so a caller that wants to run the chunks itself -- mapping them
+    across an orchestrator's tasks, say -- gets the file list from the same code
+    path ``nwm_to_parquet`` uses instead of reimplementing it. Pair it with
+    ``build_file_chunks`` and ``process_chunk_of_files``.
+
+    Parameters
+    ----------
+    configuration : str
+        NWM forecast category, e.g. "short_range".
+    output_type : str
+        Output component of the configuration, e.g. "channel_rt".
+    variable_name : str
+        NWM data variable to fetch, e.g. "streamflow".
+    json_dir : str or Path
+        Directory holding cached kerchunk reference files.
+    nwm_version : SupportedNWMOperationalVersionsEnum
+        NWM version of the requested data.
+    start_date : str, datetime or pd.Timestamp
+        Start of the period to fetch.
+    end_date : Optional[str, datetime or pd.Timestamp]
+        End of the period. Required unless ``ingest_days`` is given.
+    ingest_days : Optional[int]
+        Days to fetch from ``start_date``, instead of ``end_date``.
+    data_source : Optional[SupportedNWMDataSourcesEnum]
+        Where to fetch from; only GCS is implemented.
+    kerchunk_method : Optional[SupportedKerchunkMethod]
+        Whether to use pre-built references, build them, or both.
+    prioritize_analysis_value_time : Optional[bool]
+        For assimilation data, prefer value time over reference time.
+    t_minus_hours : Optional[List[int]]
+        Assimilation t-minus hours to include.
+    ignore_missing_file : Optional[bool]
+        Skip missing files rather than failing.
+    starting_z_hour : Optional[int]
+        First z-hour to include; defaults to the hour of ``start_date``.
+    ending_z_hour : Optional[int]
+        Last z-hour to include; defaults to the hour of ``end_date``.
+    drop_overlapping_assimilation_values : Optional[bool]
+        Drop assimilation values that overlap in value_time.
+    io_concurrency : Optional[int]
+        Remote reads in flight at once. Defaults to 48; lower it when
+        something else is fetching in parallel.
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available.
+
+    Returns
+    -------
+    NwmPointFetchPlan
+        The reference files to read and the validated names to read them with.
+
+    Examples
+    --------
+    >>> plan = plan_nwm_point_fetch(
+    ...     configuration="short_range", output_type="channel_rt",
+    ...     variable_name="streamflow", nwm_version="nwm30",
+    ...     start_date="2024-01-01", ingest_days=1, json_dir="/tmp/kerchunk",
+    ... )
+    >>> chunks = build_file_chunks(plan.json_paths, True, 100)
+    """
+    logger.info(
+        f"Planning {configuration} fetch. Version: {nwm_version}"
+    )
+
+    if isinstance(start_date, str):
+        start_date = parse(start_date)
+
+    if ingest_days is not None:
+        end_date = get_end_date_from_ingest_days(
+            start_date=start_date,
+            ingest_days=ingest_days
+        )
+    elif end_date is None:
+        raise ValueError(
+            "Either 'end_date' or 'ingest_days' must be specified."
+        )
+
+    if isinstance(end_date, str):
+        end_date = parse(end_date)
+
+    # Import appropriate config model and dicts based on NWM version
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
+        from teehr.fetching.models.nwm12_point import PointConfigurationModel
+        analysis_config_dict = NWM12_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
+        from teehr.fetching.models.nwm20_point import PointConfigurationModel
+        analysis_config_dict = NWM20_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
+        from teehr.fetching.models.nwm22_point import PointConfigurationModel
+        analysis_config_dict = NWM22_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
+        from teehr.fetching.models.nwm22_point import PointConfigurationModel
+        analysis_config_dict = NWM22_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
+        from teehr.fetching.models.nwm30_point import PointConfigurationModel
+        analysis_config_dict = NWM30_ANALYSIS_CONFIG
+    else:
+        raise ValueError(
+            "nwm_version must equal "
+            "'nwm12', 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
+        )
+
+    # Parse input parameters to validate configuration
+    vars = {
+        "configuration": configuration,
+        configuration: {
+            "output_type": output_type,
+            output_type: variable_name,
+        },
+    }
+    cm = PointConfigurationModel.model_validate(vars)
+    configuration = cm.configuration.name
+    forecast_obj = getattr(cm, configuration)
+    output_type = forecast_obj.output_type.name
+    variable_name = getattr(forecast_obj, output_type).name
+
+    # Check data_source
+    if data_source == SupportedNWMDataSourcesEnum.NOMADS:
+        # TODO
+        raise ValueError("Fetching from NOMADS is not yet implemented")
+    elif data_source == SupportedNWMDataSourcesEnum.DSTOR:
+        # TODO
+        raise ValueError("Fetching from DSTOR is not yet implemented")
+    else:
+
+        # Make sure start/end dates work with specified NWM version
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            end_date
+        )
+
+        # Build paths to netcdf files on GCS
+        gcs_component_paths = build_remote_nwm_filelist(
+            configuration,
+            output_type,
+            start_date,
+            end_date,
+            analysis_config_dict,
+            t_minus_hours,
+            ignore_missing_file,
+            prioritize_analysis_value_time,
+            drop_overlapping_assimilation_values,
+            ingest_days
+        )
+
+        if starting_z_hour is None:
+            starting_z_hour = start_date.hour
+        if ending_z_hour is None:
+            ending_z_hour = end_date.hour
+
+        gcs_component_paths = start_on_z_hour(
+            start_z_hour=starting_z_hour,
+            gcs_component_paths=gcs_component_paths
+        )
+
+        gcs_component_paths = end_on_z_hour(
+            end_z_hour=ending_z_hour,
+            gcs_component_paths=gcs_component_paths
+        )
+
+        if len(gcs_component_paths) == 0:
+            raise ValueError(
+                "No NWM files found for the specified input arguments."
+            )
+
+        # Create paths to local and/or remote kerchunk jsons
+        json_paths = generate_json_paths(
+            kerchunk_method,
+            gcs_component_paths,
+            json_dir,
+            ignore_missing_file,
+            io_concurrency,
+            cpu_workers
+        )
+
+    return NwmPointFetchPlan(
+        json_paths=json_paths,
+        configuration=configuration,
+        output_type=output_type,
+        variable_name=variable_name,
+    )
+
+
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def nwm_to_parquet(
     configuration: str,
@@ -59,7 +293,9 @@ def nwm_to_parquet(
     timeseries_type: TimeseriesTypeEnum = "secondary",
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
-    drop_overlapping_assimilation_values: Optional[bool] = True
+    drop_overlapping_assimilation_values: Optional[bool] = True,
+    io_concurrency: Optional[int] = None,
+    cpu_workers: Optional[int] = None
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -172,6 +408,11 @@ def nwm_to_parquet(
         keeping those with the most recent reference_time. In this case, all
         reference_time values are set to None. If False, overlapping values are
         kept and reference_time is retained.
+    io_concurrency : Optional[int]
+        Remote reads in flight at once. Defaults to 48; lower it when
+        something else is fetching in parallel.
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available.
 
     Notes
     -----
@@ -236,129 +477,48 @@ def nwm_to_parquet(
     """ # noqa
     logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
 
-    if isinstance(start_date, str):
-        start_date = parse(start_date)
-
-    if ingest_days is not None:
-        end_date = get_end_date_from_ingest_days(
-            start_date=start_date,
-            ingest_days=ingest_days
-        )
-    elif end_date is None:
+    if len(location_ids) == 0:
         raise ValueError(
-            "Either 'end_date' or 'ingest_days' must be specified."
+            "The 'location_ids' list cannot be empty. "
+            "Please provide at least one valid NWM ID."
         )
 
-    if isinstance(end_date, str):
-        end_date = parse(end_date)
+    plan = plan_nwm_point_fetch(
+        configuration=configuration,
+        output_type=output_type,
+        variable_name=variable_name,
+        json_dir=json_dir,
+        nwm_version=nwm_version,
+        start_date=start_date,
+        end_date=end_date,
+        ingest_days=ingest_days,
+        data_source=data_source,
+        kerchunk_method=kerchunk_method,
+        prioritize_analysis_value_time=prioritize_analysis_value_time,
+        t_minus_hours=t_minus_hours,
+        ignore_missing_file=ignore_missing_file,
+        starting_z_hour=starting_z_hour,
+        ending_z_hour=ending_z_hour,
+        drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
+        io_concurrency=io_concurrency,
+        cpu_workers=cpu_workers,
+    )
 
-    # Import appropriate config model and dicts based on NWM version
-    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
-        from teehr.fetching.models.nwm12_point import PointConfigurationModel
-        analysis_config_dict = NWM12_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
-        from teehr.fetching.models.nwm20_point import PointConfigurationModel
-        analysis_config_dict = NWM20_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
-        from teehr.fetching.models.nwm22_point import PointConfigurationModel
-        analysis_config_dict = NWM22_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
-        from teehr.fetching.models.nwm22_point import PointConfigurationModel
-        analysis_config_dict = NWM22_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
-        from teehr.fetching.models.nwm30_point import PointConfigurationModel
-        analysis_config_dict = NWM30_ANALYSIS_CONFIG
-    else:
-        raise ValueError(
-            "nwm_version must equal "
-            "'nwm12', 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
-        )
-
-    # Parse input parameters to validate configuration
-    vars = {
-        "configuration": configuration,
-        configuration: {
-            "output_type": output_type,
-            output_type: variable_name,
-        },
-    }
-    cm = PointConfigurationModel.model_validate(vars)
-    configuration = cm.configuration.name
-    forecast_obj = getattr(cm, configuration)
-    output_type = forecast_obj.output_type.name
-    variable_name = getattr(forecast_obj, output_type).name
-
-    # Check data_source
-    if data_source == SupportedNWMDataSourcesEnum.NOMADS:
-        # TODO
-        raise ValueError("Fetching from NOMADS is not yet implemented")
-    elif data_source == SupportedNWMDataSourcesEnum.DSTOR:
-        # TODO
-        raise ValueError("Fetching from DSTOR is not yet implemented")
-    else:
-
-        # Make sure start/end dates work with specified NWM version
-        validate_operational_start_end_date(
-            nwm_version,
-            start_date,
-            end_date
-        )
-
-        # Build paths to netcdf files on GCS
-        gcs_component_paths = build_remote_nwm_filelist(
-            configuration,
-            output_type,
-            start_date,
-            end_date,
-            analysis_config_dict,
-            t_minus_hours,
-            ignore_missing_file,
-            prioritize_analysis_value_time,
-            drop_overlapping_assimilation_values,
-            ingest_days
-        )
-
-        if starting_z_hour is None:
-            starting_z_hour = start_date.hour
-        if ending_z_hour is None:
-            ending_z_hour = end_date.hour
-
-        gcs_component_paths = start_on_z_hour(
-            start_z_hour=starting_z_hour,
-            gcs_component_paths=gcs_component_paths
-        )
-
-        gcs_component_paths = end_on_z_hour(
-            end_z_hour=ending_z_hour,
-            gcs_component_paths=gcs_component_paths
-        )
-
-        if len(gcs_component_paths) == 0:
-            raise ValueError(
-                "No NWM files found for the specified input arguments."
-            )
-
-        # Create paths to local and/or remote kerchunk jsons
-        json_paths = generate_json_paths(
-            kerchunk_method,
-            gcs_component_paths,
-            json_dir,
-            ignore_missing_file
-        )
-
-        # Fetch the data, saving to parquet files based on TEEHR data model
-        fetch_and_format_nwm_points(
-            file_paths=json_paths,
-            location_ids=location_ids,
-            configuration=configuration,
-            variable_name=variable_name,
-            output_parquet_dir=output_parquet_dir,
-            process_by_z_hour=process_by_z_hour,
-            stepsize=stepsize,
-            ignore_missing_file=ignore_missing_file,
-            overwrite_output=overwrite_output,
-            nwm_version=nwm_version,
-            variable_mapper=variable_mapper,
-            timeseries_type=timeseries_type,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,
-        )
+    # Fetch the data, saving to parquet files based on TEEHR data model
+    fetch_and_format_nwm_points(
+        file_paths=plan.json_paths,
+        location_ids=location_ids,
+        configuration=plan.configuration,
+        variable_name=plan.variable_name,
+        output_parquet_dir=output_parquet_dir,
+        process_by_z_hour=process_by_z_hour,
+        stepsize=stepsize,
+        ignore_missing_file=ignore_missing_file,
+        overwrite_output=overwrite_output,
+        nwm_version=nwm_version,
+        variable_mapper=variable_mapper,
+        timeseries_type=timeseries_type,
+        drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
+        io_concurrency=io_concurrency,
+        cpu_workers=cpu_workers,
+    )
