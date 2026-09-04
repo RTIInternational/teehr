@@ -215,3 +215,35 @@ def test_zarr_version_lookup_runs_once():
     fetch_utils._warm_zarr_version_lookup()
     info = fetch_utils._warm_zarr_version_lookup.cache_info()
     assert (info.misses, info.hits) == (1, 1)
+
+
+def test_remote_stores_retry_for_longer_than_two_seconds():
+    """obstore's default backoff spends all 10 retries in ~2s, which is not
+    enough to ride out an object store resetting a connection under load. Every
+    remote store must carry the longer backoff; a new from_url that forgets it
+    would fail a task on a blip that clears seconds later."""
+    from datetime import timedelta
+
+    from teehr.fetching.utils import (
+        REMOTE_RETRY_CONFIG,
+        _build_gcs_source_registry,
+        _public_store,
+        build_kerchunk_registry,
+    )
+
+    assert REMOTE_RETRY_CONFIG["backoff"]["init_backoff"] >= timedelta(seconds=1)
+
+    registry = build_kerchunk_registry(["s3://ciroh-nwm-zarr-copy/some.json"])
+    remote_urls = [
+        "gs://national-water-model/a",
+        "https://storage.googleapis.com/a",
+        "s3://ciroh-nwm-zarr-copy/a",
+    ]
+    stores = [registry.resolve(url)[0] for url in remote_urls]
+    stores.append(_build_gcs_source_registry().resolve("gcs://national-water-model/a")[0])
+    stores.append(_public_store("s3://ciroh-nwm-zarr-copy/"))
+    stores.append(_public_store("gs://national-water-model/"))
+
+    for store in stores:
+        assert store.retry_config is not None, f"{store} has obstore's 2s default"
+        assert store.retry_config["backoff"]["init_backoff"] >= timedelta(seconds=1)

@@ -88,6 +88,12 @@ REFERENCE_WORKER_MEMORY = 2000 * 1024**2
 # Fewest files worth the ~3s per worker startup; measured break-even.
 REFERENCE_BUILD_MIN_ITEMS = 32
 
+# obstore's default backoff spends its 10 retries in ~2s, which is too fast for
+# a connection an object store resets under load: the same request usually
+# succeeds seconds later. A 1s initial backoff spreads the same retries over
+# tens of seconds, still bounded by the 3 minute retry_timeout default.
+REMOTE_RETRY_CONFIG = {"backoff": {"init_backoff": timedelta(seconds=1)}}
+
 # Coordinates embedded in a reference rather than pointed at: scalars and the
 # grid axes are small, and inlining them saves the read path a round trip per
 # file. feature_id is deliberately absent -- 2.7M values for CONUS -- and is
@@ -533,9 +539,14 @@ def _public_store(url: str):
     """Anonymous store for ``url``, pinned to its region where we know it."""
     if url.startswith(NWM_S3_JSON_PATH):
         return from_url(
-            url, skip_signature=True, region=NWM_S3_JSON_REGION
+            url,
+            skip_signature=True,
+            region=NWM_S3_JSON_REGION,
+            retry_config=REMOTE_RETRY_CONFIG,
         )
-    return from_url(url, skip_signature=True)
+    return from_url(
+        url, skip_signature=True, retry_config=REMOTE_RETRY_CONFIG
+    )
 
 
 async def _check_if_files_exist_async(
@@ -608,14 +619,21 @@ def build_kerchunk_registry(json_paths: List[str]) -> ObjectStoreRegistry:
     ``combine_and_open_kerchunk_refs`` call, instead of a fresh registry (and
     fresh obstore store/connection pool) being constructed per chunk.
     """
-    gcs_store = from_url(f"gs://{NWM_BUCKET}/", skip_signature=True)
+    gcs_store = from_url(
+        f"gs://{NWM_BUCKET}/",
+        skip_signature=True,
+        retry_config=REMOTE_RETRY_CONFIG,
+    )
     s3_bucket = NWM_S3_JSON_PATH.split("://")[1]
     stores = {
         f"gcs://{NWM_BUCKET}/": gcs_store,
         f"gs://{NWM_BUCKET}/": gcs_store,
         # some kerchunk references encode chunk locations via GCS's public HTTPS
         # frontend rather than the "gcs://" scheme.
-        "https://storage.googleapis.com/": from_url("https://storage.googleapis.com/"),
+        "https://storage.googleapis.com/": from_url(
+            "https://storage.googleapis.com/",
+            retry_config=REMOTE_RETRY_CONFIG,
+        ),
         f"s3://{s3_bucket}/": _public_store(f"s3://{s3_bucket}/"),
     }
 
@@ -1111,7 +1129,11 @@ def _build_gcs_source_registry() -> ObjectStoreRegistry:
     first use rather than one per file.
     """
     return ObjectStoreRegistry({
-        f"gcs://{NWM_BUCKET}/": from_url(f"gs://{NWM_BUCKET}/", skip_signature=True),
+        f"gcs://{NWM_BUCKET}/": from_url(
+            f"gs://{NWM_BUCKET}/",
+            skip_signature=True,
+            retry_config=REMOTE_RETRY_CONFIG,
+        ),
     })
 
 
@@ -1614,7 +1636,11 @@ def build_remote_nwm_filelist(
             )
             component_paths = dropped_df["filepath"].tolist()
     else:
-        store = from_url(f"gs://{NWM_BUCKET}/", skip_signature=True)
+        store = from_url(
+            f"gs://{NWM_BUCKET}/",
+            skip_signature=True,
+            retry_config=REMOTE_RETRY_CONFIG,
+        )
         component_paths = []
         for dt in dates:
             dt_str = dt.strftime("%Y%m%d")
