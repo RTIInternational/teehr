@@ -761,3 +761,27 @@ def test_explicit_field_names_python_and_spark_engine_parity(module_scope_test_w
 
     assert list(python_df.columns) == list(spark_df.columns)
     _allclose(spark_df["event_max_relative_bias"], python_df["event_max_relative_bias"])
+
+
+@pytest.mark.module_scope_test_warehouse
+@pytest.mark.parametrize("engine", ["spark", "python"])
+def test_confusion_matrix_unpacks_to_static_keys(module_scope_test_warehouse, engine):
+    """ConfusionMatrix has fixed map keys, so unpacking needs no Spark action."""
+    ev = module_scope_test_warehouse
+
+    cm = DeterministicMetrics.ConfusionMatrix(
+        threshold_field_name="year_2_discharge"
+    )
+    cm.unpack_results = True
+
+    metrics_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[cm], group_by=["primary_location_id"], engine=engine
+        )
+        .to_pandas()
+    )
+
+    assert sorted(metrics_df.columns) == sorted(
+        ["primary_location_id", "TP", "TN", "FP", "FN"]
+    )

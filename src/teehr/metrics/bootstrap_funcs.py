@@ -12,6 +12,7 @@ from teehr.metrics.vectorized_bootstrap_funcs import (
     VECTORIZED_METRIC_FUNCS,
     compute_vectorized_shared_bootstrap,
 )
+from teehr.querying.utils import bootstrap_quantile_key
 
 logger = logging.getLogger(__name__)
 
@@ -336,7 +337,7 @@ def _calculate_quantiles(
 ) -> Dict:
     """Calculate quantile values of the bootstrap results."""
     values = np.quantile(results, quantiles)
-    quantiles = [f"{output_field_name}_{str(i)}" for i in quantiles]
+    quantiles = [bootstrap_quantile_key(output_field_name, i) for i in quantiles]
     d = dict(zip(quantiles, values))
     return d
 

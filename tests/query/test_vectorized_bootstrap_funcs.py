@@ -18,6 +18,7 @@ from teehr.metrics.bootstrap_funcs import (
     create_shared_bootstrap_func,
 )
 from teehr.metrics.models.bootstrap import Bootstrappers
+from teehr.querying.utils import derive_map_key_list
 from teehr.metrics.vectorized_bootstrap_funcs import (
     VECTORIZED_METRIC_FUNCS,
     build_index_matrix,
@@ -240,3 +241,33 @@ def test_end_to_end_reps_1000_scale(monkeypatch):
 
     for key in legacy_result:
         assert vectorized_result[key] == pytest.approx(legacy_result[key], rel=1e-8, abs=1e-11)
+
+
+def test_shared_bootstrap_keys_match_static_derivation(monkeypatch):
+    """Both engines must emit exactly the keys `derive_map_key_list` predicts.
+
+    Unpacking builds its output columns from statically derived keys, and
+    `F.col(map).getItem(missing_key)` yields null rather than an error, so a
+    drift between producers and derivation would silently produce all-null
+    quantile columns.
+    """
+    n = 60
+    p = _random_series(n, seed=20)
+    s = _random_series(n, seed=21, loc=9.0, scale=3.5)
+
+    boot = Bootstrappers.Stationary(
+        seed=321, reps=50, block_size=5, quantiles=[0.05, 0.5, 0.95]
+    )
+    metrics = [
+        DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot),
+        DeterministicMetrics.NashSutcliffeEfficiency(bootstrap=boot),
+    ]
+    expected = set()
+    for metric in metrics:
+        expected.update(derive_map_key_list(metric))
+
+    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    assert set(create_shared_bootstrap_func(metrics)(p, s).keys()) == expected
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    assert set(create_shared_bootstrap_func(metrics)(p, s).keys()) == expected

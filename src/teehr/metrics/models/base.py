@@ -19,6 +19,11 @@ class MetricsBasemodel(PydanticBaseModel):
     unpack_function: Callable = Field(default=None)
     reference_configuration: str = Field(default=None)
 
+    # MapType keys that are fixed by the metric definition itself, rather than
+    # derived from a bootstrap configuration. Set on metrics that always return
+    # the same map keys so unpacking need not read them from the data.
+    static_map_keys: ClassVar[Union[List[str], None]] = None
+
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         validate_assignment=True,

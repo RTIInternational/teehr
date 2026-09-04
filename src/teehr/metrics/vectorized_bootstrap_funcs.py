@@ -42,6 +42,7 @@ from typing import Any, Dict, List
 import numpy as np
 
 from teehr.metrics.models.base import MetricsBasemodel, TransformEnum
+from teehr.querying.utils import bootstrap_quantile_key
 
 EPSILON = 1e-6
 
@@ -321,6 +322,6 @@ def compute_vectorized_shared_bootstrap(
         else:
             q_values = np.quantile(values, quantiles)
             for q, v in zip(quantiles, q_values):
-                combined[f"{name}_{q}"] = v
+                combined[bootstrap_quantile_key(name, q)] = v
 
     return combined
