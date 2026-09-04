@@ -3,7 +3,7 @@ import os
 
 # Iceberg warehouse
 REMOTE_CATALOG_REST_URI = os.environ.get("REMOTE_CATALOG_REST_URI", "")
-REMOTE_WAREHOUSE_S3_PATH = os.environ.get("REMOTE_WAREHOUSE_S3_PATH", "")
+REMOTE_WAREHOUSE_IDENTIFIER = os.environ.get("REMOTE_WAREHOUSE_IDENTIFIER", "")
 LOCAL_CATALOG_NAME = "local"
 LOCAL_CATALOG_TYPE = "jdbc"
 LOCAL_NAMESPACE_NAME = "teehr"
@@ -39,8 +39,3 @@ LOADING_CACHE_DIR = "loading"
 S3_EVALUATIONS_PATH = "s3://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/evaluations.yaml"
 
 MAX_CPUS = max(os.cpu_count() - 1, 1)
-
-# Spark cluster configuration
-POD_TEMPLATE_PATH = "/opt/teehr/executor-pod-template.yaml"
-SERVICE_ACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-CA_CERTIFICATE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
