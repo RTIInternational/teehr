@@ -229,7 +229,15 @@ the primary metric input series.
         group_by=["primary_location_id"],
     ).to_pandas()
 
-    # Results: kling_gupta_efficiency_0.05, _0.5, _0.95
+    # Results: kling_gupta_efficiency_0_05, _0_5, _0_95
+
+Unpacked column names are ``{output_field_name}_{quantile}`` with dots replaced
+by underscores. They are derived from the metric configuration rather than read
+from the data, so unpacking adds no Spark action and ``aggregate`` remains lazy.
+
+``unpack_results`` requires ``quantiles`` to be set. With ``quantiles=None`` the
+metric returns an array of raw replicates in a single column, and unpacking
+raises a ``ValueError``.
 
 See also: :class:`Bootstrappers <teehr.Bootstrappers>`
 

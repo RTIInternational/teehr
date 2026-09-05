@@ -6,11 +6,14 @@ from pathlib import Path
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap, optimal_block_length
 import pyspark.sql.functions as F
+import pyspark.sql.types as T
 import pytest
 
 from teehr.models.filters import TableFilter
 from teehr.metrics.models.bootstrap import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
+from teehr.metrics.bootstrap_funcs import _calculate_quantiles
+from teehr.querying.utils import derive_map_key_list, unpack_sdf_dict_columns
 
 
 BOOT_YEAR_FILE = Path(
@@ -1039,3 +1042,221 @@ def test_shared_bootstrap_raw_arrays_no_quantiles(
 
     assert np.allclose(teehr_kge, manual_kge, equal_nan=True)
     assert np.allclose(teehr_nse, manual_nse, equal_nan=True)
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_aggregate_triggers_no_spark_jobs_for_unpacked_bootstrap(
+    session_scope_test_warehouse
+):
+    """aggregate() must stay lazy: no Spark job per unpacked bootstrap metric.
+
+    Unpacking used to discover the quantile map keys with a `.first()` action
+    per metric, each of which re-executed the whole upstream bootstrap DAG.
+    The keys are derivable from the metric config, so no action is needed.
+
+    Note: job groups are thread-local and `sparkContext` is only available on
+    classic Spark (not Spark Connect), which matches the test suite's session.
+    """
+    ev = session_scope_test_warehouse
+    boot_cfg = dict(seed=40, block_size=100, quantiles=[0.05, 0.5, 0.95], reps=10)
+
+    metrics = []
+    for metric_class in (
+        DeterministicMetrics.KlingGuptaEfficiency,
+        DeterministicMetrics.NashSutcliffeEfficiency,
+        DeterministicMetrics.RelativeBias,
+    ):
+        metric = metric_class()
+        metric.bootstrap = Bootstrappers.CircularBlock(**boot_cfg)
+        metric.unpack_results = True
+        metrics.append(metric)
+
+    # Build the accessor first so any table/filter setup jobs are not counted.
+    accessor = ev.table("joined_timeseries")
+    accessor.to_sdf()
+
+    sc = ev.spark.sparkContext
+    group_id = "teehr-aggregate-laziness"
+    sc.setJobGroup(group_id, "assert aggregate() runs no Spark jobs")
+    try:
+        results = accessor.aggregate(
+            metrics=metrics,
+            group_by=["primary_location_id"],
+        )
+    finally:
+        # PySpark 4 removed SparkContext.clearJobGroup(); clearing the local
+        # property is what it did.
+        sc.setLocalProperty("spark.jobGroup.id", None)
+
+    assert list(sc.statusTracker().getJobIdsForGroup(group_id)) == [], (
+        "aggregate() executed eager Spark job(s); the lazy plan is being "
+        "materialized once per bootstrap metric."
+    )
+
+    metrics_df = results.to_pandas()
+    assert "kling_gupta_efficiency_0_5" in metrics_df.columns
+    assert "nash_sutcliffe_efficiency_0_5" in metrics_df.columns
+    assert "relative_bias_0_95" in metrics_df.columns
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_unpacked_bootstrap_columns_present_when_result_is_empty(
+    session_scope_test_warehouse
+):
+    """Quantile columns must exist even when the result has no rows.
+
+    Discovering keys from the first row returned no keys for an empty result,
+    which silently dropped every quantile column and produced a KeyError
+    downstream instead of an empty frame with the expected schema.
+    """
+    ev = session_scope_test_warehouse
+
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=[0.05, 0.5, 0.95],
+        reps=10
+    )
+    kge.unpack_results = True
+
+    metrics_df = ev.table("joined_timeseries").filter(
+        filters=[
+            TableFilter(
+                column="primary_location_id",
+                operator=ops.eq,
+                value="gage-does-not-exist"
+            )
+        ],
+    ).aggregate(
+        metrics=[kge],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+    assert metrics_df.empty
+    assert sorted(metrics_df.columns) == sorted([
+        "primary_location_id",
+        "kling_gupta_efficiency_0_05",
+        "kling_gupta_efficiency_0_5",
+        "kling_gupta_efficiency_0_95",
+    ])
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_unpack_results_requires_quantiles(session_scope_test_warehouse):
+    """unpack_results on an array-valued bootstrap raises a clear error."""
+    ev = session_scope_test_warehouse
+
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=None,
+        reps=10
+    )
+    kge.unpack_results = True
+
+    with pytest.raises(ValueError, match="MapType"):
+        ev.table("joined_timeseries").aggregate(
+            metrics=[kge],
+            group_by=["primary_location_id"],
+        )
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_unpack_sdf_dict_columns_static_keys_survive_null_map(
+    session_scope_test_warehouse
+):
+    """Static keys keep quantile columns when the first row's map is null.
+
+    The shared-bootstrap minimum-sample/mean/variance guards and the mixed
+    engine's outer join can both leave a null map in the first row, which the
+    key-discovery path treats as "no keys" and silently drops the columns.
+    """
+    ev = session_scope_test_warehouse
+
+    schema = T.StructType([
+        T.StructField("primary_location_id", T.StringType(), True),
+        T.StructField(
+            "kling_gupta_efficiency",
+            T.MapType(T.StringType(), T.FloatType()),
+            True
+        ),
+    ])
+    sdf = ev.spark.createDataFrame(
+        [
+            ("gage-A", None),
+            ("gage-B", {
+                "kling_gupta_efficiency_0.05": 0.1,
+                "kling_gupta_efficiency_0.5": 0.2,
+            }),
+        ],
+        schema=schema,
+    )
+    key_list = ["kling_gupta_efficiency_0.05", "kling_gupta_efficiency_0.5"]
+
+    static_df = unpack_sdf_dict_columns(
+        sdf, "kling_gupta_efficiency", key_list=key_list
+    ).toPandas()
+
+    assert sorted(static_df.columns) == sorted([
+        "primary_location_id",
+        "kling_gupta_efficiency_0_05",
+        "kling_gupta_efficiency_0_5",
+    ])
+    assert pd.isna(static_df["kling_gupta_efficiency_0_5"].iloc[0])
+    assert static_df["kling_gupta_efficiency_0_5"].iloc[1] == pytest.approx(0.2)
+
+    # Without static keys the same frame loses both quantile columns, which is
+    # exactly why key_list exists.
+    discovered_df = unpack_sdf_dict_columns(sdf, "kling_gupta_efficiency")
+    assert discovered_df.columns == ["primary_location_id"]
+
+
+def test_derive_map_key_list():
+    """Static key derivation covers the configurations that can occur."""
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    assert derive_map_key_list(kge) is None
+
+    kge.bootstrap = Bootstrappers.CircularBlock(
+        seed=1, block_size=10, quantiles=None, reps=5
+    )
+    assert derive_map_key_list(kge) is None
+
+    kge.bootstrap = Bootstrappers.CircularBlock(
+        seed=1, block_size=10, quantiles=[0.05, 0.5, 0.95], reps=5
+    )
+    assert derive_map_key_list(kge) == [
+        "kling_gupta_efficiency_0.05",
+        "kling_gupta_efficiency_0.5",
+        "kling_gupta_efficiency_0.95",
+    ]
+
+    # A repeated quantile collapses to one key in the producer's dict.
+    kge.bootstrap = Bootstrappers.CircularBlock(
+        seed=1, block_size=10, quantiles=[0.5, 0.50], reps=5
+    )
+    assert derive_map_key_list(kge) == ["kling_gupta_efficiency_0.5"]
+
+    # Integer quantiles are coerced to float by the model.
+    kge.bootstrap = Bootstrappers.CircularBlock(
+        seed=1, block_size=10, quantiles=[0.05, 1], reps=5
+    )
+    assert derive_map_key_list(kge) == [
+        "kling_gupta_efficiency_0.05",
+        "kling_gupta_efficiency_1.0",
+    ]
+
+
+def test_derived_keys_match_legacy_producer():
+    """Derived keys must match the keys `_calculate_quantiles` produces."""
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = Bootstrappers.CircularBlock(
+        seed=1, block_size=10, quantiles=[0.05, 0.5, 0.95], reps=5
+    )
+
+    legacy = _calculate_quantiles(
+        kge.output_field_name, np.arange(20.0), kge.bootstrap.quantiles
+    )
+
+    assert list(legacy.keys()) == derive_map_key_list(kge)

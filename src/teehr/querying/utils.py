@@ -1,10 +1,12 @@
 """Utility functions for querying data."""
+import inspect
 import geopandas as gpd
 import pandas as pd
-from typing import List, Union
+from typing import Callable, List, Union
 import pyspark.sql as ps
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
+import pyspark.sql.types as T
 from pydantic import BaseModel as PydanticBaseModel
 
 import teehr
@@ -52,7 +54,12 @@ def post_process_metric_results(
 
     Additionally, if the metric model specifies unpacking of results,
     metric results returned as a dictionary will be unpacked into separate
-    columns in the DataFrame.
+    columns in the DataFrame. For a bootstrap metric with quantiles the
+    unpacked column names are derived from the metric configuration as
+    ``{output_field_name}_{quantile}`` with dots replaced by underscores, so
+    unpacking adds no Spark action and aggregation remains lazy. Metrics whose
+    map keys cannot be derived from configuration fall back to reading the keys
+    from the first row, which does trigger an action.
     """
     for model in include_metrics:
         if model.reference_configuration is not None:
@@ -91,10 +98,24 @@ def post_process_metric_results(
             # MapType column into individual quantile columns. Skip if gone.
             if model.output_field_name not in metrics_sdf.columns:
                 continue
-            metrics_sdf = model.unpack_function(
-                metrics_sdf,
-                model.output_field_name
-            )
+
+            key_list = derive_map_key_list(model)
+            if key_list is not None and _unpacker_accepts_key_list(
+                model.unpack_function
+            ):
+                # Statically derived keys keep the whole aggregate() plan lazy:
+                # no eager Spark action, and therefore no re-execution of the
+                # upstream bootstrap DAG, per metric.
+                metrics_sdf = model.unpack_function(
+                    metrics_sdf,
+                    model.output_field_name,
+                    key_list=key_list
+                )
+            else:
+                metrics_sdf = model.unpack_function(
+                    metrics_sdf,
+                    model.output_field_name
+                )
 
     return metrics_sdf
 
@@ -102,6 +123,67 @@ def post_process_metric_results(
 def sanitize_map_key_name(key, dot_replacement: str = "_") -> str:
     """Sanitize a map key into a Spark-safe output column name."""
     return str(key).replace(".", dot_replacement)
+
+
+def bootstrap_quantile_key(output_field_name: str, quantile) -> str:
+    """Return the map key used for one bootstrap quantile value.
+
+    This is the single source of truth for the key format shared by the
+    bootstrap UDFs (``metrics.bootstrap_funcs``,
+    ``metrics.vectorized_bootstrap_funcs``), the shared-bootstrap map
+    reconstruction (``metrics.format``), and the static key derivation used
+    when unpacking. Keys intentionally keep their dots; dots are replaced only
+    when building output column aliases (see ``sanitize_map_key_name``).
+    """
+    return f"{output_field_name}_{quantile}"
+
+
+def derive_map_key_list(model: PydanticBaseModel) -> Union[List[str], None]:
+    """Statically derive the MapType keys a metric's output column will have.
+
+    Parameters
+    ----------
+    model : PydanticBaseModel
+        A metric model.
+
+    Returns
+    -------
+    Union[List[str], None]
+        The ordered map keys, or None when the key set cannot be known from
+        configuration alone and must be discovered from the data.
+    """
+    bootstrap = getattr(model, "bootstrap", None)
+    quantiles = getattr(bootstrap, "quantiles", None)
+    if quantiles is not None:
+        keys = [
+            bootstrap_quantile_key(model.output_field_name, q)
+            for q in quantiles
+        ]
+        # A repeated quantile (e.g. [0.5, 0.50]) collapses to a single key in
+        # the dict the UDF returns, so dedupe to mirror the producer and avoid
+        # a spurious "sanitized map keys are not unique" error while unpacking.
+        return list(dict.fromkeys(keys))
+
+    # Metrics that always return the same map keys (e.g. ConfusionMatrix).
+    static_keys = getattr(type(model), "static_map_keys", None)
+    if static_keys:
+        return list(dict.fromkeys(static_keys))
+
+    return None
+
+
+def _unpacker_accepts_key_list(func: Callable) -> bool:
+    """Whether an unpack callable supports the ``key_list`` keyword."""
+    if func is unpack_sdf_dict_columns:
+        return True
+    try:
+        params = inspect.signature(func).parameters
+    except (TypeError, ValueError):
+        # Builtins and some C callables have no introspectable signature.
+        return False
+    return "key_list" in params or any(
+        p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()
+    )
 
 
 def calculate_metric_skill_score(
@@ -199,14 +281,54 @@ def calculate_metric_skill_score(
 def unpack_sdf_dict_columns(
     sdf: ps.DataFrame,
     column_name: str,
-    dot_replacement: str = "_"
+    dot_replacement: str = "_",
+    key_list: Union[List[str], None] = None
 ) -> ps.DataFrame:
     """Expand a MapType column into one column per key.
-    Uses keys from the first row (assumes key set is consistent) and sanitizes dots in output names.
+
+    Parameters
+    ----------
+    sdf : ps.DataFrame
+        DataFrame containing the MapType column to expand.
+    column_name : str
+        Name of the MapType column.
+    dot_replacement : str
+        Replacement for dots in the output column names, by default "_".
+    key_list : Union[List[str], None]
+        Map keys to expand, in output order. When None the keys are discovered
+        from the first row, which requires an eager Spark action and therefore
+        re-executes the upstream plan. Callers that can derive the keys from
+        configuration should pass them so the plan stays lazy (see
+        `derive_map_key_list`).
+
+    Returns
+    -------
+    ps.DataFrame
+        DataFrame with the MapType column replaced by one column per key,
+        with dots in the key names replaced by `dot_replacement`.
     """
-    first = sdf.select(column_name).first()
-    m = first[column_name] if first is not None else None
-    key_list = list(m.keys()) if m else []
+    field_type = sdf.schema[column_name].dataType
+    if not isinstance(field_type, T.MapType):
+        raise ValueError(
+            f"Cannot unpack column {column_name!r}: expected a MapType column "
+            f"but found {field_type.simpleString()}. Unpacking is only "
+            "supported for metrics that return a map, such as a bootstrap "
+            "metric with 'quantiles' set. A bootstrap configured with "
+            "quantiles=None returns an array of replicates instead; either "
+            "set quantiles or leave unpack_results=False."
+        )
+
+    if key_list is None:
+        logger.debug(
+            "Discovering map keys for column '%s' from the first row. This "
+            "triggers an eager Spark action and re-executes the upstream plan.",
+            column_name
+        )
+        first = sdf.select(column_name).first()
+        m = first[column_name] if first is not None else None
+        key_list = list(m.keys()) if m else []
+    else:
+        key_list = list(key_list)
 
     def safe_name(k) -> str:
         # k might be non-string; preserve uniqueness but remove '.' which breaks resolution

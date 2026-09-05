@@ -1,4 +1,5 @@
 """Contains functions for bootstrap calculations for use in Spark queries."""
+import os
 from typing import Any, Dict, Callable, List, Optional, Tuple
 import logging
 
@@ -6,8 +7,33 @@ import pandas as pd
 import numpy as np
 
 from teehr.metrics.models.base import MetricsBasemodel
+from teehr.metrics.vectorized_bootstrap_funcs import (
+    VECTORIZED_BOOTSTRAP_METHODS,
+    VECTORIZED_METRIC_FUNCS,
+    compute_vectorized_shared_bootstrap,
+)
+from teehr.querying.utils import bootstrap_quantile_key
 
 logger = logging.getLogger(__name__)
+
+# Internal rollout switch for the vectorized shared-bootstrap path -- not a
+# public/documented config option. Defaults to the legacy per-rep loop.
+# Set TEEHR_BOOTSTRAP_ENGINE=vectorized to opt in during validation. Read
+# dynamically (not cached at import time) so it can be toggled at runtime
+# (e.g. before creating a Spark session) and in tests via monkeypatch.
+def _vectorized_engine_enabled() -> bool:
+    return os.environ.get("TEEHR_BOOTSTRAP_ENGINE", "legacy").strip().lower() == "vectorized"
+
+
+def _can_use_vectorized_engine(ref_boot, metrics: List[MetricsBasemodel]) -> bool:
+    """Whether the vectorized path can safely handle this bootstrap/metric mix."""
+    if not _vectorized_engine_enabled():
+        return False
+    if type(ref_boot).__name__ not in VECTORIZED_BOOTSTRAP_METHODS:
+        return False
+    if ref_boot.include_value_time:
+        return False
+    return all(type(m).__name__ in VECTORIZED_METRIC_FUNCS for m in metrics)
 
 
 def _optimal_block_size(data: np.ndarray, method: str = "stationary") -> int:
@@ -277,6 +303,11 @@ def create_shared_bootstrap_func(
 
         bs = _make_bs_object(ref_boot, args)
 
+        if _can_use_vectorized_engine(ref_boot, metrics):
+            return compute_vectorized_shared_bootstrap(
+                metrics, args, bs, ref_boot.reps, quantiles
+            )
+
         # Each draw: evaluate ALL metric functions and return a list.
         def combined_func(*draw_args):
             # arch.bootstrap.apply expects a scalar or NumPy array output.
@@ -306,7 +337,7 @@ def _calculate_quantiles(
 ) -> Dict:
     """Calculate quantile values of the bootstrap results."""
     values = np.quantile(results, quantiles)
-    quantiles = [f"{output_field_name}_{str(i)}" for i in quantiles]
+    quantiles = [bootstrap_quantile_key(output_field_name, i) for i in quantiles]
     d = dict(zip(quantiles, values))
     return d
 
