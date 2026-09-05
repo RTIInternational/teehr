@@ -9,6 +9,7 @@ import pytest
 from teehr.fetching.nwm.grid_utils import update_location_id_prefix
 from teehr.fetching.nwm.nwm_points import fetch_and_format_nwm_points
 from teehr.fetching.nwm.nwm_grids import fetch_and_format_nwm_grids
+from teehr.fetching.utils import build_zarr_references_virtualizarr
 from teehr.evaluation.tables.secondary_timeseries_table import SecondaryTimeseriesTable
 
 TEST_NWM_VARIABLE_MAPPER = {
@@ -234,6 +235,79 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
 
     bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
+    # Match the column order.
+    bench_df = bench_df[[
+        'location_id',
+        'value',
+        'unit_name',
+        'variable_name',
+        'value_time',
+        'reference_time',
+        'configuration_name'
+    ]].copy()
+
+    # Run this to avoid issues with different column or row orders.
+    # Both dataframes should have 1 rows.
+    assert pd.concat([test_df, bench_df]).drop_duplicates(
+        subset=["location_id", "value", "value_time", "unit_name", "configuration_name"]
+    ).index.size == 1
+
+
+def test_nwm30_grid_fetch_and_format_virtualizarr_built_reference(tmpdir):
+    """Test grid fetch and format using a VirtualiZarr-built (not classic kerchunk) reference.
+
+    Regression test for a fill-value mismatch: VirtualiZarr's HDFParser
+    carries over the raw on-disk HDF5 storage fill value into the zarr
+    array's ``fill_value``, while the CF ``_FillValue``/``missing_value``
+    attribute says what actually represents missing data. When those two
+    disagree, VirtualiZarr's dataset construction (which grid fetching's
+    ``open_kerchunk_dataset`` uses) treats the variable as ambiguous and
+    fails to decode it (or, historically, silently masked every value to
+    NaN under the classic kerchunk engine grid fetching used before it moved
+    to VirtualiZarr too) -- exercised here since grid fetching's
+    ``kerchunk_method="local"``/``"auto"`` build their references via
+    VirtualiZarr (``build_zarr_references_virtualizarr``), not classic
+    kerchunk. The other grid tests above never catch this because they hand
+    a pre-existing, classic-kerchunk-built JSON straight to
+    ``fetch_and_format_nwm_grids``, never exercising the builder at all.
+    """
+    test_data_dir = Path("tests", "data", "nwm30")
+    weights_filepath = Path(test_data_dir, "one_huc10_alaska_weights.parquet")
+    remote_path = (
+        "gcs://national-water-model/nwm.20231101/forcing_analysis_assim_alaska/"
+        "nwm.t00z.analysis_assim.forcing.tm02.alaska.nc"
+    )
+
+    json_paths = build_zarr_references_virtualizarr(
+        remote_paths=[remote_path],
+        json_dir=tmpdir,
+        ignore_missing_file=False,
+    )
+
+    output_parquet_dir = Path(tmpdir, "out")
+    fetch_and_format_nwm_grids(
+        json_paths=json_paths,
+        nwm_configuration_name="forcing_analysis_assim_alaska",
+        nwm_version="nwm30",
+        variable_name="RAINRATE",
+        output_parquet_dir=output_parquet_dir,
+        zonal_weights_filepath=weights_filepath,
+        ignore_missing_file=False,
+        overwrite_output=True,
+        location_id_prefix=None,
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER,
+        timeseries_type="primary",
+        drop_overlapping_assimilation_values=True
+    )
+
+    parquet_file = Path(output_parquet_dir, "20231101T00.parquet")
+    benchmark_file = Path(test_data_dir, "grid_benchmark.parquet")
+
+    bench_df = pd.read_parquet(benchmark_file)
+    test_df = pd.read_parquet(parquet_file)
+
+    assert not test_df["value"].isna().any()
+
     # Match the column order.
     bench_df = bench_df[[
         'location_id',

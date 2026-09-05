@@ -30,7 +30,6 @@ your computer's memory.
 """
 import pandas as pd
 import xarray as xr
-import fsspec
 from pydantic import validate_call
 import numpy as np
 
@@ -59,6 +58,7 @@ from teehr.fetching.models.utils import (
     TimeseriesTypeEnum
 )
 from teehr.fetching.utils import (
+    public_zarr_store,
     write_timeseries_parquet_file,
     get_period_start_end_times,
     create_periods_based_on_chunksize
@@ -267,6 +267,12 @@ def nwm_retro_to_parquet(
         f"Fetching NWM retrospective point data, version: {nwm_version}."
     )
 
+    if len(location_ids) == 0:
+        raise ValueError(
+            "The 'location_ids' list cannot be empty. "
+            "Please provide at least one valid NWM ID."
+        )
+
     if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
         s3_zarr_url = "s3://noaa-nwm-retro-v2-zarr-pds"
     elif nwm_version == SupportedNWMRetroVersionsEnum.nwm21:
@@ -288,7 +294,7 @@ def nwm_retro_to_parquet(
         output_dir.mkdir(parents=True)
 
     da = xr.open_zarr(
-        fsspec.get_mapper(s3_zarr_url, anon=True, asynchronous=True), consolidated=True
+        public_zarr_store(s3_zarr_url), consolidated=True
     )[variable_name].sel(
         feature_id=location_ids, time=slice(start_date, end_date)
     )

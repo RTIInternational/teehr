@@ -4,6 +4,13 @@ import shutil
 from typing import Union
 import logging
 
+# Concurrency helpers moved to teehr.utils.concurrency; re-exported so existing
+# imports keep working.
+from teehr.utils.concurrency import (  # noqa: F401
+    run_concurrent_map,
+    run_sync,
+)
+
 logger = logging.getLogger(__name__)
 
 

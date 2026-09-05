@@ -1,18 +1,14 @@
 """Module for generating area-based weights for grid layer pixels."""
 from typing import Union, Dict
 from pathlib import Path
-import warnings
 import logging
 
-import geopandas as gpd
 from geopandas import GeoDataFrame
 import numpy as np
 import xarray as xr
 from rasterio.transform import rowcol
-import rasterio
 import pandas as pd
-import dask
-import shapely
+from exactextract import exact_extract
 import rioxarray  # noqa: F401 - needed to add rio accessors to xarray objects
 
 from teehr.fetching.nwm.grid_utils import update_location_id_prefix
@@ -23,178 +19,74 @@ import teehr.models.pandera_dataframe_schemas as schemas
 logger = logging.getLogger(__name__)
 
 
-@dask.delayed
-def vectorize(data_array: xr.DataArray) -> gpd.GeoDataFrame:
-    """Convert 2D xarray.DataArray into a geopandas.GeoDataFrame.
-
-    Parameters
-    ----------
-    data_array : xr.DataArray
-        A 2D xarray DataArray containing grid data to be vectorized.
-        Must have valid CRS and transform information via rioxarray.
-
-    Returns
-    -------
-    gpd.GeoDataFrame
-        A GeoDataFrame where each row represents a grid cell with:
-        - Unique pixel value
-        - Polygon geometry
-        - x, y coordinates of cell center
-
-    Notes
-    -----
-    Heavily borrowed from GeoCube implementation.
-    See: https://github.com/corteva/geocube/blob/master/geocube/vector.py#L12
-
-    The function assigns unique values to each pixel and vectorizes them
-    into polygon geometries. Nodata pixels are masked out based on the
-    rio.nodata attribute.
-    """
-    # nodata mask
-    mask = None
-    if np.isnan(data_array.rio.nodata):
-        mask = ~data_array.isnull()
-    elif data_array.rio.nodata is not None:
-        mask = data_array != data_array.rio.nodata
-
-    # Give all pixels a unique value
-    data_array.values[:, :] = np.arange(0, data_array.values.size).reshape(
-        data_array.shape
-    )
-
-    # vectorize generator
-    vectorized_data = (
-        (value, shapely.geometry.shape(polygon))
-        for polygon, value in rasterio.features.shapes(
-            data_array,
-            transform=data_array.rio.transform(),
-            mask=mask,
-        )
-    )
-    gdf = gpd.GeoDataFrame(
-        vectorized_data,
-        columns=[data_array.name, "geometry"],
-        crs=data_array.rio.crs,
-    )
-    xx, yy = np.meshgrid(data_array.x.values, data_array.y.values)
-    gdf["x"] = xx.ravel()
-    gdf["y"] = yy.ravel()
-
-    return gdf
-
-
-@dask.delayed
-def overlay_zones(
-    grid: gpd.GeoDataFrame, zones: gpd.GeoDataFrame
-) -> gpd.GeoDataFrame:
-    """Overlay zone polygons on vectorized grid cells."""
-    with pd.option_context(
-        "mode.chained_assignment", None
-    ):  # to ignore setwithcopywarning
-        grid.loc[:, "pixel_area"] = grid.geometry.area
-        overlay_gdf = grid.overlay(zones, keep_geom_type=True)
-        overlay_gdf.loc[:, "overlay_area"] = overlay_gdf.geometry.area
-        overlay_gdf.loc[:, "weight"] = (
-            overlay_gdf.overlay_area / overlay_gdf.pixel_area
-        )
-    return overlay_gdf
-
-
-def vectorize_grid(
+def _zone_pixel_coverage(
     src_da: xr.DataArray,
-    nodata_val: float,
-    crs_wkt: str,
-    vectorize_chunk: float = 40,
-) -> gpd.GeoDataFrame:
-    """Vectorize pixels in the template array in chunks using dask.
+    zone_gdf: GeoDataFrame,
+    unique_zone_id: str,
+) -> pd.DataFrame:
+    """Fraction of each grid pixel covered by each zone polygon.
 
-    Notes
-    -----
-    Parameter vectorize_chunk determines how many pixels will
-    be vectorized at one time
-    (thousands of pixels)
+    One row per intersecting (zone, pixel) pair. ``row``/``col`` index the full
+    grid, never a clipped subset: exactextract windows the raster per polygon
+    so clipping saves nothing, and clipping drops boundary pixels that still
+    overlap the zone.
     """
-    src_da = src_da.persist()
-    max_pixels = vectorize_chunk * 1000
-    num_splits = np.ceil(src_da.values.size / max_pixels).astype(int)
+    # A column named "id" is read as the OGR feature id, silently yielding
+    # 0, 1, 2 ... instead of the real values, so pass the ids under a private
+    # name and hand over nothing else.
+    zones = GeoDataFrame(
+        {"_teehr_zone_id": zone_gdf[unique_zone_id].astype(str).values},
+        geometry=zone_gdf.geometry.make_valid().values,
+        crs=zone_gdf.crs,
+    )
 
-    # Prepare each data array
-    if num_splits > 0:
-        da_list = np.array_split(src_da, num_splits)
-        [da.rio.write_nodata(nodata_val, inplace=True) for da in da_list]
-    else:
-        src_da.rio.write_nodata(nodata_val, inplace=True)
-        da_list = [src_da]
+    result = exact_extract(
+        rast=src_da,
+        vec=zones,
+        ops=["cell_id", "coverage"],
+        include_cols=["_teehr_zone_id"],
+        output="pandas",
+    )
+    # One row per zone holding lists of cells; a zone intersecting nothing
+    # contributes a single null row.
+    result = result.explode(["cell_id", "coverage"])
+    result = result.dropna(subset=["cell_id", "coverage"])
 
-    results = []
-    for da_subset in da_list:
-        results.append(vectorize(da_subset))
-    grid_gdf = pd.concat(dask.compute(results)[0])
-    grid_gdf.crs = crs_wkt
+    cell_id = result["cell_id"].to_numpy(dtype=np.int64)
+    width = src_da.rio.width
+    # cell_id runs row-major from the north-west corner. Either axis may be
+    # stored in the opposite order, so resolve through coordinate values and
+    # let rowcol map them back.
+    y_values = src_da.y.values
+    if y_values[0] < y_values[-1]:
+        y_values = y_values[::-1]
+    x_values = src_da.x.values
+    if x_values[0] > x_values[-1]:
+        x_values = x_values[::-1]
+    rows, cols = rowcol(
+        src_da.rio.transform(),
+        x_values[cell_id % width],
+        y_values[cell_id // width],
+    )
 
-    # Reindex to remove duplicates
-    grid_gdf["index"] = np.arange(len(grid_gdf.index))
-    grid_gdf.set_index("index", inplace=True)
-
-    return grid_gdf
-
-
-def calculate_weights(
-    grid_gdf: gpd.GeoDataFrame,
-    zone_gdf: gpd.GeoDataFrame,
-    overlay_chunk: float = 250,
-) -> gpd.GeoDataFrame:
-    """Overlay vectorized pixels and zone polygons, and calculate weights.
-
-    Notes
-    -----
-    Parameter overlay_chunk determines the size of the rectangular
-    window that spatially subsets datasets for the operation
-    (thousands of pixels).
-    """
-    # Make sure geometries are valid
-    grid_gdf["geometry"] = grid_gdf.geometry.make_valid()
-    zone_gdf["geometry"] = zone_gdf.geometry.make_valid()
-
-    xmin, ymin, xmax, ymax = zone_gdf.total_bounds
-
-    x_steps = np.arange(xmin, xmax, overlay_chunk * 1000)
-    y_steps = np.arange(ymin, ymax, overlay_chunk * 1000)
-
-    x_steps = np.append(x_steps, xmax)
-    y_steps = np.append(y_steps, ymax)
-
-    results = []
-    for i in range(x_steps.size - 1):
-        for j in range(y_steps.size - 1):
-            xmin = x_steps[i]
-            xmax = x_steps[i + 1]
-
-            ymin = y_steps[j]
-            ymax = y_steps[j + 1]
-
-            zone = zone_gdf.cx[xmin:xmax, ymin:ymax]
-            grid = grid_gdf.cx[xmin:xmax, ymin:ymax]
-
-            if len(zone.index) == 0 or len(grid.index) == 0:
-                continue
-            results.append(overlay_zones(grid, zone))
-
-    overlay_gdf = pd.concat(dask.compute(results)[0])
-
-    return overlay_gdf
+    return pd.DataFrame({
+        "row": np.asarray(rows, dtype=np.int64),
+        "col": np.asarray(cols, dtype=np.int64),
+        "weight": result["coverage"].to_numpy(dtype=np.float32),
+        LOCATION_ID: result["_teehr_zone_id"].to_numpy(dtype=object),
+    })
 
 
 def generate_weights_file(
     zone_polygons: Union[Path, str, GeoDataFrame],
     template_dataset: Union[str, Path, xr.Dataset],
     variable_name: str,
-    output_weights_filepath: Union[str, Path],
+    output_weights_filepath: Union[str, Path, None],
     crs_wkt: str,
     unique_zone_id: str,
     location_id_prefix: str = None,
     **read_args: Dict,
-) -> None:
+) -> pd.DataFrame:
     """Generate a file of area weights for pixels intersecting zone polyons.
 
     Parameters
@@ -205,8 +97,9 @@ def generate_weights_file(
         Path to the grid dataset or an xarray Dataset to use as a template.
     variable_name : str
         Name of the variable within the dataset.
-    output_weights_filepath : str
-        Path to the resultant weights file.
+    output_weights_filepath : str or None
+        Path to write the weights file to. If None, the weights are returned
+        without being written.
     crs_wkt : str
         Coordinate system for given template gridded dataset as WKT string.
         The zone_polygons will be reprojected to this CRS.
@@ -217,6 +110,12 @@ def generate_weights_file(
     **read_args : dict, optional
         Keyword arguments to be passed to GeoPandas read_file().
         read_parquet(), and read_feather() methods.
+
+    Returns
+    -------
+    pd.DataFrame
+        Columns ``row``, ``col``, ``weight``, ``location_id``. ``row`` and
+        ``col`` index the full template grid.
 
     Examples
     --------
@@ -272,53 +171,18 @@ def generate_weights_file(
     if isinstance(template_dataset, (str, Path)):
         template_dataset = xr.open_dataset(template_dataset)
     src_da = template_dataset[variable_name]
-    src_da = src_da.rio.write_crs(crs_wkt, inplace=True)
-    grid_transform = src_da.rio.transform()
-    nodata_val = src_da.rio.nodata
 
     if not all([dim in src_da.dims for dim in ["x", "y"]]):
         raise ValueError("Template dataset must have x and y dimensions.")
 
-    # Get the subset of the grid that intersects the total zone bounds
-    bbox = tuple(zone_gdf.total_bounds)
-    if len(template_dataset.dims) == 2:
-        src_da = src_da.sel(
-            x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3])
-        )
-    else:
-        src_da = src_da.sel(
-            x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3])
-        )[0]
+    # Only the grid geometry matters; drop any non-spatial dimension.
+    extra_dims = [d for d in src_da.dims if d not in ("x", "y")]
+    if extra_dims:
+        src_da = src_da.isel({d: 0 for d in extra_dims}, drop=True)
     src_da = src_da.astype("float32")
-    src_da["x"] = np.float32(src_da.x.values)
-    src_da["y"] = np.float32(src_da.y.values)
+    src_da = src_da.rio.write_crs(crs_wkt, inplace=True)
 
-    # Vectorize source grid pixels
-    grid_gdf = vectorize_grid(src_da, nodata_val, crs_wkt)
-
-    # Overlay and calculate areal weights of pixels within each zone
-    # Note: Temporarily suppress the dask UserWarning: "Large object detected
-    #  in task graph" until a better approach is found
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=UserWarning)
-        weights_gdf = calculate_weights(grid_gdf, zone_gdf)
-    weights_gdf = weights_gdf.drop_duplicates(
-        subset=["x", "y", unique_zone_id]
-    )
-
-    # Convert x-y to row-col using original transform
-    rows, cols = rowcol(
-        grid_transform, weights_gdf.x.values, weights_gdf.y.values
-    )
-    weights_gdf["row"] = rows
-    weights_gdf["col"] = cols
-
-    if unique_zone_id:
-        df = weights_gdf[["row", "col", "weight", unique_zone_id]].copy()
-        df.rename(columns={unique_zone_id: LOCATION_ID}, inplace=True)
-    else:
-        df = weights_gdf[["row", "col", "weight"]]
-        df[LOCATION_ID] = weights_gdf.index.values
+    df = _zone_pixel_coverage(src_da, zone_gdf, unique_zone_id)
 
     if location_id_prefix:
         df = update_location_id_prefix(
@@ -327,6 +191,7 @@ def generate_weights_file(
 
     schema = schemas.weights_file_schema()
     validated_df = schema.validate(df)
-    validated_df.to_parquet(output_weights_filepath)
+    if output_weights_filepath is not None:
+        validated_df.to_parquet(output_weights_filepath)
 
-    return
+    return validated_df

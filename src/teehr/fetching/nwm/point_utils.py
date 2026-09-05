@@ -7,15 +7,19 @@ import logging
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+from obspec_utils.registry import ObjectStoreRegistry
 
 from teehr.fetching.utils import (
     write_timeseries_parquet_file,
     split_dataframe,
     format_nwm_configuration_metadata,
+    map_variable_and_unit_name,
     parse_nwm_json_paths,
     combine_and_open_kerchunk_refs,
+    build_kerchunk_registry,
 )
 from teehr.fetching.models.utils import TimeseriesTypeEnum
+from teehr.utils.concurrency import resolve_budget
 from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,
@@ -43,8 +47,25 @@ def process_chunk_of_files(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-):
-    """Assemble a table for a chunk of NWM files."""
+    registry: Optional[ObjectStoreRegistry] = None,
+    max_concurrent_files: Optional[int] = None,
+    cpu_workers: Optional[int] = None,
+) -> Optional[Path]:
+    """Assemble a table for a chunk of NWM files.
+
+    ``registry`` should be a single ObjectStoreRegistry built once (via
+    ``build_kerchunk_registry``) covering every file across all chunks in the
+    run, so obstore's stores/connection pools are reused across chunks rather
+    than rebuilt per chunk. Built fresh from this chunk alone if omitted.
+
+    ``max_concurrent_files`` bounds how many of this chunk's files are read
+    at once and ``cpu_workers`` how many are parsed at once. Both default to
+    the process-wide budget; divide them among callers running several chunks
+    at the same time, since the two levels multiply.
+
+    Returns the path to the parquet file written for this chunk, or ``None``
+    if the chunk produced no data.
+    """
     location_ids = np.array(location_ids).astype(int)
 
     schema = pa.schema(
@@ -69,24 +90,22 @@ def process_chunk_of_files(
 
     ds, read_mask = combine_and_open_kerchunk_refs(
         json_paths=valid_paths,
+        variable_name=variable_name,
+        location_ids=location_ids,
         ignore_missing_file=ignore_missing_file,
-        storage_options={"target_options": {"anon": True}},
+        registry=registry,
+        max_concurrent_files=max_concurrent_files,
+        cpu_workers=cpu_workers,
     )
     df_valid = df_valid[read_mask].reset_index(drop=True)
 
-    ds = ds.sel(feature_id=location_ids)
     vals = ds[variable_name].astype("float32").values
     nwm_units = ds[variable_name].units
     n_files, n_locations = vals.shape
 
-    if variable_mapper is None:
-        teehr_variable_name = variable_name
-        teehr_units = nwm_units
-    else:
-        teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
-            variable_name, {}
-        ).get("name", variable_name)
-        teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, {}).get("name", nwm_units)
+    teehr_variable_name, teehr_units = map_variable_and_unit_name(
+        variable_name, nwm_units, variable_mapper
+    )
 
     ref_times = [
         pd.to_datetime(r.day) + pd.to_timedelta(int(r.z_hour[1:3]), unit="h")
@@ -144,12 +163,64 @@ def process_chunk_of_files(
         df_output.loc[:, REFERENCE_TIME] = pd.NaT
         output_table = pa.Table.from_pandas(df_output, schema=schema)
 
-    write_timeseries_parquet_file(
+    return write_timeseries_parquet_file(
         Path(output_parquet_dir, filename),
         overwrite_output,
         output_table,
         timeseries_type
     )
+
+
+def build_file_chunks(
+    file_paths: List[Optional[str]],
+    process_by_z_hour: bool,
+    stepsize: int,
+) -> List[pd.DataFrame]:
+    """Group resolved kerchunk reference file paths into chunks for processing.
+
+    Each returned dataframe is a chunk that can be passed to
+    ``process_chunk_of_files`` to fetch, format, and write a single output
+    parquet file. Exposed separately from ``fetch_and_format_nwm_points`` so
+    external callers (e.g. a Prefect flow) can build the chunk list once and
+    parallelize calls to ``process_chunk_of_files`` themselves.
+
+    Parameters
+    ----------
+    file_paths : List[Optional[str]]
+        Resolved file paths from ``generate_json_paths``. May contain
+        ``None`` entries for files that should be skipped.
+    process_by_z_hour : bool
+        A boolean flag that determines the method of grouping files
+        for processing. True groups by day and z_hour. False chunks
+        files sequentially into groups, whose size is determined by
+        stepsize.
+    stepsize : int
+        The number of json files to process at one time. Used if
+        process_by_z_hour is set to False.
+
+    Returns
+    -------
+    List[pd.DataFrame]
+        A list of dataframes, each representing one chunk of files to be
+        passed to ``process_chunk_of_files``.
+    """
+    non_null_paths = [p for p in file_paths if p is not None]
+    if not non_null_paths:
+        raise FileNotFoundError(
+            "No NWM files could be resolved for the given configuration."
+        )
+
+    df_refs = parse_nwm_json_paths(non_null_paths)
+
+    if process_by_z_hour:
+        # Option #1. Groupby day and z_hour
+        gps = df_refs.groupby(["day", "z_hour"])
+        dfs = [df for _, df in gps]
+    else:
+        # Option #2. Chunk by some number of files
+        dfs = split_dataframe(df_refs, stepsize)
+
+    return dfs
 
 
 def fetch_and_format_nwm_points(
@@ -166,13 +237,16 @@ def fetch_and_format_nwm_points(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-):
+    io_concurrency: Optional[int] = None,
+    cpu_workers: Optional[int] = None,
+) -> List[Path]:
     """Fetch NWM point data and save as parquet files.
 
-    Accepts a list of kerchunk reference file paths (S3/local .json, or local .parq)
-    as produced by ``generate_json_paths``. ``None`` entries are filtered out before
-    processing. Each chunk is combined into a single xarray Dataset via kerchunk.
-    Intended to be refactored to use VirtualiZarr in a future release.
+    Accepts reference file paths (local or S3 .json) as produced by
+    ``generate_json_paths``; ``None`` entries are filtered out first. Files are
+    grouped into chunks, and each chunk is read through VirtualiZarr into one
+    xarray Dataset, subset to ``location_ids``, and written as a single parquet
+    file.
 
     Parameters
     ----------
@@ -208,32 +282,55 @@ def fetch_and_format_nwm_points(
         The type of timeseries being processed.
     drop_overlapping_assimilation_values : bool
         Whether to drop assimilation values that overlap in value_time.
+    io_concurrency : Optional[int]
+        Remote reads in flight at once. Defaults to 48; lower it when
+        something else is fetching in parallel.
+    cpu_workers : Optional[int]
+        Files processed at once. Defaults to the cpus available.
+
+    Returns
+    -------
+    List[Path]
+        Paths to the parquet files written, in chunk order. Chunks that
+        produced no data are omitted.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
         output_parquet_dir.mkdir(parents=True)
 
-    # Filter None entries (files skipped for remote mode with no S3 JSON)
-    non_null_paths = [p for p in file_paths if p is not None]
+    dfs = build_file_chunks(file_paths, process_by_z_hour, stepsize)
+
+    budget = resolve_budget(io=io_concurrency, cpu=cpu_workers)
+    n_files = int(sum(len(df) for df in dfs))
+    logger.info(
+        f"Processing {n_files} files in {len(dfs)} chunks for configuration:"
+        f" {configuration}, variable: {variable_name}. Reading up to"
+        f" {budget.io} files at once using {budget.cpu} threads."
+    )
+
+    non_null_paths = [path for path in file_paths if path is not None]
     if not non_null_paths:
         raise FileNotFoundError(
-            "No NWM files could be resolved for the given configuration."
+            "No NWM files for specified input configuration were found in GCS!"
         )
-
-    df_refs = parse_nwm_json_paths(non_null_paths)
-
-    if process_by_z_hour:
-        # Option #1. Groupby day and z_hour
-        gps = df_refs.groupby(["day", "z_hour"])
-        dfs = [df for _, df in gps]
-    else:
-        # Option #2. Chunk by some number of files
-        dfs = split_dataframe(df_refs, stepsize)
-
-    logger.info(f"Processing {len(dfs)} chunks of files for configuration: {configuration}, variable: {variable_name}.")
-
-    for df in dfs:
-        process_chunk_of_files(
+    # Chunks run one at a time: reading one is already parallel across its
+    # files, and that work waits on the network rather than the GIL, so worker
+    # processes measured no faster (0.72-1.01x at 36-144 files). Callers
+    # wanting chunks in parallel should map them themselves -- see
+    # build_file_chunks and process_chunk_of_files.
+    #
+    # The registry is built once and reused across every chunk, so obstore's
+    # stores and connection pools are not rebuilt per chunk.
+    registry = build_kerchunk_registry(non_null_paths)
+    output_paths = []
+    for number, df in enumerate(dfs, start=1):
+        # Logged before the work, not after: a chunk takes a while, and
+        # silence until it finishes looks like a hang.
+        logger.info(
+            f"Chunk {number} of {len(dfs)}: reading {len(df)} files"
+            f" starting {df.day.iloc[0]} {df.z_hour.iloc[0]}"
+        )
+        filepath = process_chunk_of_files(
             df,
             location_ids,
             configuration,
@@ -246,4 +343,17 @@ def fetch_and_format_nwm_points(
             variable_mapper,
             timeseries_type,
             drop_overlapping_assimilation_values,
+            registry,
+            budget.io,
+            budget.cpu,
         )
+        if filepath is None:
+            logger.info(f"Chunk {number} of {len(dfs)} produced no data.")
+        else:
+            logger.debug(f"Chunk {number} wrote {Path(filepath).name}")
+        output_paths.append(filepath)
+
+    written = [path for path in output_paths if path is not None]
+    logger.info(f"Wrote {len(written)} files from {len(dfs)} chunks.")
+
+    return written

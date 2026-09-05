@@ -1,21 +1,26 @@
 """Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
+import functools
 import logging
 
-import dask
 import numpy as np
 import pandas as pd
 import xarray as xr
 
 import teehr.models.pandera_dataframe_schemas as schemas
+from obspec_utils.registry import ObjectStoreRegistry
+
 from teehr.fetching.utils import (
-    get_dataset,
+    build_kerchunk_registry,
+    map_variable_and_unit_name,
+    open_kerchunk_dataset,
     write_timeseries_parquet_file,
     parse_nwm_json_paths,
     format_nwm_configuration_metadata,
     convert_value_from_kelvin_to_celsius
 )
+from teehr.utils.concurrency import run_concurrent_map
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
@@ -54,11 +59,18 @@ def get_nwm_grid_data(
     row_min: int,
     col_min: int,
     row_max: int,
-    col_max: int
+    col_max: int,
+    x_dim: str = "x",
+    y_dim: str = "y",
 ):
-    """Read a subset nwm grid data into memory using row/col bounds."""
+    """Read a subset nwm grid data into memory using row/col bounds.
+
+    ``x_dim``/``y_dim`` default to NWM's usual "x"/"y" dimension names, but
+    can be overridden for grids that use different names (e.g. NWM v2.1
+    retrospective forcing's "west_east"/"south_north").
+    """
     grid_values = var_da.isel(
-        x=slice(col_min, col_max+1), y=slice(row_min, row_max+1)
+        **{x_dim: slice(col_min, col_max + 1), y_dim: slice(row_min, row_max + 1)}
     ).values
     return grid_values
 
@@ -87,16 +99,67 @@ def compute_weighted_average(
     grid_values: np.ndarray,
     weights_df: pd.DataFrame
 ) -> pd.DataFrame:
-    """Compute weighted average of pixels for given zones and weights."""
-    weights_df.loc[:, "weighted_value"] = grid_values * \
-        weights_df.weight.values
+    """Coverage-weighted mean of grid pixels for each zone.
 
-    # Compute weighted average
-    df = weights_df.groupby(
-        by=LOCATION_ID, as_index=False)[["weighted_value", "weight"]].sum()
-    df.loc[:, VALUE] = df.weighted_value/df.weight
+    Parameters
+    ----------
+    grid_values : np.ndarray
+        Pixel values aligned row-for-row with ``weights_df``. Either
+        ``(n_pixels,)`` for one timestep or ``(n_times, n_pixels)`` for several.
+    weights_df : pd.DataFrame
+        Weights with ``location_id`` and ``weight`` columns.
 
-    return df[[LOCATION_ID, VALUE]].copy()
+    Returns
+    -------
+    pd.DataFrame
+        ``location_id`` and ``value``, plus ``time_index`` when
+        ``grid_values`` is 2-D.
+
+    Raises
+    ------
+    ValueError
+        If a zone's weights sum to zero, which would make the mean undefined.
+    """
+    values = np.asarray(grid_values)
+    single_step = values.ndim == 1
+    if single_step:
+        values = values[np.newaxis, :]
+
+    # Factorize (hash-based) rather than sorting the label column, then sort
+    # only the unique labels and remap -- sorting millions of location strings
+    # dominates otherwise.
+    codes, unique_locations = pd.factorize(weights_df[LOCATION_ID].to_numpy())
+    label_order = np.argsort(unique_locations)
+    rank = np.empty_like(label_order)
+    rank[label_order] = np.arange(label_order.size)
+    codes = rank[codes]
+    unique_locations = unique_locations[label_order]
+    weights = weights_df["weight"].to_numpy("float64")
+
+    n_zones = len(unique_locations)
+    total_weight = np.bincount(codes, weights=weights, minlength=n_zones)
+    if not (total_weight > 0).all():
+        empty = unique_locations[total_weight <= 0]
+        raise ValueError(
+            f"Total coverage weight is 0 for {empty.size} location(s), "
+            f"e.g. {empty[:5].tolist()}."
+        )
+
+    # Accumulate in float64; the weights and values are float32 and a zone can
+    # cover thousands of pixels.
+    weighted = np.stack([
+        np.bincount(codes, weights=weights * step, minlength=n_zones)
+        for step in values.astype("float64")
+    ])
+    means = weighted / total_weight
+
+    if single_step:
+        return pd.DataFrame({LOCATION_ID: unique_locations, VALUE: means[0]})
+    return pd.DataFrame({
+        "time_index": np.repeat(np.arange(means.shape[0]), n_zones),
+        LOCATION_ID: np.tile(unique_locations, means.shape[0]),
+        VALUE: means.ravel(),
+    })
 
 
 def read_and_validate_weights_file(
@@ -110,7 +173,6 @@ def read_and_validate_weights_file(
     return schema.validate(weights_df)
 
 
-@dask.delayed
 def process_single_nwm_grid_file(
     row: Tuple,
     configuration_name: str,
@@ -118,14 +180,22 @@ def process_single_nwm_grid_file(
     weights_filepath: str,
     ignore_missing_file: bool,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, Dict[str, str]]]
+    variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
+    registry: Optional[ObjectStoreRegistry] = None,
 ) -> pd.DataFrame:
     """Fetch data for a single reference file and compute weighted average."""
-    ds = get_dataset(
+    # get_nwm_grid_data's .isel(x=..., y=...) only needs positions, not real
+    # x/y coordinate values -- but xarray's .isel() still re-indexes the x/y
+    # coordinate variables themselves to keep them aligned with the sliced
+    # data, which fails if they're still virtual (unmaterialized) arrays, so
+    # x/y must be materialized here even though their values are unused.
+    ds = open_kerchunk_dataset(
         row.filepath,
-        ignore_missing_file
+        loadable_variables=[variable_name, "time", "x", "y"],
+        ignore_missing_file=ignore_missing_file,
+        registry=registry,
     )
-    if not ds:
+    if ds is None:
         return None
     yrmoday = row.day
     z_hour = row.z_hour[1:3]
@@ -156,14 +226,11 @@ def process_single_nwm_grid_file(
     # Calculate mean areal value of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    if variable_mapper is None:
-        df.loc[:, UNIT_NAME] = nwm_units
-        df.loc[:, VARIABLE_NAME] = variable_name
-    else:
-        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, {}).get("name", nwm_units)
-        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name).get("name")
+    teehr_variable_name, teehr_units = map_variable_and_unit_name(
+        variable_name, nwm_units, variable_mapper
+    )
+    df.loc[:, UNIT_NAME] = teehr_units
+    df.loc[:, VARIABLE_NAME] = teehr_variable_name
 
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = ref_time
@@ -188,13 +255,17 @@ def fetch_and_format_nwm_grids(
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
-    convert_k_to_c: bool = True
+    convert_k_to_c: bool = True,
+    cpu_workers: Optional[int] = None
 ):
     """Compute weighted average, grouping by reference time.
 
     Group a list of json files by reference time and compute the weighted
     average of the variable values for each zone. The results are saved to
     parquet files using TEEHR data model.
+
+    ``cpu_workers`` bounds how many files are processed at once -- one file
+    per worker, so it is the only budget that applies here.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
@@ -212,24 +283,28 @@ def fetch_and_format_nwm_grids(
         nwm_version=nwm_version
     )
 
+    # Built once from every file in the run (not per group) so obstore's
+    # stores/connection pools are reused across all groups below.
+    registry = build_kerchunk_registry(json_paths)
+
     for gp in gps:
         _, df = gp
 
-        results = []
-        for row in df.itertuples():
-            results.append(
-                process_single_nwm_grid_file(
-                    row,
-                    teehr_config["name"],
-                    variable_name,
-                    zonal_weights_filepath,
-                    ignore_missing_file,
-                    location_id_prefix,
-                    variable_mapper
-                )
-            )
-
-        output = dask.compute(*results)
+        rows = list(df.itertuples())
+        output = run_concurrent_map(
+            functools.partial(
+                process_single_nwm_grid_file,
+                configuration_name=teehr_config["name"],
+                variable_name=variable_name,
+                weights_filepath=zonal_weights_filepath,
+                ignore_missing_file=ignore_missing_file,
+                location_id_prefix=location_id_prefix,
+                variable_mapper=variable_mapper,
+                registry=registry,
+            ),
+            rows,
+            cpu_workers,
+        )
 
         output = [df for df in output if df is not None]
         if len(output) == 0:
