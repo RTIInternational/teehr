@@ -1,0 +1,6 @@
+teehr.metrics.deterministic\_funcs.confusion\_matrix
+====================================================
+
+.. currentmodule:: teehr.metrics.deterministic_funcs
+
+.. autofunction:: confusion_matrix

@@ -1,0 +1,57 @@
+﻿ConfigurationTable
+==================
+
+.. currentmodule:: teehr.evaluation.tables.configuration_table
+
+.. autoclass:: ConfigurationTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ConfigurationTable.add
+      ~ConfigurationTable.add_attributes
+      ~ConfigurationTable.add_calculated_fields
+      ~ConfigurationTable.add_geometry
+      ~ConfigurationTable.aggregate
+      ~ConfigurationTable.delete
+      ~ConfigurationTable.distinct_values
+      ~ConfigurationTable.drop
+      ~ConfigurationTable.filter
+      ~ConfigurationTable.load_csv
+      ~ConfigurationTable.load_dataframe
+      ~ConfigurationTable.load_parquet
+      ~ConfigurationTable.order_by
+      ~ConfigurationTable.to_geopandas
+      ~ConfigurationTable.to_pandas
+      ~ConfigurationTable.to_sdf
+      ~ConfigurationTable.validate
+      ~ConfigurationTable.write
+      ~ConfigurationTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ConfigurationTable.foreign_keys
+      ~ConfigurationTable.is_core_table
+      ~ConfigurationTable.primary_location_id_field
+      ~ConfigurationTable.secondary_location_id_field
+      ~ConfigurationTable.strict_validation
+      ~ConfigurationTable.table_name
+      ~ConfigurationTable.uniqueness_fields
+      ~ConfigurationTable.validate_filter_field_types
+   
+      ~ConfigurationTable.extraction_func
+      ~ConfigurationTable.schema_func
+   
+   

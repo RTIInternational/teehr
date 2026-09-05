@@ -1,0 +1,56 @@
+﻿DomainTable
+===========
+
+.. currentmodule:: teehr.evaluation.tables.domain_table
+
+.. autoclass:: DomainTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~DomainTable.add_attributes
+      ~DomainTable.add_calculated_fields
+      ~DomainTable.add_geometry
+      ~DomainTable.aggregate
+      ~DomainTable.delete
+      ~DomainTable.distinct_values
+      ~DomainTable.drop
+      ~DomainTable.filter
+      ~DomainTable.load_csv
+      ~DomainTable.load_dataframe
+      ~DomainTable.load_parquet
+      ~DomainTable.order_by
+      ~DomainTable.to_geopandas
+      ~DomainTable.to_pandas
+      ~DomainTable.to_sdf
+      ~DomainTable.validate
+      ~DomainTable.write
+      ~DomainTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DomainTable.foreign_keys
+      ~DomainTable.is_core_table
+      ~DomainTable.primary_location_id_field
+      ~DomainTable.schema_func
+      ~DomainTable.secondary_location_id_field
+      ~DomainTable.strict_validation
+      ~DomainTable.table_name
+      ~DomainTable.uniqueness_fields
+      ~DomainTable.validate_filter_field_types
+   
+      ~DomainTable.extraction_func
+   
+   

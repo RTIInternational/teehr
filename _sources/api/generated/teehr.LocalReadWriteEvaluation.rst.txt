@@ -1,0 +1,57 @@
+﻿LocalReadWriteEvaluation
+========================
+
+.. currentmodule:: teehr
+
+.. autoclass:: LocalReadWriteEvaluation
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LocalReadWriteEvaluation.check_evaluation_version
+      ~LocalReadWriteEvaluation.clean_cache
+      ~LocalReadWriteEvaluation.drop_table
+      ~LocalReadWriteEvaluation.enable_logging
+      ~LocalReadWriteEvaluation.joined_timeseries_view
+      ~LocalReadWriteEvaluation.list_tables
+      ~LocalReadWriteEvaluation.list_views
+      ~LocalReadWriteEvaluation.location_attributes_view
+      ~LocalReadWriteEvaluation.log_spark_config
+      ~LocalReadWriteEvaluation.primary_timeseries_view
+      ~LocalReadWriteEvaluation.secondary_timeseries_view
+      ~LocalReadWriteEvaluation.sql
+      ~LocalReadWriteEvaluation.table
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LocalReadWriteEvaluation.active_catalog
+      ~LocalReadWriteEvaluation.attributes
+      ~LocalReadWriteEvaluation.catalog
+      ~LocalReadWriteEvaluation.configurations
+      ~LocalReadWriteEvaluation.download
+      ~LocalReadWriteEvaluation.fetch
+      ~LocalReadWriteEvaluation.generate
+      ~LocalReadWriteEvaluation.local_catalog
+      ~LocalReadWriteEvaluation.location_attributes
+      ~LocalReadWriteEvaluation.location_crosswalks
+      ~LocalReadWriteEvaluation.locations
+      ~LocalReadWriteEvaluation.metrics
+      ~LocalReadWriteEvaluation.primary_timeseries
+      ~LocalReadWriteEvaluation.secondary_timeseries
+      ~LocalReadWriteEvaluation.units
+      ~LocalReadWriteEvaluation.variables
+   
+   
+   

@@ -1,0 +1,586 @@
+.. _metrics:
+
+*******
+Metrics
+*******
+
+TEEHR provides comprehensive metrics for evaluating hydrologic model performance.
+The :meth:`aggregate() <teehr.evaluation.tables.base_table.BaseTable.aggregate>` method on tables and views computes metrics across grouped data,
+with support for bootstrapping, transforms, multiple metric categories, and a choice of
+aggregation engine (Spark-native or Python/pandas-UDF).
+
+Using the Aggregate Method
+==========================
+
+
+The :meth:`aggregate() <teehr.evaluation.tables.base_table.BaseTable.aggregate>` method is available on all Table and View objects. It computes
+specified metrics grouped by selected fields:
+
+.. code-block:: python
+
+    import teehr
+    from teehr.metrics import DeterministicMetrics
+
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
+
+    # Basic metrics query
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=[
+            DeterministicMetrics.KlingGuptaEfficiency(),
+            DeterministicMetrics.NashSutcliffeEfficiency(),
+        ],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+Aggregate Parameters
+--------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Parameter
+     - Description
+   * - ``metrics``
+     - List of metric instances to compute
+   * - ``group_by``
+     - List of fields to group by before computing metrics
+   * - ``engine``
+     - Aggregation engine: ``"auto"`` (default), ``"spark"``, or ``"python"``
+
+
+Choosing an Engine
+------------------
+
+The ``engine`` parameter controls how metrics are computed under the hood.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 85
+
+   * - Engine
+     - Behaviour
+   * - ``"auto"`` *(default)*
+     - Routes each metric to the fastest available path.  Metrics that have a
+       Spark-native implementation run without pandas UDFs; remaining metrics
+       fall back to the Python/pandas-UDF path.  Results are joined before
+       being returned.
+   * - ``"spark"``
+     - Forces the Spark-native path for every metric.  Raises
+       ``ValueError`` if any requested metric is not supported natively
+       (e.g. metrics with a transform or bootstrap configured). Produces a physical plan with no
+       ``AggregateInPandas`` nodes, which can significantly improve
+       performance on large datasets.
+   * - ``"python"``
+     - Forces the Python/pandas-UDF path for every metric.  Behaves
+       identically to the pre-engine-parameter behavior.
+
+**Metrics supported on the Spark-native path** (no transform, no bootstrap):
+
+*Signature metrics:* Count, Minimum, Maximum, Average, Sum, Variance, MaxValueTime,
+FlowDurationCurveSlope, CenterOfTiming, StdDevOfTiming
+
+*Deterministic metrics:* MeanError, RelativeBias, MultiplicativeBias,
+MeanSquareError, RootMeanSquareError, MeanAbsoluteError,
+MeanAbsoluteRelativeError, PearsonCorrelation, SpearmanCorrelation, Rsquared,
+NashSutcliffeEfficiency, NormalizedNashSutcliffeEfficiency,
+VariabilityRatio, RootMeanStandardDeviationRatio,
+KlingGuptaEfficiency, KlingGuptaEfficiencyMod1, KlingGuptaEfficiencyMod2,
+RelativeMean, RelativeMedian, RelativeMinimum, RelativeMaximum,
+RelativeStandardDeviation
+
+.. note::
+
+   Metrics that use a ``transform`` (e.g. ``transform="log"``) or a
+   ``bootstrap`` configuration are always routed to the Python path,
+   even in ``engine="auto"`` mode.
+
+.. note::
+
+  Spark-native quantile-derived metrics may use Spark approximate quantile
+  algorithms rather than exact order statistics. In the current Spark-native
+  metric set, this mainly affects metrics that depend on medians, such as
+  ``RelativeMedian``. The approximation is computed from a distributed summary
+  of the full group, not from a simple random sample, so it is usually a good
+  tradeoff for large datasets. The main practical effect is that values very
+  close to the cutoff can shift slightly relative to an exact pandas result.
+  If exact quantile behavior is important for your analysis, use
+  ``engine="python"``.
+
+.. code-block:: python
+
+    from teehr import DeterministicMetrics
+
+    # Explicitly use Spark-native path for a pure-native query
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=[
+            DeterministicMetrics.KlingGuptaEfficiency(),
+            DeterministicMetrics.NashSutcliffeEfficiency(),
+            DeterministicMetrics.RelativeBias(),
+        ],
+        group_by=["primary_location_id"],
+        engine="spark",
+    ).to_pandas()
+
+    # Auto mode – mix native and python metrics transparently
+    metrics_df = ev.table("joined_timeseries").aggregate(
+        metrics=[
+        DeterministicMetrics.MeanError(),                      # spark-native
+        DeterministicMetrics.MeanError(transform="log"),      # python path (transform)
+        ],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+Group By Fields
+---------------
+
+The ``group_by`` parameter controls how metrics are aggregated. Common groupings:
+
+.. code-block:: python
+
+    import teehr.calculated_fields.models.row_level as rcf
+
+    # Group by location only
+    jt.aggregate(metrics=[...], group_by=["primary_location_id"])
+
+    # Group by location and configuration
+    jt.aggregate(metrics=[...], group_by=["primary_location_id", "configuration_name"])
+
+    # Group by calculated fields
+    jt = ev.joined_timeseries_view().add_calculated_fields([
+        rcf.Month(),
+        rcf.WaterYear(),
+    ])
+    jt.aggregate(metrics=[...], group_by=["primary_location_id", "water_year", "month"])
+
+
+Using Metrics
+=============
+
+Import metric classes and instantiate them:
+
+.. code-block:: python
+
+    from teehr.metrics import DeterministicMetrics, Signatures, ProbabilisticMetrics
+
+    # Deterministic metrics
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    nse = DeterministicMetrics.NashSutcliffeEfficiency()
+    rmse = DeterministicMetrics.RootMeanSquareError()
+
+    # Signatures (single field statistics)
+    avg = Signatures.Average()
+    fdc = Signatures.FlowDurationCurveSlope()
+
+    # Probabilistic metrics (ensemble forecasts)
+    crps = ProbabilisticMetrics.CRPS()
+
+
+Transforms
+----------
+
+Apply mathematical transformations before computing metrics:
+
+.. code-block:: python
+
+    from teehr.metrics.models.base import TransformEnum
+
+    # Log-transformed RMSE
+    rmse = DeterministicMetrics.RootMeanSquareError()
+    rmse.transform = TransformEnum.log
+    rmse.add_epsilon = True  # Avoid log(0)
+
+Available transforms: ``log``, ``sqrt``, ``square``, ``cube``, ``exp``, ``inv``, ``abs``
+
+
+Bootstrapping
+-------------
+
+Compute confidence intervals using bootstrap resampling:
+
+For ``CircularBlock`` and ``Stationary`` bootstrapping, ``block_size`` is
+optional. If omitted (or set to ``None``), TEEHR uses
+``arch.bootstrap.optimal_block_length`` to estimate an optimal block size from
+the primary metric input series.
+
+.. code-block:: python
+
+    from teehr.metrics.models.bootstrap import Bootstrappers
+
+    # Configure bootstrap
+    boot = Bootstrappers.CircularBlock(
+        reps=1000,
+        # block_size=None -> auto estimate using optimal_block_length (b_cb)
+        block_size=None,
+        seed=42,
+        quantiles=[0.05, 0.5, 0.95]
+    )
+
+    # Optional: provide a fixed block size if desired
+    # boot = Bootstrappers.CircularBlock(reps=1000, block_size=365, seed=42)
+
+    # Apply to metric
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+    kge.unpack_results = True  # Separate columns for quantiles
+
+    metrics_df = jt.aggregate(
+        metrics=[kge],
+        group_by=["primary_location_id"],
+    ).to_pandas()
+
+    # Results: kling_gupta_efficiency_0.05, _0.5, _0.95
+
+See also: :class:`Bootstrappers <teehr.Bootstrappers>`
+
+
+Complete Example
+----------------
+
+.. code-block:: python
+
+    import teehr
+    from teehr.metrics import DeterministicMetrics, Signatures
+    import teehr.calculated_fields.models.row_level as rcf
+
+    ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
+
+    # Build view with calculated fields
+    metrics_df = (
+        ev.joined_timeseries_view(add_attrs=True)
+        .add_calculated_fields([rcf.WaterYear(), rcf.Seasons()])
+        .filter("water_year >= 2015")
+        .aggregate(
+            metrics=[
+                DeterministicMetrics.KlingGuptaEfficiency(),
+                DeterministicMetrics.RelativeBias(),
+                Signatures.Average(),
+            ],
+            group_by=["primary_location_id", "season"],
+        )
+        .order_by(["primary_location_id", "season"])
+        .to_pandas()
+    )
+
+    print(metrics_df.head())
+    ev.spark.stop()
+
+
+=================
+Available Metrics
+=================
+
+The metrics currently built into TEEHR are listed in the tables below.
+Please note that some are still in development and planned for inclusion in future versions.
+
+Signatures
+==========
+
+Signatures operate on a single field to characterize timeseries properties.
+
+.. list-table::
+   :header-rows: 1
+   :class: metrics-table
+
+   * - Available
+     - Description
+     - Short Name
+     - Equation
+     - API Reference
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Average
+     - :math:`Average`
+     - :math:`\frac{\sum(prim)}{count}`
+     - :class:`Average <teehr.Signatures.Average>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Count
+     - :math:`Count`
+     - :math:`count`
+     - :class:`Count <teehr.Signatures.Count>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Flow Duration Curve Slope
+     - :math:`FDC\ Slope`
+     - :math:`\frac{q85-q25}{p85-p25}`
+     - :class:`Flow Duration Curve Slope <teehr.Signatures.FlowDurationCurveSlope>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Max Value Time
+     - :math:`Max\ Value\ Time`
+     - :math:`peak\ time_{prim}`
+     - :class:`Max Value Time <teehr.Signatures.MaxValueTime>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Maximum
+     - :math:`Max`
+     - :math:`max(prim)`
+     - :class:`Maximum <teehr.Signatures.Maximum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Minimum
+     - :math:`Min`
+     - :math:`min(prim)`
+     - :class:`Minimum <teehr.Signatures.Minimum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Sum
+     - :math:`Sum`
+     - :math:`\sum(prim)`
+     - :class:`Sum <teehr.Signatures.Sum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Variance
+     - :math:`Variance`
+     - :math:`\sigma^2_{prim}`
+     - :class:`Variance <teehr.Signatures.Variance>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Center of Timing
+     - :math:`Center\ of\ Timing`
+     - :math:`\frac{\sum(t_i \cdot prim_i)}{\sum(prim_i)}`
+     - :class:`Center of Timing <teehr.Signatures.CenterOfTiming>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Standard Deviation of Timing
+     - :math:`Std\ Dev\ of\ Timing`
+     - :math:`\sqrt{\frac{\sum(prim_i \cdot (t_i - CenterOfTiming)^2)}{\frac{\sum(prim_i)\cdot(n^{\prime}-1)}{n^{\prime}}}}`
+     - :class:`Standard Deviation of Timing <teehr.Signatures.StandardDeviationOfTiming>`
+
+
+Deterministic Metrics
+=====================
+
+Deterministic metrics compare two timeseries, typically primary ("observed") vs. secondary ("modeled") values.
+
+.. list-table::
+   :header-rows: 1
+   :class: metrics-table
+
+   * - Available
+     - Description
+     - Short Name
+     - Equation
+     - API Reference
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Mean Error
+     - :math:`Mean\ Error`
+     - :math:`\frac{\sum(sec-prim)}{count}`
+     - :class:`Mean Error <teehr.DeterministicMetrics.MeanError>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Bias
+     - :math:`Relative\ Bias`
+     - :math:`\frac{\sum(sec-prim)}{\sum(prim)}`
+     - :class:`Relative Bias <teehr.DeterministicMetrics.RelativeBias>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Multiplicative Bias
+     - :math:`Mult.\ Bias`
+     - :math:`\frac{\mu_{sec}}{\mu_{prim}}`
+     - :class:`Multiplicative Bias <teehr.DeterministicMetrics.MultiplicativeBias>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Mean
+     - :math:`RelMean`
+     - :math:`\frac{mean(sec)}{mean(prim)}`
+     - :class:`Relative Mean <teehr.DeterministicMetrics.RelativeMean>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Median
+     - :math:`RelMedian`
+     - :math:`\frac{median(sec)}{median(prim)}`
+     - :class:`Relative Median <teehr.DeterministicMetrics.RelativeMedian>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Minimum
+     - :math:`RelMin`
+     - :math:`\frac{min(sec)}{min(prim)}`
+     - :class:`Relative Minimum <teehr.DeterministicMetrics.RelativeMinimum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Maximum
+     - :math:`RelMax`
+     - :math:`\frac{max(sec)}{max(prim)}`
+     - :class:`Relative Maximum <teehr.DeterministicMetrics.RelativeMaximum>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Relative Standard Deviation
+     - :math:`RelStd`
+     - :math:`\frac{std(sec)}{std(prim)}`
+     - :class:`Relative Standard Deviation <teehr.DeterministicMetrics.RelativeStandardDeviation>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Mean Square Error
+     - :math:`MSE`
+     - :math:`\frac{\sum(sec-prim)^2}{count}`
+     - :class:`Mean Square Error <teehr.DeterministicMetrics.MeanSquareError>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Root Mean Square Error
+     - :math:`RMSE`
+     - :math:`\sqrt{\frac{\sum(sec-prim)^2}{count}}`
+     - :class:`Root Mean Square Error <teehr.DeterministicMetrics.RootMeanSquareError>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Mean Absolute Error
+     - :math:`MAE`
+     - :math:`\frac{\sum|sec-prim|}{count}`
+     - :class:`Mean Absolute Error <teehr.DeterministicMetrics.MeanAbsoluteError>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Mean Absolute Relative Error
+     - :math:`Relative\ MAE`
+     - :math:`\frac{\sum|sec-prim|}{\sum(prim)}`
+     - :class:`Mean Absolute Relative Error <teehr.DeterministicMetrics.MeanAbsoluteRelativeError>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Pearson Correlation Coefficient
+     - :math:`r`
+     - :math:`r(sec, prim)`
+     - :class:`Pearson Correlation Coefficient <teehr.DeterministicMetrics.PearsonCorrelation>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Variability Ratio
+     - :math:`VR`
+     - :math:`\frac{\sigma_{sec}}{\sigma_{prim}}`
+     - :class:`Variability Ratio <teehr.DeterministicMetrics.VariabilityRatio>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Coefficient of Determination
+     - :math:`r^2`
+     - :math:`r(sec, prim)^2`
+     - :class:`Coefficient of Determination <teehr.DeterministicMetrics.Rsquared>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Nash-Sutcliffe Efficiency
+     - :math:`NSE`
+     - :math:`1-\frac{\sum(prim-sec)^2}{\sum(prim-\mu_{prim}^2)}`
+     - :class:`Nash-Sutcliffe Efficiency <teehr.DeterministicMetrics.NashSutcliffeEfficiency>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Normalized Nash-Sutcliffe Efficiency
+     - :math:`NNSE`
+     - :math:`\frac{1}{(2-NSE)}`
+     - :class:`Normalized Nash-Sutcliffe Efficiency <teehr.DeterministicMetrics.NormalizedNashSutcliffeEfficiency>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Kling Gupta Efficiency - original
+     - :math:`KGE`
+     - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}}{\sigma_{prim}}-1)^2+(\frac{\mu_{sec}}{\mu_{sec}/\mu_{prim}}-1)^2}`
+     - :class:`Kling Gupta Efficiency - original <teehr.DeterministicMetrics.KlingGuptaEfficiency>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Kling Gupta Efficiency - modified 1 (2012)
+     - :math:`KGE'`
+     - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}/\mu_{sec}}{\sigma_{prim}/\mu_{prim}}-1)^2+(\frac{\mu_{sec}}{\mu_{sec}/\mu_{prim}}-1)^2}`
+     - :class:`Kling Gupta Efficiency - modified 1 <teehr.DeterministicMetrics.KlingGuptaEfficiencyMod1>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Kling Gupta Efficiency - modified 2 (2021)
+     - :math:`KGE''`
+     - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}}{\sigma_{prim}}-1)^2+\frac{(\mu_{sec}-\mu_{prim})^2}{\sigma_{prim}^2}}`
+     - :class:`Kling Gupta Efficiency - modified 2 <teehr.DeterministicMetrics.KlingGuptaEfficiencyMod2>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Annual Peak Relative Bias
+     - :math:`Ann\ PF\ Bias`
+     - :math:`\frac{\sum(ann.\ peak_{sec}-ann.\ peak_{prim})}{\sum(ann.\ peak_{prim})}`
+     - :class:`Annual Peak Relative Bias <teehr.DeterministicMetrics.AnnualPeakRelativeBias>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Spearman Rank Correlation Coefficient
+     - :math:`r_s`
+     - :math:`1-\frac{6*\sum|rank_{prim}-rank_{sec}|^2}{count(count^2-1)}`
+     - :class:`Spearman Rank Correlation Coefficient <teehr.DeterministicMetrics.SpearmanCorrelation>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Max Value Delta
+     - :math:`Max\ Val\ Delta`
+     - :math:`max(sec) - max(prim)`
+     - :class:`Max Value Delta <teehr.DeterministicMetrics.MaxValueDelta>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Root Mean Standard Deviation Ratio
+     - :math:`RSR`
+     - :math:`\frac{RMSE}{\sigma_{prim}}`
+     - :class:`Root Mean Standard Deviation Ratio <teehr.DeterministicMetrics.RootMeanStandardDeviationRatio>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Max Value Time Delta
+     - :math:`Max\ Val\ Time\ Delta`
+     - :math:`time(max(sec)) - time(max(prim))`
+     - :class:`Max Value Time Delta <teehr.DeterministicMetrics.MaxValueTimeDelta>`
+   * - `Coming Soon`
+     - Flow Duration Curve Slope Error
+     - :math:`Slope\ FDC\ Error`
+     - :math:`\frac{q66_{sec}-q33_{sec}}{33}-\frac{q66_{prim}-q33_{prim}}{33}`
+     - `N/A`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Event Peak Flow Relative Bias
+     - :math:`Peak\ Bias`
+     - :math:`\frac{\sum(peak_{sec}-peak_{prim})}{\sum(peak_{prim})}`
+     - `N/A`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Event Peak Flow Timing Error
+     - :math:`Peak\ Time\ Error`
+     - :math:`\frac{\sum(peak\ time_{sec}-peak\ time_{prim})}{count}`
+     - `N/A`
+   * - `Coming Soon`
+     - Baseflow Index Error
+     - :math:`BFI\ Error`
+     - :math:`\frac{\frac{\mu(baseflow_{sec})}{\mu(sec)}-\frac{\mu(baseflow_{prim})}{\mu(prim)}}{\frac{\mu(baseflow_{prim})}{\mu(prim)}}`
+     - `N/A`
+   * - `Coming Soon`
+     - Rising Limb Density Error
+     - :math:`RLD\ Error`
+     - :math:`\frac{count(rising\ limb\ events_{sec})}{count(rising\ limb\ timesteps_{sec})}-\frac{count(rising\ limb\ events_{prim})}{count(rising\ limb\ timesteps_{prim})}`
+     - `N/A`
+   * - `Coming Soon`
+     - Mean Square Error Skill Score (generalized reference)
+     - :math:`MSESS`
+     - :math:`1-\frac{\sum(prim-sec)^2}{\sum(prim-reference)^2}`
+     - `N/A`
+   * - `Coming Soon`
+     - Runoff Ratio Error
+     - :math:`RR\ Error`
+     - :math:`abs\left\|\frac{\mu(volume_{sec})}{\mu(precip\ volume)}-\frac{\mu(volume_{prim})}{\mu(precip\ volume)}\right\|`
+     - `N/A`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Confusion Matrix
+     - :math:`CM`
+     - :math:`TP,\ TN,\ FP,\ FN`
+     - :class:`Confusion Matrix <teehr.DeterministicMetrics.ConfusionMatrix>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - False Alarm Ratio
+     - :math:`FAR`
+     - :math:`\frac{n_{FP}}{n_{TP}+n_{FP}}`
+     - :class:`False Alarm Ratio <teehr.DeterministicMetrics.FalseAlarmRatio>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Probability of Detection
+     - :math:`POD`
+     - :math:`\frac{n_{TP}}{n_{TP}+n_{FN}}`
+     - :class:`Probability of Detection <teehr.DeterministicMetrics.ProbabilityOfDetection>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Probability of False Detection
+     - :math:`POFD`
+     - :math:`\frac{n_{FP}}{n_{TN}+n_{FP}}`
+     - :class:`Probability of False Detection <teehr.DeterministicMetrics.ProbabilityOfFalseDetection>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Critical Success Index (Threat Score)
+     - :math:`CSI`
+     - :math:`\frac{n_{TP}}{n_{TP}+n_{FN}+n_{FP}}`
+     - :class:`Critical Success Index <teehr.DeterministicMetrics.CriticalSuccessIndex>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Success Ratio
+     - :math:`SR`
+     - :math:`\frac{n_{TP}+n_{TN}}{n_{TP}+n_{FP}+n_{FN}+n_{TN}}`
+     - :class:`Success Ratio <teehr.DeterministicMetrics.SuccessRatio>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Frequency Bias Index
+     - :math:`FBI`
+     - :math:`\frac{n_{TP}+n_{FP}}{n_{TP}+n_{FN}}`
+     - :class:`Frequency Bias Index <teehr.DeterministicMetrics.FrequencyBiasIndex>`
+
+
+Probabilistic Metrics
+=====================
+
+Probabilistic metrics compare a value against a distribution of predicted values, such as ensemble forecasts.
+
+.. list-table::
+   :header-rows: 1
+   :class: metrics-table
+
+   * - Available
+     - Description
+     - Short Name
+     - Equation
+     - API Reference
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Continuous Ranked Probability Score
+     - :math:`CRPS`
+     - :math:`\int_{-\infty}^{\infty} (F(x) - \mathbf{1}_{x \geq y})^2 dx`
+     - :class:`Continuous Ranked Probability Score <teehr.ProbabilisticMetrics.CRPS>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Brier Score
+     - :math:`BS`
+     - :math:`\frac{\sum(sec\ ensemble\ prob-prim\ outcome)^2}{n}`
+     - :class:`Brier Score <teehr.ProbabilisticMetrics.BrierScore>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Brier Skill Score
+     - :math:`BSS`
+     - :math:`1-\frac{BS}{BS_{ref}}`
+     - :class:`Brier Score <teehr.ProbabilisticMetrics.BrierScore>`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Continuous Ranked Probability Skill Score
+     - :math:`CRPSS`
+     - :math:`1-\frac{CRPS}{CRPS_{ref}}`
+     - :class:`Continuous Ranked Probability Score <teehr.ProbabilisticMetrics.CRPS>`

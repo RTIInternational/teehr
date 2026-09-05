@@ -1,0 +1,41 @@
+﻿signature\_funcs
+================
+
+
+.. automodule:: teehr.metrics.signature_funcs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      average
+      center_of_timing
+      count
+      flow_duration_curve_slope
+      max_value_time
+      maximum
+      minimum
+      standard_deviation_of_timing
+      sum
+      variance
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

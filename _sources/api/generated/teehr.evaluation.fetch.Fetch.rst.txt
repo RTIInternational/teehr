@@ -1,0 +1,27 @@
+﻿Fetch
+=====
+
+.. currentmodule:: teehr.evaluation.fetch
+
+.. autoclass:: Fetch
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Fetch.nwm_operational_grids
+      ~Fetch.nwm_operational_points
+      ~Fetch.nwm_retrospective_grids
+      ~Fetch.nwm_retrospective_points
+      ~Fetch.usgs_streamflow
+   
+   
+
+   
+   
+   
