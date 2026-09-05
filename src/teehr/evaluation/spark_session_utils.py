@@ -324,7 +324,18 @@ def _create_spark_base_session(
         f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
         "org.datasyslab:geotools-wrapper:1.8.0-33.1",
         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
-        "software.amazon.awssdk:bundle:2.24.6",
+        # Must stay >= the AWS SDK that ICEBERG_VERSION is built against
+        # (Iceberg 1.10.1 -> 2.33.0). Iceberg's VendedCredentialsProvider, used
+        # for the Polaris/STS vended-credential path, calls
+        # IoUtils.closeQuietlyV2, which does not exist before ~2.30. On 2.24.6
+        # every Iceberg broadcast cleanup threw NoSuchMethodError on a Spark
+        # daemon thread and killed the executor with exit code 50.
+        #
+        # This is deliberately newer than the 2.24.6 hadoop-aws 3.4.1 pulls in
+        # transitively; declaring it explicitly lets Ivy's latest-revision
+        # conflict resolution put a single, new-enough SDK on the classpath for
+        # both Iceberg and S3A.
+        "software.amazon.awssdk:bundle:2.33.0",
         "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for compatibility
         "com.amazonaws:aws-java-sdk-bundle:1.12.791",
         "org.xerial:sqlite-jdbc:3.42.0.0"
