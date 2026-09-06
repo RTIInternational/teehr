@@ -41,7 +41,10 @@ pyarrow = ">=21.0.0,<23.0"
 httpx = ">=0.25.1,<1"
 pandas = ">=2.2.0,<3"
 pyspark = {extras = ["pandas-on-spark"], version = "4.0.1"}
-dataretrieval = ">=1.1.2,<2"
+# 1.3.0 introduced the waterdata module that fetching/usgs/usgs.py imports,
+# and in the same release switched from requests to httpx (see the requests
+# entry above). Anything older resolves to a broken install.
+dataretrieval = ">=1.3,<2"
 numba = ">=0.60.0,<1"
 arch = ">=7.0.0,<8"
 pandera = {extras = ["pyspark"], version = ">=0.20.4,<1"}
