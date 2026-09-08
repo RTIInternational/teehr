@@ -10,6 +10,7 @@ from pyspark.sql.functions import pandas_udf
 
 from teehr.calculated_fields.row_level_spark import (
     _timedelta_to_iso_duration,
+    validate_closed,
     validate_forecast_lead_time_bin_size,
 )
 
@@ -132,9 +133,11 @@ def apply_forecast_lead_time_bins_pandas(
     lead_time_field_name: str,
     output_field_name: str,
     bin_size,
+    closed: str = "right",
 ) -> ps.DataFrame:
     """Add forecast lead-time bin IDs with configurable binning via pandas UDF."""
     normalized_bin_size = validate_forecast_lead_time_bin_size(bin_size)
+    validate_closed(closed)
 
     if lead_time_field_name not in sdf.columns:
         sdf = apply_forecast_lead_time_pandas(
@@ -148,19 +151,32 @@ def apply_forecast_lead_time_bins_pandas(
     def func(lead_time: pd.Series) -> pd.Series:
         if isinstance(normalized_bin_size, pd.Timedelta):
             bin_size_seconds = normalized_bin_size.total_seconds()
-            bin_numbers = (lead_time.dt.total_seconds() // bin_size_seconds).astype(int)
-            bin_ids = pd.Series("", index=lead_time.index)
+            secs = lead_time.dt.total_seconds()
+            if closed == "right":
+                # (0, b], (b, 2b], ... -- a lead time of exactly b lands in the
+                # FIRST bin, so an 18-hour forecast binned at 6 hours gives 3
+                # bins (hours 1-6, 7-12, 13-18) rather than 4.
+                bin_numbers = np.ceil(secs / bin_size_seconds) - 1
+                in_range = secs > 0
+            else:
+                # [0, b), [b, 2b), ...
+                bin_numbers = np.floor(secs / bin_size_seconds)
+                in_range = secs >= 0
 
-            for bin_num in bin_numbers.unique():
-                bin_mask = bin_numbers == bin_num
+            # None, not "", for a lead time outside any bin -- matches the
+            # Spark-native path, which yields NULL.
+            bin_ids = pd.Series(None, index=lead_time.index, dtype=object)
+            for bin_num in bin_numbers[in_range].dropna().unique():
+                bin_mask = in_range & (bin_numbers == bin_num)
                 if bin_mask.any():
+                    bin_num = int(bin_num)
                     start_td = pd.Timedelta(seconds=bin_num * bin_size_seconds)
                     end_td = pd.Timedelta(seconds=(bin_num + 1) * bin_size_seconds)
                     bin_id = f"{_timedelta_to_iso_duration(start_td)}_{_timedelta_to_iso_duration(end_td)}"
                     bin_ids[bin_mask] = bin_id
             return bin_ids
 
-        bin_ids = pd.Series("", index=lead_time.index)
+        bin_ids = pd.Series(None, index=lead_time.index, dtype=object)
         lead_time_seconds = lead_time.dt.total_seconds()
         bins_to_use = []
 
@@ -189,10 +205,14 @@ def apply_forecast_lead_time_bins_pandas(
             start_seconds = start_td.total_seconds()
             end_seconds = end_td.total_seconds()
             is_last_bin = i == len(bins_to_use) - 1
-            if is_last_bin:
-                mask = lead_time_seconds >= start_seconds
+            if closed == "right":
+                mask = lead_time_seconds > start_seconds
+                if not is_last_bin:
+                    mask = mask & (lead_time_seconds <= end_seconds)
             else:
-                mask = (lead_time_seconds >= start_seconds) & (lead_time_seconds < end_seconds)
+                mask = lead_time_seconds >= start_seconds
+                if not is_last_bin:
+                    mask = mask & (lead_time_seconds < end_seconds)
             if mask.any():
                 bin_ids[mask] = bin_id
 

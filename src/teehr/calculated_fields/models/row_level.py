@@ -260,6 +260,22 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the lead time bin ID.
         Default: "forecast_lead_time_bin"
+    - closed:
+        Which side of each bin interval is inclusive.
+        Default: "right"
+
+        - "right": bins are ``(start, end]`` -- start EXCLUSIVE, end
+          INCLUSIVE. A lead time of exactly one bin width falls in the FIRST
+          bin, so an 18-hour forecast binned at 6 hours yields three bins
+          covering hours 1-6, 7-12 and 13-18.
+        - "left": bins are ``[start, end)`` -- start inclusive, end exclusive.
+          This was the behaviour before teehr issue #815, and it produced a
+          fourth bin holding only hour 18 in the example above.
+
+        Forecasts usually have no value at lead time zero, which is why
+        "right" is the default. A lead time that falls outside every bin
+        (including exactly zero when closed="right") yields NULL rather than
+        being folded into the first bin.
     - bin_size:
         Defines how forecast lead times are binned. Accepts pd.Timedelta,
         datetime.timedelta, or timedelta strings (e.g., '6 hours', '1 day').
@@ -401,6 +417,7 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
     bin_size: Union[pd.Timedelta, timedelta, str, list, dict] = Field(
         default=pd.Timedelta(days=5)
     )
+    closed: str = Field(default="right")
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
@@ -411,6 +428,7 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
             lead_time_field_name=self.lead_time_field_name,
             output_field_name=self.output_field_name,
             bin_size=self.bin_size,
+            closed=self.closed,
         )
 
 
