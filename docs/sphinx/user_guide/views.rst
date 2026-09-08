@@ -274,7 +274,7 @@ Available row-level fields:
     * - :class:`ForecastLeadTime <teehr.calculated_fields.models.row_level.ForecastLeadTime>`
      - Computes lead time from reference_time to value_time
     * - :class:`ForecastLeadTimeBins <teehr.calculated_fields.models.row_level.ForecastLeadTimeBins>`
-     - Groups lead times into bins
+     - Groups lead times into bins (start-exclusive, end-inclusive by default)
     * - :class:`ThresholdValueExceeded <teehr.calculated_fields.models.row_level.ThresholdValueExceeded>`
      - Boolean indicating if value exceeds threshold
     * - :class:`ThresholdValueNotExceeded <teehr.calculated_fields.models.row_level.ThresholdValueNotExceeded>`
@@ -287,6 +287,7 @@ Most fields have configurable parameters:
 
 .. code-block:: python
 
+    import pandas as pd
     import teehr.calculated_fields.models.row_level as rcf
 
     # Custom field names and input columns
@@ -311,11 +312,48 @@ Most fields have configurable parameters:
         output_field_name="season"
     )
 
+    # Uniform lead time bins
+    lead_time_bins = rcf.ForecastLeadTimeBins(
+        bin_size=pd.Timedelta(hours=6),
+        output_field_name="forecast_lead_time_bin"
+    )
+
     jt = ev.joined_timeseries_view(add_attrs=True).add_calculated_fields([
         month_field,
         normalized,
         seasons,
+        lead_time_bins,
     ])
+
+.. note::
+
+    **Forecast lead time bin edges.** Bins are start-exclusive and end-inclusive
+    by default (``closed="right"``), so a bin spans ``(start, end]``. With
+    ``bin_size=pd.Timedelta(hours=6)``, lead times of 1 through 6 hours fall in
+    the first bin, 7 through 12 in the second, and so on. An 18-hour forecast
+    therefore produces three bins rather than four.
+
+    This matters because forecasts usually have no value at lead time zero. A
+    lead time that falls outside every bin -- including exactly zero -- yields
+    ``NULL`` rather than being folded into the first bin.
+
+    Pass ``closed="left"`` for the previous ``[start, end)`` behaviour, in which
+    a lead time of exactly one bin width starts the *next* bin. Note that this
+    changes which rows land in which bin, so results computed under the two
+    settings are not comparable.
+
+    Explicit bin definitions take ``start`` and ``end`` keys::
+
+        rcf.ForecastLeadTimeBins(
+            bin_size=[
+                {"start": "0 hours", "end": "6 hours"},
+                {"start": "6 hours", "end": "18 hours"},
+            ],
+        )
+
+    The older ``start_inclusive`` / ``end_exclusive`` spellings are still
+    accepted, but they name a behaviour that ``closed`` now controls, so the
+    generic keys are preferred.
 
 Timeseries-Aware Calculated Fields
 ----------------------------------
