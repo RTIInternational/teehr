@@ -876,11 +876,15 @@ def test_shared_bootstrap_quantile_columns_correct(
 
 
 @pytest.mark.session_scope_test_warehouse
-def test_shared_bootstrap_singleton_group_unchanged(
+def test_shared_bootstrap_singleton_takes_shared_path(
     session_scope_test_warehouse,
 ):
-    """A single metric with quantile bootstrap should produce correct columns
-    through the shared path (singleton group, no actual sharing).
+    """A single quantile-bootstrap metric produces correct columns.
+
+    Groups of one used to be special-cased through ``boot.func(ref)`` -- the
+    legacy per-replicate loop, which never consulted the vectorized engine.
+    They now take the same shared path as every other group, so this asserts
+    the output columns survive the temp-column + expansion round trip.
     """
     ev = session_scope_test_warehouse
 
@@ -906,6 +910,118 @@ def test_shared_bootstrap_singleton_group_unchanged(
     }
     assert expected_cols.issubset(set(result_df.columns))
     assert result_df.index.size == 3
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_duplicate_quantiles_expand_to_one_column(
+    session_scope_test_warehouse,
+):
+    """A repeated quantile must not crash the map reconstruction.
+
+    ``quantiles=[0.5, 0.50]`` is a supported config (see
+    test_derive_map_key_list), and the dict the UDF returns collapses the
+    repeat to one entry. ``F.create_map`` in
+    ``_materialize_shared_bootstrap_columns`` did not, so Spark's default
+    ``mapKeyDedupPolicy=EXCEPTION`` raised DUPLICATED_MAP_KEY at collect time.
+    Routing singletons through the shared path widened that from multi-metric
+    groups to every bootstrap group, so the dedupe is what makes Stage 3 safe.
+    """
+    ev = session_scope_test_warehouse
+
+    boot = Bootstrappers.CircularBlock(
+        seed=40, block_size=100, quantiles=[0.5, 0.50], reps=50
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+
+    result_df = (
+        ev.table("joined_timeseries")
+        .aggregate(metrics=[kge], group_by=["primary_location_id"])
+        .to_pandas()
+    )
+
+    assert result_df.index.size == 3
+    # One key, not two -- matching what derive_map_key_list predicts.
+    assert derive_map_key_list(kge) == ["kling_gupta_efficiency_0.5"]
+    for value in result_df.kling_gupta_efficiency:
+        assert list(value.keys()) == ["kling_gupta_efficiency_0.5"]
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_singleton_group_is_routed_through_the_shared_path(
+    session_scope_test_warehouse,
+):
+    """format.py must build a shared-path expansion for a group of one.
+
+    This is the Stage 3 change itself: the singleton branch produced a
+    directly-aliased column and NO expansion entry, so a lone bootstrapped
+    metric bypassed create_shared_bootstrap_func (and therefore the vectorized
+    engine) entirely. Asserting on `expansions` tests the routing rather than
+    the UDF, which the other singleton tests exercise directly.
+    """
+    from teehr.metrics.bootstrap_funcs import partition_metrics_by_bootstrap
+    from teehr.metrics.format import _build_shared_bootstrap_udfs
+
+    ev = session_scope_test_warehouse
+
+    boot = Bootstrappers.CircularBlock(
+        seed=40, block_size=100, quantiles=[0.05, 0.95], reps=20
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+
+    gp = ev.table("joined_timeseries").to_sdf().groupBy("primary_location_id")
+    _, boot_groups = partition_metrics_by_bootstrap([kge])
+    assert [len(g) for g in boot_groups.values()] == [1]
+
+    func_list, expansions = _build_shared_bootstrap_udfs(boot_groups, gp)
+
+    assert len(func_list) == 1
+    assert len(expansions) == 1, "singleton group produced no expansion entry"
+    temp_col, group_metrics = expansions[0]
+    assert temp_col.startswith("_bsgrp_")
+    assert [m.output_field_name for m in group_metrics] == [
+        "kling_gupta_efficiency"
+    ]
+
+
+def test_singleton_group_now_gets_quality_guards():
+    """Groups of one are now subject to the sample-size/mean/variance guards.
+
+    Deliberate behavior change. The guards live in
+    ``create_shared_bootstrap_func``, which singleton groups previously did not
+    reach -- so one bootstrapped metric would compute on a 5-sample group while
+    the same metric plus a second one returned nulls for both. The retained
+    ``create_stationary_func`` still has no guards, which is what makes the
+    difference visible here.
+
+    Pure-python rather than Spark: the checked-in warehouse has 72 rows per
+    gage with variance well above the floor, so no guard fires anywhere in the
+    suite and a Spark-level test could not detect this.
+    """
+    from teehr.metrics.bootstrap_funcs import (
+        create_shared_bootstrap_func,
+        create_stationary_func,
+    )
+
+    rng = np.random.default_rng(5)
+    n = 10                                   # below minimum_sample_size=30
+    p = pd.Series(np.abs(rng.normal(10, 3, n)) + 0.1)
+    s = pd.Series(np.abs(rng.normal(9, 3, n)) + 0.1)
+
+    boot = Bootstrappers.Stationary(
+        seed=7, reps=20, block_size=3, quantiles=[0.05, 0.95]
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+
+    guarded = create_shared_bootstrap_func([kge])(p, s)
+    assert guarded == {"kling_gupta_efficiency": None}
+
+    # The old singleton path computed a value for the same input.
+    unguarded = create_stationary_func(kge)(p, s)
+    assert unguarded  # non-empty: a real quantile map, not a null
+    assert all(np.isfinite(v) for v in unguarded.values())
 
 
 @pytest.mark.session_scope_test_warehouse

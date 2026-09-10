@@ -345,6 +345,41 @@ def test_mixed_group_enters_vectorized_engine(monkeypatch):
     assert _can_use_vectorized_engine(boot, metrics) is True
 
 
+def test_singleton_group_uses_vectorized_engine(monkeypatch):
+    """A lone bootstrapped metric must reach the engine, and match legacy.
+
+    format.py used to route groups of one through ``boot.func(ref)``, which
+    never consults the gate -- so the flag bought a single-metric request
+    nothing at all. Groups of one now take the shared path like any other.
+    """
+    from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
+
+    n, reps = 55, 120
+    p = _random_series(n, seed=610)
+    s = _random_series(n, seed=611, loc=9, scale=3)
+
+    boot = Bootstrappers.Stationary(
+        seed=808, reps=reps, block_size=5, quantiles=[0.05, 0.95]
+    )
+
+    def build():
+        return [DeterministicMetrics.KlingGuptaEfficiency(
+            output_field_name="kge", bootstrap=boot)]
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    assert _can_use_vectorized_engine(boot, build()) is True
+    vectorized_result = create_shared_bootstrap_func(build())(p, s)
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
+    legacy_result = create_shared_bootstrap_func(build())(p, s)
+
+    assert set(legacy_result.keys()) == set(vectorized_result.keys())
+    for key in legacy_result:
+        assert vectorized_result[key] == pytest.approx(
+            legacy_result[key], rel=1e-9, abs=1e-12
+        )
+
+
 def test_engine_flag_falls_back_when_no_metric_is_covered(monkeypatch):
     """With nothing covered there is no work for the engine; use bs.apply."""
     from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine

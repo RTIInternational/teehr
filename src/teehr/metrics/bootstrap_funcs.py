@@ -381,6 +381,14 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
 
     If ``model.bootstrap.block_size`` is ``None``, the block size is estimated
     using ``arch.bootstrap.optimal_block_length`` (``b_cb`` column).
+
+    Not used by the aggregation pipeline. ``format.py`` routes every bootstrap
+    group -- including groups of one -- through
+    ``create_shared_bootstrap_func``, so this is retained as the public
+    ``Bootstrappers.*.func`` field default (frozen, see
+    ``models/bootstrap.py``), for the autodoc page, and as an independent
+    reference implementation the equivalence tests compare against. It has no
+    sample-size/mean/variance quality guards, unlike the shared path.
     """
     logger.debug("Building the Circular Block bootstrap func.")
 
@@ -422,7 +430,16 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
 
 
 def create_gumboot_func(model: MetricsBasemodel) -> Callable:
-    """Create the Gumboot bootstrap function."""
+    """Create the Gumboot bootstrap function.
+
+    Not used by the aggregation pipeline. ``format.py`` routes every bootstrap
+    group -- including groups of one -- through
+    ``create_shared_bootstrap_func``, so this is retained as the public
+    ``Bootstrappers.*.func`` field default (frozen, see
+    ``models/bootstrap.py``), for the autodoc page, and as an independent
+    reference implementation the equivalence tests compare against. It has no
+    sample-size/mean/variance quality guards, unlike the shared path.
+    """
     logger.debug("Building the Gumboot bootstrap func.")
 
     # lazy import to improve performance
@@ -463,6 +480,14 @@ def create_stationary_func(model: MetricsBasemodel) -> Callable:
 
     If ``model.bootstrap.block_size`` is ``None``, the block size is estimated
     using ``arch.bootstrap.optimal_block_length`` (``b_sb`` column).
+
+    Not used by the aggregation pipeline. ``format.py`` routes every bootstrap
+    group -- including groups of one -- through
+    ``create_shared_bootstrap_func``, so this is retained as the public
+    ``Bootstrappers.*.func`` field default (frozen, see
+    ``models/bootstrap.py``), for the autodoc page, and as an independent
+    reference implementation the equivalence tests compare against. It has no
+    sample-size/mean/variance quality guards, unlike the shared path.
     """
     logger.debug("Building the Stationary bootstrap func.")
 
