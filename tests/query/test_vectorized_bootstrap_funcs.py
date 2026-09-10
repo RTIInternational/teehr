@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from teehr import DeterministicMetrics
+from teehr import DeterministicMetrics, Signatures
 from teehr.metrics.bootstrap_funcs import (
     _make_bs_object,
     create_shared_bootstrap_func,
@@ -97,6 +97,126 @@ def test_vectorized_kernel_matches_scalar_closure(metric_cls, extra_kwargs, add_
     actual = kernel(p_mat.copy(), s_mat.copy(), metric)
 
     np.testing.assert_allclose(actual, expected, rtol=1e-9, atol=1e-12)
+
+
+def _metric_class(name):
+    """Resolve a VECTORIZED_METRIC_FUNCS key to its metric class."""
+    cls = getattr(DeterministicMetrics, name, None)
+    if cls is None:
+        cls = getattr(Signatures, name, None)
+    assert cls is not None, f"{name!r} in the registry is not a metric class"
+    return cls
+
+
+def _gappy_matrices(reps, n, seed=17):
+    """Matrices with non-finite values in p and s at DIFFERENT indices.
+
+    The offset placement is the point: it makes the p-only valid count, the
+    s-only valid count, and the pairwise valid count all differ, so a kernel
+    that masks per-series instead of pairwise gives a different answer.
+    """
+    rng = np.random.default_rng(seed)
+    p = np.abs(rng.normal(10, 3, size=(reps, n))) + 0.1
+    s = np.abs(rng.normal(9, 4, size=(reps, n))) + 0.1
+    p[:, 2] = np.nan
+    s[:, 5] = np.nan
+    p[0, :] = np.nan          # all-NaN row -> empty after the drop
+    p[1, 7] = np.inf          # inf is dropped by the scalar path, not skipped
+    s[2, 4] = -np.inf
+    return p, s
+
+
+@pytest.mark.parametrize("metric_name", sorted(VECTORIZED_METRIC_FUNCS))
+@pytest.mark.parametrize("transform", [None, "sqrt", "log"])
+def test_kernel_matches_scalar_closure_on_gappy_data(metric_name, transform):
+    """Kernels must match the scalar closures when the data has gaps.
+
+    Regression test for two bugs that shipped together and were invisible to
+    the clean-data tests above:
+
+    1. ``deterministic_funcs._transform`` gated its non-finite drop on a
+       transform being set, so with ``transform=None`` NaNs reached the
+       reduction -- where ``np.sum``/``np.mean``/etc. on a pd.Series skip them
+       (pandas dispatch) but ``np.median``/``np.cov``/``np.corrcoef`` propagate
+       them (numpy dispatch). RelativeMedian, PearsonCorrelation and
+       KlingGuptaEfficiency returned NaN where their kernels returned a number.
+    2. ``_vectorized_transform`` returned early when no transform was set,
+       skipping the pairwise mask, so kernels reduced p and s over different
+       valid subsets.
+
+    The scalar closure is called with **pd.Series**, not numpy rows: numpy rows
+    would propagate NaN through every reduction and so validate a code path
+    that arch never exercises (it passes Series).
+    """
+    reps, n = 6, 20
+    metric = _metric_class(metric_name)(transform=transform)
+    scalar_func = metric.func(metric)
+    kernel = VECTORIZED_METRIC_FUNCS[metric_name]
+
+    p_mat, s_mat = _gappy_matrices(reps, n)
+
+    expected = np.array([
+        scalar_func(pd.Series(p_mat[r]), pd.Series(s_mat[r]))
+        for r in range(reps)
+    ])
+    actual = kernel(p_mat.copy(), s_mat.copy(), metric)
+
+    np.testing.assert_allclose(
+        actual, expected, rtol=1e-9, atol=1e-12, equal_nan=True
+    )
+
+
+def test_pairwise_mask_applied_without_transform():
+    """The mask must be pairwise, not per-series, even with no transform.
+
+    p and s are non-finite at different indices, so a per-series mask would
+    make relative_mean a ratio of means taken over different rows.
+    """
+    p = np.array([[1.0, 2.0, np.nan, 4.0]])
+    s = np.array([[2.0, np.nan, 6.0, 8.0]])
+    metric = DeterministicMetrics.RelativeMean()      # transform=None
+
+    # Only indices 0 and 3 are finite in BOTH series.
+    expected = np.mean([2.0, 8.0]) / np.mean([1.0, 4.0])
+    kernel = VECTORIZED_METRIC_FUNCS["RelativeMean"]
+    actual = kernel(p.copy(), s.copy(), metric)
+
+    assert actual[0] == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("n", [10, 30, 182, 1000])
+@pytest.mark.parametrize("metric_name", ["PearsonCorrelation", "Rsquared"])
+def test_correlation_stays_within_unit_interval(metric_name, n):
+    """A correlation coefficient cannot exceed 1, on either path.
+
+    The ``add_epsilon`` branch used to divide np.cov's default ddof=1
+    covariance by ddof=0 standard deviations. Those do not cancel, so the
+    result was ``r * n/(n-1)`` -- 1.110 at n=10 on well-correlated data, which
+    is not a correlation at all. Both paths now use a consistent ddof=0, so
+    the branch differs from the np.corrcoef branch only by the +EPSILON guard.
+    """
+    rng = np.random.default_rng(11)
+    p = np.abs(rng.lognormal(2, 1, n)) + 0.1
+    s = p * rng.uniform(0.9, 1.1, n)          # near-perfect correlation
+    r_true = np.corrcoef(s, p)[0][1]
+    if metric_name == "Rsquared":
+        r_true = r_true ** 2
+
+    metric = _metric_class(metric_name)(add_epsilon=True)
+    scalar = metric.func(metric)(pd.Series(p), pd.Series(s))
+
+    assert abs(scalar) <= 1.0, f"scalar {metric_name} = {scalar} exceeds 1.0"
+    assert scalar == pytest.approx(r_true, rel=1e-5)
+
+    # Rsquared has no kernel yet; this half starts asserting when one is added.
+    if metric_name in VECTORIZED_METRIC_FUNCS:
+        kernel = VECTORIZED_METRIC_FUNCS[metric_name](
+            p[None, :].copy(), s[None, :].copy(), metric
+        )[0]
+        assert abs(kernel) <= 1.0, (
+            f"kernel {metric_name} = {kernel} exceeds 1.0"
+        )
+        assert kernel == pytest.approx(r_true, rel=1e-5)
 
 
 def test_vectorized_kernel_matches_scalar_closure_with_degenerate_rows():

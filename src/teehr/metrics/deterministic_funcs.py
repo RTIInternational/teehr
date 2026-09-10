@@ -90,33 +90,35 @@ def _transform(
     else:
         logger.debug("No transform specified, using original values")
 
-    # Remove invalid values and align series if transform applied
-    if model.transform is not None:
-        logger.debug("Removing invalid values and aligning series")
-        if (t is not None) and (threshold_series is not None):
-            valid_mask = np.isfinite(p) & np.isfinite(s)
-            p = p[valid_mask]
-            s = s[valid_mask]
-            t = t[valid_mask]
-            threshold_series = threshold_series[valid_mask]
-        elif t is not None:
-            valid_mask = np.isfinite(p) & np.isfinite(s)
-            p = p[valid_mask]
-            s = s[valid_mask]
-            t = t[valid_mask]
-        elif threshold_series is not None:
-            valid_mask = np.isfinite(p) & np.isfinite(s)
-            p = p[valid_mask]
-            s = s[valid_mask]
-            threshold_series = threshold_series[valid_mask]
-        else:
-            valid_mask = np.isfinite(p) & np.isfinite(s)
-            p = p[valid_mask]
-            s = s[valid_mask]
-        logger.debug(
-            f"Removed {len(valid_mask) - np.sum(valid_mask)} invalid entries"
-            " from the transformed input series"
-            )
+    # Remove invalid values and align series.
+    #
+    # This runs UNCONDITIONALLY, not only when a transform was applied. It used
+    # to be gated on `model.transform is not None`, which made this the only
+    # metric path in teehr that kept non-finite pairs:
+    #
+    #   - signature_funcs._transform drops unconditionally
+    #   - spark_native filters `p.isNotNull() & s.isNotNull()` before it
+    #     aggregates
+    #
+    # Worse, what "keeping" them meant depended on which numpy call a closure
+    # happened to make, because the closures receive pd.Series:
+    # np.sum/mean/std/var/min/max dispatch to the *pandas* method and silently
+    # SKIP NaN, while np.median/np.cov/np.corrcoef take the numpy array path
+    # and PROPAGATE it. So relative_mean ignored a gap while
+    # pearson_correlation returned NaN for the same input, and `len(p)` in
+    # _mean_error counted rows the reduction above it had just skipped.
+    logger.debug("Removing invalid values and aligning series")
+    valid_mask = np.isfinite(p) & np.isfinite(s)
+    p = p[valid_mask]
+    s = s[valid_mask]
+    if t is not None:
+        t = t[valid_mask]
+    if threshold_series is not None:
+        threshold_series = threshold_series[valid_mask]
+    logger.debug(
+        f"Removed {len(valid_mask) - np.sum(valid_mask)} invalid entries"
+        " from the input series"
+        )
 
     # return results
     if (t is not None) and (threshold_series is not None):
@@ -325,8 +327,17 @@ def pearson_correlation(model: MetricsBasemodel) -> Callable:
         p, s = _transform(p, s, model)
 
         if model.add_epsilon:
-            # Calculate covariance between p and s
-            numerator = np.cov(p, s)[0, 1]
+            # ddof=0 (population covariance), to match the ddof=0 standard
+            # deviations below. np.cov defaults to ddof=1, and that mismatch
+            # does NOT cancel: cov/(n-1) over sqrt(SS/n) terms yields
+            # r * n/(n-1), which exceeds 1.0 for well-correlated data on small
+            # samples (r=1.110 at n=10) -- not a correlation at all.
+            #
+            # With consistent ddof this branch now differs from the np.corrcoef
+            # branch below ONLY by the +EPSILON divide-by-zero guard, which is
+            # all add_epsilon is meant to change. It also matches spark_native,
+            # which already pairs F.covar_pop with F.stddev_pop.
+            numerator = np.cov(p, s, ddof=0)[0, 1]
 
             # Calculate standard deviations and multiply them
             denominator = np.nanstd(p) * np.nanstd(s) + EPSILON
@@ -374,8 +385,10 @@ def r_squared(model: MetricsBasemodel) -> Callable:
         p, s = _transform(p, s, model)
 
         if model.add_epsilon:
-            # Calculate covariance between p and s
-            numerator = np.cov(p, s)[0, 1]
+            # ddof=0 to match the standard deviations below -- see the note in
+            # pearson_correlation. It compounds here: r^2 was inflated by
+            # (n/(n-1))^2, ~6.9% at n=30.
+            numerator = np.cov(p, s, ddof=0)[0, 1]
 
             # Calculate standard deviations and multiply them
             denominator = np.nanstd(p) * np.nanstd(s) + EPSILON

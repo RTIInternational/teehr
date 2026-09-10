@@ -31,11 +31,10 @@ Coverage is intentionally narrow and explicit:
   metrics never silently produces wrong numbers for unvectorized ones.
 
 Every kernel here mirrors the corresponding scalar closure in
-``deterministic_funcs.py`` formula-for-formula, including quirks (e.g.
-``pearson_correlation``'s ``add_epsilon`` branch mixes ``np.cov`` (ddof=1)
-with ``np.std``/``nanstd`` (ddof=0) -- that mismatch is preserved exactly,
-not "fixed", since the goal is behavioral equivalence with the existing
-implementation, not a cleaner formula).
+``deterministic_funcs.py`` formula-for-formula. Behavioral equivalence with the
+scalar path is the contract, so a kernel is never "improved" relative to its
+closure; where a formula genuinely needed correcting, both sides were changed
+together (see ``_vec_pearson_r`` on the ddof mismatch).
 """
 from typing import Any, Dict, List
 
@@ -77,42 +76,51 @@ def _vectorized_transform(
     uses NaN-aware reductions (``nanmean``/``nanstd``/``nanmedian``/
     ``nansum``), so masking is mathematically equivalent to the legacy
     per-replicate drop-then-compute behavior for all metrics covered here.
+
+    The mask is **pairwise and unconditional**, mirroring
+    ``deterministic_funcs._transform``. Both properties matter:
+
+    - *Pairwise*, because the scalar path drops a whole row when either series
+      is non-finite there. Masking only each series' own NaNs would let
+      ``nanmean(p)`` and ``nanmean(s)`` reduce over different subsets, so e.g.
+      ``relative_mean`` would divide two means computed from different rows.
+    - *Unconditional*, because the scalar drop is no longer gated on a
+      transform being set (it used to be, which is what made the two paths
+      disagree on gappy data).
     """
     transform = getattr(model, "transform", None)
-    if transform is None:
-        return p, s
-
     add_epsilon = getattr(model, "add_epsilon", False)
 
-    if transform == TransformEnum.log:
-        if add_epsilon:
-            p = p + EPSILON
-            s = s + EPSILON
-        p = np.log(p)
-        s = np.log(s)
-    elif transform == TransformEnum.sqrt:
-        p = np.sqrt(p)
-        s = np.sqrt(s)
-    elif transform == TransformEnum.square:
-        p = np.square(p)
-        s = np.square(s)
-    elif transform == TransformEnum.cube:
-        p = np.power(p, 3)
-        s = np.power(s, 3)
-    elif transform == TransformEnum.exp:
-        p = np.exp(p)
-        s = np.exp(s)
-    elif transform == TransformEnum.inv:
-        if add_epsilon:
-            p = p + EPSILON
-            s = s + EPSILON
-        p = 1.0 / p
-        s = 1.0 / s
-    elif transform == TransformEnum.abs:
-        p = np.abs(p)
-        s = np.abs(s)
-    else:
-        raise ValueError(f"Unsupported transform: {transform}")
+    if transform is not None:
+        if transform == TransformEnum.log:
+            if add_epsilon:
+                p = p + EPSILON
+                s = s + EPSILON
+            p = np.log(p)
+            s = np.log(s)
+        elif transform == TransformEnum.sqrt:
+            p = np.sqrt(p)
+            s = np.sqrt(s)
+        elif transform == TransformEnum.square:
+            p = np.square(p)
+            s = np.square(s)
+        elif transform == TransformEnum.cube:
+            p = np.power(p, 3)
+            s = np.power(s, 3)
+        elif transform == TransformEnum.exp:
+            p = np.exp(p)
+            s = np.exp(s)
+        elif transform == TransformEnum.inv:
+            if add_epsilon:
+                p = p + EPSILON
+                s = s + EPSILON
+            p = 1.0 / p
+            s = 1.0 / s
+        elif transform == TransformEnum.abs:
+            p = np.abs(p)
+            s = np.abs(s)
+        else:
+            raise ValueError(f"Unsupported transform: {transform}")
 
     invalid = ~(np.isfinite(p) & np.isfinite(s))
     if np.any(invalid):
@@ -125,10 +133,16 @@ def _vectorized_transform(
 def _vec_pearson_r(p: np.ndarray, s: np.ndarray, add_epsilon: bool) -> np.ndarray:
     """Row-wise Pearson correlation, matching ``pearson_correlation_inner``.
 
-    ``add_epsilon=False`` mirrors ``np.corrcoef(s, p)[0][1]`` (a single
-    consistent-ddof formula). ``add_epsilon=True`` mirrors
-    ``np.cov(p, s)[0, 1] / (nanstd(p) * nanstd(s) + EPSILON)`` -- note the
-    ddof=1 (cov) vs ddof=0 (std) mismatch is intentional, preserved as-is.
+    ``add_epsilon=False`` mirrors ``np.corrcoef(s, p)[0][1]``.
+    ``add_epsilon=True`` mirrors
+    ``np.cov(p, s, ddof=0)[0, 1] / (nanstd(p) * nanstd(s) + EPSILON)``.
+
+    Both branches use a consistent ddof=0, so the two differ only by the
+    ``+EPSILON`` divide-by-zero guard. An earlier version paired ``np.cov``'s
+    default ddof=1 with ddof=0 standard deviations; those do not cancel and the
+    result was ``r * n/(n-1)``, which exceeds 1.0 on small well-correlated
+    samples. The mismatch was documented as intentional but produced a quantity
+    that is not a correlation coefficient.
     """
     n = np.sum(np.isfinite(p) & np.isfinite(s), axis=1)
     p_mean = np.nanmean(p, axis=1, keepdims=True)
@@ -139,8 +153,9 @@ def _vec_pearson_r(p: np.ndarray, s: np.ndarray, add_epsilon: bool) -> np.ndarra
 
     with np.errstate(invalid="ignore", divide="ignore"):
         if add_epsilon:
-            # np.cov default ddof=1 (sample covariance).
-            cov = cov_sum / np.maximum(n - 1, 1)
+            # ddof=0 (population covariance), matching np.cov(..., ddof=0) and
+            # the ddof=0 nanstd denominator below.
+            cov = cov_sum / np.maximum(n, 1)
             denom = np.nanstd(p, axis=1) * np.nanstd(s, axis=1) + EPSILON
             return cov / denom
         else:
