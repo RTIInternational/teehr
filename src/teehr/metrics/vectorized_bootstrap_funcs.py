@@ -30,6 +30,15 @@ Coverage is intentionally narrow and explicit:
   to the legacy per-rep scalar closure for that metric only, so adding new
   metrics never silently produces wrong numbers for unvectorized ones.
 
+  This fallback really is per metric. It previously was not: the gate in
+  ``bootstrap_funcs`` used ``all(...)``, so a single uncovered metric pushed
+  its whole group onto the legacy loop -- measured at 78 ms/group for nine
+  covered metrics versus 638 ms/group for the same nine plus one uncovered
+  one. Since ``bootstrap_group_key`` deliberately excludes metric class,
+  heterogeneous groups are the norm, so that cliff was easy to hit. The
+  fallback shares one index matrix with the kernels, so a mixed group still
+  evaluates every metric on identical draws.
+
 Every kernel here mirrors the corresponding scalar closure in
 ``deterministic_funcs.py`` formula-for-formula. Behavioral equivalence with the
 scalar path is the contract, so a kernel is never "improved" relative to its
@@ -39,6 +48,7 @@ together (see ``_vec_pearson_r`` on the ddof mismatch).
 from typing import Any, Dict, List
 
 import numpy as np
+import pandas as pd
 
 from teehr.metrics.models.base import MetricsBasemodel, TransformEnum
 from teehr.querying.utils import bootstrap_quantile_key
@@ -286,32 +296,107 @@ VECTORIZED_METRIC_FUNCS = {
 }
 
 
+def is_vectorized_metric(metric: MetricsBasemodel) -> bool:
+    """Whether this metric has a vectorized kernel in the registry."""
+    return type(metric).__name__ in VECTORIZED_METRIC_FUNCS
+
+
+def resample_args(args: tuple, indices: np.ndarray) -> tuple:
+    """One replicate's args, as ``arch.IIDBootstrap._resample`` builds them.
+
+    pandas inputs are resampled with ``.iloc``, which **preserves the original
+    (now duplicated) index labels** -- verified against ``bs.apply`` to match
+    on values, index and type. Several scalar closures depend on pandas
+    semantics rather than plain arrays (``Series.idxmax`` in
+    ``deterministic_funcs.max_value_timedelta``, ``Series.sort_values`` in
+    ``signature_funcs.flow_duration_curve_slope``, and the boolean-mask
+    indexing in ``_transform``), so both the type and the index have to match
+    or the fallback would not be equivalent to the legacy path.
+    """
+    return tuple(
+        a.iloc[indices] if isinstance(a, (pd.Series, pd.DataFrame))
+        else np.asarray(a)[indices]
+        for a in args
+    )
+
+
+def assemble_bootstrap_output(
+    output_names: List[str],
+    values: np.ndarray,
+    quantiles,
+) -> Dict[str, Any]:
+    """Format a ``(reps, n_metrics)`` result matrix as the UDF's return dict.
+
+    Shared by the vectorized and legacy paths so the two cannot drift in the
+    keys or ordering they emit.
+
+    Parameters
+    ----------
+    output_names : list of str
+        One name per column of *values*.
+    values : np.ndarray
+        ``(reps, n_metrics)`` replicate results.
+    quantiles : list or None
+        Quantile-keyed floats when set; raw per-replicate lists when None.
+    """
+    combined: Dict[str, Any] = {}
+    for i, name in enumerate(output_names):
+        column = np.asarray(values[:, i], dtype=float)
+        if quantiles is None:
+            combined[name] = column.tolist()
+        else:
+            q_values = np.quantile(column, quantiles)
+            for q, v in zip(quantiles, q_values):
+                combined[bootstrap_quantile_key(name, q)] = v
+    return combined
+
+
 def compute_vectorized_shared_bootstrap(
     metrics: List[MetricsBasemodel],
+    metric_funcs: List[Any],
     args: tuple,
     bs: Any,
     reps: int,
     quantiles,
+    max_matrix_cells: int = 20_000_000,
 ) -> Dict[str, Any]:
     """Vectorized equivalent of the per-rep loop inside ``create_shared_bootstrap_func``.
+
+    Metrics **with** a kernel are evaluated by it on the whole ``(reps, n)``
+    batch; metrics **without** one fall back to their own scalar closure,
+    called once per replicate. Both consume the *same* index matrix, so every
+    metric in the group still sees identical draws -- which is the entire point
+    of a shared bootstrap. ``bs.apply`` is deliberately not called here, so
+    there is no second RNG consumer that could let the two subsets diverge.
 
     Parameters
     ----------
     metrics : list
-        Metrics sharing the same bootstrap config, all present in
-        ``VECTORIZED_METRIC_FUNCS`` (callers must check this beforehand).
+        Metrics sharing the same bootstrap config. At least one must have a
+        kernel (see ``bootstrap_funcs._can_use_vectorized_engine``); the rest
+        are handled by the fallback loop.
+    metric_funcs : list
+        The scalar closures for *metrics*, positionally aligned, built once at
+        UDF-creation time. Passed in rather than derived here so the closure
+        factories are not re-run for every Spark group.
     args : tuple
-        The (primary_value, secondary_value) series/arrays passed to the UDF,
-        in the same order used to build ``bs``.
+        The series passed to the UDF, in the same order used to build ``bs``.
+        ``args[0]`` is primary; ``args[1]``, when present, is secondary.
     bs : arch.bootstrap.IIDBootstrap subclass instance
-        Already-constructed bootstrap object (same as the legacy path's
-        ``_make_bs_object`` result) -- reused here purely for its
-        ``update_indices()`` method and RNG state.
+        Already-constructed bootstrap object (the same one the legacy path
+        would use) -- reused here purely for ``update_indices()`` and its RNG
+        state.
     reps : int
         Number of bootstrap replicates.
     quantiles : list or None
         If set, return per-metric quantile dict entries; if None, return
         raw per-replicate arrays (matching the legacy raw-array contract).
+    max_matrix_cells : int, optional
+        Cap on ``reps * n`` per batch. ``idx``, ``p_mat`` and ``s_mat`` are
+        each this size, so an uncapped call at large n would allocate three
+        big matrices inside a Spark executor, per concurrent task. Chunking is
+        bit-identical because ``build_index_matrix`` draws sequentially, so
+        chunk boundaries do not perturb the RNG stream.
 
     Returns
     -------
@@ -321,22 +406,41 @@ def compute_vectorized_shared_bootstrap(
         list of floats per metric name.
     """
     p_arr = np.asarray(args[0], dtype=float)
-    s_arr = np.asarray(args[1], dtype=float)
+    s_arr = np.asarray(args[1], dtype=float) if len(args) > 1 else None
+    n = p_arr.shape[0]
 
-    idx = build_index_matrix(bs, reps)  # (reps, n)
-    p_mat = p_arr[idx]
-    s_mat = s_arr[idx]
+    covered = [
+        (i, m, VECTORIZED_METRIC_FUNCS[type(m).__name__])
+        for i, m in enumerate(metrics)
+        if is_vectorized_metric(m)
+    ]
+    fallback = [
+        (i, metric_funcs[i])
+        for i, m in enumerate(metrics)
+        if not is_vectorized_metric(m)
+    ]
 
-    combined: Dict[str, Any] = {}
-    for metric in metrics:
-        kernel = VECTORIZED_METRIC_FUNCS[type(metric).__name__]
-        values = kernel(p_mat, s_mat, metric)
-        name = metric.output_field_name
-        if quantiles is None:
-            combined[name] = np.asarray(values, dtype=float).tolist()
-        else:
-            q_values = np.quantile(values, quantiles)
-            for q, v in zip(quantiles, q_values):
-                combined[bootstrap_quantile_key(name, q)] = v
+    # Mirrors arch's own np.zeros((reps, num_params)) result buffer.
+    values = np.empty((reps, len(metrics)), dtype=float)
+    chunk = max(1, min(reps, max_matrix_cells // max(n, 1)))
 
-    return combined
+    done = 0
+    while done < reps:
+        k = min(chunk, reps - done)
+        idx = build_index_matrix(bs, k)  # (k, n), same draw order as bs.apply
+        if covered:
+            p_mat = p_arr[idx]
+            s_mat = s_arr[idx] if s_arr is not None else None
+            for i, metric, kernel in covered:
+                values[done:done + k, i] = kernel(p_mat, s_mat, metric)
+        for r in range(k):
+            if not fallback:
+                break
+            draw = resample_args(args, idx[r])
+            for i, fn in fallback:
+                values[done + r, i] = fn(*draw)
+        done += k
+
+    return assemble_bootstrap_output(
+        [m.output_field_name for m in metrics], values, quantiles
+    )

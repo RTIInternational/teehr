@@ -322,8 +322,18 @@ def test_engine_flag_falls_back_for_gumboot(monkeypatch):
     assert _can_use_vectorized_engine(boot, metrics) is False
 
 
-def test_engine_flag_falls_back_for_unvectorized_metric(monkeypatch):
-    """A metric without a vectorized kernel must force the legacy fallback."""
+def test_mixed_group_enters_vectorized_engine(monkeypatch):
+    """A group with SOME covered metrics must still use the vectorized engine.
+
+    This assertion is inverted from the version that shipped, which required
+    every metric in the group to have a kernel. That was a coarse proxy for
+    "an uncovered metric is never computed by a kernel" -- and it cost a mixed
+    group ~8x, since bootstrap_group_key excludes metric class and so groups
+    are heterogeneous by design. The property is now enforced structurally
+    (a class absent from the registry can only reach the scalar-closure branch
+    of the dispatch), and asserted directly by the equivalence tests below,
+    which are strictly stronger than the proxy was.
+    """
     from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
@@ -332,7 +342,172 @@ def test_engine_flag_falls_back_for_unvectorized_metric(monkeypatch):
         DeterministicMetrics.RelativeMean(bootstrap=boot),
         DeterministicMetrics.SpearmanCorrelation(bootstrap=boot),  # not in registry
     ]
+    assert _can_use_vectorized_engine(boot, metrics) is True
+
+
+def test_engine_flag_falls_back_when_no_metric_is_covered(monkeypatch):
+    """With nothing covered there is no work for the engine; use bs.apply."""
+    from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
+    metrics = [DeterministicMetrics.SpearmanCorrelation(bootstrap=boot)]
     assert _can_use_vectorized_engine(boot, metrics) is False
+
+
+@pytest.mark.parametrize("transform", [None, "log"])
+@pytest.mark.parametrize("quantiles", [[0.05, 0.95], None])
+def test_mixed_group_matches_legacy_end_to_end(
+    monkeypatch, transform, quantiles
+):
+    """A group mixing covered and uncovered metrics must match legacy exactly.
+
+    This is the test the per-metric fallback exists to make pass: the kernels
+    handle what they can on the batched matrices while SpearmanCorrelation and
+    MeanError go through their own scalar closures, all on one index matrix.
+    """
+    n, reps = 60, 200
+    p = _random_series(n, seed=210)
+    s = _random_series(n, seed=211, loc=9.5, scale=4)
+
+    boot = Bootstrappers.Stationary(
+        seed=4242, reps=reps, block_size=6, quantiles=quantiles
+    )
+
+    def build():
+        return [
+            DeterministicMetrics.RelativeMean(
+                output_field_name="rm", bootstrap=boot, transform=transform),
+            DeterministicMetrics.NashSutcliffeEfficiency(
+                output_field_name="nse", bootstrap=boot, transform=transform),
+            DeterministicMetrics.SpearmanCorrelation(      # no kernel
+                output_field_name="spearman", bootstrap=boot,
+                transform=transform),
+            DeterministicMetrics.KlingGuptaEfficiency(
+                output_field_name="kge", bootstrap=boot, transform=transform),
+            DeterministicMetrics.MeanError(               # no kernel
+                output_field_name="me", bootstrap=boot, transform=transform),
+        ]
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
+    legacy_result = create_shared_bootstrap_func(build())(p, s)
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    vectorized_result = create_shared_bootstrap_func(build())(p, s)
+
+    assert set(legacy_result.keys()) == set(vectorized_result.keys())
+    for key in legacy_result:
+        expected, actual = legacy_result[key], vectorized_result[key]
+        if quantiles is None:
+            np.testing.assert_allclose(
+                actual, expected, rtol=1e-9, atol=1e-12, equal_nan=True
+            )
+        else:
+            assert actual == pytest.approx(expected, rel=1e-9, abs=1e-12)
+
+
+def test_fallback_metric_sees_same_draws_as_kernel(monkeypatch):
+    """A covered metric and an uncovered clone of it must agree exactly.
+
+    Direct assertion that the shared bootstrap is still shared. Rather than
+    lean on a formula identity between two different metrics, this subclasses
+    RelativeBias so the formula is identical by construction, and leaves the
+    subclass out of the registry. One copy is then routed through the kernel
+    and the other through the per-rep fallback loop. If the two subsets saw
+    different draws, the columns would diverge.
+    """
+    n, reps = 50, 150
+    p = _random_series(n, seed=310)
+    s = _random_series(n, seed=311, loc=9, scale=3)
+
+    class RelativeBiasClone(DeterministicMetrics.RelativeBias):
+        """Same formula, deliberately absent from VECTORIZED_METRIC_FUNCS."""
+
+    assert "RelativeBiasClone" not in VECTORIZED_METRIC_FUNCS
+
+    boot = Bootstrappers.Stationary(
+        seed=515, reps=reps, block_size=5, quantiles=None
+    )
+    metrics = [
+        DeterministicMetrics.RelativeBias(
+            output_field_name="via_kernel", bootstrap=boot),
+        RelativeBiasClone(
+            output_field_name="via_fallback", bootstrap=boot),
+    ]
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
+    assert _can_use_vectorized_engine(boot, metrics) is True
+
+    result = create_shared_bootstrap_func(metrics)(p, s)
+    np.testing.assert_allclose(
+        result["via_fallback"], result["via_kernel"],
+        rtol=1e-9, atol=1e-12, equal_nan=True,
+    )
+
+
+@pytest.mark.parametrize("max_cells", [1, 7, 10**9])
+def test_rep_chunking_is_bit_identical(max_cells):
+    """Chunking the index matrix must not perturb the RNG stream."""
+    from teehr.metrics.bootstrap_funcs import _make_bs_object
+
+    n, reps = 40, 60
+    p = _random_series(n, seed=410)
+    s = _random_series(n, seed=411, loc=8, scale=2)
+
+    boot = Bootstrappers.Stationary(
+        seed=717, reps=reps, block_size=4, quantiles=[0.1, 0.9]
+    )
+    metrics = [
+        DeterministicMetrics.RelativeMean(
+            output_field_name="rm", bootstrap=boot),
+        DeterministicMetrics.MeanError(
+            output_field_name="me", bootstrap=boot),
+    ]
+    funcs = [m.func(m) for m in metrics]
+
+    def run(cells):
+        bs = _make_bs_object(boot, (p, s))
+        return compute_vectorized_shared_bootstrap(
+            metrics, funcs, (p, s), bs, reps, boot.quantiles,
+            max_matrix_cells=cells,
+        )
+
+    reference = run(10**9)
+    actual = run(max_cells)
+    assert set(actual) == set(reference)
+    for key in reference:
+        assert actual[key] == pytest.approx(reference[key], rel=0, abs=0)
+
+
+def test_resample_args_matches_arch_resample():
+    """resample_args must reproduce arch's _resample: values, index, type."""
+    from arch.bootstrap import StationaryBootstrap
+    from teehr.metrics.vectorized_bootstrap_funcs import resample_args
+
+    n, reps = 12, 4
+    p = pd.Series(np.arange(n, dtype=float) + 1.0)
+    s = pd.Series((np.arange(n, dtype=float) + 1.0) * 10)
+
+    seen = []
+
+    def probe(*args):
+        seen.append(tuple(args))
+        return np.asarray([0.0])
+
+    StationaryBootstrap(3, p, s, seed=42).apply(probe, reps)
+    # apply() evaluates the func once on the un-resampled data to infer shape
+    # and discards it, consuming no RNG; the draws start at index 1.
+    drawn = seen[1:]
+
+    bs = StationaryBootstrap(3, p, s, seed=42)
+    for rep in range(reps):
+        indices = np.asarray(bs.update_indices())
+        mine = resample_args((p, s), indices)
+        for got, expected in zip(mine, drawn[rep]):
+            assert type(got) is type(expected)
+            np.testing.assert_array_equal(got.values, expected.values)
+            assert list(got.index) == list(expected.index)
 
 
 def test_end_to_end_reps_1000_scale(monkeypatch):
