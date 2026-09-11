@@ -121,7 +121,9 @@ PEARSON_ATTRS = {
 
 VR_ATTRS = {
     "short_name": "VR",
-    "display_name": "Variance Ratio",
+    # "Variability Ratio", not "Variance Ratio": the formula is a ratio of
+    # standard deviations (sigma_sec / sigma_prim), matching the user guide.
+    "display_name": "Variability Ratio",
     "category": mc.Deterministic,
     "value_range": [0.0, None],
     "optimal_value": 1.0,

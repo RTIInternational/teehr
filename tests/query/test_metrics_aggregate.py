@@ -52,12 +52,17 @@ def test_executing_deterministic_metrics(function_scope_test_warehouse):
     assert metrics_df.equals(metrics_df2)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 25
+    # 26 = 25 non-conditional deterministic metrics + the group_by column.
+    # Went from 25 when VariabilityRatio was registered in the
+    # DeterministicMetrics container; it was already implemented, documented,
+    # tested and Spark-native supported, just unreachable from the container.
+    assert metrics_df.columns.size == 26
     assert "relative_mean" in metrics_df.columns
     assert "relative_median" in metrics_df.columns
     assert "relative_minimum" in metrics_df.columns
     assert "relative_maximum" in metrics_df.columns
     assert "relative_standard_deviation" in metrics_df.columns
+    assert "variability_ratio" in metrics_df.columns
 
     # Test all the conditional metrics.
     include_conditional_metrics = [

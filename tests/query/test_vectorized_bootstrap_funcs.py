@@ -3,22 +3,30 @@
 These tests validate that vectorized_bootstrap_funcs.py produces the same
 results as the existing per-replicate loop in bootstrap_funcs.py, at three
 levels: (1) resample index construction, (2) individual metric kernels, and
-(3) the full shared-bootstrap UDF body end-to-end. The vectorized engine is
-gated behind the TEEHR_BOOTSTRAP_ENGINE=vectorized env var (see
-bootstrap_funcs._can_use_vectorized_engine) and is off by default, so these
-tests explicitly enable it via monkeypatch where needed.
+(3) the full shared-bootstrap UDF body end-to-end.
+
+The vectorized engine is the default; TEEHR_BOOTSTRAP_ENGINE=legacy selects
+the per-rep loop (see bootstrap_funcs._vectorized_engine_enabled). Every test
+here that compares the two engines names BOTH explicitly via monkeypatch,
+rather than deleting the env var to get one of them. That matters: relying on
+the default would mean a future flip silently turns a legacy-vs-vectorized
+comparison into vectorized-vs-vectorized, which passes while testing nothing.
+The single exception is test_engine_flag_defaults_to_vectorized, whose whole
+purpose is to assert the default.
 """
+import logging
+
 import numpy as np
 import pandas as pd
 import pytest
 
-from teehr import DeterministicMetrics
+from teehr import DeterministicMetrics, Signatures
 from teehr.metrics.bootstrap_funcs import (
     _make_bs_object,
     create_shared_bootstrap_func,
 )
 from teehr.metrics.models.bootstrap import Bootstrappers
-from teehr.querying.utils import derive_map_key_list
+from teehr.querying.utils import derive_map_key_list, parse_fields_to_list
 from teehr.metrics.vectorized_bootstrap_funcs import (
     VECTORIZED_METRIC_FUNCS,
     build_index_matrix,
@@ -99,6 +107,251 @@ def test_vectorized_kernel_matches_scalar_closure(metric_cls, extra_kwargs, add_
     np.testing.assert_allclose(actual, expected, rtol=1e-9, atol=1e-12)
 
 
+def _metric_class(name):
+    """Resolve a VECTORIZED_METRIC_FUNCS key to its metric class."""
+    cls = getattr(DeterministicMetrics, name, None)
+    if cls is None:
+        cls = getattr(Signatures, name, None)
+    assert cls is not None, f"{name!r} in the registry is not a metric class"
+    return cls
+
+
+def _is_single_field(metric):
+    """Whether the metric's closure takes only the primary series."""
+    if hasattr(metric, "get_input_field_names"):
+        fields = metric.get_input_field_names()
+    else:
+        fields = metric.input_field_names
+    return len(parse_fields_to_list(fields)) == 1
+
+
+def _gappy_matrices(reps, n, seed=17):
+    """Matrices with non-finite values in p and s at DIFFERENT indices.
+
+    The offset placement is the point: it makes the p-only valid count, the
+    s-only valid count, and the pairwise valid count all differ, so a kernel
+    that masks per-series instead of pairwise gives a different answer.
+    """
+    rng = np.random.default_rng(seed)
+    p = np.abs(rng.normal(10, 3, size=(reps, n))) + 0.1
+    s = np.abs(rng.normal(9, 4, size=(reps, n))) + 0.1
+    p[:, 2] = np.nan
+    s[:, 5] = np.nan
+    p[0, :] = np.nan          # all-NaN row -> empty after the drop
+    p[1, 7] = np.inf          # inf is dropped by the scalar path, not skipped
+    s[2, 4] = -np.inf
+    return p, s
+
+
+@pytest.mark.parametrize("metric_name", sorted(VECTORIZED_METRIC_FUNCS))
+@pytest.mark.parametrize("transform", [None, "sqrt", "log"])
+def test_kernel_matches_scalar_closure_on_gappy_data(metric_name, transform):
+    """Kernels must match the scalar closures when the data has gaps.
+
+    Regression test for two bugs that shipped together and were invisible to
+    the clean-data tests above:
+
+    1. ``deterministic_funcs._transform`` gated its non-finite drop on a
+       transform being set, so with ``transform=None`` NaNs reached the
+       reduction -- where ``np.sum``/``np.mean``/etc. on a pd.Series skip them
+       (pandas dispatch) but ``np.median``/``np.cov``/``np.corrcoef`` propagate
+       them (numpy dispatch). RelativeMedian, PearsonCorrelation and
+       KlingGuptaEfficiency returned NaN where their kernels returned a number.
+    2. ``_vectorized_transform`` returned early when no transform was set,
+       skipping the pairwise mask, so kernels reduced p and s over different
+       valid subsets.
+
+    The scalar closure is called with **pd.Series**, not numpy rows: numpy rows
+    would propagate NaN through every reduction and so validate a code path
+    that arch never exercises (it passes Series).
+    """
+    reps, n = 6, 20
+    metric = _metric_class(metric_name)(transform=transform)
+    scalar_func = metric.func(metric)
+    kernel = VECTORIZED_METRIC_FUNCS[metric_name]
+
+    p_mat, s_mat = _gappy_matrices(reps, n)
+
+    # Signature metrics are single-field: the closure takes p alone and the
+    # kernel receives s_mat=None, exactly as
+    # compute_vectorized_shared_bootstrap passes it.
+    if _is_single_field(metric):
+        expected = np.array([
+            scalar_func(pd.Series(p_mat[r])) for r in range(reps)
+        ])
+        actual = kernel(p_mat.copy(), None, metric)
+    else:
+        expected = np.array([
+            scalar_func(pd.Series(p_mat[r]), pd.Series(s_mat[r]))
+            for r in range(reps)
+        ])
+        actual = kernel(p_mat.copy(), s_mat.copy(), metric)
+
+    np.testing.assert_allclose(
+        actual, expected, rtol=1e-9, atol=1e-12, equal_nan=True
+    )
+
+
+@pytest.mark.parametrize("metric_name", sorted(VECTORIZED_METRIC_FUNCS))
+def test_kernels_do_not_mutate_their_inputs(metric_name):
+    """Kernels must treat p_mat/s_mat as read-only.
+
+    compute_vectorized_shared_bootstrap hands the SAME two matrices to every
+    kernel in the group, so one in-place write would silently corrupt every
+    metric evaluated after it. Note the inputs are passed directly here, not
+    copied -- the older kernel tests defensively pass .copy(), which would
+    mask exactly this bug.
+    """
+    metric = _metric_class(metric_name)()
+    kernel = VECTORIZED_METRIC_FUNCS[metric_name]
+    p_mat, s_mat = _gappy_matrices(6, 20)
+    p_ref, s_ref = p_mat.copy(), s_mat.copy()
+
+    if _is_single_field(metric):
+        kernel(p_mat, None, metric)
+    else:
+        kernel(p_mat, s_mat, metric)
+        np.testing.assert_array_equal(s_mat, s_ref)
+    np.testing.assert_array_equal(p_mat, p_ref)
+
+
+def test_registry_entries_are_bootstrap_vectorizable():
+    """Every registry key must name a real metric the kernel contract fits."""
+    for name in sorted(VECTORIZED_METRIC_FUNCS):
+        metric = _metric_class(name)()
+        fields = parse_fields_to_list(
+            metric.get_input_field_names()
+            if hasattr(metric, "get_input_field_names")
+            else metric.input_field_names
+        )
+        assert len(fields) <= 2, f"{name} takes {len(fields)} input fields"
+        assert not metric.attrs.get("requires_threshold_field", False), (
+            f"{name} needs a threshold column the kernels have no slot for"
+        )
+        assert getattr(metric, "value_time_field_name", None) is None, (
+            f"{name} depends on value_time, which the gate refuses"
+        )
+
+
+def test_registry_contents_are_deliberate():
+    """Change-detection tripwire: renaming or dropping a kernel must fail here.
+
+    Parity coverage comes from the registry-driven tests; this list exists so
+    that a metric class rename, or an accidental removal, is caught rather
+    than silently shrinking the covered set.
+    """
+    assert set(VECTORIZED_METRIC_FUNCS) == {
+        # Deterministic
+        "KlingGuptaEfficiency", "KlingGuptaEfficiencyMod1",
+        "KlingGuptaEfficiencyMod2", "MaxValueDelta", "MeanAbsoluteError",
+        "MeanAbsoluteRelativeError", "MeanError", "MeanSquareError",
+        "MultiplicativeBias", "NashSutcliffeEfficiency",
+        "NormalizedNashSutcliffeEfficiency", "PearsonCorrelation",
+        "RelativeBias", "RelativeMaximum", "RelativeMean", "RelativeMedian",
+        "RelativeMinimum", "RelativeStandardDeviation",
+        "RootMeanSquareError", "RootMeanStandardDeviationRatio", "Rsquared",
+        "VariabilityRatio",
+        # Signature (single-field)
+        "Average", "Count", "Maximum", "Minimum", "Sum", "Variance",
+    }
+
+
+def test_single_field_group_matches_legacy_end_to_end(monkeypatch):
+    """Signature metrics run through the engine with args=(p,) only.
+
+    compute_vectorized_shared_bootstrap takes its arity from len(args), so
+    s_mat is None here. bootstrap_group_key includes the input-field tuple,
+    so these form their own group and can never mix with two-field metrics --
+    asserted below, since the s_mat=None contract depends on it.
+    """
+    from teehr.metrics.bootstrap_funcs import bootstrap_group_key
+
+    n, reps = 50, 150
+    p = _random_series(n, seed=710)
+
+    boot = Bootstrappers.Stationary(
+        seed=909, reps=reps, block_size=5, quantiles=[0.05, 0.95]
+    )
+
+    def build():
+        return [
+            Signatures.Average(output_field_name="avg", bootstrap=boot),
+            Signatures.Maximum(output_field_name="mx", bootstrap=boot),
+            Signatures.Variance(output_field_name="var", bootstrap=boot),
+            Signatures.Count(output_field_name="cnt", bootstrap=boot),
+        ]
+
+    keys = {bootstrap_group_key(m) for m in build()}
+    assert len(keys) == 1, "signature metrics should share one group"
+    two_field = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    assert bootstrap_group_key(two_field) not in keys
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
+    legacy_result = create_shared_bootstrap_func(build())(p)
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    vectorized_result = create_shared_bootstrap_func(build())(p)
+
+    assert set(legacy_result.keys()) == set(vectorized_result.keys())
+    for key in legacy_result:
+        assert vectorized_result[key] == pytest.approx(
+            legacy_result[key], rel=1e-9, abs=1e-12
+        )
+
+
+def test_pairwise_mask_applied_without_transform():
+    """The mask must be pairwise, not per-series, even with no transform.
+
+    p and s are non-finite at different indices, so a per-series mask would
+    make relative_mean a ratio of means taken over different rows.
+    """
+    p = np.array([[1.0, 2.0, np.nan, 4.0]])
+    s = np.array([[2.0, np.nan, 6.0, 8.0]])
+    metric = DeterministicMetrics.RelativeMean()      # transform=None
+
+    # Only indices 0 and 3 are finite in BOTH series.
+    expected = np.mean([2.0, 8.0]) / np.mean([1.0, 4.0])
+    kernel = VECTORIZED_METRIC_FUNCS["RelativeMean"]
+    actual = kernel(p.copy(), s.copy(), metric)
+
+    assert actual[0] == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("n", [10, 30, 182, 1000])
+@pytest.mark.parametrize("metric_name", ["PearsonCorrelation", "Rsquared"])
+def test_correlation_stays_within_unit_interval(metric_name, n):
+    """A correlation coefficient cannot exceed 1, on either path.
+
+    The ``add_epsilon`` branch used to divide np.cov's default ddof=1
+    covariance by ddof=0 standard deviations. Those do not cancel, so the
+    result was ``r * n/(n-1)`` -- 1.110 at n=10 on well-correlated data, which
+    is not a correlation at all. Both paths now use a consistent ddof=0, so
+    the branch differs from the np.corrcoef branch only by the +EPSILON guard.
+    """
+    rng = np.random.default_rng(11)
+    p = np.abs(rng.lognormal(2, 1, n)) + 0.1
+    s = p * rng.uniform(0.9, 1.1, n)          # near-perfect correlation
+    r_true = np.corrcoef(s, p)[0][1]
+    if metric_name == "Rsquared":
+        r_true = r_true ** 2
+
+    metric = _metric_class(metric_name)(add_epsilon=True)
+    scalar = metric.func(metric)(pd.Series(p), pd.Series(s))
+
+    assert abs(scalar) <= 1.0, f"scalar {metric_name} = {scalar} exceeds 1.0"
+    assert scalar == pytest.approx(r_true, rel=1e-5)
+
+    # Rsquared has no kernel yet; this half starts asserting when one is added.
+    if metric_name in VECTORIZED_METRIC_FUNCS:
+        kernel = VECTORIZED_METRIC_FUNCS[metric_name](
+            p[None, :].copy(), s[None, :].copy(), metric
+        )[0]
+        assert abs(kernel) <= 1.0, (
+            f"kernel {metric_name} = {kernel} exceeds 1.0"
+        )
+        assert kernel == pytest.approx(r_true, rel=1e-5)
+
+
 def test_vectorized_kernel_matches_scalar_closure_with_degenerate_rows():
     """NSE/KGE guard behavior (zero std, zero sum) must match on a mixed batch."""
     n = 10
@@ -143,7 +396,7 @@ def test_shared_bootstrap_vectorized_matches_legacy_end_to_end(monkeypatch):
         DeterministicMetrics.PearsonCorrelation(output_field_name="pearson", bootstrap=boot),
     ]
 
-    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
     legacy_func = create_shared_bootstrap_func(metrics)
     legacy_result = legacy_func(p, s)
 
@@ -171,7 +424,7 @@ def test_shared_bootstrap_vectorized_matches_legacy_circularblock(monkeypatch):
         DeterministicMetrics.PearsonCorrelation(output_field_name="pearson", bootstrap=boot),
     ]
 
-    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
     legacy_result = create_shared_bootstrap_func(metrics)(p, s)
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
@@ -182,14 +435,51 @@ def test_shared_bootstrap_vectorized_matches_legacy_circularblock(monkeypatch):
         assert vectorized_result[key] == pytest.approx(legacy_result[key], rel=1e-9, abs=1e-12)
 
 
-def test_engine_flag_defaults_to_legacy(monkeypatch):
-    """Without the env var set, the vectorized path must not be used."""
+def test_engine_flag_defaults_to_vectorized(monkeypatch):
+    """With no env var set, the vectorized path is used.
+
+    Inverted when the default flipped. This is the ONE test that is meant to
+    depend on the default -- every other test in this module names its engine
+    explicitly, so that flipping the default cannot turn a legacy-vs-vectorized
+    comparison into a vectorized-vs-vectorized one that passes while testing
+    nothing.
+    """
     from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
 
     monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
     boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
     metrics = [DeterministicMetrics.RelativeMean(bootstrap=boot)]
+    assert _can_use_vectorized_engine(boot, metrics) is True
+
+
+@pytest.mark.parametrize("value", ["legacy", "LEGACY", " legacy "])
+def test_legacy_remains_available_as_an_escape_hatch(monkeypatch, value):
+    """TEEHR_BOOTSTRAP_ENGINE=legacy must still select the per-rep loop.
+
+    The two engines are meant to be numerically identical, so if they ever are
+    not, falling back should be one env var rather than a release.
+    """
+    from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", value)
+    boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
+    metrics = [DeterministicMetrics.RelativeMean(bootstrap=boot)]
     assert _can_use_vectorized_engine(boot, metrics) is False
+
+
+def test_unrecognized_engine_value_warns_and_uses_default(monkeypatch, caplog):
+    """A typo must not silently pick an engine.
+
+    Which way a misspelling falls is invisible in the results -- the engines
+    agree numerically -- so without the warning the only symptom would be an
+    unexplained slowdown, or nothing at all.
+    """
+    from teehr.metrics.bootstrap_funcs import _vectorized_engine_enabled
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacyy")
+    with caplog.at_level(logging.WARNING):
+        assert _vectorized_engine_enabled() is True
+    assert "Unrecognized TEEHR_BOOTSTRAP_ENGINE" in caplog.text
 
 
 def test_engine_flag_falls_back_for_gumboot(monkeypatch):
@@ -202,8 +492,18 @@ def test_engine_flag_falls_back_for_gumboot(monkeypatch):
     assert _can_use_vectorized_engine(boot, metrics) is False
 
 
-def test_engine_flag_falls_back_for_unvectorized_metric(monkeypatch):
-    """A metric without a vectorized kernel must force the legacy fallback."""
+def test_mixed_group_enters_vectorized_engine(monkeypatch):
+    """A group with SOME covered metrics must still use the vectorized engine.
+
+    This assertion is inverted from the version that shipped, which required
+    every metric in the group to have a kernel. That was a coarse proxy for
+    "an uncovered metric is never computed by a kernel" -- and it cost a mixed
+    group ~8x, since bootstrap_group_key excludes metric class and so groups
+    are heterogeneous by design. The property is now enforced structurally
+    (a class absent from the registry can only reach the scalar-closure branch
+    of the dispatch), and asserted directly by the equivalence tests below,
+    which are strictly stronger than the proxy was.
+    """
     from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
@@ -212,7 +512,207 @@ def test_engine_flag_falls_back_for_unvectorized_metric(monkeypatch):
         DeterministicMetrics.RelativeMean(bootstrap=boot),
         DeterministicMetrics.SpearmanCorrelation(bootstrap=boot),  # not in registry
     ]
+    assert _can_use_vectorized_engine(boot, metrics) is True
+
+
+def test_singleton_group_uses_vectorized_engine(monkeypatch):
+    """A lone bootstrapped metric must reach the engine, and match legacy.
+
+    format.py used to route groups of one through ``boot.func(ref)``, which
+    never consults the gate -- so the flag bought a single-metric request
+    nothing at all. Groups of one now take the shared path like any other.
+    """
+    from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
+
+    n, reps = 55, 120
+    p = _random_series(n, seed=610)
+    s = _random_series(n, seed=611, loc=9, scale=3)
+
+    boot = Bootstrappers.Stationary(
+        seed=808, reps=reps, block_size=5, quantiles=[0.05, 0.95]
+    )
+
+    def build():
+        return [DeterministicMetrics.KlingGuptaEfficiency(
+            output_field_name="kge", bootstrap=boot)]
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    assert _can_use_vectorized_engine(boot, build()) is True
+    vectorized_result = create_shared_bootstrap_func(build())(p, s)
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
+    legacy_result = create_shared_bootstrap_func(build())(p, s)
+
+    assert set(legacy_result.keys()) == set(vectorized_result.keys())
+    for key in legacy_result:
+        assert vectorized_result[key] == pytest.approx(
+            legacy_result[key], rel=1e-9, abs=1e-12
+        )
+
+
+def test_engine_flag_falls_back_when_no_metric_is_covered(monkeypatch):
+    """With nothing covered there is no work for the engine; use bs.apply."""
+    from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
+    metrics = [DeterministicMetrics.SpearmanCorrelation(bootstrap=boot)]
     assert _can_use_vectorized_engine(boot, metrics) is False
+
+
+@pytest.mark.parametrize("transform", [None, "log"])
+@pytest.mark.parametrize("quantiles", [[0.05, 0.95], None])
+def test_mixed_group_matches_legacy_end_to_end(
+    monkeypatch, transform, quantiles
+):
+    """A group mixing covered and uncovered metrics must match legacy exactly.
+
+    This is the test the per-metric fallback exists to make pass: the kernels
+    handle what they can on the batched matrices while SpearmanCorrelation and
+    MeanError go through their own scalar closures, all on one index matrix.
+    """
+    n, reps = 60, 200
+    p = _random_series(n, seed=210)
+    s = _random_series(n, seed=211, loc=9.5, scale=4)
+
+    boot = Bootstrappers.Stationary(
+        seed=4242, reps=reps, block_size=6, quantiles=quantiles
+    )
+
+    def build():
+        return [
+            DeterministicMetrics.RelativeMean(
+                output_field_name="rm", bootstrap=boot, transform=transform),
+            DeterministicMetrics.NashSutcliffeEfficiency(
+                output_field_name="nse", bootstrap=boot, transform=transform),
+            DeterministicMetrics.SpearmanCorrelation(      # no kernel
+                output_field_name="spearman", bootstrap=boot,
+                transform=transform),
+            DeterministicMetrics.KlingGuptaEfficiency(
+                output_field_name="kge", bootstrap=boot, transform=transform),
+            DeterministicMetrics.MeanError(               # no kernel
+                output_field_name="me", bootstrap=boot, transform=transform),
+        ]
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
+    legacy_result = create_shared_bootstrap_func(build())(p, s)
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    vectorized_result = create_shared_bootstrap_func(build())(p, s)
+
+    assert set(legacy_result.keys()) == set(vectorized_result.keys())
+    for key in legacy_result:
+        expected, actual = legacy_result[key], vectorized_result[key]
+        if quantiles is None:
+            np.testing.assert_allclose(
+                actual, expected, rtol=1e-9, atol=1e-12, equal_nan=True
+            )
+        else:
+            assert actual == pytest.approx(expected, rel=1e-9, abs=1e-12)
+
+
+def test_fallback_metric_sees_same_draws_as_kernel(monkeypatch):
+    """A covered metric and an uncovered clone of it must agree exactly.
+
+    Direct assertion that the shared bootstrap is still shared. Rather than
+    lean on a formula identity between two different metrics, this subclasses
+    RelativeBias so the formula is identical by construction, and leaves the
+    subclass out of the registry. One copy is then routed through the kernel
+    and the other through the per-rep fallback loop. If the two subsets saw
+    different draws, the columns would diverge.
+    """
+    n, reps = 50, 150
+    p = _random_series(n, seed=310)
+    s = _random_series(n, seed=311, loc=9, scale=3)
+
+    class RelativeBiasClone(DeterministicMetrics.RelativeBias):
+        """Same formula, deliberately absent from VECTORIZED_METRIC_FUNCS."""
+
+    assert "RelativeBiasClone" not in VECTORIZED_METRIC_FUNCS
+
+    boot = Bootstrappers.Stationary(
+        seed=515, reps=reps, block_size=5, quantiles=None
+    )
+    metrics = [
+        DeterministicMetrics.RelativeBias(
+            output_field_name="via_kernel", bootstrap=boot),
+        RelativeBiasClone(
+            output_field_name="via_fallback", bootstrap=boot),
+    ]
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
+    assert _can_use_vectorized_engine(boot, metrics) is True
+
+    result = create_shared_bootstrap_func(metrics)(p, s)
+    np.testing.assert_allclose(
+        result["via_fallback"], result["via_kernel"],
+        rtol=1e-9, atol=1e-12, equal_nan=True,
+    )
+
+
+@pytest.mark.parametrize("max_cells", [1, 7, 10**9])
+def test_rep_chunking_is_bit_identical(max_cells):
+    """Chunking the index matrix must not perturb the RNG stream."""
+    from teehr.metrics.bootstrap_funcs import _make_bs_object
+
+    n, reps = 40, 60
+    p = _random_series(n, seed=410)
+    s = _random_series(n, seed=411, loc=8, scale=2)
+
+    boot = Bootstrappers.Stationary(
+        seed=717, reps=reps, block_size=4, quantiles=[0.1, 0.9]
+    )
+    metrics = [
+        DeterministicMetrics.RelativeMean(
+            output_field_name="rm", bootstrap=boot),
+        DeterministicMetrics.MeanError(
+            output_field_name="me", bootstrap=boot),
+    ]
+    funcs = [m.func(m) for m in metrics]
+
+    def run(cells):
+        bs = _make_bs_object(boot, (p, s))
+        return compute_vectorized_shared_bootstrap(
+            metrics, funcs, (p, s), bs, reps, boot.quantiles,
+            max_matrix_cells=cells,
+        )
+
+    reference = run(10**9)
+    actual = run(max_cells)
+    assert set(actual) == set(reference)
+    for key in reference:
+        assert actual[key] == pytest.approx(reference[key], rel=0, abs=0)
+
+
+def test_resample_args_matches_arch_resample():
+    """resample_args must reproduce arch's _resample: values, index, type."""
+    from arch.bootstrap import StationaryBootstrap
+    from teehr.metrics.vectorized_bootstrap_funcs import resample_args
+
+    n, reps = 12, 4
+    p = pd.Series(np.arange(n, dtype=float) + 1.0)
+    s = pd.Series((np.arange(n, dtype=float) + 1.0) * 10)
+
+    seen = []
+
+    def probe(*args):
+        seen.append(tuple(args))
+        return np.asarray([0.0])
+
+    StationaryBootstrap(3, p, s, seed=42).apply(probe, reps)
+    # apply() evaluates the func once on the un-resampled data to infer shape
+    # and discards it, consuming no RNG; the draws start at index 1.
+    drawn = seen[1:]
+
+    bs = StationaryBootstrap(3, p, s, seed=42)
+    for rep in range(reps):
+        indices = np.asarray(bs.update_indices())
+        mine = resample_args((p, s), indices)
+        for got, expected in zip(mine, drawn[rep]):
+            assert type(got) is type(expected)
+            np.testing.assert_array_equal(got.values, expected.values)
+            assert list(got.index) == list(expected.index)
 
 
 def test_end_to_end_reps_1000_scale(monkeypatch):
@@ -233,7 +733,7 @@ def test_end_to_end_reps_1000_scale(monkeypatch):
         DeterministicMetrics.PearsonCorrelation(output_field_name="pearson", bootstrap=boot),
     ]
 
-    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
     legacy_result = create_shared_bootstrap_func(metrics)(p, s)
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
@@ -266,7 +766,7 @@ def test_shared_bootstrap_keys_match_static_derivation(monkeypatch):
     for metric in metrics:
         expected.update(derive_map_key_list(metric))
 
-    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
     assert set(create_shared_bootstrap_func(metrics)(p, s).keys()) == expected
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")

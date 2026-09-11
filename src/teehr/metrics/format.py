@@ -22,7 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 def _build_non_bootstrap_udf(model: MetricsBasemodel, gp: GroupedData):
-    """Return (udf_col_expr, alias) for a non-bootstrap or raw-array metric."""
+    """Return the aggregation column expression for a non-bootstrap metric.
+
+    Only ever called with ``partition_metrics_by_bootstrap``'s ``no_boot``
+    list, and ``bootstrap_group_key`` returns None only when ``bootstrap`` is
+    falsy -- so every model reaching here has no bootstrap config. This used to
+    carry a ``model.bootstrap is not None`` branch for a "raw array path"; it
+    was unreachable, and it was the only other consumer of ``boot.func`` /
+    ``boot.return_type``.
+    """
     if hasattr(model, "get_input_field_names"):
         input_field_names = parse_fields_to_list(model.get_input_field_names())
     else:
@@ -40,20 +48,8 @@ def _build_non_bootstrap_udf(model: MetricsBasemodel, gp: GroupedData):
 
     alias = model.output_field_name
 
-    if "bootstrap" in model.model_dump() and model.bootstrap is not None:
-        logger.debug(
-            f"Applying metric: {alias} with {model.bootstrap.name}"
-            " bootstrapping (raw array path)"
-        )
-        func_pd = pandas_udf(
-            model.bootstrap.func(model),
-            model.bootstrap.return_type
-        )
-        if model.bootstrap.include_value_time and "value_time" not in input_field_names:
-            input_field_names.append("value_time")
-    else:
-        logger.debug(f"Applying metric: {alias}")
-        func_pd = pandas_udf(model.func(model), model.return_type)
+    logger.debug(f"Applying metric: {alias}")
+    func_pd = pandas_udf(model.func(model), model.return_type)
 
     return func_pd(*input_field_names).alias(alias)
 
@@ -81,6 +77,7 @@ def _build_shared_bootstrap_udfs(
     """
     func_list = []
     expansions = []
+    existing_columns = set(gp._df.columns)
 
     for idx, (key, group_metrics) in enumerate(boot_groups.items()):
         ref = group_metrics[0]
@@ -91,42 +88,52 @@ def _build_shared_bootstrap_udfs(
         else:
             input_field_names = parse_fields_to_list(ref.input_field_names)
 
+        # Same check _build_non_bootstrap_udf runs. Without it a bootstrapped
+        # threshold metric with threshold_field_name=None fails inside the UDF
+        # with an opaque TypeError instead of this explicit error.
+        if ref.attrs["requires_threshold_field"]:
+            if ref.threshold_field_name is None:
+                raise ValueError(
+                    f"{ref} requires a valid threshold_field_name argument."
+                )
+            if ref.threshold_field_name not in input_field_names:
+                input_field_names.append(ref.threshold_field_name)
+
         if boot.include_value_time and "value_time" not in input_field_names:
             input_field_names.append("value_time")
 
         validate_fields_exist(gp._df.columns, input_field_names)
 
-        if len(group_metrics) == 1:
-            # Singleton — use the standard path but still via shared helper
-            # to keep the code uniform; it's the same cost as the old path.
-            logger.debug(
-                f"Applying metric: {ref.output_field_name} with "
-                f"{boot.name} bootstrapping"
+        names = [m.output_field_name for m in group_metrics]
+        logger.debug(
+            f"Applying {len(group_metrics)} metric(s) sharing {boot.name} "
+            f"bootstrap samples: {names}"
+        )
+
+        # Every group takes this path, including groups of one. Singletons used
+        # to be special-cased through boot.func(ref) -- i.e. the legacy
+        # per-replicate loop -- which never consulted the vectorized engine, so
+        # a lone bootstrapped metric got no benefit from it at all. Routing
+        # them here also gives them the sample-size/mean/variance quality
+        # guards in create_shared_bootstrap_func, which previously applied only
+        # once a group had two or more metrics. Those guards are configured on
+        # the Bootstrappers model, so nothing needs threading through here.
+        temp_col = f"_bsgrp_{idx}"
+        while temp_col in existing_columns:
+            temp_col = f"_{temp_col}"
+        existing_columns.add(temp_col)
+
+        shared_func = create_shared_bootstrap_func(group_metrics)
+        if boot.quantiles is None:
+            return_type = T.MapType(
+                T.StringType(),
+                T.ArrayType(T.FloatType()),
             )
-            func_pd = pandas_udf(
-                boot.func(ref),
-                boot.return_type,
-            )
-            func_list.append(func_pd(*input_field_names).alias(ref.output_field_name))
-            # No expansion needed — MapType column already has the right name.
         else:
-            names = [m.output_field_name for m in group_metrics]
-            logger.debug(
-                f"Applying {len(group_metrics)} metrics sharing {boot.name} "
-                f"bootstrap samples: {names}"
-            )
-            temp_col = f"_bsgrp_{idx}"
-            shared_func = create_shared_bootstrap_func(group_metrics)
-            if boot.quantiles is None:
-                return_type = T.MapType(
-                    T.StringType(),
-                    T.ArrayType(T.FloatType()),
-                )
-            else:
-                return_type = T.MapType(T.StringType(), T.FloatType())
-            func_pd = pandas_udf(shared_func, return_type)
-            func_list.append(func_pd(*input_field_names).alias(temp_col))
-            expansions.append((temp_col, group_metrics))
+            return_type = T.MapType(T.StringType(), T.FloatType())
+        func_pd = pandas_udf(shared_func, return_type)
+        func_list.append(func_pd(*input_field_names).alias(temp_col))
+        expansions.append((temp_col, group_metrics))
 
     return func_list, expansions
 
@@ -150,9 +157,16 @@ def _materialize_shared_bootstrap_columns(sdf, expansions):
             if quantiles is None:
                 sdf = sdf.withColumn(name, F.col(temp_col).getItem(name))
             else:
+                # Dedupe exactly as derive_map_key_list does. A repeated
+                # quantile (e.g. [0.5, 0.50]) collapses to one entry in the
+                # dict the UDF returns, but F.create_map would emit the key
+                # twice and Spark's default mapKeyDedupPolicy=EXCEPTION then
+                # raises DUPLICATED_MAP_KEY at collect time.
+                keys = list(dict.fromkeys(
+                    bootstrap_quantile_key(name, q) for q in quantiles
+                ))
                 key_value_pairs = []
-                for q in quantiles:
-                    key = bootstrap_quantile_key(name, q)
+                for key in keys:
                     key_value_pairs.extend([
                         F.lit(key),
                         F.col(temp_col).getItem(key),

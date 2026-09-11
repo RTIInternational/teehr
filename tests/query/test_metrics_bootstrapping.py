@@ -16,6 +16,38 @@ from teehr.metrics.bootstrap_funcs import _calculate_quantiles
 from teehr.querying.utils import derive_map_key_list, unpack_sdf_dict_columns
 
 
+def _assert_bootstrap_samples_match(teehr_results, manual_results):
+    """Compare teehr's bootstrap samples against a hand-rolled arch run.
+
+    Both sides compute in float64 (callers cast the manual inputs; teehr's
+    vectorized engine casts via np.asarray(args[0], dtype=float)), so this is
+    a like-for-like comparison and the tolerance only has to absorb the final
+    float32 cast of the output column -- a couple of ULPs.
+
+    This used to assert exact float32 equality, which held only because
+    teehr's legacy path ran the identical code on the identical dtype. The
+    warehouse stores primary_value/secondary_value as float32, and the legacy
+    path passes those Series to the closures unchanged, so np.nansum/np.std
+    accumulated in float32. Measured on gage-A, KGE, 500 reps:
+
+        vectorized vs legacy (float32 in)   max rel 2.59e-06
+        vectorized vs legacy (float64 in)   max rel 7.48e-15   <- algorithmic
+        legacy float64 vs legacy float32    max rel 2.59e-06
+
+    The engines agree to ~1e-15; the whole gap was input dtype. Rather than
+    widen the tolerance until that gap fits -- which would have meant a
+    tolerance of 1e-4 to accommodate degenerate log-transform replicates where
+    KGE reaches -123 -- the callers now feed the manual run float64 so the
+    confound is gone.
+
+    Manual runs stay float32 and exact where the engine cannot apply (Gumboot).
+    """
+    assert teehr_results.shape == manual_results.shape
+    np.testing.assert_allclose(
+        teehr_results, manual_results, rtol=1e-6, atol=1e-7, equal_nan=True
+    )
+
+
 BOOT_YEAR_FILE = Path(
     "tests",
     "data",
@@ -120,8 +152,14 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
     df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
+    # float64, to match what teehr computes in. The warehouse stores these
+    # as float32; the vectorized engine casts once via
+    # np.asarray(args[0], dtype=float) and accumulates in float64, so a
+    # float32 manual run would be comparing two different precisions and
+    # the residual would be input dtype, not arithmetic. Casting here keeps
+    # the comparison like-for-like and the tolerance meaningful.
+    p = df_gageA.primary_value.astype("float64")
+    s = df_gageA.secondary_value.astype("float64")
 
     bs = CircularBlockBootstrap(
         kge.bootstrap.block_size,
@@ -158,7 +196,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
     )
     manual_results = np.sort(results.ravel()).astype(np.float32)
 
-    assert (teehr_results == manual_results).all()
+    _assert_bootstrap_samples_match(teehr_results, manual_results)
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
@@ -185,8 +223,14 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
+    # float64, to match what teehr computes in. The warehouse stores these
+    # as float32; the vectorized engine casts once via
+    # np.asarray(args[0], dtype=float) and accumulates in float64, so a
+    # float32 manual run would be comparing two different precisions and
+    # the residual would be input dtype, not arithmetic. Casting here keeps
+    # the comparison like-for-like and the tolerance meaningful.
+    p = df_gageA.primary_value.astype("float64")
+    s = df_gageA.secondary_value.astype("float64")
 
     bs = StationaryBootstrap(
         kge.bootstrap.block_size,
@@ -223,7 +267,7 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     )
     manual_results = np.sort(results.ravel()).astype(np.float32)
 
-    assert (teehr_results == manual_results).all()
+    _assert_bootstrap_samples_match(teehr_results, manual_results)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
@@ -467,8 +511,14 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
     df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
+    # float64, to match what teehr computes in. The warehouse stores these
+    # as float32; the vectorized engine casts once via
+    # np.asarray(args[0], dtype=float) and accumulates in float64, so a
+    # float32 manual run would be comparing two different precisions and
+    # the residual would be input dtype, not arithmetic. Casting here keeps
+    # the comparison like-for-like and the tolerance meaningful.
+    p = df_gageA.primary_value.astype("float64")
+    s = df_gageA.secondary_value.astype("float64")
 
     bs = CircularBlockBootstrap(
         kge.bootstrap.block_size,
@@ -505,7 +555,7 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
     )
     manual_results = np.sort(results.ravel()).astype(np.float32)
 
-    assert (teehr_results == manual_results).all()
+    _assert_bootstrap_samples_match(teehr_results, manual_results)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
@@ -876,11 +926,15 @@ def test_shared_bootstrap_quantile_columns_correct(
 
 
 @pytest.mark.session_scope_test_warehouse
-def test_shared_bootstrap_singleton_group_unchanged(
+def test_shared_bootstrap_singleton_takes_shared_path(
     session_scope_test_warehouse,
 ):
-    """A single metric with quantile bootstrap should produce correct columns
-    through the shared path (singleton group, no actual sharing).
+    """A single quantile-bootstrap metric produces correct columns.
+
+    Groups of one used to be special-cased through ``boot.func(ref)`` -- the
+    legacy per-replicate loop, which never consulted the vectorized engine.
+    They now take the same shared path as every other group, so this asserts
+    the output columns survive the temp-column + expansion round trip.
     """
     ev = session_scope_test_warehouse
 
@@ -906,6 +960,305 @@ def test_shared_bootstrap_singleton_group_unchanged(
     }
     assert expected_cols.issubset(set(result_df.columns))
     assert result_df.index.size == 3
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_duplicate_quantiles_expand_to_one_column(
+    session_scope_test_warehouse,
+):
+    """A repeated quantile must not crash the map reconstruction.
+
+    ``quantiles=[0.5, 0.50]`` is a supported config (see
+    test_derive_map_key_list), and the dict the UDF returns collapses the
+    repeat to one entry. ``F.create_map`` in
+    ``_materialize_shared_bootstrap_columns`` did not, so Spark's default
+    ``mapKeyDedupPolicy=EXCEPTION`` raised DUPLICATED_MAP_KEY at collect time.
+    Routing singletons through the shared path widened that from multi-metric
+    groups to every bootstrap group, so the dedupe is what makes Stage 3 safe.
+    """
+    ev = session_scope_test_warehouse
+
+    boot = Bootstrappers.CircularBlock(
+        seed=40, block_size=100, quantiles=[0.5, 0.50], reps=50
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+
+    result_df = (
+        ev.table("joined_timeseries")
+        .aggregate(metrics=[kge], group_by=["primary_location_id"])
+        .to_pandas()
+    )
+
+    assert result_df.index.size == 3
+    # One key, not two -- matching what derive_map_key_list predicts.
+    assert derive_map_key_list(kge) == ["kling_gupta_efficiency_0.5"]
+    for value in result_df.kling_gupta_efficiency:
+        assert list(value.keys()) == ["kling_gupta_efficiency_0.5"]
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_singleton_group_is_routed_through_the_shared_path(
+    session_scope_test_warehouse,
+):
+    """format.py must build a shared-path expansion for a group of one.
+
+    This is the Stage 3 change itself: the singleton branch produced a
+    directly-aliased column and NO expansion entry, so a lone bootstrapped
+    metric bypassed create_shared_bootstrap_func (and therefore the vectorized
+    engine) entirely. Asserting on `expansions` tests the routing rather than
+    the UDF, which the other singleton tests exercise directly.
+    """
+    from teehr.metrics.bootstrap_funcs import partition_metrics_by_bootstrap
+    from teehr.metrics.format import _build_shared_bootstrap_udfs
+
+    ev = session_scope_test_warehouse
+
+    boot = Bootstrappers.CircularBlock(
+        seed=40, block_size=100, quantiles=[0.05, 0.95], reps=20
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+
+    gp = ev.table("joined_timeseries").to_sdf().groupBy("primary_location_id")
+    _, boot_groups = partition_metrics_by_bootstrap([kge])
+    assert [len(g) for g in boot_groups.values()] == [1]
+
+    func_list, expansions = _build_shared_bootstrap_udfs(boot_groups, gp)
+
+    assert len(func_list) == 1
+    assert len(expansions) == 1, "singleton group produced no expansion entry"
+    temp_col, group_metrics = expansions[0]
+    assert temp_col.startswith("_bsgrp_")
+    assert [m.output_field_name for m in group_metrics] == [
+        "kling_gupta_efficiency"
+    ]
+
+
+@pytest.mark.parametrize("cls", [
+    DeterministicMetrics.MaxValueTimeDelta,
+    DeterministicMetrics.AnnualPeakRelativeBias,
+    Signatures.MaxValueTime,
+    Signatures.CenterOfTiming,
+    Signatures.StandardDeviationOfTiming,
+])
+def test_value_time_metrics_reject_bootstrap(cls):
+    """value_time-dependent metrics must refuse a bootstrap config.
+
+    Resampling reorders and repeats observations, so the time axis these are
+    defined on no longer lines up with the values beside it. The combination
+    never worked -- it failed inconsistently: MaxValueTimeDelta and
+    MaxValueTime raised, while AnnualPeakRelativeBias, CenterOfTiming and
+    StandardDeviationOfTiming returned numbers computed on a scrambled time
+    axis. Under Gumboot all five raised, because _make_bs_object peels the
+    trailing value_time argument off for water-year blocking and never
+    forwards it to the metric.
+    """
+    boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
+
+    with pytest.raises(ValueError, match="cannot be bootstrapped"):
+        cls(bootstrap=boot)
+
+    # Also caught on assignment, which is how much of this suite builds them.
+    metric = cls()
+    with pytest.raises(ValueError, match="cannot be bootstrapped"):
+        metric.bootstrap = boot
+
+
+def test_value_time_metrics_still_work_without_bootstrap():
+    """The guard must not affect the un-bootstrapped use of these metrics."""
+    for cls in (
+        DeterministicMetrics.MaxValueTimeDelta,
+        Signatures.CenterOfTiming,
+    ):
+        metric = cls()
+        assert metric.bootstrap is None
+        assert metric.value_time_field_name == "value_time"
+
+    # And a bootstrap on a metric with no value_time dependence is unaffected.
+    boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
+    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    assert kge.bootstrap is boot
+    fdc = Signatures.FlowDurationCurveSlope(bootstrap=boot)
+    assert fdc.bootstrap is boot
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_sample_size_guard_nulls_small_groups_end_to_end(
+    session_scope_test_warehouse,
+):
+    """A group under minimum_sample_size returns null through the pipeline.
+
+    The warehouse has 72 rows per gage, above the default floor of 30, so no
+    guard fires on the full fixture. Filtering value_time brings every gage to
+    27 rows while leaving mean (0.49 / 10.49 / 145.6) and variance (0.081 /
+    0.081 / 913.6) well above their floors -- so this isolates the
+    sample-size guard specifically, rather than tripping several at once.
+
+    Worth having at the Spark level and not only as a unit test: this is the
+    behaviour change from routing singleton bootstrap groups through the
+    shared path, and it is what a user with fine-grained grouping will hit.
+    """
+    ev = session_scope_test_warehouse
+
+    small_group = [
+        TableFilter(
+            column="value_time",
+            operator=ops.lt,
+            value="2022-01-01 10:00:00",
+        )
+    ]
+
+    def run(**boot_kwargs):
+        kge = DeterministicMetrics.KlingGuptaEfficiency()
+        kge.bootstrap = Bootstrappers.CircularBlock(
+            seed=40, block_size=5, quantiles=[0.05, 0.95], reps=50,
+            **boot_kwargs,
+        )
+        kge.unpack_results = True
+        return (
+            ev.table("joined_timeseries")
+            .filter(filters=small_group)
+            .aggregate(metrics=[kge], group_by=["primary_location_id"])
+            .order_by("primary_location_id")
+            .to_pandas()
+        )
+
+    # Default floor of 30 against 27 rows -> null for every gage.
+    guarded = run()
+    assert guarded.index.size == 3
+    for col in ("kling_gupta_efficiency_0_05", "kling_gupta_efficiency_0_95"):
+        assert guarded[col].isna().all(), (
+            f"{col} should be null under the guard"
+        )
+
+    # Lowering the floor on the Bootstrapper is the escape hatch.
+    relaxed = run(minimum_sample_size=5)
+    assert relaxed.index.size == 3
+    for col in ("kling_gupta_efficiency_0_05", "kling_gupta_efficiency_0_95"):
+        assert relaxed[col].notna().all(), (
+            f"{col} should be populated at floor=5"
+        )
+
+
+def test_quality_guards_are_configurable_on_the_bootstrapper():
+    """The guards are fields on the Bootstrappers model, so they can be tuned.
+
+    They belong there rather than on the aggregation call because they are
+    properties of a bootstrap configuration -- and because grouping already
+    works that way: bootstrap_group_key keys on the bootstrap config, so
+    metrics sharing a config necessarily share guards.
+    """
+    from teehr.metrics.bootstrap_funcs import create_shared_bootstrap_func
+
+    rng = np.random.default_rng(5)
+    n = 10                                   # below the default floor of 30
+    p = pd.Series(np.abs(rng.normal(10, 3, n)) + 0.1)
+    s = pd.Series(np.abs(rng.normal(9, 3, n)) + 0.1)
+
+    def kge_with(**kwargs):
+        return DeterministicMetrics.KlingGuptaEfficiency(
+            output_field_name="kge",
+            bootstrap=Bootstrappers.Stationary(
+                reps=20, seed=7, block_size=3, quantiles=[0.05, 0.95],
+                **kwargs,
+            ),
+        )
+
+    # Defaults unchanged from when they were hardcoded.
+    default = Bootstrappers.Stationary(reps=10)
+    assert default.minimum_sample_size == 30
+    assert default.minimum_mean == 0.01
+    assert default.minimum_variance == 0.000025
+
+    guarded = create_shared_bootstrap_func([kge_with()])(p, s)
+    assert guarded == {"kge": None}
+
+    relaxed = create_shared_bootstrap_func(
+        [kge_with(minimum_sample_size=5)]
+    )(p, s)
+    assert set(relaxed) == {"kge_0.05", "kge_0.95"}
+    assert all(np.isfinite(v) for v in relaxed.values())
+
+
+def test_differing_guards_do_not_share_a_bootstrap_group():
+    """Guards are part of bootstrap_group_key.
+
+    create_shared_bootstrap_func reads them from metrics[0].bootstrap, so if
+    two configs differing only in a guard shared a group, the first metric's
+    thresholds would silently apply to the others.
+    """
+    from teehr.metrics.bootstrap_funcs import bootstrap_group_key
+
+    strict = Bootstrappers.Stationary(reps=10, seed=1)
+    relaxed = Bootstrappers.Stationary(reps=10, seed=1, minimum_sample_size=5)
+
+    a = DeterministicMetrics.KlingGuptaEfficiency(
+        output_field_name="a", bootstrap=strict)
+    b = DeterministicMetrics.NashSutcliffeEfficiency(
+        output_field_name="b", bootstrap=relaxed)
+    c = DeterministicMetrics.RelativeMean(
+        output_field_name="c", bootstrap=Bootstrappers.Stationary(
+            reps=10, seed=1))
+
+    keys = {bootstrap_group_key(m) for m in (a, b, c)}
+    assert len(keys) == 2, "a differing guard must split the group"
+    assert bootstrap_group_key(a) == bootstrap_group_key(c)
+    assert bootstrap_group_key(a) != bootstrap_group_key(b)
+
+
+@pytest.mark.parametrize("boot_cls", [
+    Bootstrappers.Stationary,
+    Bootstrappers.CircularBlock,
+    Bootstrappers.Gumboot,
+])
+def test_guards_available_on_every_bootstrap_method(boot_cls):
+    """Declared on BootstrapBasemodel, so every method inherits them."""
+    boot = boot_cls(
+        reps=10, minimum_sample_size=5, minimum_mean=0.0, minimum_variance=0.0
+    )
+    assert boot.minimum_sample_size == 5
+    assert boot.minimum_mean == 0.0
+    assert boot.minimum_variance == 0.0
+
+
+def test_singleton_group_now_gets_quality_guards():
+    """Groups of one are now subject to the sample-size/mean/variance guards.
+
+    Deliberate behavior change. The guards live in
+    ``create_shared_bootstrap_func``, which singleton groups previously did not
+    reach -- so one bootstrapped metric would compute on a 5-sample group while
+    the same metric plus a second one returned nulls for both. The retained
+    ``create_stationary_func`` still has no guards, which is what makes the
+    difference visible here.
+
+    Pure-python rather than Spark: the checked-in warehouse has 72 rows per
+    gage with variance well above the floor, so no guard fires anywhere in the
+    suite and a Spark-level test could not detect this.
+    """
+    from teehr.metrics.bootstrap_funcs import (
+        create_shared_bootstrap_func,
+        create_stationary_func,
+    )
+
+    rng = np.random.default_rng(5)
+    n = 10                    # below the default minimum_sample_size of 30
+    p = pd.Series(np.abs(rng.normal(10, 3, n)) + 0.1)
+    s = pd.Series(np.abs(rng.normal(9, 3, n)) + 0.1)
+
+    boot = Bootstrappers.Stationary(
+        seed=7, reps=20, block_size=3, quantiles=[0.05, 0.95]
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+
+    guarded = create_shared_bootstrap_func([kge])(p, s)
+    assert guarded == {"kling_gupta_efficiency": None}
+
+    # The old singleton path computed a value for the same input.
+    unguarded = create_stationary_func(kge)(p, s)
+    assert unguarded  # non-empty: a real quantile map, not a null
+    assert all(np.isfinite(v) for v in unguarded.values())
 
 
 @pytest.mark.session_scope_test_warehouse

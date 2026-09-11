@@ -9,31 +9,92 @@ import numpy as np
 from teehr.metrics.models.base import MetricsBasemodel
 from teehr.metrics.vectorized_bootstrap_funcs import (
     VECTORIZED_BOOTSTRAP_METHODS,
-    VECTORIZED_METRIC_FUNCS,
+    assemble_bootstrap_output,
     compute_vectorized_shared_bootstrap,
+    is_vectorized_metric,
 )
-from teehr.querying.utils import bootstrap_quantile_key
+from teehr.querying.utils import bootstrap_quantile_key, parse_fields_to_list
 
 logger = logging.getLogger(__name__)
 
-# Internal rollout switch for the vectorized shared-bootstrap path -- not a
-# public/documented config option. Defaults to the legacy per-rep loop.
-# Set TEEHR_BOOTSTRAP_ENGINE=vectorized to opt in during validation. Read
-# dynamically (not cached at import time) so it can be toggled at runtime
-# (e.g. before creating a Spark session) and in tests via monkeypatch.
+# Engine selector for the shared-bootstrap path. The vectorized engine is now
+# the default; set TEEHR_BOOTSTRAP_ENGINE=legacy to fall back to the per-rep
+# loop. The escape hatch exists because the two are meant to be numerically
+# identical -- if they ever are not, switching back should be one env var, not
+# a release.
+#
+# Read dynamically (not cached at import time) so it can be toggled at runtime
+# (e.g. before creating a Spark session) and in tests via monkeypatch. On a
+# Spark cluster it must be set on the EXECUTORS, not just the driver --
+# spark.executorEnv.TEEHR_BOOTSTRAP_ENGINE -- since the check runs inside the
+# pandas UDF.
 def _vectorized_engine_enabled() -> bool:
-    return os.environ.get("TEEHR_BOOTSTRAP_ENGINE", "legacy").strip().lower() == "vectorized"
+    engine = os.environ.get("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    engine = engine.strip().lower()
+    if engine not in ("vectorized", "legacy"):
+        # Don't silently pick an engine for a typo. Which way a misspelling
+        # falls is invisible in the results -- the two engines agree
+        # numerically -- so the only symptom would be an unexplained 8x
+        # slowdown, or none at all.
+        logger.warning(
+            "Unrecognized TEEHR_BOOTSTRAP_ENGINE=%r; expected 'vectorized' "
+            "or 'legacy'. Using the default (vectorized).",
+            engine,
+        )
+        return True
+    return engine == "vectorized"
 
 
-def _can_use_vectorized_engine(ref_boot, metrics: List[MetricsBasemodel]) -> bool:
-    """Whether the vectorized path can safely handle this bootstrap/metric mix."""
-    if not _vectorized_engine_enabled():
-        return False
+def _vectorized_engine_available(ref_boot, metrics) -> bool:
+    """Group-level preconditions for the vectorized path.
+
+    These are properties of the bootstrap object and the group's input fields,
+    so they genuinely cannot be decided per metric:
+
+    - the resampler must expose arch's ``update_indices()`` contract. Gumboot
+      takes a ``rep`` argument and returns ragged per-water-year index blocks,
+      so no ``(reps, n)`` matrix exists for it at all.
+    - ``include_value_time`` adds a third positional arg that the kernels have
+      no slot for, and ``np.asarray(..., dtype=float)`` on datetimes is lossy.
+    - the field count must match the kernel contract: ``args[0]`` primary and
+      an optional ``args[1]`` secondary. This one is not redundant with the
+      registry -- e.g. ``Signatures.Average(secondary_field_name=...)`` yields
+      a two-field group whose scalar closure takes one argument, where legacy
+      raises TypeError but a kernel would quietly ignore ``s_mat`` and
+      succeed. Rejecting keeps the two paths' error behavior identical.
+    """
     if type(ref_boot).__name__ not in VECTORIZED_BOOTSTRAP_METHODS:
         return False
     if ref_boot.include_value_time:
         return False
-    return all(type(m).__name__ in VECTORIZED_METRIC_FUNCS for m in metrics)
+
+    ref = metrics[0]
+    if hasattr(ref, "get_input_field_names"):
+        n_fields = len(parse_fields_to_list(ref.get_input_field_names()))
+    else:
+        n_fields = len(parse_fields_to_list(ref.input_field_names))
+    expects_secondary = getattr(ref, "secondary_field_name", None) is not None
+    return n_fields == (2 if expects_secondary else 1)
+
+
+def _can_use_vectorized_engine(ref_boot, metrics: List[MetricsBasemodel]) -> bool:
+    """Whether the vectorized path can help this bootstrap/metric group.
+
+    ``any``, not ``all``: metrics without a kernel are evaluated by their own
+    scalar closure inside ``compute_vectorized_shared_bootstrap``, on the same
+    draws as the kernels. Requiring every metric to be covered meant one
+    uncovered metric cost the whole group an ~8x slowdown, and
+    ``bootstrap_group_key`` excludes metric class precisely so that unrelated
+    metrics *do* share a group.
+
+    A group with no covered metrics returns False and takes the untouched
+    ``bs.apply`` path, so nothing changes for it.
+    """
+    if not _vectorized_engine_enabled():
+        return False
+    if not _vectorized_engine_available(ref_boot, metrics):
+        return False
+    return any(is_vectorized_metric(m) for m in metrics)
 
 
 def _optimal_block_size(data: np.ndarray, method: str = "stationary") -> int:
@@ -148,6 +209,13 @@ def bootstrap_group_key(metric: MetricsBasemodel) -> Optional[tuple]:
         quantile_key,
         boot.include_value_time,
         fields,
+        # The guards must be part of the key. create_shared_bootstrap_func
+        # reads them from metrics[0].bootstrap, so two configs differing only
+        # in a guard would otherwise share a group and the first metric's
+        # thresholds would silently apply to the rest.
+        boot.minimum_sample_size,
+        boot.minimum_mean,
+        boot.minimum_variance,
     )
 
     # Method-specific extra fields
@@ -239,25 +307,16 @@ def _make_bs_object(boot, args):
 
 def create_shared_bootstrap_func(
     metrics: List[MetricsBasemodel],
-    minimum_sample_size: int = 30,
-    minimum_mean: float = 0.01,
-    minimum_variance: float = 0.000025,
 ) -> Callable:
     """Create a single bootstrap UDF that evaluates multiple metrics per draw.
 
     All metrics in *metrics* must share the same bootstrap configuration
-    (same class, reps, seed, block_size, quantiles, and input fields).
+    (same class, reps, seed, block_size, quantiles, guards, and input fields).
 
     Parameters
     ----------
     metrics : List[MetricsBasemodel]
         Metrics sharing the same bootstrap config.
-    minimum_sample_size : int, optional
-        Minimum sample count to run bootstrap. Default 30.
-    minimum_mean : float, optional
-        Minimum mean value of primary series to run bootstrap. Default 0.01.
-    minimum_variance : float, optional
-        Minimum variance of primary series to run bootstrap. Default 0.000025.
 
     Returns
     -------
@@ -266,6 +325,13 @@ def create_shared_bootstrap_func(
     """
     # Reference bootstrap config from the first metric (all are equivalent).
     ref_boot = metrics[0].bootstrap
+
+    # Quality guards come from the bootstrap config rather than this call:
+    # they describe the resampling, and bootstrap_group_key already keys
+    # groups on the config, so metrics in a group necessarily share them.
+    minimum_sample_size = ref_boot.minimum_sample_size
+    minimum_mean = ref_boot.minimum_mean
+    minimum_variance = ref_boot.minimum_variance
 
     # Build per-metric inner functions once at UDF-creation time.
     metric_funcs = [m.func(m) for m in metrics]
@@ -305,7 +371,7 @@ def create_shared_bootstrap_func(
 
         if _can_use_vectorized_engine(ref_boot, metrics):
             return compute_vectorized_shared_bootstrap(
-                metrics, args, bs, ref_boot.reps, quantiles
+                metrics, metric_funcs, args, bs, ref_boot.reps, quantiles
             )
 
         # Each draw: evaluate ALL metric functions and return a list.
@@ -317,15 +383,7 @@ def create_shared_bootstrap_func(
         # results shape: (reps, N_metrics)
         results = bs.apply(combined_func, ref_boot.reps)
 
-        combined_dict: Dict[str, Any] = {}
-        for i, name in enumerate(output_names):
-            if quantiles is None:
-                combined_dict[name] = np.asarray(results[:, i], dtype=float).tolist()
-            else:
-                combined_dict.update(
-                    _calculate_quantiles(name, results[:, i], quantiles)
-                )
-        return combined_dict
+        return assemble_bootstrap_output(output_names, results, quantiles)
 
     return shared_bootstrap_func
 
@@ -347,6 +405,14 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
 
     If ``model.bootstrap.block_size`` is ``None``, the block size is estimated
     using ``arch.bootstrap.optimal_block_length`` (``b_cb`` column).
+
+    Not used by the aggregation pipeline. ``format.py`` routes every bootstrap
+    group -- including groups of one -- through
+    ``create_shared_bootstrap_func``, so this is retained as the public
+    ``Bootstrappers.*.func`` field default (frozen, see
+    ``models/bootstrap.py``), for the autodoc page, and as an independent
+    reference implementation the equivalence tests compare against. It has no
+    sample-size/mean/variance quality guards, unlike the shared path.
     """
     logger.debug("Building the Circular Block bootstrap func.")
 
@@ -388,7 +454,16 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
 
 
 def create_gumboot_func(model: MetricsBasemodel) -> Callable:
-    """Create the Gumboot bootstrap function."""
+    """Create the Gumboot bootstrap function.
+
+    Not used by the aggregation pipeline. ``format.py`` routes every bootstrap
+    group -- including groups of one -- through
+    ``create_shared_bootstrap_func``, so this is retained as the public
+    ``Bootstrappers.*.func`` field default (frozen, see
+    ``models/bootstrap.py``), for the autodoc page, and as an independent
+    reference implementation the equivalence tests compare against. It has no
+    sample-size/mean/variance quality guards, unlike the shared path.
+    """
     logger.debug("Building the Gumboot bootstrap func.")
 
     # lazy import to improve performance
@@ -429,6 +504,14 @@ def create_stationary_func(model: MetricsBasemodel) -> Callable:
 
     If ``model.bootstrap.block_size`` is ``None``, the block size is estimated
     using ``arch.bootstrap.optimal_block_length`` (``b_sb`` column).
+
+    Not used by the aggregation pipeline. ``format.py`` routes every bootstrap
+    group -- including groups of one -- through
+    ``create_shared_bootstrap_func``, so this is retained as the public
+    ``Bootstrappers.*.func`` field default (frozen, see
+    ``models/bootstrap.py``), for the autodoc page, and as an independent
+    reference implementation the equivalence tests compare against. It has no
+    sample-size/mean/variance quality guards, unlike the shared path.
     """
     logger.debug("Building the Stationary bootstrap func.")
 

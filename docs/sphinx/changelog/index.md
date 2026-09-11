@@ -3,6 +3,46 @@
 ## Unreleased
 
 ### Breaking Changes
+- **Metrics that depend on `value_time` can no longer be bootstrapped.** `MaxValueTimeDelta`,
+  `AnnualPeakRelativeBias`, `MaxValueTime`, `CenterOfTiming` and
+  `StandardDeviationOfTiming` now raise a `ValueError` if given a `bootstrap` config.
+  Resampling reorders and repeats observations, so the time axis these metrics are defined on
+  no longer corresponds to the values beside it — the result is undefined rather than merely
+  imprecise. The combination did not work before either, it just failed inconsistently:
+  `MaxValueTimeDelta` and `MaxValueTime` raised, while the other three returned numbers
+  computed on a scrambled time axis. Under `Gumboot` all five raised, because the bootstrapper
+  consumes the trailing `value_time` argument for its own water-year blocking and never
+  forwards it to the metric. Supporting these under `Gumboot` — where water-year resampling
+  *does* preserve within-year time structure — would require plumbing `value_time` through to
+  the metric and reconstructing the resampled timestamps, and is not part of this change.
+- **Non-finite values are now dropped from every metric, not just transformed ones.**
+  `deterministic_funcs._transform` used to drop non-finite `(primary, secondary)` pairs only
+  when a `transform` was set, making it the one metric path in TEEHR that kept them. What that
+  meant in practice depended on which NumPy call a metric happened to use, because the
+  closures receive `pd.Series`: `np.sum`/`mean`/`std`/`min`/`max` dispatch to pandas and skip
+  NaN, while `np.median`/`np.cov`/`np.corrcoef` propagate it. So `relative_mean` ignored a gap
+  while `pearson_correlation` returned NaN for the same input, and `len(p)` in the
+  mean-error family counted rows the reduction above it had just skipped. Dropping is now
+  unconditional, matching `signature_funcs` and the Spark-native engine, which both already
+  did this. **Metric values change for any evaluation with gaps in the joined timeseries**,
+  and the ME/MAE/MSE/RMSE denominators are now the valid-pair count rather than the raw row
+  count.
+- **`pearson_correlation` and `r_squared` with `add_epsilon=True` return corrected values.**
+  That branch divided a `ddof=1` covariance (`np.cov`'s default) by `ddof=0` standard
+  deviations. Those do not cancel, so the result was `r * n/(n-1)` — which exceeds 1.0 on
+  small well-correlated samples (1.110 at n=10) and is therefore not a correlation
+  coefficient at all. Both paths now use a consistent `ddof=0`, matching the Spark-native
+  engine, which already paired `covar_pop` with `stddev_pop`. Values shift by `n/(n-1)` for
+  `pearson_correlation` and `(n/(n-1))²` for `r_squared`; the `add_epsilon=False` branch
+  (`np.corrcoef`) was already correct and is unchanged.
+- **Bootstrap quality guards now apply to single-metric requests.** The sample-size (n < 30),
+  mean (< 0.01) and variance (< 2.5e-5) guards lived on the shared-bootstrap path, which
+  groups of one bypassed. One bootstrapped metric would therefore compute on a 5-sample group
+  while the same metric requested alongside a second one returned nulls for both. All
+  bootstrap groups now take the same path, so small or degenerate groups that previously
+  returned a value will return null. Note a "group of one" is a *bootstrap-config* group —
+  metrics with different seeds, reps, quantiles or input fields do not share one, so several
+  bootstrapped metrics can still produce several singleton groups.
 - **`ForecastLeadTimeBins` lead time bins are now start-exclusive and end-inclusive**
   (`closed="right"`, the new default). A lead time of exactly one bin width now falls in the
   *first* bin, so an 18-hour forecast binned at 6 hours yields three bins covering hours
@@ -19,11 +59,50 @@
   `start_inclusive` / `end_exclusive` spellings are still accepted, but they name a
   behaviour that `closed` now controls, so the generic keys are preferred.
 
+### Added
+- `DeterministicMetrics.VariabilityRatio` is now reachable. The metric was implemented,
+  announced in a previous release, documented in the user guide (with a `:class:` reference to
+  `teehr.DeterministicMetrics.VariabilityRatio`), tested for Spark/pandas parity and supported
+  on the Spark-native path — but was never added to the `DeterministicMetrics` container, so
+  following the documentation raised `AttributeError`. Its `display_name` is corrected from
+  "Variance Ratio" to "Variability Ratio", since the formula is a ratio of standard
+  deviations. It also gains a vectorized bootstrap kernel. Note its formula is identical to
+  `RelativeStandardDeviation`; whether the two should remain separate metrics is tracked
+  separately.
+- Bootstrap quality guards are now configurable on the `Bootstrappers` models:
+  `minimum_sample_size` (default 30), `minimum_mean` (0.01) and `minimum_variance`
+  (0.000025). A group failing any of them returns null for every metric sharing the config.
+  The thresholds were previously hardcoded with no user-facing override. They live on the
+  bootstrap config rather than the aggregation call because that is what they describe, and
+  because `bootstrap_group_key` already keys groups on the config — so they are now part of
+  that key, and two configs differing only in a guard no longer share a group. Note that for
+  `Gumboot` the meaningful sample size is the number of water years rather than timesteps,
+  while the guard measures input series length, so callers resampling few water years may
+  want to raise `minimum_sample_size` explicitly.
+
 ### Changed
+- **Bootstrapped metrics now use the vectorized engine by default**, roughly 19x faster than
+  the per-replicate loop for a group of covered metrics (measured at n=1000, reps=1000). Set
+  `TEEHR_BOOTSTRAP_ENGINE=legacy` to fall back; on a Spark cluster that must be set on the
+  executors (`spark.executorEnv.TEEHR_BOOTSTRAP_ENGINE`), since the check runs inside the
+  pandas UDF. The two engines are numerically identical — verified bit-for-bit at reps=1000,
+  and to ~1e-15 once input dtype is held equal.
+- The vectorized bootstrap covers 27 metrics, up from 9: 21 of 31 deterministic and 6 of 10
+  signature. Metrics without a kernel now fall back **per metric** rather than forcing their
+  whole bootstrap group onto the legacy loop, which previously cost a mixed group ~8x.
+- Bootstrapped metrics accumulate in float64. Values are stored as float32, and the legacy
+  loop reduced in float32; results can therefore differ in the last couple of float32 ULPs
+  from previous releases (more under a `log` transform, which amplifies the input error).
 - `unpack_sdf_dict_columns` accepts an optional `key_list` argument to expand a MapType column without reading its keys from the data.
 - `unpack_sdf_dict_columns` raises a clear `ValueError` when asked to unpack a non-MapType column, instead of an `AttributeError`.
 
 ### Fixed
+- A repeated bootstrap quantile (e.g. `quantiles=[0.5, 0.50]`) no longer raises
+  `DUPLICATED_MAP_KEY` when the shared-bootstrap map is expanded. The UDF's dict collapses the
+  repeat, but the map reconstruction emitted the key twice.
+- A bootstrapped threshold metric with `threshold_field_name=None` now raises the same
+  explicit `ValueError` as the non-bootstrap path, instead of an opaque `TypeError` from
+  inside the UDF.
 - A forecast lead time that falls outside every bin now yields NULL instead of being folded
   into the first bin. Previously the uniform-bin path cast a truncating division, so a
   negative lead time silently landed in bin 0.
