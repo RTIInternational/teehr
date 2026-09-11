@@ -1,0 +1,58 @@
+﻿PrimaryTimeseriesTable
+======================
+
+.. currentmodule:: teehr.evaluation.tables.primary_timeseries_table
+
+.. autoclass:: PrimaryTimeseriesTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~PrimaryTimeseriesTable.add_attributes
+      ~PrimaryTimeseriesTable.add_calculated_fields
+      ~PrimaryTimeseriesTable.add_geometry
+      ~PrimaryTimeseriesTable.aggregate
+      ~PrimaryTimeseriesTable.delete
+      ~PrimaryTimeseriesTable.distinct_values
+      ~PrimaryTimeseriesTable.drop
+      ~PrimaryTimeseriesTable.filter
+      ~PrimaryTimeseriesTable.load_csv
+      ~PrimaryTimeseriesTable.load_dataframe
+      ~PrimaryTimeseriesTable.load_fews_xml
+      ~PrimaryTimeseriesTable.load_netcdf
+      ~PrimaryTimeseriesTable.load_parquet
+      ~PrimaryTimeseriesTable.order_by
+      ~PrimaryTimeseriesTable.to_geopandas
+      ~PrimaryTimeseriesTable.to_pandas
+      ~PrimaryTimeseriesTable.to_sdf
+      ~PrimaryTimeseriesTable.validate
+      ~PrimaryTimeseriesTable.write
+      ~PrimaryTimeseriesTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PrimaryTimeseriesTable.foreign_keys
+      ~PrimaryTimeseriesTable.is_core_table
+      ~PrimaryTimeseriesTable.primary_location_id_field
+      ~PrimaryTimeseriesTable.secondary_location_id_field
+      ~PrimaryTimeseriesTable.strict_validation
+      ~PrimaryTimeseriesTable.table_name
+      ~PrimaryTimeseriesTable.uniqueness_fields
+      ~PrimaryTimeseriesTable.validate_filter_field_types
+   
+      ~PrimaryTimeseriesTable.extraction_func
+      ~PrimaryTimeseriesTable.schema_func
+   
+   

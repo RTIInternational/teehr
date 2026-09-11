@@ -1,0 +1,58 @@
+﻿SecondaryTimeseriesTable
+========================
+
+.. currentmodule:: teehr.evaluation.tables.secondary_timeseries_table
+
+.. autoclass:: SecondaryTimeseriesTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SecondaryTimeseriesTable.add_attributes
+      ~SecondaryTimeseriesTable.add_calculated_fields
+      ~SecondaryTimeseriesTable.add_geometry
+      ~SecondaryTimeseriesTable.aggregate
+      ~SecondaryTimeseriesTable.delete
+      ~SecondaryTimeseriesTable.distinct_values
+      ~SecondaryTimeseriesTable.drop
+      ~SecondaryTimeseriesTable.filter
+      ~SecondaryTimeseriesTable.load_csv
+      ~SecondaryTimeseriesTable.load_dataframe
+      ~SecondaryTimeseriesTable.load_fews_xml
+      ~SecondaryTimeseriesTable.load_netcdf
+      ~SecondaryTimeseriesTable.load_parquet
+      ~SecondaryTimeseriesTable.order_by
+      ~SecondaryTimeseriesTable.to_geopandas
+      ~SecondaryTimeseriesTable.to_pandas
+      ~SecondaryTimeseriesTable.to_sdf
+      ~SecondaryTimeseriesTable.validate
+      ~SecondaryTimeseriesTable.write
+      ~SecondaryTimeseriesTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SecondaryTimeseriesTable.foreign_keys
+      ~SecondaryTimeseriesTable.is_core_table
+      ~SecondaryTimeseriesTable.primary_location_id_field
+      ~SecondaryTimeseriesTable.secondary_location_id_field
+      ~SecondaryTimeseriesTable.strict_validation
+      ~SecondaryTimeseriesTable.table_name
+      ~SecondaryTimeseriesTable.uniqueness_fields
+      ~SecondaryTimeseriesTable.validate_filter_field_types
+   
+      ~SecondaryTimeseriesTable.extraction_func
+      ~SecondaryTimeseriesTable.schema_func
+   
+   

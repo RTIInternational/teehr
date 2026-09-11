@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.flow\_duration\_curve\_slope
+===========================================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: flow_duration_curve_slope

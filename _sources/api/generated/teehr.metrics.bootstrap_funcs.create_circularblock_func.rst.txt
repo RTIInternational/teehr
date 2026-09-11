@@ -1,0 +1,6 @@
+teehr.metrics.bootstrap\_funcs.create\_circularblock\_func
+==========================================================
+
+.. currentmodule:: teehr.metrics.bootstrap_funcs
+
+.. autofunction:: create_circularblock_func

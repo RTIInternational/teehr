@@ -1,0 +1,56 @@
+﻿LocationCrosswalkTable
+======================
+
+.. currentmodule:: teehr.evaluation.tables.location_crosswalk_table
+
+.. autoclass:: LocationCrosswalkTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LocationCrosswalkTable.add_attributes
+      ~LocationCrosswalkTable.add_calculated_fields
+      ~LocationCrosswalkTable.add_geometry
+      ~LocationCrosswalkTable.aggregate
+      ~LocationCrosswalkTable.delete
+      ~LocationCrosswalkTable.distinct_values
+      ~LocationCrosswalkTable.drop
+      ~LocationCrosswalkTable.filter
+      ~LocationCrosswalkTable.load_csv
+      ~LocationCrosswalkTable.load_dataframe
+      ~LocationCrosswalkTable.load_parquet
+      ~LocationCrosswalkTable.order_by
+      ~LocationCrosswalkTable.to_geopandas
+      ~LocationCrosswalkTable.to_pandas
+      ~LocationCrosswalkTable.to_sdf
+      ~LocationCrosswalkTable.validate
+      ~LocationCrosswalkTable.write
+      ~LocationCrosswalkTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LocationCrosswalkTable.foreign_keys
+      ~LocationCrosswalkTable.is_core_table
+      ~LocationCrosswalkTable.primary_location_id_field
+      ~LocationCrosswalkTable.secondary_location_id_field
+      ~LocationCrosswalkTable.strict_validation
+      ~LocationCrosswalkTable.table_name
+      ~LocationCrosswalkTable.uniqueness_fields
+      ~LocationCrosswalkTable.validate_filter_field_types
+   
+      ~LocationCrosswalkTable.extraction_func
+      ~LocationCrosswalkTable.schema_func
+   
+   

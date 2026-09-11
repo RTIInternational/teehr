@@ -1,0 +1,33 @@
+﻿SecondaryTimeseriesView
+=======================
+
+.. currentmodule:: teehr.evaluation.views.secondary_timeseries_view
+
+.. autoclass:: SecondaryTimeseriesView
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SecondaryTimeseriesView.add_attributes
+      ~SecondaryTimeseriesView.add_calculated_fields
+      ~SecondaryTimeseriesView.add_geometry
+      ~SecondaryTimeseriesView.aggregate
+      ~SecondaryTimeseriesView.filter
+      ~SecondaryTimeseriesView.order_by
+      ~SecondaryTimeseriesView.to_geopandas
+      ~SecondaryTimeseriesView.to_pandas
+      ~SecondaryTimeseriesView.to_sdf
+      ~SecondaryTimeseriesView.write
+      ~SecondaryTimeseriesView.write_to
+   
+   
+
+   
+   
+   

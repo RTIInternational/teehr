@@ -1,0 +1,6 @@
+teehr.metrics.deterministic\_funcs.relative\_median
+===================================================
+
+.. currentmodule:: teehr.metrics.deterministic_funcs
+
+.. autofunction:: relative_median
