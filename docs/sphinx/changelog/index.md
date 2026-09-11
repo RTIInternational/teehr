@@ -60,6 +60,15 @@
   behaviour that `closed` now controls, so the generic keys are preferred.
 
 ### Added
+- `DeterministicMetrics.VariabilityRatio` is now reachable. The metric was implemented,
+  announced in a previous release, documented in the user guide (with a `:class:` reference to
+  `teehr.DeterministicMetrics.VariabilityRatio`), tested for Spark/pandas parity and supported
+  on the Spark-native path — but was never added to the `DeterministicMetrics` container, so
+  following the documentation raised `AttributeError`. Its `display_name` is corrected from
+  "Variance Ratio" to "Variability Ratio", since the formula is a ratio of standard
+  deviations. It also gains a vectorized bootstrap kernel. Note its formula is identical to
+  `RelativeStandardDeviation`; whether the two should remain separate metrics is tracked
+  separately.
 - Bootstrap quality guards are now configurable on the `Bootstrappers` models:
   `minimum_sample_size` (default 30), `minimum_mean` (0.01) and `minimum_variance`
   (0.000025). A group failing any of them returns null for every metric sharing the config.

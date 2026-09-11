@@ -441,6 +441,7 @@ class DeterministicMetrics:
     RelativeMinimum = RelativeMinimum
     RelativeMaximum = RelativeMaximum
     RelativeStandardDeviation = RelativeStandardDeviation
+    VariabilityRatio = VariabilityRatio
 
     # Correlation metrics
     PearsonCorrelation = PearsonCorrelation

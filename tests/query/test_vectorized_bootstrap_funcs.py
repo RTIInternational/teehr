@@ -250,6 +250,7 @@ def test_registry_contents_are_deliberate():
         "RelativeBias", "RelativeMaximum", "RelativeMean", "RelativeMedian",
         "RelativeMinimum", "RelativeStandardDeviation",
         "RootMeanSquareError", "RootMeanStandardDeviationRatio", "Rsquared",
+        "VariabilityRatio",
         # Signature (single-field)
         "Average", "Count", "Maximum", "Minimum", "Sum", "Variance",
     }

@@ -542,6 +542,10 @@ VECTORIZED_METRIC_FUNCS = {
     "MeanAbsoluteRelativeError": _vec_mean_absolute_relative_error,
     # multiplicative_bias_inner and relative_mean_inner are the same formula.
     "MultiplicativeBias": _vec_relative_mean,
+    # Likewise variability_ratio_inner and relative_standard_deviation_inner.
+    # Tracked separately as a duplicate-metric question; registering the
+    # kernel keeps the two from diverging in the meantime.
+    "VariabilityRatio": _vec_relative_standard_deviation,
     "Rsquared": _vec_r_squared,
     "NormalizedNashSutcliffeEfficiency": (
         _vec_nash_sutcliffe_efficiency_normalized
