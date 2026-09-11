@@ -4,6 +4,8 @@ This module defines deterministic metrics using a compact class-variable pattern
 Each metric class inherits common fields from DeterministicBasemodel and only
 specifies metric-specific defaults via class variables.
 """
+from typing import ClassVar, List
+
 from pyspark.sql import types as T
 
 from pydantic import Field
@@ -291,6 +293,9 @@ class ConfusionMatrix(ThresholdBasemodel):
     return_type: T.DataType = Field(
         default=T.MapType(T.StringType(), T.IntegerType()), frozen=True
     )
+    # Keys emitted by both engines: metric_funcs.confusion_matrix and the
+    # Spark-native F.create_map() equivalent in metrics.spark_native.
+    static_map_keys: ClassVar[List[str]] = ["TP", "TN", "FP", "FN"]
 
 
 class FalseAlarmRatio(ThresholdBasemodel):

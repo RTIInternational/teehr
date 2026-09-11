@@ -1,5 +1,21 @@
 # Release Notes
 
+## Unreleased
+
+### Added
+- None
+
+### Changed
+- `unpack_sdf_dict_columns` accepts an optional `key_list` argument to expand a MapType column without reading its keys from the data.
+- `unpack_sdf_dict_columns` raises a clear `ValueError` when asked to unpack a non-MapType column, instead of an `AttributeError`.
+
+### Fixed
+- Unpacking bootstrap quantile results (`unpack_results=True`) no longer triggers an eager Spark action per metric inside `aggregate()`. The map keys are now derived from the metric configuration, so the upstream bootstrap DAG is no longer re-executed once per metric.
+- Unpacked quantile columns are no longer silently dropped when the result is empty or the first row's map is null.
+
+### Dependencies
+- None
+
 ## 0.7.0 - 2026-09-04
 
 ### Breaking Changes

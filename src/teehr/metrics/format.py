@@ -13,6 +13,7 @@ from teehr.metrics.bootstrap_funcs import (
     create_shared_bootstrap_func,
 )
 from teehr.querying.utils import (
+    bootstrap_quantile_key,
     validate_fields_exist,
     parse_fields_to_list
 )
@@ -151,7 +152,7 @@ def _materialize_shared_bootstrap_columns(sdf, expansions):
             else:
                 key_value_pairs = []
                 for q in quantiles:
-                    key = f"{name}_{q}"
+                    key = bootstrap_quantile_key(name, q)
                     key_value_pairs.extend([
                         F.lit(key),
                         F.col(temp_col).getItem(key),
