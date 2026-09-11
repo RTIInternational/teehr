@@ -1035,6 +1035,54 @@ def test_singleton_group_is_routed_through_the_shared_path(
     ]
 
 
+@pytest.mark.parametrize("cls", [
+    DeterministicMetrics.MaxValueTimeDelta,
+    DeterministicMetrics.AnnualPeakRelativeBias,
+    Signatures.MaxValueTime,
+    Signatures.CenterOfTiming,
+    Signatures.StandardDeviationOfTiming,
+])
+def test_value_time_metrics_reject_bootstrap(cls):
+    """value_time-dependent metrics must refuse a bootstrap config.
+
+    Resampling reorders and repeats observations, so the time axis these are
+    defined on no longer lines up with the values beside it. The combination
+    never worked -- it failed inconsistently: MaxValueTimeDelta and
+    MaxValueTime raised, while AnnualPeakRelativeBias, CenterOfTiming and
+    StandardDeviationOfTiming returned numbers computed on a scrambled time
+    axis. Under Gumboot all five raised, because _make_bs_object peels the
+    trailing value_time argument off for water-year blocking and never
+    forwards it to the metric.
+    """
+    boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
+
+    with pytest.raises(ValueError, match="cannot be bootstrapped"):
+        cls(bootstrap=boot)
+
+    # Also caught on assignment, which is how much of this suite builds them.
+    metric = cls()
+    with pytest.raises(ValueError, match="cannot be bootstrapped"):
+        metric.bootstrap = boot
+
+
+def test_value_time_metrics_still_work_without_bootstrap():
+    """The guard must not affect the un-bootstrapped use of these metrics."""
+    for cls in (
+        DeterministicMetrics.MaxValueTimeDelta,
+        Signatures.CenterOfTiming,
+    ):
+        metric = cls()
+        assert metric.bootstrap is None
+        assert metric.value_time_field_name == "value_time"
+
+    # And a bootstrap on a metric with no value_time dependence is unaffected.
+    boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
+    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    assert kge.bootstrap is boot
+    fdc = Signatures.FlowDurationCurveSlope(bootstrap=boot)
+    assert fdc.bootstrap is boot
+
+
 def test_singleton_group_now_gets_quality_guards():
     """Groups of one are now subject to the sample-size/mean/variance guards.
 

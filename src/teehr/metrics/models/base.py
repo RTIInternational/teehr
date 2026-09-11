@@ -273,6 +273,50 @@ class DeterministicBasemodel(MetricsBasemodel):
             self.input_field_names = fields
         return self
 
+    @model_validator(mode="after")
+    def reject_bootstrap_on_value_time_metrics(self):
+        """Refuse to bootstrap a metric that depends on ``value_time``.
+
+        Resampling destroys the time axis these metrics are defined on. A
+        stationary or circular-block draw concatenates blocks in a new order
+        and repeats some of them, so "the time of the peak", "the difference
+        between the two peak times" or "the centre of timing" are computed
+        over a series whose timestamps no longer correspond to the values
+        beside them. The answer is not merely imprecise, it is undefined.
+
+        The combination did not work before this guard either -- it just
+        failed inconsistently. Measured across the five affected metrics:
+
+            metric                      Stationary       Gumboot
+            MaxValueTimeDelta           AttributeError   TypeError
+            MaxValueTime                TypeError        TypeError
+            AnnualPeakRelativeBias      "succeeded"      TypeError
+            CenterOfTiming              "succeeded"      TypeError
+            StandardDeviationOfTiming   "succeeded"      TypeError
+
+        Three of them returned numbers computed on a scrambled time axis,
+        which is worse than crashing. Under Gumboot all five raise, because
+        ``_make_bs_object`` peels the trailing ``value_time`` argument off for
+        its own water-year blocking and never forwards it to the metric.
+
+        That last point is why Gumboot is not carved out as an exception here
+        even though water-year resampling *does* preserve within-year time
+        structure: supporting it needs ``value_time`` plumbed through to the
+        closure and the resampled timestamps reconstructed, which is a feature
+        rather than a guard. See the note in the changelog.
+        """
+        if getattr(self, "bootstrap", None) is None:
+            return self
+        if self.value_time_field_name is None:
+            return self
+        raise ValueError(
+            f"{type(self).__name__} depends on "
+            f"'{self.value_time_field_name}' and cannot be bootstrapped: "
+            "resampling reorders and repeats observations, so the time axis "
+            "the metric is defined on no longer matches its values. Request "
+            "this metric without a bootstrap config."
+        )
+
     def get_input_field_names(self) -> List[Union[str, StrEnum]]:
         """Return concrete ordered input field names for downstream calls."""
         if self.input_field_names is None:

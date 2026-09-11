@@ -3,6 +3,18 @@
 ## Unreleased
 
 ### Breaking Changes
+- **Metrics that depend on `value_time` can no longer be bootstrapped.** `MaxValueTimeDelta`,
+  `AnnualPeakRelativeBias`, `MaxValueTime`, `CenterOfTiming` and
+  `StandardDeviationOfTiming` now raise a `ValueError` if given a `bootstrap` config.
+  Resampling reorders and repeats observations, so the time axis these metrics are defined on
+  no longer corresponds to the values beside it — the result is undefined rather than merely
+  imprecise. The combination did not work before either, it just failed inconsistently:
+  `MaxValueTimeDelta` and `MaxValueTime` raised, while the other three returned numbers
+  computed on a scrambled time axis. Under `Gumboot` all five raised, because the bootstrapper
+  consumes the trailing `value_time` argument for its own water-year blocking and never
+  forwards it to the metric. Supporting these under `Gumboot` — where water-year resampling
+  *does* preserve within-year time structure — would require plumbing `value_time` through to
+  the metric and reconstructing the resampled timestamps, and is not part of this change.
 - **Non-finite values are now dropped from every metric, not just transformed ones.**
   `deterministic_funcs._transform` used to drop non-finite `(primary, secondary)` pairs only
   when a `transform` was set, making it the one metric path in TEEHR that kept them. What that
