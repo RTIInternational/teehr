@@ -74,6 +74,37 @@ def build_index_matrix(bs: Any, reps: int) -> np.ndarray:
     return np.stack([np.asarray(bs.update_indices()) for _ in range(reps)])
 
 
+def _apply_transform_1d(
+    x: np.ndarray,
+    transform: TransformEnum,
+    add_epsilon: bool,
+) -> np.ndarray:
+    """Apply one transform to one matrix, mirroring the scalar ``match`` block.
+
+    Shared by the two-field and single-field transforms so the branch list
+    cannot drift between them. Never mutates ``x``.
+    """
+    if transform == TransformEnum.log:
+        if add_epsilon:
+            x = x + EPSILON
+        return np.log(x)
+    elif transform == TransformEnum.sqrt:
+        return np.sqrt(x)
+    elif transform == TransformEnum.square:
+        return np.square(x)
+    elif transform == TransformEnum.cube:
+        return np.power(x, 3)
+    elif transform == TransformEnum.exp:
+        return np.exp(x)
+    elif transform == TransformEnum.inv:
+        if add_epsilon:
+            x = x + EPSILON
+        return 1.0 / x
+    elif transform == TransformEnum.abs:
+        return np.abs(x)
+    raise ValueError(f"Unsupported transform: {transform}")
+
+
 def _vectorized_transform(
     p: np.ndarray,
     s: np.ndarray,
@@ -102,35 +133,8 @@ def _vectorized_transform(
     add_epsilon = getattr(model, "add_epsilon", False)
 
     if transform is not None:
-        if transform == TransformEnum.log:
-            if add_epsilon:
-                p = p + EPSILON
-                s = s + EPSILON
-            p = np.log(p)
-            s = np.log(s)
-        elif transform == TransformEnum.sqrt:
-            p = np.sqrt(p)
-            s = np.sqrt(s)
-        elif transform == TransformEnum.square:
-            p = np.square(p)
-            s = np.square(s)
-        elif transform == TransformEnum.cube:
-            p = np.power(p, 3)
-            s = np.power(s, 3)
-        elif transform == TransformEnum.exp:
-            p = np.exp(p)
-            s = np.exp(s)
-        elif transform == TransformEnum.inv:
-            if add_epsilon:
-                p = p + EPSILON
-                s = s + EPSILON
-            p = 1.0 / p
-            s = 1.0 / s
-        elif transform == TransformEnum.abs:
-            p = np.abs(p)
-            s = np.abs(s)
-        else:
-            raise ValueError(f"Unsupported transform: {transform}")
+        p = _apply_transform_1d(p, transform, add_epsilon)
+        s = _apply_transform_1d(s, transform, add_epsilon)
 
     invalid = ~(np.isfinite(p) & np.isfinite(s))
     if np.any(invalid):
@@ -138,6 +142,45 @@ def _vectorized_transform(
         s = np.where(invalid, np.nan, s)
 
     return p, s
+
+
+def _vectorized_signature_transform(
+    p: np.ndarray,
+    model: MetricsBasemodel,
+) -> np.ndarray:
+    """Row-wise equivalent of ``signature_funcs._transform``.
+
+    Signature metrics are single-field, so the mask depends on ``p`` alone --
+    that is the only difference from ``_vectorized_transform``, which masks
+    pairwise. Masking non-finite values is required rather than optional: the
+    scalar path drops them (``signature_funcs._transform``), so leaving an inf
+    in place would let ``nansum``/``nanmax`` see a value the scalar path never
+    does.
+    """
+    transform = getattr(model, "transform", None)
+    if transform is not None:
+        p = _apply_transform_1d(
+            p, transform, getattr(model, "add_epsilon", False)
+        )
+
+    invalid = ~np.isfinite(p)
+    if np.any(invalid):
+        p = np.where(invalid, np.nan, p)
+
+    return p
+
+
+def _finite_pair_count(p: np.ndarray, s: np.ndarray) -> np.ndarray:
+    """Per-row count of positions finite in both series (or in ``p`` alone).
+
+    This is the row-wise equivalent of ``len(p)`` *after* ``_transform``, which
+    since the unconditional-drop fix is always the count of surviving pairs --
+    so metrics dividing by ``len(...)`` (the ``_mean_error`` family) need this
+    rather than the raw row width.
+    """
+    if s is None:
+        return np.sum(np.isfinite(p), axis=1)
+    return np.sum(np.isfinite(p) & np.isfinite(s), axis=1)
 
 
 def _vec_pearson_r(p: np.ndarray, s: np.ndarray, add_epsilon: bool) -> np.ndarray:
@@ -228,9 +271,14 @@ def _vec_relative_bias(p, s, model) -> np.ndarray:
     return diff_sum / p_sum
 
 
-def _vec_nash_sutcliffe_efficiency(p, s, model) -> np.ndarray:
+def _vec_nse_parts(p, s, model) -> tuple:
+    """Numerator, denominator and NaN guard shared by NSE and normalized NSE.
+
+    The two scalar closures are identical up to their final expression, so
+    sharing the parts keeps the guards from drifting apart.
+    """
     # Legacy guards (per-row, before transform): empty or all-zero-sum rows -> NaN.
-    n_valid = np.sum(np.isfinite(p) & np.isfinite(s), axis=1)
+    n_valid = _finite_pair_count(p, s)
     p_sum_raw = np.nansum(p, axis=1)
     s_sum_raw = np.nansum(s, axis=1)
     guard_nan = (n_valid == 0) | (p_sum_raw == 0) | (s_sum_raw == 0)
@@ -242,10 +290,24 @@ def _vec_nash_sutcliffe_efficiency(p, s, model) -> np.ndarray:
     if model.add_epsilon:
         denominator = denominator + EPSILON
 
+    return numerator, denominator, guard_nan | (denominator == 0)
+
+
+def _vec_nash_sutcliffe_efficiency(p, s, model) -> np.ndarray:
+    numerator, denominator, guard_nan = _vec_nse_parts(p, s, model)
     with np.errstate(invalid="ignore", divide="ignore"):
         result = 1.0 - numerator / denominator
-    result = np.where(guard_nan | (denominator == 0), np.nan, result)
-    return result
+    return np.where(guard_nan, np.nan, result)
+
+
+def _vec_nash_sutcliffe_efficiency_normalized(p, s, model) -> np.ndarray:
+    numerator, denominator, guard_nan = _vec_nse_parts(p, s, model)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        # Written as the scalar closure writes it (1/(1 + num/den)) rather than
+        # the algebraically equal 1/(2 - NSE): same value, but bit-identical to
+        # deterministic_funcs and no second division.
+        result = 1.0 / (1.0 + numerator / denominator)
+    return np.where(guard_nan, np.nan, result)
 
 
 def _vec_kling_gupta_efficiency(p, s, model) -> np.ndarray:
@@ -282,6 +344,184 @@ def _vec_pearson_correlation(p, s, model) -> np.ndarray:
     return _vec_pearson_r(p, s, add_epsilon=model.add_epsilon)
 
 
+def _vec_r_squared(p, s, model) -> np.ndarray:
+    # r_squared_inner is pearson_correlation_inner with the result squared.
+    p, s = _vectorized_transform(p, s, model)
+    return _vec_pearson_r(p, s, add_epsilon=model.add_epsilon) ** 2
+
+
+def _vec_mean_error_core(p, s, model, power=1.0, root=False) -> np.ndarray:
+    """Row-wise ``deterministic_funcs._mean_error`` on transformed matrices.
+
+    Takes ALREADY-transformed inputs, mirroring the scalar helper, which its
+    callers likewise invoke after ``_transform``.
+
+    The denominator is the finite-pair count, not the row width: the scalar
+    helper divides by ``len(y_true)`` *after* ``_transform`` has dropped
+    non-finite pairs.
+    """
+    with np.errstate(invalid="ignore", divide="ignore"):
+        me = (
+            np.nansum(np.abs(p - s) ** power, axis=1)
+            / _finite_pair_count(p, s)
+        )
+    return np.sqrt(me) if root else me
+
+
+def _vec_mean_error(p, s, model) -> np.ndarray:
+    # mean_error_inner uses np.sum(s - p)/len(p) directly, NOT _mean_error --
+    # note it is signed, and s - p rather than |p - s|.
+    p, s = _vectorized_transform(p, s, model)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return np.nansum(s - p, axis=1) / _finite_pair_count(p, s)
+
+
+def _vec_mean_absolute_error(p, s, model) -> np.ndarray:
+    p, s = _vectorized_transform(p, s, model)
+    return _vec_mean_error_core(p, s, model)
+
+
+def _vec_mean_squared_error(p, s, model) -> np.ndarray:
+    p, s = _vectorized_transform(p, s, model)
+    return _vec_mean_error_core(p, s, model, power=2.0)
+
+
+def _vec_root_mean_squared_error(p, s, model) -> np.ndarray:
+    p, s = _vectorized_transform(p, s, model)
+    return _vec_mean_error_core(p, s, model, power=2.0, root=True)
+
+
+def _vec_root_mean_standard_deviation_ratio(p, s, model) -> np.ndarray:
+    # Transforms ONCE then calls the core helper, mirroring
+    # root_mean_standard_deviation_ratio_inner calling _root_mean_squared_error
+    # (the helper that does no transform of its own). Delegating to
+    # _vec_root_mean_squared_error instead would transform twice.
+    p, s = _vectorized_transform(p, s, model)
+    rmse = _vec_mean_error_core(p, s, model, power=2.0, root=True)
+    p_std = np.nanstd(p, axis=1)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        if model.add_epsilon:
+            return rmse / (p_std + EPSILON)
+        return rmse / p_std
+
+
+def _vec_mean_absolute_relative_error(p, s, model) -> np.ndarray:
+    p, s = _vectorized_transform(p, s, model)
+    numerator = np.nansum(np.abs(s - p), axis=1)
+    p_sum = np.nansum(p, axis=1)          # np.sum(p): p only, not pairwise
+    with np.errstate(invalid="ignore", divide="ignore"):
+        if model.add_epsilon:
+            return numerator / (p_sum + EPSILON)
+        return numerator / p_sum
+
+
+def _vec_max_value_delta(p, s, model) -> np.ndarray:
+    p, s = _vectorized_transform(p, s, model)
+    return np.nanmax(s, axis=1) - np.nanmax(p, axis=1)
+
+
+def _vec_kling_gupta_efficiency_mod1(p, s, model) -> np.ndarray:
+    # Legacy guard (pre-transform): zero std on either side -> NaN.
+    guard_nan = (np.nanstd(s, axis=1) == 0) | (np.nanstd(p, axis=1) == 0)
+
+    p, s = _vectorized_transform(p, s, model)
+    r = _vec_pearson_r(p, s, add_epsilon=False)  # always plain corrcoef
+
+    p_std = np.nanstd(p, axis=1)
+    s_std = np.nanstd(s, axis=1)
+    p_mean = np.nanmean(p, axis=1)
+    s_mean = np.nanmean(s, axis=1)
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        if model.add_epsilon:
+            # Mod1's variability ratio is a ratio of coefficients of
+            # variation, unlike kge's ratio of raw standard deviations.
+            var_ratio = (
+                (s_std / (s_mean + EPSILON)) / (p_std / (p_mean + EPSILON))
+            )
+            rel_mean = s_mean / (p_mean + EPSILON)
+        else:
+            var_ratio = (s_std / s_mean) / (p_std / p_mean)
+            rel_mean = s_mean / p_mean
+
+    euclidean = np.sqrt(
+        model.sr * (r - 1.0) ** 2
+        + model.sa * (var_ratio - 1.0) ** 2
+        + model.sb * (rel_mean - 1.0) ** 2
+    )
+    return np.where(guard_nan, np.nan, 1.0 - euclidean)
+
+
+def _vec_kling_gupta_efficiency_mod2(p, s, model) -> np.ndarray:
+    # Legacy guard (pre-transform): zero std on either side -> NaN.
+    guard_nan = (np.nanstd(s, axis=1) == 0) | (np.nanstd(p, axis=1) == 0)
+
+    p, s = _vectorized_transform(p, s, model)
+    r = _vec_pearson_r(p, s, add_epsilon=False)  # always plain corrcoef
+
+    p_std = np.nanstd(p, axis=1)
+    s_std = np.nanstd(s, axis=1)
+    p_mean = np.nanmean(p, axis=1)
+    s_mean = np.nanmean(s, axis=1)
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        if model.add_epsilon:
+            rel_var = s_std / (p_std + EPSILON)
+            bias = ((s_mean - p_mean) ** 2) / ((p_std ** 2) + EPSILON)
+        else:
+            rel_var = s_std / p_std
+            bias = ((s_mean - p_mean) ** 2) / (p_std ** 2)
+
+    euclidean = np.sqrt(
+        model.sr * (r - 1.0) ** 2
+        + model.sa * (rel_var - 1.0) ** 2
+        + model.sb * bias          # NOT squared, unlike the other two terms
+    )
+    return np.where(guard_nan, np.nan, 1.0 - euclidean)
+
+
+# --- Signature kernels -----------------------------------------------------
+#
+# Single-field: `s` is None (see compute_vectorized_shared_bootstrap) and is
+# accepted only to keep one uniform kernel signature across the registry.
+# bootstrap_group_key includes the input-field tuple, so signature metrics form
+# their own groups and can never be mixed with two-field ones.
+
+def _vec_count(p, s, model) -> np.ndarray:
+    """Row-wise ``len(p)`` after the drop.
+
+    Near-degenerate under fixed-size resampling: every draw has the same
+    length, so this varies only with how many non-finite positions a draw
+    happens to hit. Registered anyway because the engine gate is per group --
+    leaving it out would drag a group like {Count, Average, Maximum} entirely
+    onto the per-replicate loop.
+    """
+    return _finite_pair_count(
+        _vectorized_signature_transform(p, model), None
+    ).astype(float)
+
+
+def _vec_minimum(p, s, model) -> np.ndarray:
+    return np.nanmin(_vectorized_signature_transform(p, model), axis=1)
+
+
+def _vec_maximum(p, s, model) -> np.ndarray:
+    return np.nanmax(_vectorized_signature_transform(p, model), axis=1)
+
+
+def _vec_average(p, s, model) -> np.ndarray:
+    return np.nanmean(_vectorized_signature_transform(p, model), axis=1)
+
+
+def _vec_sum(p, s, model) -> np.ndarray:
+    return np.nansum(_vectorized_signature_transform(p, model), axis=1)
+
+
+def _vec_variance(p, s, model) -> np.ndarray:
+    # np.var(Series) dispatches to pandas with ddof=0, so nanvar matches.
+    return np.nanvar(_vectorized_signature_transform(p, model), axis=1)
+
+
 # Registry: metric class name -> vectorized kernel(p_mat, s_mat, model) -> (reps,) array.
 VECTORIZED_METRIC_FUNCS = {
     "RelativeMean": _vec_relative_mean,
@@ -293,6 +533,29 @@ VECTORIZED_METRIC_FUNCS = {
     "NashSutcliffeEfficiency": _vec_nash_sutcliffe_efficiency,
     "KlingGuptaEfficiency": _vec_kling_gupta_efficiency,
     "PearsonCorrelation": _vec_pearson_correlation,
+    # --- Deterministic, row-wise reductions ---
+    "MeanError": _vec_mean_error,
+    "MeanAbsoluteError": _vec_mean_absolute_error,
+    "MeanSquareError": _vec_mean_squared_error,
+    "RootMeanSquareError": _vec_root_mean_squared_error,
+    "RootMeanStandardDeviationRatio": _vec_root_mean_standard_deviation_ratio,
+    "MeanAbsoluteRelativeError": _vec_mean_absolute_relative_error,
+    # multiplicative_bias_inner and relative_mean_inner are the same formula.
+    "MultiplicativeBias": _vec_relative_mean,
+    "Rsquared": _vec_r_squared,
+    "NormalizedNashSutcliffeEfficiency": (
+        _vec_nash_sutcliffe_efficiency_normalized
+    ),
+    "KlingGuptaEfficiencyMod1": _vec_kling_gupta_efficiency_mod1,
+    "KlingGuptaEfficiencyMod2": _vec_kling_gupta_efficiency_mod2,
+    "MaxValueDelta": _vec_max_value_delta,
+    # --- Signature (single-field; the kernel's `s` argument is None) ---
+    "Count": _vec_count,
+    "Minimum": _vec_minimum,
+    "Maximum": _vec_maximum,
+    "Average": _vec_average,
+    "Sum": _vec_sum,
+    "Variance": _vec_variance,
 }
 
 

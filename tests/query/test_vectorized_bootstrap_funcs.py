@@ -18,7 +18,7 @@ from teehr.metrics.bootstrap_funcs import (
     create_shared_bootstrap_func,
 )
 from teehr.metrics.models.bootstrap import Bootstrappers
-from teehr.querying.utils import derive_map_key_list
+from teehr.querying.utils import derive_map_key_list, parse_fields_to_list
 from teehr.metrics.vectorized_bootstrap_funcs import (
     VECTORIZED_METRIC_FUNCS,
     build_index_matrix,
@@ -108,6 +108,15 @@ def _metric_class(name):
     return cls
 
 
+def _is_single_field(metric):
+    """Whether the metric's closure takes only the primary series."""
+    if hasattr(metric, "get_input_field_names"):
+        fields = metric.get_input_field_names()
+    else:
+        fields = metric.input_field_names
+    return len(parse_fields_to_list(fields)) == 1
+
+
 def _gappy_matrices(reps, n, seed=17):
     """Matrices with non-finite values in p and s at DIFFERENT indices.
 
@@ -155,15 +164,130 @@ def test_kernel_matches_scalar_closure_on_gappy_data(metric_name, transform):
 
     p_mat, s_mat = _gappy_matrices(reps, n)
 
-    expected = np.array([
-        scalar_func(pd.Series(p_mat[r]), pd.Series(s_mat[r]))
-        for r in range(reps)
-    ])
-    actual = kernel(p_mat.copy(), s_mat.copy(), metric)
+    # Signature metrics are single-field: the closure takes p alone and the
+    # kernel receives s_mat=None, exactly as
+    # compute_vectorized_shared_bootstrap passes it.
+    if _is_single_field(metric):
+        expected = np.array([
+            scalar_func(pd.Series(p_mat[r])) for r in range(reps)
+        ])
+        actual = kernel(p_mat.copy(), None, metric)
+    else:
+        expected = np.array([
+            scalar_func(pd.Series(p_mat[r]), pd.Series(s_mat[r]))
+            for r in range(reps)
+        ])
+        actual = kernel(p_mat.copy(), s_mat.copy(), metric)
 
     np.testing.assert_allclose(
         actual, expected, rtol=1e-9, atol=1e-12, equal_nan=True
     )
+
+
+@pytest.mark.parametrize("metric_name", sorted(VECTORIZED_METRIC_FUNCS))
+def test_kernels_do_not_mutate_their_inputs(metric_name):
+    """Kernels must treat p_mat/s_mat as read-only.
+
+    compute_vectorized_shared_bootstrap hands the SAME two matrices to every
+    kernel in the group, so one in-place write would silently corrupt every
+    metric evaluated after it. Note the inputs are passed directly here, not
+    copied -- the older kernel tests defensively pass .copy(), which would
+    mask exactly this bug.
+    """
+    metric = _metric_class(metric_name)()
+    kernel = VECTORIZED_METRIC_FUNCS[metric_name]
+    p_mat, s_mat = _gappy_matrices(6, 20)
+    p_ref, s_ref = p_mat.copy(), s_mat.copy()
+
+    if _is_single_field(metric):
+        kernel(p_mat, None, metric)
+    else:
+        kernel(p_mat, s_mat, metric)
+        np.testing.assert_array_equal(s_mat, s_ref)
+    np.testing.assert_array_equal(p_mat, p_ref)
+
+
+def test_registry_entries_are_bootstrap_vectorizable():
+    """Every registry key must name a real metric the kernel contract fits."""
+    for name in sorted(VECTORIZED_METRIC_FUNCS):
+        metric = _metric_class(name)()
+        fields = parse_fields_to_list(
+            metric.get_input_field_names()
+            if hasattr(metric, "get_input_field_names")
+            else metric.input_field_names
+        )
+        assert len(fields) <= 2, f"{name} takes {len(fields)} input fields"
+        assert not metric.attrs.get("requires_threshold_field", False), (
+            f"{name} needs a threshold column the kernels have no slot for"
+        )
+        assert getattr(metric, "value_time_field_name", None) is None, (
+            f"{name} depends on value_time, which the gate refuses"
+        )
+
+
+def test_registry_contents_are_deliberate():
+    """Change-detection tripwire: renaming or dropping a kernel must fail here.
+
+    Parity coverage comes from the registry-driven tests; this list exists so
+    that a metric class rename, or an accidental removal, is caught rather
+    than silently shrinking the covered set.
+    """
+    assert set(VECTORIZED_METRIC_FUNCS) == {
+        # Deterministic
+        "KlingGuptaEfficiency", "KlingGuptaEfficiencyMod1",
+        "KlingGuptaEfficiencyMod2", "MaxValueDelta", "MeanAbsoluteError",
+        "MeanAbsoluteRelativeError", "MeanError", "MeanSquareError",
+        "MultiplicativeBias", "NashSutcliffeEfficiency",
+        "NormalizedNashSutcliffeEfficiency", "PearsonCorrelation",
+        "RelativeBias", "RelativeMaximum", "RelativeMean", "RelativeMedian",
+        "RelativeMinimum", "RelativeStandardDeviation",
+        "RootMeanSquareError", "RootMeanStandardDeviationRatio", "Rsquared",
+        # Signature (single-field)
+        "Average", "Count", "Maximum", "Minimum", "Sum", "Variance",
+    }
+
+
+def test_single_field_group_matches_legacy_end_to_end(monkeypatch):
+    """Signature metrics run through the engine with args=(p,) only.
+
+    compute_vectorized_shared_bootstrap takes its arity from len(args), so
+    s_mat is None here. bootstrap_group_key includes the input-field tuple,
+    so these form their own group and can never mix with two-field metrics --
+    asserted below, since the s_mat=None contract depends on it.
+    """
+    from teehr.metrics.bootstrap_funcs import bootstrap_group_key
+
+    n, reps = 50, 150
+    p = _random_series(n, seed=710)
+
+    boot = Bootstrappers.Stationary(
+        seed=909, reps=reps, block_size=5, quantiles=[0.05, 0.95]
+    )
+
+    def build():
+        return [
+            Signatures.Average(output_field_name="avg", bootstrap=boot),
+            Signatures.Maximum(output_field_name="mx", bootstrap=boot),
+            Signatures.Variance(output_field_name="var", bootstrap=boot),
+            Signatures.Count(output_field_name="cnt", bootstrap=boot),
+        ]
+
+    keys = {bootstrap_group_key(m) for m in build()}
+    assert len(keys) == 1, "signature metrics should share one group"
+    two_field = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    assert bootstrap_group_key(two_field) not in keys
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
+    legacy_result = create_shared_bootstrap_func(build())(p)
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    vectorized_result = create_shared_bootstrap_func(build())(p)
+
+    assert set(legacy_result.keys()) == set(vectorized_result.keys())
+    for key in legacy_result:
+        assert vectorized_result[key] == pytest.approx(
+            legacy_result[key], rel=1e-9, abs=1e-12
+        )
 
 
 def test_pairwise_mask_applied_without_transform():
