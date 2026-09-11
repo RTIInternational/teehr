@@ -130,6 +130,34 @@ class BootstrapBasemodel(PydanticBaseModel):
     func : Callable
         The wrapper to generate the bootstrapping function,
         by default None.
+    minimum_sample_size : int
+        Minimum number of values in a group before it is bootstrapped, by
+        default 30. Groups below this return null rather than an interval.
+    minimum_mean : float
+        Minimum mean of the primary series before a group is bootstrapped, by
+        default 0.01.
+    minimum_variance : float
+        Minimum variance of the primary series before a group is
+        bootstrapped, by default 0.000025.
+
+    Notes
+    -----
+    The three ``minimum_*`` fields are quality guards: a stationary bootstrap
+    over eight points, or over a series that is effectively constant, yields
+    an interval that looks authoritative and means nothing. A group failing
+    any of them returns null for every metric sharing the config.
+
+    They live here, rather than on the aggregation call, because they are
+    properties of a bootstrap configuration -- and because metric grouping
+    already works that way: ``bootstrap_funcs.bootstrap_group_key`` keys
+    groups on the bootstrap config, so metrics sharing a config necessarily
+    share guards.
+
+    The defaults are uniform across methods. Note that for ``Gumboot`` the
+    scientifically meaningful sample size is the number of water years rather
+    than the number of timesteps, while the guard (like the others) measures
+    the input series length -- so a caller resampling few water years may want
+    to raise ``minimum_sample_size`` explicitly.
     """
 
     return_type: Union[str, T.ArrayType, T.MapType] = Field(default=None)
@@ -139,6 +167,9 @@ class BootstrapBasemodel(PydanticBaseModel):
     name: str = Field(default=None)
     include_value_time: bool = Field(default=False)
     func: Callable = Field(default=None)
+    minimum_sample_size: int = Field(default=30, ge=0)
+    minimum_mean: float = Field(default=0.01)
+    minimum_variance: float = Field(default=0.000025)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,

@@ -209,6 +209,13 @@ def bootstrap_group_key(metric: MetricsBasemodel) -> Optional[tuple]:
         quantile_key,
         boot.include_value_time,
         fields,
+        # The guards must be part of the key. create_shared_bootstrap_func
+        # reads them from metrics[0].bootstrap, so two configs differing only
+        # in a guard would otherwise share a group and the first metric's
+        # thresholds would silently apply to the rest.
+        boot.minimum_sample_size,
+        boot.minimum_mean,
+        boot.minimum_variance,
     )
 
     # Method-specific extra fields
@@ -300,25 +307,16 @@ def _make_bs_object(boot, args):
 
 def create_shared_bootstrap_func(
     metrics: List[MetricsBasemodel],
-    minimum_sample_size: int = 30,
-    minimum_mean: float = 0.01,
-    minimum_variance: float = 0.000025,
 ) -> Callable:
     """Create a single bootstrap UDF that evaluates multiple metrics per draw.
 
     All metrics in *metrics* must share the same bootstrap configuration
-    (same class, reps, seed, block_size, quantiles, and input fields).
+    (same class, reps, seed, block_size, quantiles, guards, and input fields).
 
     Parameters
     ----------
     metrics : List[MetricsBasemodel]
         Metrics sharing the same bootstrap config.
-    minimum_sample_size : int, optional
-        Minimum sample count to run bootstrap. Default 30.
-    minimum_mean : float, optional
-        Minimum mean value of primary series to run bootstrap. Default 0.01.
-    minimum_variance : float, optional
-        Minimum variance of primary series to run bootstrap. Default 0.000025.
 
     Returns
     -------
@@ -327,6 +325,13 @@ def create_shared_bootstrap_func(
     """
     # Reference bootstrap config from the first metric (all are equivalent).
     ref_boot = metrics[0].bootstrap
+
+    # Quality guards come from the bootstrap config rather than this call:
+    # they describe the resampling, and bootstrap_group_key already keys
+    # groups on the config, so metrics in a group necessarily share them.
+    minimum_sample_size = ref_boot.minimum_sample_size
+    minimum_mean = ref_boot.minimum_mean
+    minimum_variance = ref_boot.minimum_variance
 
     # Build per-metric inner functions once at UDF-creation time.
     metric_funcs = [m.func(m) for m in metrics]

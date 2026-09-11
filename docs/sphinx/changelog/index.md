@@ -59,6 +59,18 @@
   `start_inclusive` / `end_exclusive` spellings are still accepted, but they name a
   behaviour that `closed` now controls, so the generic keys are preferred.
 
+### Added
+- Bootstrap quality guards are now configurable on the `Bootstrappers` models:
+  `minimum_sample_size` (default 30), `minimum_mean` (0.01) and `minimum_variance`
+  (0.000025). A group failing any of them returns null for every metric sharing the config.
+  The thresholds were previously hardcoded with no user-facing override. They live on the
+  bootstrap config rather than the aggregation call because that is what they describe, and
+  because `bootstrap_group_key` already keys groups on the config — so they are now part of
+  that key, and two configs differing only in a guard no longer share a group. Note that for
+  `Gumboot` the meaningful sample size is the number of water years rather than timesteps,
+  while the guard measures input series length, so callers resampling few water years may
+  want to raise `minimum_sample_size` explicitly.
+
 ### Changed
 - **Bootstrapped metrics now use the vectorized engine by default**, roughly 19x faster than
   the per-replicate loop for a group of covered metrics (measured at n=1000, reps=1000). Set

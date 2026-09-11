@@ -1083,6 +1083,87 @@ def test_value_time_metrics_still_work_without_bootstrap():
     assert fdc.bootstrap is boot
 
 
+def test_quality_guards_are_configurable_on_the_bootstrapper():
+    """The guards are fields on the Bootstrappers model, so they can be tuned.
+
+    They belong there rather than on the aggregation call because they are
+    properties of a bootstrap configuration -- and because grouping already
+    works that way: bootstrap_group_key keys on the bootstrap config, so
+    metrics sharing a config necessarily share guards.
+    """
+    from teehr.metrics.bootstrap_funcs import create_shared_bootstrap_func
+
+    rng = np.random.default_rng(5)
+    n = 10                                   # below the default floor of 30
+    p = pd.Series(np.abs(rng.normal(10, 3, n)) + 0.1)
+    s = pd.Series(np.abs(rng.normal(9, 3, n)) + 0.1)
+
+    def kge_with(**kwargs):
+        return DeterministicMetrics.KlingGuptaEfficiency(
+            output_field_name="kge",
+            bootstrap=Bootstrappers.Stationary(
+                reps=20, seed=7, block_size=3, quantiles=[0.05, 0.95],
+                **kwargs,
+            ),
+        )
+
+    # Defaults unchanged from when they were hardcoded.
+    default = Bootstrappers.Stationary(reps=10)
+    assert default.minimum_sample_size == 30
+    assert default.minimum_mean == 0.01
+    assert default.minimum_variance == 0.000025
+
+    guarded = create_shared_bootstrap_func([kge_with()])(p, s)
+    assert guarded == {"kge": None}
+
+    relaxed = create_shared_bootstrap_func(
+        [kge_with(minimum_sample_size=5)]
+    )(p, s)
+    assert set(relaxed) == {"kge_0.05", "kge_0.95"}
+    assert all(np.isfinite(v) for v in relaxed.values())
+
+
+def test_differing_guards_do_not_share_a_bootstrap_group():
+    """Guards are part of bootstrap_group_key.
+
+    create_shared_bootstrap_func reads them from metrics[0].bootstrap, so if
+    two configs differing only in a guard shared a group, the first metric's
+    thresholds would silently apply to the others.
+    """
+    from teehr.metrics.bootstrap_funcs import bootstrap_group_key
+
+    strict = Bootstrappers.Stationary(reps=10, seed=1)
+    relaxed = Bootstrappers.Stationary(reps=10, seed=1, minimum_sample_size=5)
+
+    a = DeterministicMetrics.KlingGuptaEfficiency(
+        output_field_name="a", bootstrap=strict)
+    b = DeterministicMetrics.NashSutcliffeEfficiency(
+        output_field_name="b", bootstrap=relaxed)
+    c = DeterministicMetrics.RelativeMean(
+        output_field_name="c", bootstrap=Bootstrappers.Stationary(
+            reps=10, seed=1))
+
+    keys = {bootstrap_group_key(m) for m in (a, b, c)}
+    assert len(keys) == 2, "a differing guard must split the group"
+    assert bootstrap_group_key(a) == bootstrap_group_key(c)
+    assert bootstrap_group_key(a) != bootstrap_group_key(b)
+
+
+@pytest.mark.parametrize("boot_cls", [
+    Bootstrappers.Stationary,
+    Bootstrappers.CircularBlock,
+    Bootstrappers.Gumboot,
+])
+def test_guards_available_on_every_bootstrap_method(boot_cls):
+    """Declared on BootstrapBasemodel, so every method inherits them."""
+    boot = boot_cls(
+        reps=10, minimum_sample_size=5, minimum_mean=0.0, minimum_variance=0.0
+    )
+    assert boot.minimum_sample_size == 5
+    assert boot.minimum_mean == 0.0
+    assert boot.minimum_variance == 0.0
+
+
 def test_singleton_group_now_gets_quality_guards():
     """Groups of one are now subject to the sample-size/mean/variance guards.
 
@@ -1103,7 +1184,7 @@ def test_singleton_group_now_gets_quality_guards():
     )
 
     rng = np.random.default_rng(5)
-    n = 10                                   # below minimum_sample_size=30
+    n = 10                    # below the default minimum_sample_size of 30
     p = pd.Series(np.abs(rng.normal(10, 3, n)) + 0.1)
     s = pd.Series(np.abs(rng.normal(9, 3, n)) + 0.1)
 

@@ -57,9 +57,6 @@ def _build_non_bootstrap_udf(model: MetricsBasemodel, gp: GroupedData):
 def _build_shared_bootstrap_udfs(
     boot_groups,
     gp: GroupedData,
-    minimum_sample_size: int = 30,
-    minimum_mean: float = 0.01,
-    minimum_variance: float = 0.000025,
 ):
     """Return (func_list_entries, expansion_steps) for shared-bootstrap groups.
 
@@ -69,14 +66,6 @@ def _build_shared_bootstrap_udfs(
         Mapping of key → list of metrics sharing the same bootstrap config.
     gp : GroupedData
         The grouped Spark DataFrame (used for field validation).
-    minimum_sample_size : int, optional
-        Minimum sample count to run bootstrap. Default 30.
-    minimum_mean : float, optional
-        Minimum mean value of the primary series to run bootstrap. Default
-        0.01.
-    minimum_variance : float, optional
-        Minimum variance of the primary series to run bootstrap. Default
-        0.000025.
 
     Returns
     -------
@@ -127,18 +116,14 @@ def _build_shared_bootstrap_udfs(
         # a lone bootstrapped metric got no benefit from it at all. Routing
         # them here also gives them the sample-size/mean/variance quality
         # guards in create_shared_bootstrap_func, which previously applied only
-        # once a group had two or more metrics.
+        # once a group had two or more metrics. Those guards are configured on
+        # the Bootstrappers model, so nothing needs threading through here.
         temp_col = f"_bsgrp_{idx}"
         while temp_col in existing_columns:
             temp_col = f"_{temp_col}"
         existing_columns.add(temp_col)
 
-        shared_func = create_shared_bootstrap_func(
-            group_metrics,
-            minimum_sample_size=minimum_sample_size,
-            minimum_mean=minimum_mean,
-            minimum_variance=minimum_variance,
-        )
+        shared_func = create_shared_bootstrap_func(group_metrics)
         if boot.quantiles is None:
             return_type = T.MapType(
                 T.StringType(),
