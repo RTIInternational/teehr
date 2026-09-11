@@ -1083,6 +1083,64 @@ def test_value_time_metrics_still_work_without_bootstrap():
     assert fdc.bootstrap is boot
 
 
+@pytest.mark.session_scope_test_warehouse
+def test_sample_size_guard_nulls_small_groups_end_to_end(
+    session_scope_test_warehouse,
+):
+    """A group under minimum_sample_size returns null through the pipeline.
+
+    The warehouse has 72 rows per gage, above the default floor of 30, so no
+    guard fires on the full fixture. Filtering value_time brings every gage to
+    27 rows while leaving mean (0.49 / 10.49 / 145.6) and variance (0.081 /
+    0.081 / 913.6) well above their floors -- so this isolates the
+    sample-size guard specifically, rather than tripping several at once.
+
+    Worth having at the Spark level and not only as a unit test: this is the
+    behaviour change from routing singleton bootstrap groups through the
+    shared path, and it is what a user with fine-grained grouping will hit.
+    """
+    ev = session_scope_test_warehouse
+
+    small_group = [
+        TableFilter(
+            column="value_time",
+            operator=ops.lt,
+            value="2022-01-01 10:00:00",
+        )
+    ]
+
+    def run(**boot_kwargs):
+        kge = DeterministicMetrics.KlingGuptaEfficiency()
+        kge.bootstrap = Bootstrappers.CircularBlock(
+            seed=40, block_size=5, quantiles=[0.05, 0.95], reps=50,
+            **boot_kwargs,
+        )
+        kge.unpack_results = True
+        return (
+            ev.table("joined_timeseries")
+            .filter(filters=small_group)
+            .aggregate(metrics=[kge], group_by=["primary_location_id"])
+            .order_by("primary_location_id")
+            .to_pandas()
+        )
+
+    # Default floor of 30 against 27 rows -> null for every gage.
+    guarded = run()
+    assert guarded.index.size == 3
+    for col in ("kling_gupta_efficiency_0_05", "kling_gupta_efficiency_0_95"):
+        assert guarded[col].isna().all(), (
+            f"{col} should be null under the guard"
+        )
+
+    # Lowering the floor on the Bootstrapper is the escape hatch.
+    relaxed = run(minimum_sample_size=5)
+    assert relaxed.index.size == 3
+    for col in ("kling_gupta_efficiency_0_05", "kling_gupta_efficiency_0_95"):
+        assert relaxed[col].notna().all(), (
+            f"{col} should be populated at floor=5"
+        )
+
+
 def test_quality_guards_are_configurable_on_the_bootstrapper():
     """The guards are fields on the Bootstrappers model, so they can be tuned.
 
