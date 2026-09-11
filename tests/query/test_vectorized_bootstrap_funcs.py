@@ -3,11 +3,19 @@
 These tests validate that vectorized_bootstrap_funcs.py produces the same
 results as the existing per-replicate loop in bootstrap_funcs.py, at three
 levels: (1) resample index construction, (2) individual metric kernels, and
-(3) the full shared-bootstrap UDF body end-to-end. The vectorized engine is
-gated behind the TEEHR_BOOTSTRAP_ENGINE=vectorized env var (see
-bootstrap_funcs._can_use_vectorized_engine) and is off by default, so these
-tests explicitly enable it via monkeypatch where needed.
+(3) the full shared-bootstrap UDF body end-to-end.
+
+The vectorized engine is the default; TEEHR_BOOTSTRAP_ENGINE=legacy selects
+the per-rep loop (see bootstrap_funcs._vectorized_engine_enabled). Every test
+here that compares the two engines names BOTH explicitly via monkeypatch,
+rather than deleting the env var to get one of them. That matters: relying on
+the default would mean a future flip silently turns a legacy-vs-vectorized
+comparison into vectorized-vs-vectorized, which passes while testing nothing.
+The single exception is test_engine_flag_defaults_to_vectorized, whose whole
+purpose is to assert the default.
 """
+import logging
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -387,7 +395,7 @@ def test_shared_bootstrap_vectorized_matches_legacy_end_to_end(monkeypatch):
         DeterministicMetrics.PearsonCorrelation(output_field_name="pearson", bootstrap=boot),
     ]
 
-    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
     legacy_func = create_shared_bootstrap_func(metrics)
     legacy_result = legacy_func(p, s)
 
@@ -415,7 +423,7 @@ def test_shared_bootstrap_vectorized_matches_legacy_circularblock(monkeypatch):
         DeterministicMetrics.PearsonCorrelation(output_field_name="pearson", bootstrap=boot),
     ]
 
-    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
     legacy_result = create_shared_bootstrap_func(metrics)(p, s)
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
@@ -426,14 +434,51 @@ def test_shared_bootstrap_vectorized_matches_legacy_circularblock(monkeypatch):
         assert vectorized_result[key] == pytest.approx(legacy_result[key], rel=1e-9, abs=1e-12)
 
 
-def test_engine_flag_defaults_to_legacy(monkeypatch):
-    """Without the env var set, the vectorized path must not be used."""
+def test_engine_flag_defaults_to_vectorized(monkeypatch):
+    """With no env var set, the vectorized path is used.
+
+    Inverted when the default flipped. This is the ONE test that is meant to
+    depend on the default -- every other test in this module names its engine
+    explicitly, so that flipping the default cannot turn a legacy-vs-vectorized
+    comparison into a vectorized-vs-vectorized one that passes while testing
+    nothing.
+    """
     from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
 
     monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
     boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
     metrics = [DeterministicMetrics.RelativeMean(bootstrap=boot)]
+    assert _can_use_vectorized_engine(boot, metrics) is True
+
+
+@pytest.mark.parametrize("value", ["legacy", "LEGACY", " legacy "])
+def test_legacy_remains_available_as_an_escape_hatch(monkeypatch, value):
+    """TEEHR_BOOTSTRAP_ENGINE=legacy must still select the per-rep loop.
+
+    The two engines are meant to be numerically identical, so if they ever are
+    not, falling back should be one env var rather than a release.
+    """
+    from teehr.metrics.bootstrap_funcs import _can_use_vectorized_engine
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", value)
+    boot = Bootstrappers.Stationary(seed=1, reps=10, quantiles=None)
+    metrics = [DeterministicMetrics.RelativeMean(bootstrap=boot)]
     assert _can_use_vectorized_engine(boot, metrics) is False
+
+
+def test_unrecognized_engine_value_warns_and_uses_default(monkeypatch, caplog):
+    """A typo must not silently pick an engine.
+
+    Which way a misspelling falls is invisible in the results -- the engines
+    agree numerically -- so without the warning the only symptom would be an
+    unexplained slowdown, or nothing at all.
+    """
+    from teehr.metrics.bootstrap_funcs import _vectorized_engine_enabled
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacyy")
+    with caplog.at_level(logging.WARNING):
+        assert _vectorized_engine_enabled() is True
+    assert "Unrecognized TEEHR_BOOTSTRAP_ENGINE" in caplog.text
 
 
 def test_engine_flag_falls_back_for_gumboot(monkeypatch):
@@ -687,7 +732,7 @@ def test_end_to_end_reps_1000_scale(monkeypatch):
         DeterministicMetrics.PearsonCorrelation(output_field_name="pearson", bootstrap=boot),
     ]
 
-    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
     legacy_result = create_shared_bootstrap_func(metrics)(p, s)
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
@@ -720,7 +765,7 @@ def test_shared_bootstrap_keys_match_static_derivation(monkeypatch):
     for metric in metrics:
         expected.update(derive_map_key_list(metric))
 
-    monkeypatch.delenv("TEEHR_BOOTSTRAP_ENGINE", raising=False)
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
     assert set(create_shared_bootstrap_func(metrics)(p, s).keys()) == expected
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")

@@ -16,6 +16,38 @@ from teehr.metrics.bootstrap_funcs import _calculate_quantiles
 from teehr.querying.utils import derive_map_key_list, unpack_sdf_dict_columns
 
 
+def _assert_bootstrap_samples_match(teehr_results, manual_results):
+    """Compare teehr's bootstrap samples against a hand-rolled arch run.
+
+    Both sides compute in float64 (callers cast the manual inputs; teehr's
+    vectorized engine casts via np.asarray(args[0], dtype=float)), so this is
+    a like-for-like comparison and the tolerance only has to absorb the final
+    float32 cast of the output column -- a couple of ULPs.
+
+    This used to assert exact float32 equality, which held only because
+    teehr's legacy path ran the identical code on the identical dtype. The
+    warehouse stores primary_value/secondary_value as float32, and the legacy
+    path passes those Series to the closures unchanged, so np.nansum/np.std
+    accumulated in float32. Measured on gage-A, KGE, 500 reps:
+
+        vectorized vs legacy (float32 in)   max rel 2.59e-06
+        vectorized vs legacy (float64 in)   max rel 7.48e-15   <- algorithmic
+        legacy float64 vs legacy float32    max rel 2.59e-06
+
+    The engines agree to ~1e-15; the whole gap was input dtype. Rather than
+    widen the tolerance until that gap fits -- which would have meant a
+    tolerance of 1e-4 to accommodate degenerate log-transform replicates where
+    KGE reaches -123 -- the callers now feed the manual run float64 so the
+    confound is gone.
+
+    Manual runs stay float32 and exact where the engine cannot apply (Gumboot).
+    """
+    assert teehr_results.shape == manual_results.shape
+    np.testing.assert_allclose(
+        teehr_results, manual_results, rtol=1e-6, atol=1e-7, equal_nan=True
+    )
+
+
 BOOT_YEAR_FILE = Path(
     "tests",
     "data",
@@ -120,8 +152,14 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
     df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
+    # float64, to match what teehr computes in. The warehouse stores these
+    # as float32; the vectorized engine casts once via
+    # np.asarray(args[0], dtype=float) and accumulates in float64, so a
+    # float32 manual run would be comparing two different precisions and
+    # the residual would be input dtype, not arithmetic. Casting here keeps
+    # the comparison like-for-like and the tolerance meaningful.
+    p = df_gageA.primary_value.astype("float64")
+    s = df_gageA.secondary_value.astype("float64")
 
     bs = CircularBlockBootstrap(
         kge.bootstrap.block_size,
@@ -158,7 +196,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
     )
     manual_results = np.sort(results.ravel()).astype(np.float32)
 
-    assert (teehr_results == manual_results).all()
+    _assert_bootstrap_samples_match(teehr_results, manual_results)
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
@@ -185,8 +223,14 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
+    # float64, to match what teehr computes in. The warehouse stores these
+    # as float32; the vectorized engine casts once via
+    # np.asarray(args[0], dtype=float) and accumulates in float64, so a
+    # float32 manual run would be comparing two different precisions and
+    # the residual would be input dtype, not arithmetic. Casting here keeps
+    # the comparison like-for-like and the tolerance meaningful.
+    p = df_gageA.primary_value.astype("float64")
+    s = df_gageA.secondary_value.astype("float64")
 
     bs = StationaryBootstrap(
         kge.bootstrap.block_size,
@@ -223,7 +267,7 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     )
     manual_results = np.sort(results.ravel()).astype(np.float32)
 
-    assert (teehr_results == manual_results).all()
+    _assert_bootstrap_samples_match(teehr_results, manual_results)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
@@ -467,8 +511,14 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
     df = ev.table("joined_timeseries").to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
+    # float64, to match what teehr computes in. The warehouse stores these
+    # as float32; the vectorized engine casts once via
+    # np.asarray(args[0], dtype=float) and accumulates in float64, so a
+    # float32 manual run would be comparing two different precisions and
+    # the residual would be input dtype, not arithmetic. Casting here keeps
+    # the comparison like-for-like and the tolerance meaningful.
+    p = df_gageA.primary_value.astype("float64")
+    s = df_gageA.secondary_value.astype("float64")
 
     bs = CircularBlockBootstrap(
         kge.bootstrap.block_size,
@@ -505,7 +555,7 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
     )
     manual_results = np.sort(results.ravel()).astype(np.float32)
 
-    assert (teehr_results == manual_results).all()
+    _assert_bootstrap_samples_match(teehr_results, manual_results)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2

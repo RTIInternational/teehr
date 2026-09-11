@@ -17,13 +17,32 @@ from teehr.querying.utils import bootstrap_quantile_key, parse_fields_to_list
 
 logger = logging.getLogger(__name__)
 
-# Internal rollout switch for the vectorized shared-bootstrap path -- not a
-# public/documented config option. Defaults to the legacy per-rep loop.
-# Set TEEHR_BOOTSTRAP_ENGINE=vectorized to opt in during validation. Read
-# dynamically (not cached at import time) so it can be toggled at runtime
-# (e.g. before creating a Spark session) and in tests via monkeypatch.
+# Engine selector for the shared-bootstrap path. The vectorized engine is now
+# the default; set TEEHR_BOOTSTRAP_ENGINE=legacy to fall back to the per-rep
+# loop. The escape hatch exists because the two are meant to be numerically
+# identical -- if they ever are not, switching back should be one env var, not
+# a release.
+#
+# Read dynamically (not cached at import time) so it can be toggled at runtime
+# (e.g. before creating a Spark session) and in tests via monkeypatch. On a
+# Spark cluster it must be set on the EXECUTORS, not just the driver --
+# spark.executorEnv.TEEHR_BOOTSTRAP_ENGINE -- since the check runs inside the
+# pandas UDF.
 def _vectorized_engine_enabled() -> bool:
-    return os.environ.get("TEEHR_BOOTSTRAP_ENGINE", "legacy").strip().lower() == "vectorized"
+    engine = os.environ.get("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    engine = engine.strip().lower()
+    if engine not in ("vectorized", "legacy"):
+        # Don't silently pick an engine for a typo. Which way a misspelling
+        # falls is invisible in the results -- the two engines agree
+        # numerically -- so the only symptom would be an unexplained 8x
+        # slowdown, or none at all.
+        logger.warning(
+            "Unrecognized TEEHR_BOOTSTRAP_ENGINE=%r; expected 'vectorized' "
+            "or 'legacy'. Using the default (vectorized).",
+            engine,
+        )
+        return True
+    return engine == "vectorized"
 
 
 def _vectorized_engine_available(ref_boot, metrics) -> bool:
