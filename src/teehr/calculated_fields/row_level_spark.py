@@ -100,6 +100,44 @@ def _to_pd_timedelta(value, field_name: str, context: str) -> pd.Timedelta:
     )
 
 
+#: Accepted values for the `closed` argument of the lead-time binning helpers.
+CLOSED_OPTIONS = ("right", "left")
+
+
+def validate_closed(closed: str) -> str:
+    """Validate which side of a lead-time bin interval is inclusive.
+
+    "right" (the default) means bins are ``(start, end]`` -- start exclusive,
+    end inclusive. "left" means ``[start, end)``, which is how binning behaved
+    before teehr issue #815.
+    """
+    if closed not in CLOSED_OPTIONS:
+        raise ValueError(
+            f"closed must be one of {CLOSED_OPTIONS}, got {closed!r}"
+        )
+    return closed
+
+
+# Bin edges used to be spelled `start_inclusive` / `end_exclusive`, which named
+# a behaviour that is now chosen by the `closed` argument instead of being fixed
+# by the key. `start` / `end` are preferred; the old spellings still work.
+_BIN_BOUND_ALIASES = {
+    "start": ("start", "start_inclusive", "start_exclusive"),
+    "end": ("end", "end_exclusive", "end_inclusive"),
+}
+
+
+def _bin_bound(bin_dict: dict, which: str, label: str) -> pd.Timedelta:
+    """Pull one bin edge, accepting the generic and legacy key spellings."""
+    for key in _BIN_BOUND_ALIASES[which]:
+        if key in bin_dict:
+            return _to_pd_timedelta(bin_dict[key], key, label)
+    raise ValueError(
+        f"{label} is missing a '{which}' bound. Provide '{which}' "
+        f"(or one of {_BIN_BOUND_ALIASES[which][1:]})."
+    )
+
+
 def validate_forecast_lead_time_bin_size(
     bin_size: Union[pd.Timedelta, timedelta, str, list, dict],
 ) -> Union[pd.Timedelta, list[tuple[pd.Timedelta, pd.Timedelta, str | None]]]:
@@ -115,12 +153,8 @@ def validate_forecast_lead_time_bin_size(
         for i, bin_dict in enumerate(bin_size):
             if not isinstance(bin_dict, dict):
                 raise TypeError(f"Item {i} in bin_size list must be a dict")
-            required_keys = {"start_inclusive", "end_exclusive"}
-            if not required_keys.issubset(bin_dict.keys()):
-                raise ValueError(f"Item {i} missing required keys. Must have: {required_keys}")
-
-            start = _to_pd_timedelta(bin_dict["start_inclusive"], "start_inclusive", f"Item {i}")
-            end = _to_pd_timedelta(bin_dict["end_exclusive"], "end_exclusive", f"Item {i}")
+            start = _bin_bound(bin_dict, "start", f"Item {i}")
+            end = _bin_bound(bin_dict, "end", f"Item {i}")
             normalized.append((start, end, None))
         return normalized
 
@@ -134,12 +168,8 @@ def validate_forecast_lead_time_bin_size(
                 raise TypeError(f"Dict keys must be strings (custom bin IDs), got {type(custom_id)}")
             if not isinstance(bin_dict, dict):
                 raise TypeError("Dict values must be dicts with bin specification")
-            required_keys = {"start_inclusive", "end_exclusive"}
-            if not required_keys.issubset(bin_dict.keys()):
-                raise ValueError(f"Bin '{custom_id}' missing required keys. Must have: {required_keys}")
-
-            start = _to_pd_timedelta(bin_dict["start_inclusive"], "start_inclusive", f"Bin '{custom_id}'")
-            end = _to_pd_timedelta(bin_dict["end_exclusive"], "end_exclusive", f"Bin '{custom_id}'")
+            start = _bin_bound(bin_dict, "start", f"Bin '{custom_id}'")
+            end = _bin_bound(bin_dict, "end", f"Bin '{custom_id}'")
             normalized.append((start, end, custom_id))
         return normalized
 
@@ -211,9 +241,11 @@ def apply_forecast_lead_time_bins(
     lead_time_field_name: str,
     output_field_name: str,
     bin_size: Union[pd.Timedelta, timedelta, str, list, dict],
+    closed: str = "right",
 ) -> ps.DataFrame:
     """Add forecast lead-time bin IDs with Spark-native binning logic."""
     normalized_bin_size = validate_forecast_lead_time_bin_size(bin_size)
+    validate_closed(closed)
 
     if lead_time_field_name not in sdf.columns:
         sdf = apply_forecast_lead_time(
@@ -230,14 +262,30 @@ def apply_forecast_lead_time_bins(
 
     if isinstance(normalized_bin_size, pd.Timedelta):
         bin_size_sec = F.lit(int(normalized_bin_size.total_seconds()))
-        bin_num = (lead_sec / bin_size_sec).cast("long")
+        if closed == "right":
+            # Bins are (0, b], (b, 2b], ... so a lead time of exactly b belongs
+            # to the FIRST bin. An 18-hour forecast binned at 6 hours therefore
+            # yields 3 bins -- hours 1-6, 7-12, 13-18 -- rather than a 4th bin
+            # holding only hour 18.
+            bin_num = F.ceil(lead_sec / bin_size_sec).cast("long") - F.lit(1)
+            in_range = lead_sec > F.lit(0)
+        else:
+            # Bins are [0, b), [b, 2b), ...
+            bin_num = F.floor(lead_sec / bin_size_sec).cast("long")
+            in_range = lead_sec >= F.lit(0)
         start_sec = bin_num * bin_size_sec
         end_sec = (bin_num + F.lit(1)) * bin_size_sec
-        bin_id_expr = F.concat(
-            _seconds_to_iso_expr(start_sec),
-            F.lit("_"),
-            _seconds_to_iso_expr(end_sec),
-        )
+        # A lead time outside any bin is NULL rather than being folded into the
+        # first one. Previously the cast truncated toward zero, so a negative
+        # lead time silently landed in bin 0.
+        bin_id_expr = F.when(
+            in_range,
+            F.concat(
+                _seconds_to_iso_expr(start_sec),
+                F.lit("_"),
+                _seconds_to_iso_expr(end_sec),
+            ),
+        ).otherwise(F.lit(None).cast("string"))
     else:
         bins_to_use = []
         for start_td, end_td, bin_id in normalized_bin_size:
@@ -252,17 +300,26 @@ def apply_forecast_lead_time_bins(
 
         last_end_sec = bins_to_use[-1][1]
 
+        if closed == "right":
+            def _in_bin(start_s, end_s):
+                return (lead_sec > F.lit(start_s)) & (lead_sec <= F.lit(end_s))
+
+            overflow_cond = lead_sec > F.lit(last_end_sec)
+        else:
+            def _in_bin(start_s, end_s):
+                return (lead_sec >= F.lit(start_s)) & (lead_sec < F.lit(end_s))
+
+            overflow_cond = lead_sec >= F.lit(last_end_sec)
+
         first_start_s, first_end_s, first_bid = bins_to_use[0]
-        first_cond = (lead_sec >= F.lit(first_start_s)) & (lead_sec < F.lit(first_end_s))
-        bin_id_expr = F.when(first_cond, F.lit(first_bid))
+        bin_id_expr = F.when(_in_bin(first_start_s, first_end_s), F.lit(first_bid))
 
         for i in range(1, len(bins_to_use)):
             start_s, end_s, bid = bins_to_use[i]
-            cond = (lead_sec >= F.lit(start_s)) & (lead_sec < F.lit(end_s))
-            bin_id_expr = bin_id_expr.when(cond, F.lit(bid))
+            bin_id_expr = bin_id_expr.when(_in_bin(start_s, end_s), F.lit(bid))
 
         bin_id_expr = bin_id_expr.otherwise(
-            F.when(lead_sec >= F.lit(last_end_sec), F.lit("overflow")).otherwise(
+            F.when(overflow_cond, F.lit("overflow")).otherwise(
                 F.lit(None).cast("string")
             )
         )

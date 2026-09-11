@@ -814,3 +814,125 @@ def test_location_event_detection(function_scope_test_warehouse):
     assert "event_above_id" in sdf.columns
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns
+
+
+def _lead_time_bin_map(spark, closed=None, bin_size=None, hours=range(0, 19)):
+    """Map lead time in hours -> bin ID, for a single forecast.
+
+    Uses the CF model (and therefore whichever apply path the model wires up)
+    rather than calling the binning helpers directly.
+    """
+    reference_time = pd.Timestamp("2025-10-01 00:00:00")
+    rows = [
+        (
+            reference_time.to_pydatetime(),
+            (reference_time + pd.Timedelta(hours=h)).to_pydatetime(),
+        )
+        for h in hours
+    ]
+    sdf = spark.createDataFrame(
+        rows, "reference_time timestamp, value_time timestamp"
+    )
+    kwargs = {}
+    if bin_size is not None:
+        kwargs["bin_size"] = bin_size
+    if closed is not None:
+        kwargs["closed"] = closed
+    sdf = rcf.ForecastLeadTimeBins(**kwargs).apply_to(sdf)
+    return {
+        int((r["value_time"] - r["reference_time"]).total_seconds() // 3600):
+            r["forecast_lead_time_bin"]
+        for r in sdf.collect()
+    }
+
+
+def test_forecast_lead_time_bin_edges_default(spark_shared_session):
+    """An 18 hour forecast binned at 6 hours gives 3 bins, not 4.
+
+    Regression test for teehr issue #815. The default is closed="right", i.e.
+    bins are (start, end], so hours 1-6 land in the first bin rather than hour
+    6 spilling into the second. Under the previous left-closed behaviour an
+    18 hour forecast produced a fourth bin holding only hour 18.
+    """
+    got = _lead_time_bin_map(
+        spark_shared_session, bin_size=pd.Timedelta(hours=6)
+    )
+
+    bins = [b for b in dict.fromkeys(got[h] for h in sorted(got)) if b is not None]
+    assert len(bins) == 3
+
+    # hours 1-6 together, 7-12 together, 13-18 together
+    assert got[1] == got[5] == got[6]
+    assert got[7] == got[11] == got[12]
+    assert got[13] == got[17] == got[18]
+    assert got[6] != got[7]
+    assert got[12] != got[13]
+
+    # a lead time of exactly zero is in no bin, since bins are start-exclusive
+    assert got[0] is None
+
+
+def test_forecast_lead_time_bin_edges_left_closed(spark_shared_session):
+    """closed="left" restores the pre-#815 behaviour."""
+    got = _lead_time_bin_map(
+        spark_shared_session, closed="left", bin_size=pd.Timedelta(hours=6)
+    )
+
+    bins = [b for b in dict.fromkeys(got[h] for h in sorted(got)) if b is not None]
+    assert len(bins) == 4
+
+    # hour 0 is included, and hour 6 starts the second bin
+    assert got[0] == got[5]
+    assert got[6] != got[5]
+    # hour 18 gets its own fourth bin -- the behaviour #815 objected to
+    assert got[18] not in (got[13], got[17])
+
+
+def test_forecast_lead_time_bin_edges_variable_bins(spark_shared_session):
+    """Explicit bins honour `closed` too, and accept generic start/end keys."""
+    bins = [
+        {"start": pd.Timedelta(hours=0), "end": pd.Timedelta(hours=6)},
+        {"start": pd.Timedelta(hours=6), "end": pd.Timedelta(hours=12)},
+        {"start": pd.Timedelta(hours=12), "end": pd.Timedelta(hours=18)},
+    ]
+
+    right = _lead_time_bin_map(spark_shared_session, bin_size=bins)
+    assert right[0] is None
+    assert right[6] == right[1]
+    assert right[18] == right[13]
+
+    left = _lead_time_bin_map(spark_shared_session, closed="left", bin_size=bins)
+    assert left[0] == left[5]
+    assert left[6] != left[5]
+    # 18 is past the last left-closed bin [12, 18)
+    assert left[18] != left[13]
+
+
+def test_forecast_lead_time_bin_size_legacy_keys():
+    """The pre-#815 start_inclusive/end_exclusive spellings still parse."""
+    from teehr.calculated_fields.row_level_spark import (
+        validate_forecast_lead_time_bin_size,
+    )
+
+    legacy = validate_forecast_lead_time_bin_size([
+        {"start_inclusive": pd.Timedelta(hours=0),
+         "end_exclusive": pd.Timedelta(hours=6)},
+    ])
+    generic = validate_forecast_lead_time_bin_size([
+        {"start": pd.Timedelta(hours=0), "end": pd.Timedelta(hours=6)},
+    ])
+    assert legacy == generic
+
+    with pytest.raises(ValueError, match="missing a 'end' bound"):
+        validate_forecast_lead_time_bin_size([{"start": pd.Timedelta(hours=0)}])
+
+
+def test_forecast_lead_time_bins_closed_validation():
+    """`closed` only accepts 'right' and 'left'."""
+    from teehr.calculated_fields.row_level_spark import validate_closed
+
+    assert validate_closed("right") == "right"
+    assert validate_closed("left") == "left"
+    for bad in ("both", "neither", "Right", ""):
+        with pytest.raises(ValueError, match="closed must be one of"):
+            validate_closed(bad)

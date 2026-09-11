@@ -2,14 +2,33 @@
 
 ## Unreleased
 
+### Breaking Changes
+- **`ForecastLeadTimeBins` lead time bins are now start-exclusive and end-inclusive**
+  (`closed="right"`, the new default). A lead time of exactly one bin width now falls in the
+  *first* bin, so an 18-hour forecast binned at 6 hours yields three bins covering hours
+  1-6, 7-12 and 13-18. Previously bins were start-inclusive and end-exclusive, which
+  produced a fourth bin holding only hour 18. Bin ID strings are unchanged, but which rows
+  land in which bin has changed, so previously computed lead-time-binned results are not
+  comparable with new ones. Pass `closed="left"` to restore the old behaviour. See
+  [#815](https://github.com/RTIInternational/teehr/issues/815).
+
 ### Added
-- None
+- `closed` argument on `ForecastLeadTimeBins`, choosing which side of each bin interval is
+  inclusive: `"right"` for `(start, end]` (default) or `"left"` for `[start, end)`.
+- Explicit bin definitions accept generic `start` / `end` keys. The previous
+  `start_inclusive` / `end_exclusive` spellings are still accepted, but they name a
+  behaviour that `closed` now controls, so the generic keys are preferred.
 
 ### Changed
 - `unpack_sdf_dict_columns` accepts an optional `key_list` argument to expand a MapType column without reading its keys from the data.
 - `unpack_sdf_dict_columns` raises a clear `ValueError` when asked to unpack a non-MapType column, instead of an `AttributeError`.
 
 ### Fixed
+- A forecast lead time that falls outside every bin now yields NULL instead of being folded
+  into the first bin. Previously the uniform-bin path cast a truncating division, so a
+  negative lead time silently landed in bin 0.
+- The pandas execution path for `ForecastLeadTimeBins` returns NULL rather than an empty
+  string for a lead time in no bin, matching the Spark-native path.
 - Unpacking bootstrap quantile results (`unpack_results=True`) no longer triggers an eager Spark action per metric inside `aggregate()`. The map keys are now derived from the metric configuration, so the upstream bootstrap DAG is no longer re-executed once per metric.
 - Unpacked quantile columns are no longer silently dropped when the result is empty or the first row's map is null.
 
