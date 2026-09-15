@@ -106,6 +106,14 @@
 - A forecast lead time that falls outside every bin now yields NULL instead of being folded
   into the first bin. Previously the uniform-bin path cast a truncating division, so a
   negative lead time silently landed in bin 0.
+- `ForecastLeadTimeBins` now honours `closed` (and its end-inclusive default) when the
+  Spark-native engine runs the field, which is the default for `add_calculated_fields()`.
+  That path carried its own copy of the binning arithmetic and was missed by the #815
+  change, so it stayed start-inclusive/end-exclusive: a lead time of exactly one bin width
+  opened the next bin and a lead time of zero landed in the first one. The duplicated
+  implementation is gone -- both engines now share one. The model's own `apply_to()` was
+  already correct, so only results computed through `add_calculated_fields()` (or
+  `engine="spark"`/`"auto"`) were affected.
 - The pandas execution path for `ForecastLeadTimeBins` returns NULL rather than an empty
   string for a lead time in no bin, matching the Spark-native path.
 - Unpacking bootstrap quantile results (`unpack_results=True`) no longer triggers an eager Spark action per metric inside `aggregate()`. The map keys are now derived from the metric configuration, so the upstream bootstrap DAG is no longer re-executed once per metric.
