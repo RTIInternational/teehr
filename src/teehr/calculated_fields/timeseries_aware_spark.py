@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import Sequence
 
-import pandas as pd
 from pyspark.sql import DataFrame
 from pyspark.sql import Window
 import pyspark.sql.functions as F
@@ -175,52 +174,6 @@ def apply_threshold_batch_spark(
     return sdf.drop(threshold_cast_col)
 
 
-def _seconds_to_iso_expr(sec_col: F.Column) -> F.Column:
-    """Convert a seconds Column to an ISO 8601 duration string Column."""
-    sec = sec_col.cast("long")
-    d = (sec / F.lit(86400)).cast("long")
-    rem1 = sec - d * F.lit(86400)
-    h = (rem1 / F.lit(3600)).cast("long")
-    rem2 = rem1 - h * F.lit(3600)
-    m = (rem2 / F.lit(60)).cast("long")
-    s = rem2 - m * F.lit(60)
-
-    t_with_days = F.when(
-        (m == 0) & (s == 0), F.concat(F.lit("T"), h.cast("string"), F.lit("H"))
-    ).when(
-        s == 0,
-        F.concat(F.lit("T"), h.cast("string"), F.lit("H"), m.cast("string"), F.lit("M")),
-    ).otherwise(
-        F.concat(
-            F.lit("T"), h.cast("string"), F.lit("H"),
-            m.cast("string"), F.lit("M"),
-            s.cast("string"), F.lit("S"),
-        )
-    )
-
-    t_no_days = F.when(
-        (h == 0) & (m == 0) & (s == 0), F.lit("T0S")
-    ).when(
-        (m == 0) & (s == 0), F.concat(F.lit("T"), h.cast("string"), F.lit("H"))
-    ).when(
-        s == 0,
-        F.concat(F.lit("T"), h.cast("string"), F.lit("H"), m.cast("string"), F.lit("M")),
-    ).otherwise(
-        F.concat(
-            F.lit("T"), h.cast("string"), F.lit("H"),
-            m.cast("string"), F.lit("M"),
-            s.cast("string"), F.lit("S"),
-        )
-    )
-
-    return F.when(
-        d > 0,
-        F.concat(F.lit("P"), d.cast("string"), F.lit("D"), t_with_days),
-    ).otherwise(
-        F.concat(F.lit("P"), t_no_days)
-    )
-
-
 def apply_exceedance_probability_spark(
     sdf: DataFrame,
     cf: CalculatedFieldBaseModel,
@@ -290,64 +243,19 @@ def apply_lead_time_bins_spark(
 ) -> DataFrame:
     """Compute ForecastLeadTimeBins via Spark-native arithmetic / when-otherwise."""
     from teehr.calculated_fields.row_level_spark import (
-        _timedelta_to_iso_duration,
-        apply_forecast_lead_time,
-        validate_forecast_lead_time_bin_size,
+        apply_forecast_lead_time_bins,
     )
 
-    if cf.lead_time_field_name not in sdf.columns:
-        sdf = apply_forecast_lead_time(
-            sdf,
-            value_time_field_name=cf.value_time_field_name,
-            reference_time_field_name=cf.reference_time_field_name,
-            output_field_name=cf.lead_time_field_name,
-        )
-
-    normalized = validate_forecast_lead_time_bin_size(cf.bin_size)
-
-    lead_sec = (
-        F.unix_timestamp(F.col(cf.value_time_field_name))
-        - F.unix_timestamp(F.col(cf.reference_time_field_name))
-    ).cast("long")
-
-    if isinstance(normalized, pd.Timedelta):
-        bin_size_sec = F.lit(int(normalized.total_seconds()))
-        bin_num = (lead_sec / bin_size_sec).cast("long")
-        start_sec = bin_num * bin_size_sec
-        end_sec = (bin_num + F.lit(1)) * bin_size_sec
-        bin_id_expr = F.concat(
-            _seconds_to_iso_expr(start_sec),
-            F.lit("_"),
-            _seconds_to_iso_expr(end_sec),
-        )
-    else:
-        bins_to_use = []
-        for start_td, end_td, bin_id in normalized:
-            final_id = (
-                bin_id
-                if bin_id is not None
-                else f"{_timedelta_to_iso_duration(start_td)}_{_timedelta_to_iso_duration(end_td)}"
-            )
-            bins_to_use.append(
-                (int(start_td.total_seconds()), int(end_td.total_seconds()), final_id)
-            )
-
-        last_end_sec = bins_to_use[-1][1]
-
-        first_start_s, first_end_s, first_bid = bins_to_use[0]
-        first_cond = (lead_sec >= F.lit(first_start_s)) & (lead_sec < F.lit(first_end_s))
-        bin_id_expr = F.when(first_cond, F.lit(first_bid))
-
-        for i in range(1, len(bins_to_use)):
-            start_s, end_s, bid = bins_to_use[i]
-            cond = (lead_sec >= F.lit(start_s)) & (lead_sec < F.lit(end_s))
-            bin_id_expr = bin_id_expr.when(cond, F.lit(bid))
-
-        # Keep this lazy by deriving overflow from row-level lead time.
-        bin_id_expr = bin_id_expr.otherwise(
-            F.when(lead_sec >= F.lit(last_end_sec), F.lit("overflow")).otherwise(
-                F.lit(None).cast("string")
-            )
-        )
-
-    return sdf.withColumn(cf.output_field_name, bin_id_expr)
+    # Delegate rather than re-implement: this path previously carried its own
+    # copy of the binning arithmetic, which stayed start-inclusive/end-exclusive
+    # when teehr issue #815 made bins end-inclusive by default, so `closed` was
+    # silently ignored whenever the Spark-native engine ran the field.
+    return apply_forecast_lead_time_bins(
+        sdf,
+        value_time_field_name=cf.value_time_field_name,
+        reference_time_field_name=cf.reference_time_field_name,
+        lead_time_field_name=cf.lead_time_field_name,
+        output_field_name=cf.output_field_name,
+        bin_size=cf.bin_size,
+        closed=cf.closed,
+    )

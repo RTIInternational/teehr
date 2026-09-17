@@ -2,6 +2,9 @@
 import pytest
 
 import teehr
+from teehr.calculated_fields.engine import (
+    apply_calculated_fields_with_engine,
+)
 from teehr import RowLevelCalculatedFields as rcf
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
@@ -133,26 +136,47 @@ def test_add_row_udfs(session_scope_test_warehouse):
 
 @pytest.mark.function_scope_small_ensemble_warehouse
 def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
-    """Test ForecastLeadTimeBins UDF."""
+    """Test ForecastLeadTimeBins UDF.
+
+    The ensemble warehouse holds 6-hourly forecasts with lead times of
+    0, 6, ... 48 hours. Bins are (start, end] by default (teehr issue #815),
+    so a lead time of exactly zero lands in no bin and a lead time on a bin
+    edge closes that bin rather than opening the next one. Each case below
+    asserts the whole lead-hour -> bin mapping rather than a distinct count,
+    since a count is satisfied by the wrong bins as easily as the right ones.
+    """
     ev = function_scope_small_ensemble_warehouse
 
+    def bin_map(bin_size):
+        """Map lead time in whole hours -> bin ID for the whole warehouse."""
+        sdf = ev.table("joined_timeseries").add_calculated_fields([
+            teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
+                bin_size=bin_size
+            ),
+        ]).to_sdf()
+        rows = sdf.select(
+            "forecast_lead_time", "forecast_lead_time_bin"
+        ).distinct().collect()
+        got = {}
+        for row in rows:
+            hours = int(row["forecast_lead_time"].total_seconds() // 3600)
+            # One bin per lead time, or the mapping below means nothing.
+            assert got.setdefault(hours, row["forecast_lead_time_bin"]) == \
+                row["forecast_lead_time_bin"]
+        return got
+
     # test with single bin size
-    fcst_bins_static = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
-        bin_size=pd.Timedelta(hours=6)
-    )
-    sdf = ev.table("joined_timeseries").add_calculated_fields([
-        fcst_bins_static,
-    ]).to_sdf()
-
-    sorted_sdf = sdf.orderBy(
-        "primary_location_id",
-        "configuration_name",
-        "member",
-        "reference_time",
-        "value_time"
-    )
-
-    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 9
+    assert bin_map(pd.Timedelta(hours=6)) == {
+        0: None,
+        6: "PT0S_PT6H",
+        12: "PT6H_PT12H",
+        18: "PT12H_PT18H",
+        24: "PT18H_P1DT0H",
+        30: "P1DT0H_P1DT6H",
+        36: "P1DT6H_P1DT12H",
+        42: "P1DT12H_P1DT18H",
+        48: "P1DT18H_P2DT0H",
+    }
 
     # try with dynamic bin sizes that DO encompass full lead time range
     bin = [
@@ -171,21 +195,19 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
         {'start_inclusive': pd.Timedelta(days=2),
          'end_exclusive': pd.Timedelta(days=3)},
     ]
-    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
-        bin_size=bin,
-    )
-
-    sdf = ev.table("joined_timeseries").add_calculated_fields([
-        fcst_bins_dynamic,
-    ]).to_sdf()
-    sorted_sdf = sdf.orderBy(
-        "primary_location_id",
-        "configuration_name",
-        "member",
-        "reference_time",
-        "value_time"
-        )
-    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
+    # The last bin goes unused: 48 hours closes the (1d12h, 2d] bin instead of
+    # opening the (2d, 3d] one.
+    assert bin_map(bin) == {
+        0: None,
+        6: "P0DT0H_P0DT6H",
+        12: "P0DT6H_P0DT12H",
+        18: "P0DT12H_P0DT18H",
+        24: "P0DT18H_P1DT0H",
+        30: "P1DT0H_P1DT12H",
+        36: "P1DT0H_P1DT12H",
+        42: "P1DT12H_P2DT0H",
+        48: "P1DT12H_P2DT0H",
+    }
 
     # try with dynamic bin sizes that DO NOT encompass full lead time range
     bin = [
@@ -200,24 +222,18 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
         {'start_inclusive': pd.Timedelta(days=1),
          'end_exclusive': pd.Timedelta(days=1, hours=12)},
     ]
-    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
-        bin_size=bin,
-    )
-    sdf = ev.table("joined_timeseries").add_calculated_fields([
-        fcst_bins_dynamic,
-    ]).to_sdf()
-    sorted_sdf = sdf.orderBy(
-        "primary_location_id",
-        "configuration_name",
-        "member",
-        "reference_time",
-        "value_time"
-        )
-    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 6
-    assert 'overflow' in [row['forecast_lead_time_bin'] for row in
-                          sorted_sdf.select(
-                               'forecast_lead_time_bin'
-                               ).distinct().collect()]
+    assert bin_map(bin) == {
+        0: None,
+        6: "P0DT0H_P0DT6H",
+        12: "P0DT6H_P0DT12H",
+        18: "P0DT12H_P0DT18H",
+        24: "P0DT18H_P1DT0H",
+        30: "P1DT0H_P1DT12H",
+        36: "P1DT0H_P1DT12H",
+        # past the last bin
+        42: "overflow",
+        48: "overflow",
+    }
 
     # try with dynamic bin sizes w/ string dict keys that DO encompass full
     # lead time range
@@ -237,20 +253,18 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
         'bin_7': {'start_inclusive': pd.Timedelta(days=2),
                   'end_exclusive': pd.Timedelta(days=3)},
     }
-    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
-        bin_size=bin
-    )
-    sdf = ev.table("joined_timeseries").add_calculated_fields([
-        fcst_bins_dynamic,
-    ]).to_sdf()
-    sorted_sdf = sdf.orderBy(
-        "primary_location_id",
-        "configuration_name",
-        "member",
-        "reference_time",
-        "value_time"
-        )
-    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
+    named_bins = {
+        0: None,
+        6: 'bin_1',
+        12: 'bin_2',
+        18: 'bin_3',
+        24: 'bin_4',
+        30: 'bin_5',
+        36: 'bin_5',
+        42: 'bin_6',
+        48: 'bin_6',
+    }
+    assert bin_map(bin) == named_bins
 
     # try with dynamic bin sizes w/ string dict keys that DO NOT encompass
     # full lead time range
@@ -268,24 +282,9 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
         'bin_6': {'start_inclusive': pd.Timedelta(days=1, hours=12),
                   'end_exclusive': pd.Timedelta(days=2)},
     }
-    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
-        bin_size=bin
-    )
-    sdf = ev.table("joined_timeseries").add_calculated_fields([
-        fcst_bins_dynamic,
-    ]).to_sdf()
-    sorted_sdf = sdf.orderBy(
-        "primary_location_id",
-        "configuration_name",
-        "member",
-        "reference_time",
-        "value_time"
-        )
-    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
-    assert 'overflow' in [row['forecast_lead_time_bin'] for row in
-                          sorted_sdf.select(
-                              'forecast_lead_time_bin'
-                              ).distinct().collect()]
+    # Dropping the unused (2d, 3d] bin changes nothing: the longest lead time
+    # is 2 days, which the (1d12h, 2d] bin still covers, so nothing overflows.
+    assert bin_map(bin) == named_bins
 
     # try mixed type dynamic bin sizes w/ string dict keys that DO encompass
     # the full lead time range
@@ -305,20 +304,7 @@ def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
         'bin_7': {'start_inclusive': timedelta(days=2),
                   'end_exclusive': '3 days'},
     }
-    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
-        bin_size=bin
-    )
-    sdf = ev.table("joined_timeseries").add_calculated_fields([
-        fcst_bins_dynamic,
-    ]).to_sdf()
-    sorted_sdf = sdf.orderBy(
-        "primary_location_id",
-        "configuration_name",
-        "member",
-        "reference_time",
-        "value_time"
-        )
-    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
+    assert bin_map(bin) == named_bins
 
 
 @pytest.mark.function_scope_two_location_warehouse
@@ -816,11 +802,14 @@ def test_location_event_detection(function_scope_test_warehouse):
     assert "max_secondary_value" in sdf.columns
 
 
-def _lead_time_bin_map(spark, closed=None, bin_size=None, hours=range(0, 19)):
+def _lead_time_bin_map(
+    spark, closed=None, bin_size=None, hours=range(0, 19), engine=None
+):
     """Map lead time in hours -> bin ID, for a single forecast.
 
-    Uses the CF model (and therefore whichever apply path the model wires up)
-    rather than calling the binning helpers directly.
+    With engine=None the CF model applies itself (whichever path the model
+    wires up); otherwise the field is routed through the execution engine the
+    same way add_calculated_fields() does, so each path gets checked.
     """
     reference_time = pd.Timestamp("2025-10-01 00:00:00")
     rows = [
@@ -838,7 +827,11 @@ def _lead_time_bin_map(spark, closed=None, bin_size=None, hours=range(0, 19)):
         kwargs["bin_size"] = bin_size
     if closed is not None:
         kwargs["closed"] = closed
-    sdf = rcf.ForecastLeadTimeBins(**kwargs).apply_to(sdf)
+    cf = rcf.ForecastLeadTimeBins(**kwargs)
+    if engine is None:
+        sdf = cf.apply_to(sdf)
+    else:
+        sdf = apply_calculated_fields_with_engine(sdf=sdf, cfs=[cf], engine=engine)
     return {
         int((r["value_time"] - r["reference_time"]).total_seconds() // 3600):
             r["forecast_lead_time_bin"]
@@ -846,7 +839,8 @@ def _lead_time_bin_map(spark, closed=None, bin_size=None, hours=range(0, 19)):
     }
 
 
-def test_forecast_lead_time_bin_edges_default(spark_shared_session):
+@pytest.mark.parametrize("engine", [None, "spark", "python"])
+def test_forecast_lead_time_bin_edges_default(spark_shared_session, engine):
     """An 18 hour forecast binned at 6 hours gives 3 bins, not 4.
 
     Regression test for teehr issue #815. The default is closed="right", i.e.
@@ -855,7 +849,7 @@ def test_forecast_lead_time_bin_edges_default(spark_shared_session):
     18 hour forecast produced a fourth bin holding only hour 18.
     """
     got = _lead_time_bin_map(
-        spark_shared_session, bin_size=pd.Timedelta(hours=6)
+        spark_shared_session, bin_size=pd.Timedelta(hours=6), engine=engine
     )
 
     bins = [b for b in dict.fromkeys(got[h] for h in sorted(got)) if b is not None]
@@ -872,10 +866,12 @@ def test_forecast_lead_time_bin_edges_default(spark_shared_session):
     assert got[0] is None
 
 
-def test_forecast_lead_time_bin_edges_left_closed(spark_shared_session):
+@pytest.mark.parametrize("engine", [None, "spark", "python"])
+def test_forecast_lead_time_bin_edges_left_closed(spark_shared_session, engine):
     """closed="left" restores the pre-#815 behaviour."""
     got = _lead_time_bin_map(
-        spark_shared_session, closed="left", bin_size=pd.Timedelta(hours=6)
+        spark_shared_session, closed="left", bin_size=pd.Timedelta(hours=6),
+        engine=engine,
     )
 
     bins = [b for b in dict.fromkeys(got[h] for h in sorted(got)) if b is not None]
@@ -888,7 +884,8 @@ def test_forecast_lead_time_bin_edges_left_closed(spark_shared_session):
     assert got[18] not in (got[13], got[17])
 
 
-def test_forecast_lead_time_bin_edges_variable_bins(spark_shared_session):
+@pytest.mark.parametrize("engine", [None, "spark", "python"])
+def test_forecast_lead_time_bin_edges_variable_bins(spark_shared_session, engine):
     """Explicit bins honour `closed` too, and accept generic start/end keys."""
     bins = [
         {"start": pd.Timedelta(hours=0), "end": pd.Timedelta(hours=6)},
@@ -896,12 +893,16 @@ def test_forecast_lead_time_bin_edges_variable_bins(spark_shared_session):
         {"start": pd.Timedelta(hours=12), "end": pd.Timedelta(hours=18)},
     ]
 
-    right = _lead_time_bin_map(spark_shared_session, bin_size=bins)
+    right = _lead_time_bin_map(
+        spark_shared_session, bin_size=bins, engine=engine
+    )
     assert right[0] is None
     assert right[6] == right[1]
     assert right[18] == right[13]
 
-    left = _lead_time_bin_map(spark_shared_session, closed="left", bin_size=bins)
+    left = _lead_time_bin_map(
+        spark_shared_session, closed="left", bin_size=bins, engine=engine
+    )
     assert left[0] == left[5]
     assert left[6] != left[5]
     # 18 is past the last left-closed bin [12, 18)
