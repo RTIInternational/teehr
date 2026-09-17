@@ -4,7 +4,7 @@
 
 ### Breaking Changes
 - **A metric that is not defined for a group is now NULL on every path, never NaN or `inf`.**
-  The two engines already agreed a result was undefined and disagreed only on how to spell it.
+  The two engines already agreed a result was undefined and disagreed only on how to represent it.
   The Python path returns `np.nan`, which Arrow converts to NULL on the way out of the pandas
   UDF; the Spark-native path emitted a literal NaN. So `IS NULL` found one and missed the other,
   and an average over the column returned NaN rather than skipping the gap. Separately, a zero
