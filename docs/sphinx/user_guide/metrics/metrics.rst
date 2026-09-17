@@ -107,6 +107,14 @@ RelativeStandardDeviation
   If exact quantile behavior is important for your analysis, use
   ``engine="python"``.
 
+.. note::
+
+  A metric that is not defined for a group -- a KGE where the observed series
+  is constant, or a ratio whose denominator is zero -- is NULL, on both
+  engines. Filter it with ``IS NULL`` / ``isna()``; it is never NaN or
+  ``inf``. Pandas represents a NULL float column as NaN, so a result read
+  with ``to_pandas()`` will show ``NaN`` for these rows.
+
 .. code-block:: python
 
     from teehr import DeterministicMetrics
@@ -202,6 +210,51 @@ For ``CircularBlock`` and ``Stationary`` bootstrapping, ``block_size`` is
 optional. If omitted (or set to ``None``), TEEHR uses
 ``arch.bootstrap.optimal_block_length`` to estimate an optimal block size from
 the primary metric input series.
+
+.. _bootstrap-sort-by:
+
+Set ``sort_by`` for a reproducible interval
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``CircularBlock`` and ``Stationary`` draw blocks of *adjacent rows*, and
+``Gumboot`` blocks by water year, so what they return depends on the order the
+rows reach them -- and Spark defines no row order within a group. Left unset,
+the same query can produce different intervals on a different plan (for
+example at ``engine="auto"`` versus ``engine="python"``), and the blocks are
+drawn from an arbitrary permutation rather than from the series. That defeats
+the purpose of a block method: it stops preserving serial correlation and
+understates the uncertainty. The ``seed`` does not help here -- it fixes which
+positions are drawn, not which value sits at each position.
+
+``sort_by`` names the field(s) that put each group in series order before it is
+resampled:
+
+.. code-block:: python
+
+    boot = Bootstrappers.Stationary(
+        reps=1000,
+        seed=42,
+        quantiles=[0.025, 0.975],
+        sort_by="value_time",
+    )
+
+Which field is correct depends on your query, which is why it is not fixed to
+``value_time``:
+
+* On a joined timeseries, the series order is ``value_time``.
+* Where an upstream aggregation has already collapsed ``value_time`` -- e.g. a
+  per-forecast, per-lead-time-bin aggregation, after which each row is one
+  forecast -- the remaining time axis is ``reference_time``, and that is what
+  to sort on. The field only has to be a column of the table being aggregated;
+  it does not have to be one of the ``group_by`` fields or a metric input.
+
+Rows tied on the sort key keep their arrival order, which is still arbitrary,
+so pass a list when one field does not distinguish every row in a group:
+``sort_by=["reference_time", "member"]``.
+
+``sort_by`` defaults to ``None``, which preserves the historical behaviour of
+resampling in whatever order Spark supplies. TEEHR logs a warning when a
+``CircularBlock`` or ``Stationary`` metric is bootstrapped without it.
 
 .. code-block:: python
 

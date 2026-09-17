@@ -213,8 +213,19 @@ def _deterministic_fields(metrics: List[MetricsBasemodel]) -> Tuple[str, str]:
     return next(iter(p_cols)), next(iter(s_cols))
 
 
-def _nan():
-    return F.lit(float("nan"))
+def _undefined():
+    """The value a metric takes when it is not defined for a group.
+
+    NULL, not NaN. Both engines have to agree on one spelling, and NULL is the
+    only one they can both produce: a pandas UDF physically cannot return NaN,
+    because Arrow treats NaN in a float column as a missing value and converts
+    it on the way out. This path used to emit a literal NaN, so the same
+    undefined result was NaN here and NULL on the Python path -- which meant
+    `IS NULL` found one and missed the other, and an average over the column
+    returned NaN rather than skipping the gap. It also matches what
+    F.try_divide already returns for a zero denominator.
+    """
+    return F.lit(None).cast("double")
 
 
 def _divide(numerator, denominator):
@@ -395,13 +406,13 @@ def _compute_deterministic_metrics(
             if metric.add_epsilon:
                 denom = denom + F.lit(EPSILON)
             invalid = (F.col("_n") == 0) | (F.col("_sum_p") == 0) | (F.col("_sum_s") == 0) | (denom == 0)
-            expr = F.when(invalid, _nan()).otherwise(F.lit(1.0) - _divide(F.col("_sum_sq_diff"), denom))
+            expr = F.when(invalid, _undefined()).otherwise(F.lit(1.0) - _divide(F.col("_sum_sq_diff"), denom))
         elif class_name == "NormalizedNashSutcliffeEfficiency":
             denom = F.col("_sum_p2") - (F.col("_n") * F.col("_mean_p") * F.col("_mean_p"))
             if metric.add_epsilon:
                 denom = denom + F.lit(EPSILON)
             invalid = (F.col("_n") == 0) | (F.col("_sum_p") == 0) | (F.col("_sum_s") == 0) | (denom == 0)
-            expr = F.when(invalid, _nan()).otherwise(F.lit(1.0) / (F.lit(1.0) + _divide(F.col("_sum_sq_diff"), denom)))
+            expr = F.when(invalid, _undefined()).otherwise(F.lit(1.0) / (F.lit(1.0) + _divide(F.col("_sum_sq_diff"), denom)))
         elif class_name == "KlingGuptaEfficiency":
             invalid = (F.col("_std_p") == 0) | (F.col("_std_s") == 0)
             linear_correlation = F.col("_corr_ps")
@@ -412,7 +423,7 @@ def _compute_deterministic_metrics(
                 + F.lit(metric.sa) * F.pow(relative_variability - F.lit(1.0), 2)
                 + F.lit(metric.sb) * F.pow(relative_mean - F.lit(1.0), 2)
             )
-            expr = F.when(invalid, _nan()).otherwise(F.lit(1.0) - euclidean_distance)
+            expr = F.when(invalid, _undefined()).otherwise(F.lit(1.0) - euclidean_distance)
         elif class_name == "KlingGuptaEfficiencyMod1":
             invalid = (F.col("_std_p") == 0) | (F.col("_std_s") == 0)
             linear_correlation = F.col("_corr_ps")
@@ -426,7 +437,7 @@ def _compute_deterministic_metrics(
                 + F.lit(metric.sa) * F.pow(variability_ratio - F.lit(1.0), 2)
                 + F.lit(metric.sb) * F.pow(relative_mean - F.lit(1.0), 2)
             )
-            expr = F.when(invalid, _nan()).otherwise(F.lit(1.0) - euclidean_distance)
+            expr = F.when(invalid, _undefined()).otherwise(F.lit(1.0) - euclidean_distance)
         elif class_name == "KlingGuptaEfficiencyMod2":
             invalid = (F.col("_std_p") == 0) | (F.col("_std_s") == 0)
             linear_correlation = F.col("_corr_ps")
@@ -446,7 +457,7 @@ def _compute_deterministic_metrics(
                 + F.lit(metric.sa) * F.pow(relative_variability - F.lit(1.0), 2)
                 + F.lit(metric.sb) * bias_component
             )
-            expr = F.when(invalid, _nan()).otherwise(F.lit(1.0) - euclidean_distance)
+            expr = F.when(invalid, _undefined()).otherwise(F.lit(1.0) - euclidean_distance)
         elif class_name == "RelativeMean":
             expr = _ratio(F.col("_mean_s"), F.col("_mean_p"), metric.add_epsilon)
         elif class_name == "RelativeMedian":
@@ -469,27 +480,27 @@ def _compute_deterministic_metrics(
         elif class_name == "FalseAlarmRatio":
             expr = F.when(
                 (F.col("_tp") + F.col("_fp")) == 0,
-                _nan(),
+                _undefined(),
             ).otherwise(_divide(F.col("_fp"), F.col("_tp") + F.col("_fp")))
         elif class_name == "ProbabilityOfDetection":
             expr = F.when(
                 (F.col("_tp") + F.col("_fn")) == 0,
-                _nan(),
+                _undefined(),
             ).otherwise(_divide(F.col("_tp"), F.col("_tp") + F.col("_fn")))
         elif class_name == "ProbabilityOfFalseDetection":
             expr = F.when(
                 (F.col("_fp") + F.col("_tn")) == 0,
-                _nan(),
+                _undefined(),
             ).otherwise(_divide(F.col("_fp"), F.col("_fp") + F.col("_tn")))
         elif class_name == "CriticalSuccessIndex":
             expr = F.when(
                 (F.col("_tp") + F.col("_fp") + F.col("_fn")) == 0,
-                _nan(),
+                _undefined(),
             ).otherwise(_divide(F.col("_tp"), F.col("_tp") + F.col("_fp") + F.col("_fn")))
         elif class_name == "SuccessRatio":
             expr = F.when(
                 (F.col("_tp") + F.col("_tn") + F.col("_fp") + F.col("_fn")) == 0,
-                _nan(),
+                _undefined(),
             ).otherwise(
                 _divide(
                     F.col("_tp") + F.col("_tn"),
@@ -499,7 +510,7 @@ def _compute_deterministic_metrics(
         elif class_name == "FrequencyBiasIndex":
             expr = F.when(
                 (F.col("_tp") + F.col("_fn")) == 0,
-                _nan(),
+                _undefined(),
             ).otherwise(_divide(F.col("_tp") + F.col("_fp"), F.col("_tp") + F.col("_fn")))
         else:
             raise ValueError(f"Unsupported spark-native deterministic metric: {class_name}")

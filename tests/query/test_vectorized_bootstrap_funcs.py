@@ -771,3 +771,50 @@ def test_shared_bootstrap_keys_match_static_derivation(monkeypatch):
 
     monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
     assert set(create_shared_bootstrap_func(metrics)(p, s).keys()) == expected
+
+
+@pytest.mark.parametrize("metric_cls", [
+    DeterministicMetrics.RelativeMean,
+    DeterministicMetrics.RelativeMinimum,
+    DeterministicMetrics.RelativeMaximum,
+    DeterministicMetrics.RelativeStandardDeviation,
+    DeterministicMetrics.RelativeBias,
+    DeterministicMetrics.MeanAbsoluteRelativeError,
+    DeterministicMetrics.KlingGuptaEfficiency,
+    DeterministicMetrics.KlingGuptaEfficiencyMod1,
+    DeterministicMetrics.KlingGuptaEfficiencyMod2,
+    DeterministicMetrics.RootMeanStandardDeviationRatio,
+])
+def test_kernel_and_closure_agree_on_zero_denominators(metric_cls):
+    """A zero denominator gives NaN -- never inf -- on both paths.
+
+    Each of these metrics divides by something drawn from the observed series,
+    which a resampled draw can make exactly zero (an all-zero draw, or a
+    constant one for the std/KGE denominators). NumPy's answer there is inf,
+    which survives Arrow, lands in the warehouse, and takes any downstream
+    mean with it -- and a single inf replicate takes the bootstrap quantiles
+    with it too. Both paths now return NaN, which the UDF hands back as NULL,
+    matching what the Spark-native path produces via F.try_divide.
+
+    The kernels are held bit-identical to the closures, so the rule has to be
+    in both; this pins that together rather than one at a time.
+    """
+    metric = metric_cls(add_epsilon=False)
+    scalar_func = metric.func(metric)
+    kernel = VECTORIZED_METRIC_FUNCS[type(metric).__name__]
+
+    n = 12
+    p_mat = np.abs(RNG.normal(loc=10, scale=3, size=(4, n))) + 0.1
+    s_mat = np.abs(RNG.normal(loc=9, scale=4, size=(4, n))) + 0.1
+    p_mat[1, :] = 0.0        # zero sum, zero mean, zero min, zero std
+    p_mat[2, :] = 7.0        # constant -> zero std
+    p_mat[3, 0] = 0.0        # zero minimum only
+
+    expected = np.array([scalar_func(p_mat[r], s_mat[r]) for r in range(4)])
+    actual = kernel(p_mat.copy(), s_mat.copy(), metric)
+
+    assert not np.isinf(actual).any(), f"kernel produced inf: {actual}"
+    assert not np.isinf(expected).any(), f"closure produced inf: {expected}"
+    np.testing.assert_allclose(
+        actual, expected, rtol=1e-9, atol=1e-12, equal_nan=True
+    )
