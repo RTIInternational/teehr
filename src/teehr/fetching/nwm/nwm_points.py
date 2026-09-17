@@ -181,10 +181,13 @@ def plan_nwm_point_fetch(
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         from teehr.fetching.models.nwm30_point import PointConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm31:
+        from teehr.fetching.models.nwm31_point import PointConfigurationModel
+        analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
         raise ValueError(
             "nwm_version must equal "
-            "'nwm12', 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
+            "'nwm12', 'nwm20', 'nwm21', 'nwm22', 'nwm30', or 'nwm31'"
         )
 
     # Parse input parameters to validate configuration

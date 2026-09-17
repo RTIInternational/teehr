@@ -25,6 +25,7 @@ from virtualizarr.manifests import ManifestStore
 from virtualizarr.manifests.manifest import validate_and_normalize_path_to_uri
 from virtualizarr.parsers import HDFParser
 from virtualizarr.parsers.kerchunk.translator import manifestgroup_from_kerchunk_refs
+import zarr
 from zarr.errors import UnstableSpecificationWarning
 from zarr.storage import ObjectStore
 import pandas as pd
@@ -57,12 +58,17 @@ from teehr.fetching.const import (
     NWM_HAWAII_VARIABLE_MAPPER,
     NWM_S3_JSON_PATH,
     S3_BUCKET_REGIONS,
+    NWM31_START_DATE,
     NWM30_START_DATE,
     NWM21_START_DATE,
     NWM20_START_DATE,
     NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
     NWM_CONFIGURATION_DESCRIPTIONS,
+    NWM_VERSION_ATTRS,
+    NWM_VERSION_ATTR_VALUES,
+    NWM_VERSION_BOUNDARIES,
+    NWM_VERSION_SWITCHOVER_GRACE,
     UNIT_NAME,
     VARIABLE_NAME
 )
@@ -282,7 +288,13 @@ def validate_operational_start_end_date(
     start_date: Union[datetime, pd.Timestamp],
     end_date: Union[datetime, pd.Timestamp]
 ):
-    """Make sure start/end dates work with specified NWM version."""
+    """Make sure start/end dates work with specified NWM version.
+
+    Compares at z-hour resolution, since a switch lands on a forecast cycle,
+    not midnight: v3.0 begins at ``2023-09-19 t12z``, so that day's t00z-t11z
+    are still v2.2. Comparing whole days would accept up to 14 hours of the
+    neighbouring version. See :data:`NWM_VERSION_BOUNDARIES`.
+    """
     logger.debug("Checking dates against NWM version.")
 
     if end_date < start_date:
@@ -299,9 +311,17 @@ def validate_operational_start_end_date(
         f"v3.0 release date ({NWM30_START_DATE})"
     )
 
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm31:
+        if start_date < NWM31_START_DATE:
+            raise ValueError(
+                f"The specified start date ({start_date}) is before the NWM "
+                f"v3.1 release date ({NWM31_START_DATE})"
+            )
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         if start_date < NWM30_START_DATE:
             raise ValueError(v3_err_msg)
+        if end_date >= NWM31_START_DATE:
+            raise ValueError(err_msg)
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         if (end_date >= NWM30_START_DATE) | (start_date < NWM21_START_DATE):
             raise ValueError(err_msg)
@@ -1298,6 +1318,252 @@ def gen_json_virtualizarr(
         return None
 
     return outf
+
+
+def read_nwm_global_attrs(
+    remote_path: str,
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> Dict:
+    """Read the global (root group) attributes of a remote NWM NetCDF file.
+
+    Fetches only the file's HDF5 metadata, through the same obstore-backed I/O
+    as :func:`gen_json_virtualizarr`, so it is cheap enough to run across a
+    file list before committing to a fetch.
+
+    Avoids ``ManifestStore.to_virtual_dataset``, which loads every indexed
+    coordinate -- for point output that means inlining ``feature_id`` at the
+    cost documented in :func:`gen_json_virtualizarr`. Reading the zarr group's
+    attributes is free once the file is parsed.
+
+    Parameters
+    ----------
+    remote_path : str
+        Path to the file in the remote location (ie, GCS bucket), as produced
+        by :func:`build_remote_nwm_filelist`.
+    registry : Optional[ObjectStoreRegistry]
+        Registry covering the source bucket. Defaults to the process-wide
+        cached NWM source registry; pass one only to read a different bucket.
+
+    Returns
+    -------
+    Dict
+        The file's global attributes, e.g. ``NWM_version_number``,
+        ``code_version``, ``model_configuration``,
+        ``model_output_valid_time``. Raises if the file is missing or corrupt.
+
+    Examples
+    --------
+    >>> attrs = read_nwm_global_attrs(gcs_component_paths[0])
+    >>> attrs["NWM_version_number"]
+    'v3.0'
+    """
+    if registry is None:
+        registry = _build_gcs_source_registry()
+
+    manifest_store = HDFParser()(url=remote_path, registry=registry)
+    return zarr.open_group(manifest_store, mode="r").attrs.asdict()
+
+
+def _normalize_nwm_version_attr(value: str) -> str:
+    """Reduce a model-version attribute to bare digits, e.g. ``"3.0"``.
+
+    Spelling varies by era (``"NWM 1.2"`` vs ``"v3.1"``), so both are reduced
+    to the form used in :data:`NWM_VERSION_ATTR_VALUES`.
+    """
+    return value.strip().removeprefix("NWM").strip().lstrip("vV")
+
+
+def read_nwm_file_version(
+    remote_path: str,
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> Optional[str]:
+    """Read the model version a remote NWM file reports, e.g. ``"3.0"``.
+
+    Takes the file's global attributes (see :func:`read_nwm_global_attrs`) and
+    returns whichever of :data:`NWM_VERSION_ATTRS` is present, normalized to
+    bare digits so eras with different conventions compare cleanly.
+
+    Parameters
+    ----------
+    remote_path : str
+        Path to the file in the remote location (ie, GCS bucket).
+    registry : Optional[ObjectStoreRegistry]
+        Registry covering the source bucket; see
+        :func:`read_nwm_global_attrs`.
+
+    Returns
+    -------
+    Optional[str]
+        The normalized version, or None if the file carries no version
+        attribute at all -- nwm12-era *forcing* files record only their
+        initialization and valid times -- so absence is normal, not an error.
+    """
+    attrs = read_nwm_global_attrs(remote_path, registry=registry)
+    for attr in NWM_VERSION_ATTRS:
+        if attrs.get(attr):
+            return _normalize_nwm_version_attr(attrs[attr])
+    return None
+
+
+def _parse_nwm_cycle(remote_path: str) -> Optional[datetime]:
+    """Parse the cycle (day plus z-hour) a remote NWM path refers to.
+
+    Parsed as in :func:`parse_nwm_gcs_paths`, but for one path and without
+    needing the configuration name. None if either part is absent.
+    """
+    day_match = re.search(DAY_PATTERN, remote_path)
+    z_match = re.search(r"t([0-9]+)z", Path(remote_path).name)
+    if day_match is None or z_match is None:
+        return None
+    day = day_match.group().split(".")[1]
+    return (
+        datetime.strptime(day, "%Y%m%d")
+        + timedelta(hours=int(z_match.group(1)))
+    )
+
+
+def nwm_version_at(cycle: datetime) -> Optional[str]:
+    """Look up the NWM version in force at ``cycle``.
+
+    Walks :data:`NWM_VERSION_BOUNDARIES`, which holds each version's first
+    cycle at z-hour resolution.
+
+    Parameters
+    ----------
+    cycle : datetime
+        A cycle time (day plus z-hour).
+
+    Returns
+    -------
+    Optional[str]
+        The normalized version, or None if ``cycle`` precedes the earliest
+        operational data teehr reads.
+    """
+    in_force = None
+    for boundary, boundary_version in NWM_VERSION_BOUNDARIES:
+        if cycle < boundary:
+            break
+        in_force = boundary_version
+    return in_force
+
+
+def _outgoing_version_within_grace(cycle: datetime) -> Optional[str]:
+    """Find the previous version still tolerated at ``cycle``.
+
+    Returns the version in force immediately *before* the most recent
+    boundary, when ``cycle`` falls within
+    :data:`NWM_VERSION_SWITCHOVER_GRACE` of it, else None.
+    """
+    latest = None
+    for index, (boundary, _) in enumerate(NWM_VERSION_BOUNDARIES):
+        if cycle < boundary:
+            break
+        latest = index
+    if not latest:  # None, or the first entry, which has no predecessor
+        return None
+
+    boundary = NWM_VERSION_BOUNDARIES[latest][0]
+    if cycle - boundary >= NWM_VERSION_SWITCHOVER_GRACE:
+        return None
+    return NWM_VERSION_BOUNDARIES[latest - 1][1]
+
+
+def validate_nwm_version_against_files(
+    remote_paths: List[str],
+    nwm_version: str,
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> None:
+    """Raise if the source files disagree with the requested NWM version.
+
+    Catches a date range the requested ``nwm_version`` did not produce, which
+    otherwise succeeds and yields timeseries labelled with the wrong version,
+    by comparing each file's own attributes against
+    :data:`NWM_VERSION_ATTR_VALUES`.
+
+    Reads only the first and last of ``remote_paths``: that covers both a
+    version wrong for the whole range and a range straddling a boundary, where
+    only one end disagrees. Checking every file would double the run's
+    metadata reads, since reference building parses each file anyway.
+
+    A file reporting the previous version within
+    :data:`NWM_VERSION_SWITCHOVER_GRACE` of a boundary warns and is accepted,
+    since NOAA reruns some cycles on the outgoing system mid-switch. Outside
+    that window a mismatch raises.
+
+    Parameters
+    ----------
+    remote_paths : List[str]
+        Remote filepaths for the fetch, as produced by
+        :func:`build_remote_nwm_filelist`. An empty list is a no-op.
+    nwm_version : str
+        The requested version, a
+        :class:`SupportedNWMOperationalVersionsEnum` value. ``nwm21`` and
+        ``nwm22`` are treated as one version, so a file stamped either
+        satisfies a request for either.
+    registry : Optional[ObjectStoreRegistry]
+        Registry covering the source bucket; see
+        :func:`read_nwm_global_attrs`.
+
+    Raises
+    ------
+    ValueError
+        If a checked file reports a version outside the set accepted for
+        ``nwm_version``, or if ``nwm_version`` has no entry in
+        :data:`NWM_VERSION_ATTR_VALUES`.
+    """
+    if nwm_version not in NWM_VERSION_ATTR_VALUES:
+        raise ValueError(
+            f"No model version attribute values are known for"
+            f" '{nwm_version}'; add an entry to NWM_VERSION_ATTR_VALUES."
+        )
+    if not remote_paths:
+        return
+
+    expected = NWM_VERSION_ATTR_VALUES[nwm_version]
+    # dict.fromkeys so a single-file list is read once, not twice.
+    to_check = dict.fromkeys([remote_paths[0], remote_paths[-1]])
+
+    mismatches = []
+    for path in to_check:
+        found = read_nwm_file_version(path, registry=registry)
+        if found is None:
+            # Normal for some eras (see read_nwm_file_version); nothing to
+            # compare against, so this file cannot confirm or deny.
+            logger.debug(f"No model version attribute to check in {path}.")
+            continue
+        if found in expected:
+            continue
+
+        # An outgoing-version file just after a switchover is an archive
+        # artifact, not the wrong request, so warn rather than fail the fetch.
+        cycle = _parse_nwm_cycle(path)
+        outgoing = (
+            _outgoing_version_within_grace(cycle)
+            if cycle is not None else None
+        )
+        if outgoing is not None and found == outgoing:
+            logger.warning(
+                f"{path} reports NWM version {found}, but its cycle is within"
+                f" {NWM_VERSION_SWITCHOVER_GRACE} of the"
+                f" v{nwm_version_at(cycle)} switchover, where NOAA reruns some"
+                " cycles on the outgoing system. Treating it as"
+                f" v{nwm_version_at(cycle)} rather than a version mismatch."
+            )
+            continue
+
+        mismatches.append((path, found))
+
+    if mismatches:
+        detail = "; ".join(f"{path} reports {found}" for path, found in mismatches)
+        raise ValueError(
+            f"NWM version mismatch: requested '{nwm_version}' which expects"
+            f" {'/'.join(sorted(expected))}, but {detail}. Check the start and"
+            " end dates against the requested version."
+        )
+    logger.debug(
+        f"Checked {len(to_check)} file(s) against requested NWM version"
+        f" '{nwm_version}'."
+    )
 
 
 async def _build_zarr_references_virtualizarr_async(
