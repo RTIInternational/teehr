@@ -1,8 +1,9 @@
 """Test NWM fetching utils."""
+from datetime import timedelta
 from pathlib import Path
 from dateutil.parser import parse
 
-import tempfile
+import logging
 import pytest
 
 import numpy as np
@@ -14,6 +15,10 @@ from teehr.fetching.utils import (
     build_remote_nwm_filelist,
     generate_json_paths,
     open_kerchunk_dataset,
+    read_nwm_global_attrs,
+    read_nwm_file_version,
+    validate_nwm_version_against_files,
+    nwm_version_at,
     create_periods_based_on_chunksize,
     parse_nwm_json_paths,
     start_on_z_hour,
@@ -23,6 +28,12 @@ from teehr.fetching.utils import (
 from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
+    NWM_VERSION_BOUNDARIES,
+    NWM31_START_DATE,
+    NWM30_START_DATE,
+    NWM21_START_DATE,
+    NWM20_START_DATE,
+    NWM12_START_DATE,
 )
 from teehr.evaluation.evaluation import create_spark_session
 
@@ -517,28 +528,205 @@ def test_feature_id_positions_beyond_range_raises():
         _feature_id_positions(feature_ids, np.array([99]))
 
 
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
-        test_parsing_remote_json_paths(tempdir)
-        test_point_zarr_reference_file(tempdir)
-    test_building_nwm30_gcs_paths()
-    test_building_nwm22_gcs_paths()
-    test_generate_json_paths()
-    test_dates_and_nwm30_version()
-    test_dates_and_nwm22_version()
-    test_dates_and_nwm21_version()
-    test_dates_and_nwm20_version()
-    test_dates_and_nwm12_version()
-    test_generate_json_for_bad_file()
-    test_create_periods_based_on_day()
-    test_create_periods_based_on_week()
-    test_create_periods_based_on_month()
-    test_create_periods_based_on_year()
-    test_start_end_z_hours()
-    test_nwm_configuration_metadata()
-    test_reading_nwm_operational_from_gcs()
-    test_feature_id_positions_sorted()
-    test_feature_id_positions_unsorted_coordinate()
-    test_feature_id_positions_duplicated_request()
-    test_feature_id_positions_missing_id_raises()
-    test_feature_id_positions_beyond_range_raises()
+def test_read_nwm_global_attrs():
+    """Global attributes come back from a remote NWM file's metadata alone."""
+    attrs = read_nwm_global_attrs(
+        "gcs://national-water-model/nwm.20240222/analysis_assim/nwm.t23z.analysis_assim.channel_rt.tm00.conus.nc"  # noqa
+    )
+    assert attrs["NWM_version_number"] == "v3.0"
+    assert attrs["model_configuration"] == "analysis_and_assimilation"
+    assert attrs["model_output_valid_time"] == "2024-02-22_23:00:00"
+
+
+def test_read_nwm_global_attrs_for_bad_file():
+    """A missing or corrupt file raises rather than returning empty attrs."""
+    with pytest.raises(Exception):
+        read_nwm_global_attrs(
+            "gcs://national-water-model/nwm.20240125/forcing_medium_range/nwm.t18z.medium_range.forcing.f104.conus.nc"  # noqa
+        )
+
+
+# One channel_rt file per NWM era, keyed by the version it reports. Also pins
+# normalization: nwm12 writes "NWM 1.2", later eras "v2.0".."v3.1".
+ERA_FILES = {
+    "1.2": "nwm.20180918/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm01.conus.nc",  # noqa
+    "2.0": "nwm.20190620/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm00.conus.nc",  # noqa
+    "2.1": "nwm.20210421/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm00.conus.nc",  # noqa
+    "2.2": "nwm.20230501/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm00.conus.nc",  # noqa
+    "3.0": "nwm.20240222/analysis_assim/nwm.t23z.analysis_assim.channel_rt.tm00.conus.nc",  # noqa
+    "3.1": "nwm.20260915/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm00.conus.nc",  # noqa
+}
+# nwm12-era forcing files record only their init/valid times, no version.
+UNVERSIONED_FILE = "nwm.20180918/forcing_analysis_assim/nwm.t00z.analysis_assim.forcing.tm00.conus.nc"  # noqa
+
+
+def _era_path(version):
+    return f"gcs://national-water-model/{ERA_FILES[version]}"
+
+
+@pytest.mark.parametrize("expected", list(ERA_FILES))
+def test_read_nwm_file_version_across_eras(expected):
+    """Each era's version attribute normalizes to bare digits."""
+    assert read_nwm_file_version(_era_path(expected)) == expected
+
+
+def test_read_nwm_file_version_when_absent():
+    """A file with no version attribute returns None rather than raising."""
+    assert read_nwm_file_version(
+        f"gcs://national-water-model/{UNVERSIONED_FILE}"
+    ) is None
+
+
+@pytest.mark.parametrize("nwm_version,file_version", [
+    ("nwm12", "1.2"),
+    ("nwm20", "2.0"),
+    ("nwm21", "2.1"),
+    ("nwm30", "3.0"),
+    ("nwm31", "3.1"),
+])
+def test_validate_nwm_version_matching(nwm_version, file_version):
+    """A file stamped with the requested version passes."""
+    validate_nwm_version_against_files(
+        [_era_path(file_version)], nwm_version
+    )
+
+
+@pytest.mark.parametrize("nwm_version", ["nwm21", "nwm22"])
+@pytest.mark.parametrize("file_version", ["2.1", "2.2"])
+def test_validate_nwm_version_21_and_22_interchangeable(
+    nwm_version, file_version
+):
+    """v2.1 and v2.2 are treated as one version, in either direction."""
+    validate_nwm_version_against_files(
+        [_era_path(file_version)], nwm_version
+    )
+
+
+def test_validate_nwm_version_mismatch_raises():
+    """A file from a different era is an error, not a silent relabel."""
+    with pytest.raises(ValueError, match="NWM version mismatch"):
+        validate_nwm_version_against_files([_era_path("3.0")], "nwm21")
+
+
+def test_validate_nwm_version_checks_both_ends():
+    """A range straddling a version boundary raises on the far end alone."""
+    with pytest.raises(ValueError, match="reports 3.1"):
+        validate_nwm_version_against_files(
+            [_era_path("3.0"), _era_path("3.1")], "nwm30"
+        )
+    with pytest.raises(ValueError, match="reports 3.0"):
+        validate_nwm_version_against_files(
+            [_era_path("3.0"), _era_path("3.1")], "nwm31"
+        )
+
+
+def test_validate_nwm_version_skips_unversioned_file():
+    """A file carrying no version attribute cannot disagree, so it passes."""
+    validate_nwm_version_against_files(
+        [f"gcs://national-water-model/{UNVERSIONED_FILE}"], "nwm12"
+    )
+
+
+def test_validate_nwm_version_empty_and_unknown():
+    """No paths is a no-op; an unmapped version is a programming error."""
+    validate_nwm_version_against_files([], "nwm30")
+    with pytest.raises(ValueError, match="NWM_VERSION_ATTR_VALUES"):
+        validate_nwm_version_against_files([_era_path("3.0")], "nwm99")
+
+
+def _analysis_assim_path(when):
+    """Build the analysis_assim channel_rt path for a given cycle."""
+    return (
+        f"gcs://national-water-model/nwm.{when:%Y%m%d}/analysis_assim/"
+        f"nwm.t{when.hour:02d}z.analysis_assim.channel_rt.tm00.conus.nc"
+    )
+
+
+@pytest.mark.parametrize("boundary,version", NWM_VERSION_BOUNDARIES[1:])
+def test_nwm_version_boundaries(boundary, version):
+    """Each boundary is the exact cycle the new version starts, to the z-hour.
+
+    Reads the boundary cycle and the one before it, so a constant drifting to
+    the wrong day *or* hour fails here. Skips the earliest entry, an
+    availability floor rather than a switch.
+    """
+    assert read_nwm_file_version(_analysis_assim_path(boundary)) == version
+
+    previous = boundary - timedelta(hours=1)
+    assert read_nwm_file_version(_analysis_assim_path(previous)) != version
+
+
+@pytest.mark.parametrize("nwm_version,boundary", [
+    ("nwm20", NWM20_START_DATE),
+    ("nwm21", NWM21_START_DATE),
+    ("nwm30", NWM30_START_DATE),
+    ("nwm31", NWM31_START_DATE),
+])
+def test_dates_validated_at_z_hour_resolution(nwm_version, boundary):
+    """The cycle before a boundary is rejected, the boundary itself accepted.
+
+    A day-level comparison would accept the whole switchover day, including
+    the hours still produced by the previous version.
+    """
+    validate_operational_start_end_date(nwm_version, boundary, boundary)
+
+    previous = boundary - timedelta(hours=1)
+    with pytest.raises(ValueError):
+        validate_operational_start_end_date(nwm_version, previous, previous)
+
+
+# Adjacent cycles on the v3.1 switchover day (2026-08-18): one still v3.0, the
+# next already v3.1.
+SWITCHOVER_V30_FILE = "gcs://national-water-model/nwm.20260818/analysis_assim/nwm.t04z.analysis_assim.channel_rt.tm00.conus.nc"  # noqa
+SWITCHOVER_V31_FILE = "gcs://national-water-model/nwm.20260818/analysis_assim/nwm.t05z.analysis_assim.channel_rt.tm00.conus.nc"  # noqa
+
+
+def test_switchover_day_really_is_mixed():
+    """The premise: one switchover day holds both versions, cycle by cycle."""
+    assert read_nwm_file_version(SWITCHOVER_V30_FILE) == "3.0"
+    assert read_nwm_file_version(SWITCHOVER_V31_FILE) == "3.1"
+
+
+def test_outgoing_version_on_switchover_day_is_tolerated(caplog):
+    """An outgoing-version rerun warns instead of failing the fetch."""
+    with caplog.at_level(logging.WARNING):
+        validate_nwm_version_against_files(
+            [SWITCHOVER_V30_FILE, SWITCHOVER_V31_FILE], "nwm31"
+        )
+    assert "reports NWM version 3.0" in caplog.text
+    assert "switchover" in caplog.text
+
+
+def test_matching_file_on_switchover_day_is_silent():
+    """The grace window does not warn about files that already agree."""
+    validate_nwm_version_against_files([SWITCHOVER_V31_FILE], "nwm31")
+
+
+def test_outgoing_version_outside_grace_still_raises():
+    """Past the grace window, an old-version file is a real error."""
+    with pytest.raises(ValueError, match="NWM version mismatch"):
+        validate_nwm_version_against_files([_era_path("3.0")], "nwm31")
+
+
+def test_nwm_version_at_boundaries():
+    """The in-force version steps exactly at each boundary."""
+    assert nwm_version_at(NWM12_START_DATE - timedelta(hours=1)) is None
+    for boundary, version in NWM_VERSION_BOUNDARIES:
+        assert nwm_version_at(boundary) == version
+    assert nwm_version_at(NWM30_START_DATE - timedelta(hours=1)) == "2.1"
+    assert nwm_version_at(NWM31_START_DATE + timedelta(days=365)) == "3.1"
+
+
+def test_dates_and_nwm31_version():
+    """nwm30 stops where nwm31 starts, at the z-hour."""
+    last_v30 = NWM31_START_DATE - timedelta(hours=1)
+    validate_operational_start_end_date("nwm30", NWM30_START_DATE, last_v30)
+
+    with pytest.raises(ValueError):
+        validate_operational_start_end_date(
+            "nwm30", NWM30_START_DATE, NWM31_START_DATE
+        )
+
+    validate_operational_start_end_date(
+        "nwm31", NWM31_START_DATE, NWM31_START_DATE + timedelta(days=1)
+    )
