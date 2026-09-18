@@ -1,0 +1,55 @@
+﻿LocationTable
+=============
+
+.. currentmodule:: teehr.evaluation.tables.location_table
+
+.. autoclass:: LocationTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LocationTable.add_attributes
+      ~LocationTable.add_calculated_fields
+      ~LocationTable.add_geometry
+      ~LocationTable.aggregate
+      ~LocationTable.delete
+      ~LocationTable.distinct_values
+      ~LocationTable.drop
+      ~LocationTable.filter
+      ~LocationTable.load_dataframe
+      ~LocationTable.load_spatial
+      ~LocationTable.order_by
+      ~LocationTable.to_geopandas
+      ~LocationTable.to_pandas
+      ~LocationTable.to_sdf
+      ~LocationTable.validate
+      ~LocationTable.write
+      ~LocationTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LocationTable.foreign_keys
+      ~LocationTable.is_core_table
+      ~LocationTable.primary_location_id_field
+      ~LocationTable.secondary_location_id_field
+      ~LocationTable.strict_validation
+      ~LocationTable.table_name
+      ~LocationTable.uniqueness_fields
+      ~LocationTable.validate_filter_field_types
+   
+      ~LocationTable.extraction_func
+      ~LocationTable.schema_func
+   
+   

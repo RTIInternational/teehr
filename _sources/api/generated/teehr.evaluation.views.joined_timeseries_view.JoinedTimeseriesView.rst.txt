@@ -1,0 +1,33 @@
+﻿JoinedTimeseriesView
+====================
+
+.. currentmodule:: teehr.evaluation.views.joined_timeseries_view
+
+.. autoclass:: JoinedTimeseriesView
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~JoinedTimeseriesView.add_attributes
+      ~JoinedTimeseriesView.add_calculated_fields
+      ~JoinedTimeseriesView.add_geometry
+      ~JoinedTimeseriesView.aggregate
+      ~JoinedTimeseriesView.filter
+      ~JoinedTimeseriesView.order_by
+      ~JoinedTimeseriesView.to_geopandas
+      ~JoinedTimeseriesView.to_pandas
+      ~JoinedTimeseriesView.to_sdf
+      ~JoinedTimeseriesView.write
+      ~JoinedTimeseriesView.write_to
+   
+   
+
+   
+   
+   
