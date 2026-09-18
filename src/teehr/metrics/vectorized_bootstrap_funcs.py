@@ -170,6 +170,20 @@ def _vectorized_signature_transform(
     return p
 
 
+def _vec_divide(numerator, denominator):
+    """Row-wise ``deterministic_funcs._divide``: NaN where the denominator is 0.
+
+    The kernels are required to be bit-identical to the scalar closures (see
+    the parity tests), so they need the same zero-denominator rule. Without it
+    a bootstrapped ``relative_minimum`` over a group whose observed minimum is
+    zero draws ``inf`` replicates, and a single ``inf`` takes the quantiles
+    with it.
+    """
+    with np.errstate(invalid="ignore", divide="ignore"):
+        result = numerator / denominator
+    return np.where(np.asarray(denominator) == 0, np.nan, result)
+
+
 def _finite_pair_count(p: np.ndarray, s: np.ndarray) -> np.ndarray:
     """Per-row count of positions finite in both series (or in ``p`` alone).
 
@@ -210,11 +224,11 @@ def _vec_pearson_r(p: np.ndarray, s: np.ndarray, add_epsilon: bool) -> np.ndarra
             # the ddof=0 nanstd denominator below.
             cov = cov_sum / np.maximum(n, 1)
             denom = np.nanstd(p, axis=1) * np.nanstd(s, axis=1) + EPSILON
-            return cov / denom
+            return _vec_divide(cov, denom)
         else:
             # np.corrcoef is ddof-invariant (any consistent ddof cancels).
             denom = np.sqrt(np.nansum(dp**2, axis=1) * np.nansum(ds**2, axis=1))
-            return cov_sum / denom
+            return _vec_divide(cov_sum, denom)
 
 
 def _vec_relative_mean(p, s, model) -> np.ndarray:
@@ -222,8 +236,8 @@ def _vec_relative_mean(p, s, model) -> np.ndarray:
     p_mean = np.nanmean(p, axis=1)
     s_mean = np.nanmean(s, axis=1)
     if model.add_epsilon:
-        return s_mean / (p_mean + EPSILON)
-    return s_mean / p_mean
+        return _vec_divide(s_mean, p_mean + EPSILON)
+    return _vec_divide(s_mean, p_mean)
 
 
 def _vec_relative_median(p, s, model) -> np.ndarray:
@@ -231,8 +245,8 @@ def _vec_relative_median(p, s, model) -> np.ndarray:
     p_med = np.nanmedian(p, axis=1)
     s_med = np.nanmedian(s, axis=1)
     if model.add_epsilon:
-        return s_med / (p_med + EPSILON)
-    return s_med / p_med
+        return _vec_divide(s_med, p_med + EPSILON)
+    return _vec_divide(s_med, p_med)
 
 
 def _vec_relative_minimum(p, s, model) -> np.ndarray:
@@ -240,8 +254,8 @@ def _vec_relative_minimum(p, s, model) -> np.ndarray:
     p_min = np.nanmin(p, axis=1)
     s_min = np.nanmin(s, axis=1)
     if model.add_epsilon:
-        return s_min / (p_min + EPSILON)
-    return s_min / p_min
+        return _vec_divide(s_min, p_min + EPSILON)
+    return _vec_divide(s_min, p_min)
 
 
 def _vec_relative_maximum(p, s, model) -> np.ndarray:
@@ -249,8 +263,8 @@ def _vec_relative_maximum(p, s, model) -> np.ndarray:
     p_max = np.nanmax(p, axis=1)
     s_max = np.nanmax(s, axis=1)
     if model.add_epsilon:
-        return s_max / (p_max + EPSILON)
-    return s_max / p_max
+        return _vec_divide(s_max, p_max + EPSILON)
+    return _vec_divide(s_max, p_max)
 
 
 def _vec_relative_standard_deviation(p, s, model) -> np.ndarray:
@@ -258,8 +272,8 @@ def _vec_relative_standard_deviation(p, s, model) -> np.ndarray:
     p_std = np.nanstd(p, axis=1)
     s_std = np.nanstd(s, axis=1)
     if model.add_epsilon:
-        return s_std / (p_std + EPSILON)
-    return s_std / p_std
+        return _vec_divide(s_std, p_std + EPSILON)
+    return _vec_divide(s_std, p_std)
 
 
 def _vec_relative_bias(p, s, model) -> np.ndarray:
@@ -267,8 +281,8 @@ def _vec_relative_bias(p, s, model) -> np.ndarray:
     diff_sum = np.nansum(s - p, axis=1)
     p_sum = np.nansum(p, axis=1)
     if model.add_epsilon:
-        return diff_sum / (p_sum + EPSILON)
-    return diff_sum / p_sum
+        return _vec_divide(diff_sum, p_sum + EPSILON)
+    return _vec_divide(diff_sum, p_sum)
 
 
 def _vec_nse_parts(p, s, model) -> tuple:
@@ -324,11 +338,11 @@ def _vec_kling_gupta_efficiency(p, s, model) -> np.ndarray:
 
     with np.errstate(invalid="ignore", divide="ignore"):
         if model.add_epsilon:
-            rel_var = s_std / (p_std + EPSILON)
-            rel_mean = s_mean / (p_mean + EPSILON)
+            rel_var = _vec_divide(s_std, p_std + EPSILON)
+            rel_mean = _vec_divide(s_mean, p_mean + EPSILON)
         else:
-            rel_var = s_std / p_std
-            rel_mean = s_mean / p_mean
+            rel_var = _vec_divide(s_std, p_std)
+            rel_mean = _vec_divide(s_mean, p_mean)
 
     euclidean = np.sqrt(
         model.sr * (r - 1.0) ** 2
@@ -361,9 +375,9 @@ def _vec_mean_error_core(p, s, model, power=1.0, root=False) -> np.ndarray:
     non-finite pairs.
     """
     with np.errstate(invalid="ignore", divide="ignore"):
-        me = (
-            np.nansum(np.abs(p - s) ** power, axis=1)
-            / _finite_pair_count(p, s)
+        me = _vec_divide(
+            np.nansum(np.abs(p - s) ** power, axis=1),
+            _finite_pair_count(p, s),
         )
     return np.sqrt(me) if root else me
 
@@ -373,7 +387,9 @@ def _vec_mean_error(p, s, model) -> np.ndarray:
     # note it is signed, and s - p rather than |p - s|.
     p, s = _vectorized_transform(p, s, model)
     with np.errstate(invalid="ignore", divide="ignore"):
-        return np.nansum(s - p, axis=1) / _finite_pair_count(p, s)
+        return _vec_divide(
+            np.nansum(s - p, axis=1), _finite_pair_count(p, s)
+        )
 
 
 def _vec_mean_absolute_error(p, s, model) -> np.ndarray:
@@ -401,8 +417,8 @@ def _vec_root_mean_standard_deviation_ratio(p, s, model) -> np.ndarray:
     p_std = np.nanstd(p, axis=1)
     with np.errstate(invalid="ignore", divide="ignore"):
         if model.add_epsilon:
-            return rmse / (p_std + EPSILON)
-        return rmse / p_std
+            return _vec_divide(rmse, p_std + EPSILON)
+        return _vec_divide(rmse, p_std)
 
 
 def _vec_mean_absolute_relative_error(p, s, model) -> np.ndarray:
@@ -411,8 +427,8 @@ def _vec_mean_absolute_relative_error(p, s, model) -> np.ndarray:
     p_sum = np.nansum(p, axis=1)          # np.sum(p): p only, not pairwise
     with np.errstate(invalid="ignore", divide="ignore"):
         if model.add_epsilon:
-            return numerator / (p_sum + EPSILON)
-        return numerator / p_sum
+            return _vec_divide(numerator, p_sum + EPSILON)
+        return _vec_divide(numerator, p_sum)
 
 
 def _vec_max_value_delta(p, s, model) -> np.ndarray:
@@ -436,13 +452,16 @@ def _vec_kling_gupta_efficiency_mod1(p, s, model) -> np.ndarray:
         if model.add_epsilon:
             # Mod1's variability ratio is a ratio of coefficients of
             # variation, unlike kge's ratio of raw standard deviations.
-            var_ratio = (
-                (s_std / (s_mean + EPSILON)) / (p_std / (p_mean + EPSILON))
+            var_ratio = _vec_divide(
+                _vec_divide(s_std, s_mean + EPSILON),
+                _vec_divide(p_std, p_mean + EPSILON),
             )
-            rel_mean = s_mean / (p_mean + EPSILON)
+            rel_mean = _vec_divide(s_mean, p_mean + EPSILON)
         else:
-            var_ratio = (s_std / s_mean) / (p_std / p_mean)
-            rel_mean = s_mean / p_mean
+            var_ratio = _vec_divide(
+                _vec_divide(s_std, s_mean), _vec_divide(p_std, p_mean)
+            )
+            rel_mean = _vec_divide(s_mean, p_mean)
 
     euclidean = np.sqrt(
         model.sr * (r - 1.0) ** 2
@@ -466,11 +485,13 @@ def _vec_kling_gupta_efficiency_mod2(p, s, model) -> np.ndarray:
 
     with np.errstate(invalid="ignore", divide="ignore"):
         if model.add_epsilon:
-            rel_var = s_std / (p_std + EPSILON)
-            bias = ((s_mean - p_mean) ** 2) / ((p_std ** 2) + EPSILON)
+            rel_var = _vec_divide(s_std, p_std + EPSILON)
+            bias = _vec_divide(
+                (s_mean - p_mean) ** 2, (p_std ** 2) + EPSILON
+            )
         else:
-            rel_var = s_std / p_std
-            bias = ((s_mean - p_mean) ** 2) / (p_std ** 2)
+            rel_var = _vec_divide(s_std, p_std)
+            bias = _vec_divide((s_mean - p_mean) ** 2, p_std ** 2)
 
     euclidean = np.sqrt(
         model.sr * (r - 1.0) ** 2

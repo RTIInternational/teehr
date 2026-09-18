@@ -102,7 +102,34 @@ def _build_shared_bootstrap_udfs(
         if boot.include_value_time and "value_time" not in input_field_names:
             input_field_names.append("value_time")
 
+        # The sort fields go LAST, and are appended even when the field is
+        # already a metric input -- passing a column to the UDF twice is
+        # deliberate. It keeps the sort keys at a known trailing position, so
+        # create_shared_bootstrap_func can peel them off before anything else
+        # reads args (notably _make_bs_object's Gumboot `args[-1]` value_time
+        # contract and the `args[0]` primary series), with no index
+        # bookkeeping to keep in step.
+        sort_fields = parse_fields_to_list(boot.sort_by) if boot.sort_by else []
+        input_field_names.extend(sort_fields)
+
         validate_fields_exist(gp._df.columns, input_field_names)
+
+        if not sort_fields and type(boot).__name__ in ("CircularBlock", "Stationary"):
+            # Once per bootstrap group per query, on the driver -- not per
+            # Spark group. Without a sort the blocks are drawn from whatever
+            # row order the plan happens to produce, so the interval is
+            # neither reproducible nor the block estimator it looks like, and
+            # this is the only place a caller would find that out.
+            logger.warning(
+                "%s bootstrap has no sort_by, so its blocks are drawn in "
+                "whatever row order Spark supplies for each group. Set "
+                "sort_by to the field that carries the series order (e.g. "
+                "value_time, or reference_time once value_time has been "
+                "aggregated away) for reproducible intervals. Affected "
+                "metric(s): %s",
+                boot.name,
+                [m.output_field_name for m in group_metrics],
+            )
 
         names = [m.output_field_name for m in group_metrics]
         logger.debug(

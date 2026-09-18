@@ -127,6 +127,11 @@ class BootstrapBasemodel(PydanticBaseModel):
     include_value_time : bool
         Whether to include the value_time series in the bootstrapping
         function, by default False.
+    sort_by : Union[str, List[str], None]
+        Field name(s) to sort each group by before resampling, by default
+        None (the rows are resampled in whatever order Spark supplies them).
+        See the notes below -- for a block method this is the difference
+        between a reproducible interval and an arbitrary one.
     func : Callable
         The wrapper to generate the bootstrapping function,
         by default None.
@@ -158,6 +163,28 @@ class BootstrapBasemodel(PydanticBaseModel):
     than the number of timesteps, while the guard (like the others) measures
     the input series length -- so a caller resampling few water years may want
     to raise ``minimum_sample_size`` explicitly.
+
+    ``sort_by`` names the field(s) that put each group in series order before
+    it is resampled. ``CircularBlock`` and ``Stationary`` draw blocks of
+    *adjacent rows*, and ``Gumboot`` blocks by water year, so what these
+    methods return is a function of the row order -- which Spark does not
+    define for a grouped aggregation. Left unset, the same query can yield
+    different intervals on a different plan, and the blocks are drawn from an
+    arbitrary permutation rather than from the series, which defeats the point
+    of a block method: it stops preserving serial correlation and understates
+    the uncertainty.
+
+    Which field is right depends on the caller's pipeline, which is why this
+    is not simply hard-wired to ``value_time``. On a joined timeseries the
+    series order is ``value_time``; but where an upstream aggregation has
+    already collapsed ``value_time`` -- e.g. a per-forecast, per-lead-time-bin
+    aggregation, after which each row is one forecast -- the remaining time
+    axis is ``reference_time``, and that is the field to sort on.
+
+    Rows tied on the sort key keep their arrival order, which is still
+    arbitrary, so pass enough fields for a total order (e.g.
+    ``["reference_time", "member"]``) when the key alone does not distinguish
+    every row in a group.
     """
 
     return_type: Union[str, T.ArrayType, T.MapType] = Field(default=None)
@@ -166,6 +193,7 @@ class BootstrapBasemodel(PydanticBaseModel):
     quantiles: Union[List[float], None] = None
     name: str = Field(default=None)
     include_value_time: bool = Field(default=False)
+    sort_by: Union[str, List[str], None] = Field(default=None)
     func: Callable = Field(default=None)
     minimum_sample_size: int = Field(default=30, ge=0)
     minimum_mean: float = Field(default=0.01)

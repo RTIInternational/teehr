@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from teehr import DeterministicMetrics, Signatures
+from teehr.metrics.engine import aggregate_metrics_with_engine
 from teehr.metrics.models.deterministic import VariabilityRatio
 
 EPSILON = 1e-6
@@ -785,3 +786,90 @@ def test_confusion_matrix_unpacks_to_static_keys(module_scope_test_warehouse, en
     assert sorted(metrics_df.columns) == sorted(
         ["primary_location_id", "TP", "TN", "FP", "FN"]
     )
+
+
+def _undefined_data(spark):
+    """Two groups whose metrics are undefined, for different reasons.
+
+    flat      -- primary is constant, so its standard deviation is 0 and the
+                 KGE/NSE guards fire.
+    zero-min  -- primary's minimum is 0, so relative_minimum divides by zero.
+    """
+    rows = []
+    for i in range(40):
+        rows.append(("flat", 5.0, 5.0 + (i % 3)))
+    for i in range(40):
+        rows.append(("zero-min", float(i % 10), float(i % 7) + 1.0))
+    return spark.createDataFrame(
+        rows,
+        "primary_location_id string, primary_value double, "
+        "secondary_value double",
+    )
+
+
+def _row_by_group(sdf):
+    return {r["primary_location_id"]: r.asDict() for r in sdf.collect()}
+
+
+@pytest.mark.parametrize("engine", ["spark", "python"])
+def test_undefined_metric_is_null_on_both_engines(spark_shared_session, engine):
+    """An undefined metric result is NULL, whichever engine computed it.
+
+    Both engines already agreed it was undefined; they disagreed on how to
+    spell it. The Python path returns np.nan, which Arrow converts to NULL on
+    the way out of the UDF, while the Spark path used to emit a literal NaN --
+    so `IS NULL` found one and missed the other, and an average over the
+    column returned NaN instead of skipping the gap.
+
+    Asserted on collect() rows, not to_pandas(): pandas collapses NULL and
+    NaN into the same float NaN, so a to_pandas() assertion would pass either
+    way and prove nothing.
+    """
+    sdf = _undefined_data(spark_shared_session)
+
+    got = _row_by_group(
+        aggregate_metrics_with_engine(
+            sdf=sdf,
+            group_by=["primary_location_id"],
+            metrics=[
+                DeterministicMetrics.KlingGuptaEfficiency(),
+                DeterministicMetrics.NashSutcliffeEfficiency(),
+            ],
+            engine=engine,
+        )
+    )
+
+    # Constant primary -> zero standard deviation -> undefined.
+    assert got["flat"]["kling_gupta_efficiency"] is None
+    assert got["flat"]["nash_sutcliffe_efficiency"] is None
+    # The other group is well posed, so it must still produce a number.
+    assert got["zero-min"]["kling_gupta_efficiency"] is not None
+
+
+@pytest.mark.parametrize("engine", ["spark", "python"])
+def test_divide_by_zero_is_null_not_inf(spark_shared_session, engine):
+    """A zero denominator yields NULL on both engines, never inf.
+
+    With add_epsilon=False and an observed minimum of 0, numpy returned inf
+    and wrote it into the result, while Spark's try_divide returned NULL. An
+    inf in a stored column is the worse of the two: it survives Arrow intact
+    and turns every downstream mean over that column into inf.
+    """
+    sdf = _undefined_data(spark_shared_session)
+
+    got = _row_by_group(
+        aggregate_metrics_with_engine(
+            sdf=sdf,
+            group_by=["primary_location_id"],
+            metrics=[
+                DeterministicMetrics.RelativeMinimum(add_epsilon=False),
+                DeterministicMetrics.RelativeMean(add_epsilon=False),
+            ],
+            engine=engine,
+        )
+    )
+
+    assert got["zero-min"]["relative_minimum"] is None
+    # Not a blanket null: the mean of the same group is well defined.
+    assert got["zero-min"]["relative_mean"] is not None
+    assert np.isfinite(got["zero-min"]["relative_mean"])

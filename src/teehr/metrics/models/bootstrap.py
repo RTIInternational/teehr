@@ -36,6 +36,13 @@ class Gumboot(BootstrapBasemodel):
         The file path to the boot year csv file. The default value is None.
     water_year_month : int
         The month specifying the start of the water year. Default value is 10.
+    sort_by : Union[str, List[str], None]
+        Field name(s) ordering each group before it is resampled, by default
+        None. Gumboot blocks by water year, so it is less sensitive to the
+        order within a year, but setting it still makes a run reproducible
+        across query plans. See :class:`BootstrapBasemodel
+        <teehr.metrics.models.base.BootstrapBasemodel>` for the full
+        discussion.
     """
 
     boot_year_file: Union[str, Path, None] = None
@@ -56,7 +63,17 @@ class CircularBlock(BootstrapBasemodel):
         The block size for the CircularBlockBootstrap.
         If ``None`` (default), TEEHR estimates an optimal block size using
         ``arch.bootstrap.optimal_block_length`` on the primary metric input
-        series and uses the ``b_cb`` estimate.
+        series and uses the ``b_cb`` estimate. Note the estimate is itself
+        computed from the series *in the order it arrives*, so it moves with
+        the row order too unless ``sort_by`` is set.
+    sort_by : Union[str, List[str], None]
+        Field name(s) ordering each group before it is resampled, by default
+        None. Leaving it unset means the blocks are drawn in whatever row
+        order Spark supplies, which makes the interval depend on the query
+        plan and is not the block estimator it appears to be. See
+        :class:`BootstrapBasemodel
+        <teehr.metrics.models.base.BootstrapBasemodel>` for the full
+        discussion.
     """
 
     random_state: Union[RandomState, None] = None
@@ -80,7 +97,17 @@ class Stationary(BootstrapBasemodel):
         The block size for the StationaryBootstrap.
         If ``None`` (default), TEEHR estimates an optimal block size using
         ``arch.bootstrap.optimal_block_length`` on the primary metric input
-        series and uses the ``b_sb`` estimate.
+        series and uses the ``b_sb`` estimate. Note the estimate is itself
+        computed from the series *in the order it arrives*, so it moves with
+        the row order too unless ``sort_by`` is set.
+    sort_by : Union[str, List[str], None]
+        Field name(s) ordering each group before it is resampled, by default
+        None. Leaving it unset means the blocks are drawn in whatever row
+        order Spark supplies, which makes the interval depend on the query
+        plan and is not the block estimator it appears to be. See
+        :class:`BootstrapBasemodel
+        <teehr.metrics.models.base.BootstrapBasemodel>` for the full
+        discussion.
     """
 
     random_state: Union[RandomState, None] = None

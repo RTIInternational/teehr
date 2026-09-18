@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 
+from teehr.metrics.deterministic_funcs import _divide
 from teehr.metrics.models.base import MetricsBasemodel
 from teehr.metrics.models.base import TransformEnum
 from typing import Callable, Optional
@@ -203,15 +204,14 @@ def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
         if model.as_percentile:
             fdc_probs = fdc_probs * 100
 
-        # calculate slope between the two quantiles
+        # calculate slope between the two quantiles. Two equal quantile
+        # ordinates give a zero denominator, which is NULL on the
+        # Spark-native path (F.try_divide) -- so NaN, not inf, here.
+        rise = p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]
+        run = fdc_probs[upper_idx] - fdc_probs[lower_idx]
         if model.add_epsilon:
-            slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / ((
-                fdc_probs[upper_idx] - fdc_probs[lower_idx]
-            ) + EPSILON)
-        else:
-            slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / (
-                fdc_probs[upper_idx] - fdc_probs[lower_idx]
-            )
+            run = run + EPSILON
+        slope = _divide(rise, run)
 
         return slope
 
