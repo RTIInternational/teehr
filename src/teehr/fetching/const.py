@@ -138,6 +138,7 @@ NWM_CONFIGURATION_DESCRIPTIONS = {
 # entries that differ are written out; the rest are inherited, so a description
 # added above reaches 3.1 too.
 NWM31_CONFIGURATION_DESCRIPTIONS = NWM_CONFIGURATION_DESCRIPTIONS | {
+    "forcing_short_range_puertorico": "PRVI NBM mean areal forcing for NWM short range",
     "short_range_puertorico": "PRVI NWM short range, NBM forcing",
     "short_range_puertorico_no_da": "PRVI NWM short range, NBM forcing, initialized by no_da analysis_assim",
 }
