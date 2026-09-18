@@ -768,7 +768,7 @@ class Fetch:
             (e.g., "streamflow", "velocity", ...).
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
-            "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+            "nwm12", "nwm20", "nwm21", "nwm22", "nwm30", or "nwm31".
             Note that there is no change in NWM configuration between
             version 2.1 and 2.2, and they are treated as the same version.
             They are both allowed here for convenience.
@@ -778,7 +778,8 @@ class Fetch:
             - v1.2: 2018-09-17 - 2019-06-18
             - v2.0: 2019-06-19 - 2021-04-19
             - v2.1/2.2: 2021-04-20 - 2023-09-18
-            - v3.0: 2023-09-19 - present
+            - v3.0: 2023-09-19 - 2026-08-17
+            - v3.1: 2026-08-18 - present
         start_date : Union[str, datetime, pd.Timestamp]
             Date and time to begin data ingest.
             Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
@@ -1079,7 +1080,7 @@ class Fetch:
             (e.g., "streamflow", "velocity", ...).
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
-            "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+            "nwm12", "nwm20", "nwm21", "nwm22", "nwm30", or "nwm31".
             Note that there is no change in NWM configuration between
             version 2.1 and 2.2, and they are treated as the same version.
             They are both allowed here for convenience.
@@ -1089,7 +1090,8 @@ class Fetch:
             - v1.2: 2018-09-17 - 2019-06-18
             - v2.0: 2019-06-19 - 2021-04-19
             - v2.1/2.2: 2021-04-20 - 2023-09-18
-            - v3.0: 2023-09-19 - present
+            - v3.0: 2023-09-19 - 2026-08-17
+            - v3.1: 2026-08-18 - present
         start_date : Union[str, datetime, pd.Timestamp]
             Date and time to begin data ingest.
             Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
