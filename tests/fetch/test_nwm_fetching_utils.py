@@ -35,6 +35,9 @@ from teehr.fetching.const import (
     NWM20_START_DATE,
     NWM12_START_DATE,
 )
+from teehr.fetching.models.utils import (
+    SupportedNWMOperationalVersionsEnum,
+)
 from teehr.evaluation.evaluation import create_spark_session
 
 TIMEFORMAT = "%Y-%m-%d %H:%M:%S"
@@ -465,6 +468,43 @@ def test_nwm_configuration_metadata():
     )
     assert config_meta["name"] == "nwm30_medium_range_alaska"
     assert config_meta["description"] == "Alaska NWM medium range, GFS forcing"
+
+
+def test_nwm31_configuration_metadata():
+    """Test the 3.1 descriptions that differ from the shared table."""
+    # PRVI short range switched from NAM-NEST to NBM forcing in 3.1.
+    for nwm_configuration_name, nwm30_desc, nwm31_desc in [
+        (
+            "short_range_puertorico",
+            "PRVI NWM short range, NAM-NEST forcing",
+            "PRVI NWM short range, NBM forcing",
+        ),
+        (
+            "short_range_puertorico_no_da",
+            "PRVI NWM short range, NAM-NEST forcing, initialized by no_da analysis_assim",
+            "PRVI NWM short range, NBM forcing, initialized by no_da analysis_assim",
+        ),
+    ]:
+        config_meta = format_nwm_configuration_metadata(
+            nwm_config_name=nwm_configuration_name,
+            nwm_version="nwm30"
+        )
+        assert config_meta["description"] == nwm30_desc
+
+        config_meta = format_nwm_configuration_metadata(
+            nwm_config_name=nwm_configuration_name,
+            nwm_version=SupportedNWMOperationalVersionsEnum.nwm31
+        )
+        assert config_meta["name"] == f"nwm31_{nwm_configuration_name}"
+        assert config_meta["description"] == nwm31_desc
+
+    # Everything else is inherited from the shared table.
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name="short_range",
+        nwm_version="nwm31"
+    )
+    assert config_meta["name"] == "nwm31_short_range"
+    assert config_meta["description"] == "CONUS NWM short range, HRRR forcing"
 
 
 @pytest.mark.skip(reason="This must be run manually since it requires an isolated spark session")

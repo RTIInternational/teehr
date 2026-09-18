@@ -65,6 +65,7 @@ from teehr.fetching.const import (
     NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
     NWM_CONFIGURATION_DESCRIPTIONS,
+    NWM_CONFIGURATION_DESCRIPTIONS_BY_VERSION,
     NWM_VERSION_ATTRS,
     NWM_VERSION_ATTR_VALUES,
     NWM_VERSION_BOUNDARIES,
@@ -231,6 +232,9 @@ def format_nwm_configuration_metadata(
     Returns a dictionary with the formatted configuration name and member,
     which is parsed from the NWM configuration name if it's an ensemble
     (ie., medium range or long range streamflow).
+
+    Descriptions come from the version's own table where it has one,
+    otherwise the shared table.
     """
     ev_member = None
     # Try to parse the member from the configuration name.
@@ -241,10 +245,12 @@ def format_nwm_configuration_metadata(
     else:
         ev_config_name = nwm_version + "_" + nwm_config_name
     # Get the config description.
-    if nwm_config_name in NWM_CONFIGURATION_DESCRIPTIONS:
-        ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name]
-    else:
-        ev_config_desc = "NWM operational forecasts"  # default description
+    descriptions = NWM_CONFIGURATION_DESCRIPTIONS_BY_VERSION.get(
+        nwm_version, NWM_CONFIGURATION_DESCRIPTIONS
+    )
+    ev_config_desc = descriptions.get(
+        nwm_config_name, "NWM operational forecasts"  # default description
+    )
     return {
         "name": ev_config_name,
         "member": ev_member,
@@ -558,7 +564,7 @@ def list_to_np(lst):
 
 
 def _s3_region(url: str) -> str:
-    """The region an s3 bucket lives in, from :data:`S3_BUCKET_REGIONS`."""
+    """Get the region an s3 bucket lives in, from :data:`S3_BUCKET_REGIONS`."""
     bucket = url.split("://", 1)[-1].split("/", 1)[0]
     return S3_BUCKET_REGIONS.get(bucket, DEFAULT_S3_REGION)
 
@@ -577,7 +583,7 @@ def _public_store(url: str):
 
 
 def public_zarr_store(url: str) -> ObjectStore:
-    """A read-only zarr store for a public s3 zarr, backed by obstore.
+    """Create a read-only zarr store for a public s3 zarr, backed by obstore.
 
     Used instead of ``fsspec.get_mapper`` so the retrospective reads go
     through the same object store, region pinning, and retry budget as the

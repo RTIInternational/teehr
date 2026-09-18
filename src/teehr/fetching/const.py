@@ -134,6 +134,19 @@ NWM_CONFIGURATION_DESCRIPTIONS = {
     "forcing_short_range_puertorico": "PRVI NAM-NEST mean areal forcing for NWM short range",
 }
 
+# NWM 3.1 switched the PRVI short range forcing from NAM-NEST to NBM. Only the
+# entries that differ are written out; the rest are inherited, so a description
+# added above reaches 3.1 too.
+NWM31_CONFIGURATION_DESCRIPTIONS = NWM_CONFIGURATION_DESCRIPTIONS | {
+    "short_range_puertorico": "PRVI NWM short range, NBM forcing",
+    "short_range_puertorico_no_da": "PRVI NWM short range, NBM forcing, initialized by no_da analysis_assim",
+}
+
+# Versions absent here use NWM_CONFIGURATION_DESCRIPTIONS.
+NWM_CONFIGURATION_DESCRIPTIONS_BY_VERSION = {
+    "nwm31": NWM31_CONFIGURATION_DESCRIPTIONS,
+}
+
 NWM_HAWAII_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
         "streamflow": {"name": "streamflow_15min_inst", "long_name": "15-minute Instantaneous Streamflow"},
