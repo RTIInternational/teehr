@@ -125,10 +125,31 @@
 - Bootstrapped metrics accumulate in float64. Values are stored as float32, and the legacy
   loop reduced in float32; results can therefore differ in the last couple of float32 ULPs
   from previous releases (more under a `log` transform, which amplifies the input error).
+- NWM v3.1 is supported in operational point and gridded fetching (`nwm_version="nwm31"`,
+  available from 2026-08-18). Its configurations are unchanged from v3.0, so the v3.0
+  configuration models are reused. The only metadata difference is the PRVI short range
+  forcing, which moved from NAM-NEST to NBM: `short_range_puertorico` and
+  `short_range_puertorico_no_da` carry updated configuration descriptions under v3.1, while
+  every other description is inherited from the shared table.
+- Every operational fetch now checks the NWM version reported by the source files themselves
+  (`NWM_version_number` / `model_version`) against the requested `nwm_version`, and raises
+  before building references if they disagree. A date range the requested version never
+  produced previously succeeded and wrote timeseries labelled with the wrong version. Only the
+  first and last file of the range are read, which is enough to catch both a wholly wrong
+  version and a range straddling a boundary. A file still reporting the outgoing version
+  within a day of a switchover logs a warning and is accepted, since NOAA reruns some cycles
+  on the outgoing system mid-switch. Files carrying no version attribute at all — nwm12-era
+  forcing — are skipped rather than treated as a mismatch.
 - `unpack_sdf_dict_columns` accepts an optional `key_list` argument to expand a MapType column without reading its keys from the data.
 - `unpack_sdf_dict_columns` raises a clear `ValueError` when asked to unpack a non-MapType column, instead of an `AttributeError`.
 
 ### Fixed
+- NWM version start dates are now the real first cycle rather than midnight of the switchover
+  day, and operational date validation compares at z-hour resolution. v3.0 begins at
+  `2023-09-19 t12z`, v2.1 at `2021-04-20 t14z` and v2.0 at `2019-06-19 t14z`, so comparing
+  whole days accepted up to 14 hours of the neighbouring version — a `nwm30` fetch starting on
+  2023-09-19 silently pulled v2.2 files for t00z through t11z. Requesting `nwm30` for a range
+  extending past the v3.1 switchover is also rejected now, where before it was accepted.
 - `nash_sutcliffe_efficiency` and its normalized variant dropped a dead
   `if numerator == np.nan or denominator == np.nan` guard: that comparison is always False, so it
   never fired. A NaN numerator propagates through the division and lands as NULL, which is what
