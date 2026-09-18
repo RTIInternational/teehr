@@ -156,6 +156,34 @@ Fetch real-time NWM forecast data:
 
 See also: :meth:`Fetch.nwm_operational_points() <teehr.evaluation.fetch.Fetch.nwm_operational_points>`
 
+Supported NWM Versions
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Version
+     - Date Range
+   * - ``nwm12``
+     - 2018-09-17 t00z to 2019-06-19 t13z
+   * - ``nwm20``
+     - 2019-06-19 t14z to 2021-04-20 t13z
+   * - ``nwm21`` / ``nwm22``
+     - 2021-04-20 t14z to 2023-09-19 t11z
+   * - ``nwm30``
+     - 2023-09-19 t12z to 2026-08-17 t23z
+   * - ``nwm31``
+     - 2026-08-18 t00z to present
+
+There is no change in NWM configuration between versions 2.1 and 2.2, so TEEHR treats them
+as one version; both names are accepted for convenience.
+
+Each version switches on a forecast cycle rather than at midnight, so the requested date
+range is validated at z-hour resolution. Requesting ``nwm30`` from 2023-09-19 t00z, for
+example, is rejected because those cycles were still produced by v2.2. TEEHR also checks the
+version recorded in the source files themselves and fails before fetching if it disagrees
+with ``nwm_version``.
+
 Forecast Configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
