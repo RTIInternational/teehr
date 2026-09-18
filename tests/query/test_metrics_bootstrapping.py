@@ -1,4 +1,5 @@
 """Test evaluation class."""
+import logging
 from teehr import DeterministicMetrics, Signatures
 from teehr import Operators as ops
 import pandas as pd
@@ -1613,3 +1614,263 @@ def test_derived_keys_match_legacy_producer():
     )
 
     assert list(legacy.keys()) == derive_map_key_list(kge)
+
+
+def _sorted_and_shuffled_bootstrap(ev, boot):
+    """Run one bootstrap metric over the warehouse twice, in two row orders.
+
+    Returns (as_read, reordered) as {location -> quantile dict}. The two runs
+    differ only in the order the rows reach the UDF, which is what `sort_by`
+    exists to make irrelevant. Goes through apply_aggregation_metrics rather
+    than ev.aggregate() so the row order is set by an explicit orderBy -- the
+    plan-dependent order that made engine="auto" and engine="python" disagree
+    is exactly what is being pinned down here.
+    """
+    from teehr.metrics.format import apply_aggregation_metrics
+    from teehr.querying.utils import group_df
+
+    nse = DeterministicMetrics.NashSutcliffeEfficiency(
+        output_field_name="nse_boot"
+    )
+    nse.bootstrap = boot
+
+    base = ev.table("joined_timeseries").to_sdf()
+    out = []
+    for sdf in (base, base.orderBy(F.col("value_time").desc())):
+        agg = apply_aggregation_metrics(
+            gp=group_df(sdf, ["primary_location_id"]), include_metrics=[nse]
+        )
+        out.append(
+            {r["primary_location_id"]: r["nse_boot"] for r in agg.collect()}
+        )
+    assert len(out[0]) == 3
+    return out[0], out[1]
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_sort_by_makes_bootstrap_independent_of_row_order(
+    session_scope_test_warehouse,
+):
+    """`sort_by` pins the row order the resamplers depend on.
+
+    A block bootstrap draws blocks of ADJACENT rows, so its result is a
+    function of the order the group arrives in -- and Spark defines no row
+    order for a grouped aggregation. Measured on the nwmd pipeline, the same
+    query at engine="auto" and engine="python" disagreed on every bootstrap
+    column for this reason, and sorting the input moved one gage's 2.5% bound
+    from 0.127 to -2.36. The seed fixes which indices are drawn, not what sits
+    at those indices.
+    """
+    ev = session_scope_test_warehouse
+
+    kwargs = dict(seed=1234, quantiles=[0.025, 0.975], reps=200,
+                  minimum_sample_size=0)
+
+    # Unsorted: the row order leaks into the result.
+    as_read, reordered = _sorted_and_shuffled_bootstrap(
+        ev, Bootstrappers.Stationary(**kwargs)
+    )
+    assert as_read != reordered, (
+        "without sort_by the bootstrap should still depend on row order"
+    )
+
+    # Sorted: it does not.
+    as_read, reordered = _sorted_and_shuffled_bootstrap(
+        ev, Bootstrappers.Stationary(sort_by="value_time", **kwargs)
+    )
+    assert as_read == reordered, (
+        "with sort_by the bootstrap must not depend on row order"
+    )
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_sort_by_accepts_multiple_fields_and_existing_inputs(
+    session_scope_test_warehouse,
+):
+    """A list of fields works, and so does a field that is already an input.
+
+    The sort fields are appended to the UDF's argument list even when the
+    field is already a metric input, so the same column is passed to the UDF
+    twice -- deliberately, to keep the sort keys at a known trailing position.
+    This asserts Spark accepts that.
+    """
+    ev = session_scope_test_warehouse
+
+    kwargs = dict(seed=1234, quantiles=[0.025, 0.975], reps=50,
+                  minimum_sample_size=0)
+
+    multi = Bootstrappers.Stationary(
+        sort_by=["value_time", "primary_location_id"], **kwargs
+    )  # value_time alone is already a total order here; the second key is
+    #    carried through to prove multiple keys are accepted
+    as_read, reordered = _sorted_and_shuffled_bootstrap(ev, multi)
+    assert as_read == reordered
+
+    # primary_value is already args[0], so this passes the same column to the
+    # UDF twice. Paired with value_time for a total order -- on its own it is
+    # a tie-heavy key, and tied rows keep their arrival order, which is the
+    # documented reason sort_by takes a list.
+    dup = Bootstrappers.Stationary(
+        sort_by=["primary_value", "value_time"], **kwargs
+    )
+    as_read, reordered = _sorted_and_shuffled_bootstrap(ev, dup)
+    assert as_read == reordered
+    assert all(
+        v is not None
+        for quantiles in as_read.values()
+        for v in quantiles.values()
+    )
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_sort_by_unknown_field_raises(session_scope_test_warehouse):
+    """A sort field that is not on the table fails fast, like any input."""
+    ev = session_scope_test_warehouse
+
+    nse = DeterministicMetrics.NashSutcliffeEfficiency()
+    nse.bootstrap = Bootstrappers.Stationary(
+        seed=1, quantiles=[0.5], reps=5, sort_by="not_a_column"
+    )
+
+    with pytest.raises(ValueError, match="not_a_column"):
+        (
+            ev.table("joined_timeseries")
+            .aggregate(metrics=[nse], group_by=["primary_location_id"])
+            .to_pandas()
+        )
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_sort_by_with_gumboot_keeps_its_value_time(
+    session_scope_test_warehouse,
+):
+    """Gumboot reads value_time as its trailing arg; sorting must not shift it.
+
+    Gumboot blocks by water year, which it derives from a value_time series
+    passed as args[-1]. The sort keys are appended after it and peeled off
+    first, so that contract still holds -- if it did not, the water years
+    would be read off the sort column instead.
+    """
+    ev = session_scope_test_warehouse
+
+    def run(**boot_kwargs):
+        nse = DeterministicMetrics.NashSutcliffeEfficiency()
+        nse.bootstrap = Bootstrappers.Gumboot(
+            seed=50, quantiles=[0.05, 0.95], reps=20, **boot_kwargs
+        )
+        nse.unpack_results = True
+        return (
+            ev.table("joined_timeseries")
+            .aggregate(metrics=[nse], group_by=["primary_location_id"])
+            .order_by("primary_location_id")
+            .to_pandas()
+        )
+
+    sorted_run = run(sort_by="value_time")
+    assert sorted_run.index.size == 3
+    for col in (
+        "nash_sutcliffe_efficiency_0_05",
+        "nash_sutcliffe_efficiency_0_95",
+    ):
+        assert sorted_run[col].notna().all()
+
+    # The fixture is already chronological per gage, so sorting it by
+    # value_time cannot change which water years Gumboot resamples.
+    np.testing.assert_allclose(
+        sorted_run[
+            ["nash_sutcliffe_efficiency_0_05", "nash_sutcliffe_efficiency_0_95"]
+        ].values,
+        run()[
+            ["nash_sutcliffe_efficiency_0_05", "nash_sutcliffe_efficiency_0_95"]
+        ].values,
+        rtol=1e-6,
+        atol=1e-7,
+    )
+
+
+def test_sort_by_keys_the_bootstrap_group():
+    """Two configs that differ only in sort order cannot share samples."""
+    from teehr.metrics.bootstrap_funcs import bootstrap_group_key
+
+    def key(**boot_kwargs):
+        nse = DeterministicMetrics.NashSutcliffeEfficiency()
+        nse.bootstrap = Bootstrappers.Stationary(
+            seed=1, quantiles=[0.5], reps=5, **boot_kwargs
+        )
+        return bootstrap_group_key(nse)
+
+    assert len({
+        key(),
+        key(sort_by="value_time"),
+        key(sort_by="reference_time"),
+        key(sort_by=["value_time", "reference_time"]),
+    }) == 4
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_sort_by_agrees_across_bootstrap_engines(
+    session_scope_test_warehouse, monkeypatch
+):
+    """The vectorized and legacy engines sort identically."""
+    ev = session_scope_test_warehouse
+
+    def run():
+        nse = DeterministicMetrics.NashSutcliffeEfficiency()
+        nse.bootstrap = Bootstrappers.Stationary(
+            seed=1234, quantiles=[0.025, 0.975], reps=100,
+            sort_by="value_time",
+        )
+        nse.unpack_results = True
+        return (
+            ev.table("joined_timeseries")
+            .aggregate(metrics=[nse], group_by=["primary_location_id"])
+            .order_by("primary_location_id")
+            .to_pandas()
+        )
+
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "vectorized")
+    vectorized = run()
+    monkeypatch.setenv("TEEHR_BOOTSTRAP_ENGINE", "legacy")
+    legacy = run()
+
+    cols = [
+        "nash_sutcliffe_efficiency_0_025",
+        "nash_sutcliffe_efficiency_0_975",
+    ]
+    _assert_bootstrap_samples_match(vectorized[cols].values, legacy[cols].values)
+
+
+@pytest.mark.session_scope_test_warehouse
+def test_block_bootstrap_without_sort_by_warns(
+    session_scope_test_warehouse, caplog
+):
+    """A block bootstrap with no sort_by says so, once, on the driver.
+
+    The default is no sort, which keeps existing results unchanged -- so this
+    warning is the only place a caller learns that their interval depends on
+    the query plan. It is emitted while the UDF is built, i.e. once per
+    bootstrap group per query, not once per Spark group.
+    """
+    ev = session_scope_test_warehouse
+
+    def plan(**boot_kwargs):
+        nse = DeterministicMetrics.NashSutcliffeEfficiency()
+        nse.bootstrap = Bootstrappers.Stationary(
+            seed=1, quantiles=[0.5], reps=5, **boot_kwargs
+        )
+        return ev.table("joined_timeseries").aggregate(
+            metrics=[nse], group_by=["primary_location_id"]
+        )
+
+    with caplog.at_level(logging.WARNING, logger="teehr.metrics.format"):
+        plan()
+    warnings = [
+        r for r in caplog.records if "sort_by" in r.getMessage()
+    ]
+    assert len(warnings) == 1, caplog.text
+    assert "nash_sutcliffe_efficiency" in warnings[0].getMessage()
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger="teehr.metrics.format"):
+        plan(sort_by="value_time")
+    assert not [r for r in caplog.records if "sort_by" in r.getMessage()]

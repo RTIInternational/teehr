@@ -196,6 +196,12 @@ def bootstrap_group_key(metric: MetricsBasemodel) -> Optional[tuple]:
     if boot.include_value_time and "value_time" not in fields:
         fields = fields + ("value_time",)
 
+    # Mirror format.py: the sort fields are appended to the UDF's arg list
+    # even when already present, so `fields` stays equal to what the UDF is
+    # actually called with.
+    sort_fields = tuple(parse_fields_to_list(boot.sort_by)) if boot.sort_by else ()
+    fields = fields + sort_fields
+
     # Build key from every config field that affects which samples are drawn.
     boot_cls = type(boot).__name__
     quantile_mode = "quantile" if boot.quantiles is not None else "raw"
@@ -208,6 +214,7 @@ def bootstrap_group_key(metric: MetricsBasemodel) -> Optional[tuple]:
         quantile_mode,
         quantile_key,
         boot.include_value_time,
+        sort_fields,
         fields,
         # The guards must be part of the key. create_shared_bootstrap_func
         # reads them from metrics[0].bootstrap, so two configs differing only
@@ -305,6 +312,36 @@ def _make_bs_object(boot, args):
         raise ValueError(f"Unsupported bootstrap class: {boot_cls}")
 
 
+def _sort_args(args: tuple, n_sort_fields: int) -> tuple:
+    """Order the group by its trailing sort key(s), dropping them from args.
+
+    format.py appends the ``sort_by`` field(s) as the last positional args (see
+    the comment there), so they can be peeled off here without disturbing the
+    positions everything else relies on.
+
+    The sort is stable, so rows tied on the key keep their arrival order --
+    still arbitrary, which is why ``sort_by`` accepts several fields. Null or
+    NaT keys sort last.
+    """
+    keys = args[-n_sort_fields:]
+    metric_args = args[:-n_sort_fields]
+
+    key_frame = pd.DataFrame(
+        {f"_k{i}": pd.Series(np.asarray(k)) for i, k in enumerate(keys)}
+    )
+    order = key_frame.sort_values(
+        list(key_frame.columns), kind="stable", na_position="last"
+    ).index.to_numpy()
+
+    ordered = []
+    for arg in metric_args:
+        if isinstance(arg, pd.Series):
+            ordered.append(arg.iloc[order].reset_index(drop=True))
+        else:
+            ordered.append(np.asarray(arg)[order])
+    return tuple(ordered)
+
+
 def create_shared_bootstrap_func(
     metrics: List[MetricsBasemodel],
 ) -> Callable:
@@ -312,6 +349,11 @@ def create_shared_bootstrap_func(
 
     All metrics in *metrics* must share the same bootstrap configuration
     (same class, reps, seed, block_size, quantiles, guards, and input fields).
+
+    The caller must pass the bootstrap's ``sort_by`` field(s) as the last
+    positional args of the UDF, which is what ``format.py`` does. How many
+    there are is read off the same ``sort_by`` it read to build the arg list,
+    rather than being handed over separately -- one fact, one place.
 
     Parameters
     ----------
@@ -333,12 +375,26 @@ def create_shared_bootstrap_func(
     minimum_mean = ref_boot.minimum_mean
     minimum_variance = ref_boot.minimum_variance
 
+    # The trailing args holding the sort key(s), which the group is ordered
+    # by and which no metric ever sees.
+    n_sort_fields = (
+        len(parse_fields_to_list(ref_boot.sort_by)) if ref_boot.sort_by else 0
+    )
+
     # Build per-metric inner functions once at UDF-creation time.
     metric_funcs = [m.func(m) for m in metrics]
     quantiles = ref_boot.quantiles
     output_names = [m.output_field_name for m in metrics]
 
     def shared_bootstrap_func(*args: pd.Series) -> Dict[str, Any]:
+        # Order the group BEFORE anything else looks at args: the guards below
+        # read args[0], _make_bs_object reads args[0] for the auto block size
+        # and args[-1] for Gumboot's value_time, and the resamplers draw blocks
+        # of adjacent rows. Everything downstream therefore sees the sorted
+        # group and needs no changes.
+        if n_sort_fields:
+            args = _sort_args(args, n_sort_fields)
+
         # Validate series quality before attempting bootstrap (nwm-explorer pattern).
         primary_series = np.asarray(args[0], dtype=float)
         if len(primary_series) < minimum_sample_size:

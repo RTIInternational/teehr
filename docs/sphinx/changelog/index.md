@@ -3,6 +3,23 @@
 ## Unreleased
 
 ### Breaking Changes
+- **A metric that is not defined for a group is now NULL on every path, never NaN or `inf`.**
+  The two engines already agreed a result was undefined and disagreed only on how to represent it.
+  The Python path returns `np.nan`, which Arrow converts to NULL on the way out of the pandas
+  UDF; the Spark-native path emitted a literal NaN. So `IS NULL` found one and missed the other,
+  and an average over the column returned NaN rather than skipping the gap. Separately, a zero
+  denominator gave `inf` on the Python path (NumPy) and NULL on the Spark-native path
+  (`F.try_divide`) — and an `inf` is the worse of the two, because it survives Arrow, is written
+  into the warehouse, and turns every downstream mean over that column into `inf`. Both are now
+  NULL everywhere: `spark_native._nan()` is gone, and the pandas closures and the vectorized
+  bootstrap kernels divide through a shared guard. **Stored values change** for any metric that
+  was undefined for a group — spark-native NaN becomes NULL, and `relative_mean`,
+  `relative_median`, `relative_minimum`, `relative_maximum`, `relative_standard_deviation`,
+  `relative_bias`, `mean_absolute_relative_error`, `multiplicative_bias`, `variability_ratio`,
+  `root_mean_standard_deviation_ratio`, `spearman_correlation`, `annual_peak_relative_bias`,
+  `flow_duration_curve_slope` and the three `KlingGuptaEfficiency` variants no longer write
+  `inf`. Note `to_pandas()` shows NULL in a float column as `NaN`, so results read that way look
+  unchanged.
 - **Metrics that depend on `value_time` can no longer be bootstrapped.** `MaxValueTimeDelta`,
   `AnnualPeakRelativeBias`, `MaxValueTime`, `CenterOfTiming` and
   `StandardDeviationOfTiming` now raise a `ValueError` if given a `bootstrap` config.
@@ -53,6 +70,21 @@
   [#815](https://github.com/RTIInternational/teehr/issues/815).
 
 ### Added
+- `sort_by` on every bootstrapper: field name(s) that order each group before it is resampled.
+  `CircularBlock` and `Stationary` draw blocks of adjacent rows and `Gumboot` blocks by water
+  year, so their results depend on the row order — which Spark does not define for a grouped
+  aggregation, and which the `seed` does not pin down (it fixes which positions are drawn, not
+  what sits at each position). Left unset the same query can return different intervals on a
+  different plan, e.g. `engine="auto"` versus `engine="python"`, and the blocks are drawn from an
+  arbitrary permutation rather than from the series, which stops preserving the serial
+  correlation a block method exists to preserve and understates the uncertainty. Which field is
+  right depends on the query: `value_time` on a joined timeseries, but `reference_time` where an
+  upstream aggregation has already collapsed `value_time` (each row then being one forecast), so
+  it is configurable rather than fixed. Accepts a list for a total order, since rows tied on the
+  key keep their arbitrary arrival order. Defaults to `None`, which keeps the previous behaviour;
+  a warning is logged when a `CircularBlock` or `Stationary` metric is bootstrapped without it.
+  `sort_by` is part of the bootstrap group key, so metrics sorting differently do not share
+  samples.
 - `closed` argument on `ForecastLeadTimeBins`, choosing which side of each bin interval is
   inclusive: `"right"` for `(start, end]` (default) or `"left"` for `[start, end)`.
 - Explicit bin definitions accept generic `start` / `end` keys. The previous
@@ -97,6 +129,10 @@
 - `unpack_sdf_dict_columns` raises a clear `ValueError` when asked to unpack a non-MapType column, instead of an `AttributeError`.
 
 ### Fixed
+- `nash_sutcliffe_efficiency` and its normalized variant dropped a dead
+  `if numerator == np.nan or denominator == np.nan` guard: that comparison is always False, so it
+  never fired. A NaN numerator propagates through the division and lands as NULL, which is what
+  it should mean.
 - A repeated bootstrap quantile (e.g. `quantiles=[0.5, 0.50]`) no longer raises
   `DUPLICATED_MAP_KEY` when the shared-bootstrap map is expanded. The UDF's dict collapses the
   repeat, but the map reconstruction emitted the key twice.
