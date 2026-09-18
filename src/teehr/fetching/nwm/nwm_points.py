@@ -16,6 +16,7 @@ from teehr.fetching.utils import (
     generate_json_paths,
     build_remote_nwm_filelist,
     validate_operational_start_end_date,
+    validate_nwm_version_against_files,
     start_on_z_hour,
     end_on_z_hour,
     get_end_date_from_ingest_days
@@ -253,6 +254,12 @@ def plan_nwm_point_fetch(
             raise ValueError(
                 "No NWM files found for the specified input arguments."
             )
+
+        # Validate the requested NWM version against file metadata
+        validate_nwm_version_against_files(
+            gcs_component_paths,
+            nwm_version
+        )
 
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(
