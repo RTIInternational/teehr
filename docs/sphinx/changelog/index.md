@@ -70,6 +70,20 @@
   [#815](https://github.com/RTIInternational/teehr/issues/815).
 
 ### Added
+- `tests/query/test_metrics_result_stability.py`, guarding metric values against unintended
+  change in two ways the rest of the suite structurally cannot. First, every Spark-native metric
+  is computed through both `engine="python"` and `engine="spark"` on the same rows and compared
+  column by column, including NULL-vs-number — the existing engine tests check the Spark path
+  against numpy formulas written inline, which validates the arithmetic but carries none of the
+  closures' guards, so it was blind to the `inf`-vs-NULL and NaN-vs-NULL divergences. A second
+  case runs the same comparison over deliberately degenerate rows (zero denominators, a constant
+  series, pairwise nulls), and a coverage test fails if a metric in `SUPPORTED_METRICS` has no
+  cross-engine test. Second, a committed golden file pins the absolute values for both engines:
+  every other check is relational — the kernels are verified against the pandas closures, and the
+  closures are the reference — which cannot detect both paths moving together, as a change to a
+  closure does. Regenerate deliberately with `TEEHR_UPDATE_GOLDEN=1` and record the reason for
+  each changed value. Bootstrap columns are excluded from the golden file, since their values
+  follow arch's RNG stream and a dependency bump would otherwise become golden churn.
 - `sort_by` on every bootstrapper: field name(s) that order each group before it is resampled.
   `CircularBlock` and `Stationary` draw blocks of adjacent rows and `Gumboot` blocks by water
   year, so their results depend on the row order — which Spark does not define for a grouped
