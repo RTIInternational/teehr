@@ -3,6 +3,18 @@
 ## Unreleased
 
 ### Breaking Changes
+- **`RelativeMedian` on the Spark-native path now uses the exact `percentile` instead of
+  `percentile_approx`.** The two do not differ by a tolerance: `percentile_approx` is
+  nearest-rank, returning an actual data value, so on an even-sized group it returned the lower
+  of the two middle values where `np.median` — and therefore `engine="python"` — interpolates
+  between them (2.0 vs 2.5 on `[1,2,3,4]`). The engines disagreed systematically, and the tests
+  papered over it with a 3e-2 tolerance that is now removed; they agree to ~1e-8, which is just
+  float32-vs-double width. **`relative_median` values change for anyone using `engine="spark"`
+  or `engine="auto"`**; the Python engine is unaffected. Exact is also not the slower choice at
+  these group sizes: the accuracy argument previously passed (10000) sized the sketch to 10k
+  entries, so a group below that was already buffering nearly every value — measured at 1000
+  rows/group the exact aggregate matched the approximate one (0.87s vs 0.88s over 2000 groups),
+  and only cost more at 10k rows/group (1.17s vs 0.60s over 200 groups).
 - **A metric that is not defined for a group is now NULL on every path, never NaN or `inf`.**
   The two engines already agreed a result was undefined and disagreed only on how to represent it.
   The Python path returns `np.nan`, which Arrow converts to NULL on the way out of the pandas

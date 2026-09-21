@@ -97,15 +97,17 @@ RelativeStandardDeviation
 
 .. note::
 
-  Spark-native quantile-derived metrics may use Spark approximate quantile
-  algorithms rather than exact order statistics. In the current Spark-native
-  metric set, this mainly affects metrics that depend on medians, such as
-  ``RelativeMedian``. The approximation is computed from a distributed summary
-  of the full group, not from a simple random sample, so it is usually a good
-  tradeoff for large datasets. The main practical effect is that values very
-  close to the cutoff can shift slightly relative to an exact pandas result.
-  If exact quantile behavior is important for your analysis, use
-  ``engine="python"``.
+  Spark-native quantile-derived metrics use exact order statistics.
+  ``RelativeMedian`` takes Spark's exact ``percentile``, not
+  ``percentile_approx``: the latter is nearest-rank, returning an actual data
+  value, so on an even-sized group it gave the lower of the two middle values
+  where the Python engine interpolates between them -- a systematic
+  difference between the engines rather than a small one. The exact
+  percentile is also no more expensive at typical group sizes.
+
+  The only remaining difference between the engines for these metrics is
+  numeric width: the Python path declares ``FloatType`` (float32) while the
+  Spark path computes in double, which shows up at around 1e-8 relative.
 
 .. note::
 

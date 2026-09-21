@@ -37,20 +37,16 @@ from teehr.metrics.spark_native import SUPPORTED_METRICS
 
 GOLDEN = Path("tests", "data", "metric_regression", "golden_metrics.json")
 
-#: The Spark path takes percentile_approx, which is NEAREST-RANK: it returns
-#: an actual data value, so on an even-sized group it gives the lower of the
-#: two middle values where np.median interpolates between them (measured:
-#: approx=2.0 vs median=2.5 on [1,2,3,4]). On a large group the two middle
-#: values are close and the gap is small, which is what this tolerance covers;
-#: on a small or coarse-valued group it is not a tolerance question at all, so
-#: the degenerate case below skips the column instead of loosening this.
-#: Spark's exact `percentile()` does interpolate, if parity ever matters more
-#: than the cost of an exact per-group quantile.
-APPROX_QUANTILE_COLS = {"relative_median"}
-APPROX_RTOL = 3e-2
+#: No column is exempt. relative_median used to be: the Spark path took
+#: percentile_approx, which is nearest-rank and so returned the lower of the
+#: two middle values on an even-sized group where np.median interpolates. It
+#: now takes the exact percentile, which interpolates too, so the engines
+#: agree to the same tolerance as everything else. A relaxation reappearing
+#: here means that regressed.
+APPROX_QUANTILE_COLS = frozenset()
+APPROX_RTOL = RTOL = 1e-6
 #: The Python path declares FloatType, so its values are float32 while the
 #: Spark path computes in double. That is ~6e-8 relative, not a divergence.
-RTOL = 1e-6
 
 
 def _two_field_metrics():
@@ -209,11 +205,6 @@ def test_native_metrics_agree_across_engines_on_degenerate_data(
         sdf=sdf, group_by=["primary_location_id"], metrics=metrics,
         engine="spark",
     ))
-    # relative_median is skipped, not relaxed: these groups are 40 coarse
-    # values, where nearest-rank vs interpolated medians differ by a whole
-    # step (0.889 vs 1.0 measured on the zero-min group). That is the
-    # documented quantile semantics, not a guard divergence, and this test is
-    # about the guards.
     _compare(python, spark, "python", "spark", skip_cols=APPROX_QUANTILE_COLS)
 
     # And the rule those degenerate rows are here to pin down.
