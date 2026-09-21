@@ -414,3 +414,33 @@ def test_spawn_safety_answer_is_cached(monkeypatch, tmp_path):
     assert concurrency.main_module_is_spawn_safe() is True
     script.unlink()  # gone, but the cached answer stands
     assert concurrency.main_module_is_spawn_safe() is True
+
+
+def test_memory_limits_the_items_in_flight(monkeypatch):
+    """A big per-item cost lowers io so the items in flight fit in memory."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 2 * 1024**3)
+    assert resolve_budget(io=48, memory_per_item=283 * 1024**2).io == 7
+
+
+def test_small_items_do_not_lower_io(monkeypatch):
+    """A cheap per-item cost must leave the requested concurrency alone."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 2 * 1024**3)
+    assert resolve_budget(io=48, memory_per_item=16 * 1024**2).io == 48
+
+
+def test_no_memory_per_item_means_no_io_cap(monkeypatch):
+    """Without a measured per-item cost, io is left as asked for."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 1 * 1024**3)
+    assert resolve_budget(io=48).io == 48
+
+
+def test_io_cap_never_falls_below_one(monkeypatch):
+    """Even an item larger than memory must leave one in flight."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: 100 * 1024**2)
+    assert resolve_budget(io=48, memory_per_item=8 * 1024**3).io == 1
+
+
+def test_unknown_memory_leaves_io_alone(monkeypatch):
+    """On a platform that cannot report memory, bound by io alone."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: None)
+    assert resolve_budget(io=48, memory_per_item=8 * 1024**3).io == 48
