@@ -13,14 +13,15 @@ from obspec_utils.registry import ObjectStoreRegistry
 
 from teehr.fetching.utils import (
     build_kerchunk_registry,
+    grid_window_memory,
     map_variable_and_unit_name,
-    open_kerchunk_dataset,
+    open_kerchunk_grid_window,
     write_timeseries_parquet_file,
     parse_nwm_json_paths,
     format_nwm_configuration_metadata,
     convert_value_from_kelvin_to_celsius
 )
-from teehr.utils.concurrency import run_concurrent_map
+from teehr.utils.concurrency import resolve_budget, run_concurrent_map
 from teehr.fetching.models.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
@@ -177,48 +178,41 @@ def process_single_nwm_grid_file(
     row: Tuple,
     configuration_name: str,
     variable_name: str,
-    weights_filepath: str,
+    weights_df: pd.DataFrame,
+    weights_bounds: Dict,
     ignore_missing_file: bool,
     location_id_prefix: Union[str, None],
     variable_mapper: Dict[str, Dict[str, Dict[str, str]]],
     registry: Optional[ObjectStoreRegistry] = None,
 ) -> pd.DataFrame:
-    """Fetch data for a single reference file and compute weighted average."""
-    # get_nwm_grid_data's .isel(x=..., y=...) only needs positions, not real
-    # x/y coordinate values -- but xarray's .isel() still re-indexes the x/y
-    # coordinate variables themselves to keep them aligned with the sliced
-    # data, which fails if they're still virtual (unmaterialized) arrays, so
-    # x/y must be materialized here even though their values are unused.
-    ds = open_kerchunk_dataset(
+    """Fetch data for a single reference file and compute weighted average.
+
+    ``weights_df`` and ``weights_bounds`` are the same for every file in a
+    run, so they are read once by the caller and passed in. Both are treated
+    as read-only here, which is what lets files be processed in parallel.
+    """
+    window = open_kerchunk_grid_window(
         row.filepath,
-        loadable_variables=[variable_name, "time", "x", "y"],
+        variable_name,
+        weights_bounds["row_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_min"],
+        weights_bounds["col_max"],
         ignore_missing_file=ignore_missing_file,
         registry=registry,
     )
-    if ds is None:
+    if window is None:
         return None
+    grid_arr, time_values, nwm_units = window
+
     yrmoday = row.day
     z_hour = row.z_hour[1:3]
     ref_time = pd.to_datetime(yrmoday) \
         + pd.to_timedelta(int(z_hour), unit="h")
 
-    nwm_units = ds[variable_name].attrs["units"]
-    value_time = ds.time.values[0]
-    da = ds[variable_name][0]
+    value_time = time_values[0]
 
-    weights_df = read_and_validate_weights_file(weights_filepath)
-
-    weights_bounds = get_weights_row_col_stats(weights_df)
-
-    grid_arr = get_nwm_grid_data(
-        da,
-        weights_bounds["row_min"],
-        weights_bounds["col_min"],
-        weights_bounds["row_max"],
-        weights_bounds["col_max"]
-    )
-
-    grid_values = grid_arr[
+    grid_values = grid_arr[0][
         weights_bounds["rows_norm"],
         weights_bounds["cols_norm"]
     ]
@@ -256,6 +250,7 @@ def fetch_and_format_nwm_grids(
     timeseries_type: TimeseriesTypeEnum,
     drop_overlapping_assimilation_values: bool,
     convert_k_to_c: bool = True,
+    io_concurrency: Optional[int] = None,
     cpu_workers: Optional[int] = None
 ):
     """Compute weighted average, grouping by reference time.
@@ -264,8 +259,10 @@ def fetch_and_format_nwm_grids(
     average of the variable values for each zone. The results are saved to
     parquet files using TEEHR data model.
 
-    ``cpu_workers`` bounds how many files are processed at once -- one file
-    per worker, so it is the only budget that applies here.
+    ``io_concurrency`` bounds how many files are read at once -- one file
+    per worker, and the work is mostly waiting on the object store, so it
+    takes the io budget rather than the cpu one. Lowered automatically when
+    the zonal window is large enough that that many would not fit in memory.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
@@ -287,6 +284,27 @@ def fetch_and_format_nwm_grids(
     # stores/connection pools are reused across all groups below.
     registry = build_kerchunk_registry(json_paths)
 
+    # Read and validated once, not per file: the weights don't vary across the
+    # run, and validating a CONUS-scale file costs about a second each time.
+    weights_df = read_and_validate_weights_file(zonal_weights_filepath)
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    # Files in flight come from the io budget, not the cpu one: each read is
+    # mostly waiting on the object store. Bounded by memory instead, which
+    # scales with the window -- a HUC10 and all of CONUS differ 30-fold.
+    budget = resolve_budget(
+        io=io_concurrency,
+        cpu=cpu_workers,
+        memory_per_item=grid_window_memory(
+            weights_bounds["row_max"] - weights_bounds["row_min"] + 1,
+            weights_bounds["col_max"] - weights_bounds["col_min"] + 1,
+        ),
+    )
+    logger.info(
+        f"Reading up to {budget.io} files at once for configuration:"
+        f" {nwm_configuration_name}, variable: {variable_name}."
+    )
+
     for gp in gps:
         _, df = gp
 
@@ -296,14 +314,15 @@ def fetch_and_format_nwm_grids(
                 process_single_nwm_grid_file,
                 configuration_name=teehr_config["name"],
                 variable_name=variable_name,
-                weights_filepath=zonal_weights_filepath,
+                weights_df=weights_df,
+                weights_bounds=weights_bounds,
                 ignore_missing_file=ignore_missing_file,
                 location_id_prefix=location_id_prefix,
                 variable_mapper=variable_mapper,
                 registry=registry,
             ),
             rows,
-            cpu_workers,
+            budget.io,
         )
 
         output = [df for df in output if df is not None]
