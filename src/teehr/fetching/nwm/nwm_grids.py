@@ -426,5 +426,6 @@ def nwm_grids_to_parquet(
             timeseries_type=timeseries_type,
             drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,
             convert_k_to_c=convert_k_to_c,
+            io_concurrency=io_concurrency,
             cpu_workers=cpu_workers
         )

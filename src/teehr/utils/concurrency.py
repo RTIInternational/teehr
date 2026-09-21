@@ -311,6 +311,7 @@ def resolve_budget(
     io: Optional[int] = None,
     cpu: Optional[int] = None,
     memory_per_process: Optional[int] = None,
+    memory_per_item: Optional[int] = None,
 ) -> ConcurrencyBudget:
     """Work out the budget for one operation.
 
@@ -326,14 +327,24 @@ def resolve_budget(
     memory_per_process : Optional[int]
         Bytes one worker process is expected to peak at. Only affects
         ``processes``; omit unless you intend to use them.
+    memory_per_item : Optional[int]
+        Bytes one in-flight item is expected to peak at, measured by the
+        caller. Lowers ``io`` so the items in flight fit in
+        :func:`available_memory`. Resolve it here, not at the call site:
+        callers that divide a budget across worker processes divide ``io``
+        too, whereas a cap each process computed for itself would multiply.
 
     Examples
     --------
     >>> budget = resolve_budget()          # process-wide defaults
     >>> budget = resolve_budget(io=8)      # ...only 8 requests in flight
     """
+    io_value = resolve_io_concurrency(io)
+    memory = available_memory()
+    if memory_per_item and memory:
+        io_value = max(1, min(io_value, memory // memory_per_item))
     return ConcurrencyBudget(
-        io=resolve_io_concurrency(io),
+        io=io_value,
         cpu=resolve_cpu_workers(cpu),
         processes=resolve_cpu_processes(cpu, memory_per_process),
     )
