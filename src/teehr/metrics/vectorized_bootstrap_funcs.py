@@ -43,7 +43,7 @@ Every kernel here mirrors the corresponding scalar closure in
 ``deterministic_funcs.py`` formula-for-formula. Behavioral equivalence with the
 scalar path is the contract, so a kernel is never "improved" relative to its
 closure; where a formula genuinely needed correcting, both sides were changed
-together (see ``_vec_pearson_r`` on the ddof mismatch).
+together (see ``_pearson_r_from`` on the ddof mismatch).
 """
 from typing import Any, Dict, List
 
@@ -322,6 +322,19 @@ class _Moments:
 
     # -- counts and first moments ------------------------------------------
     @property
+    def raw_n(self):
+        """Finite pairs before the transform, which is what the NSE guard reads.
+
+        Equal to ``n`` unless a transform turns a finite pair non-finite (a
+        log of a non-positive value, say).
+        """
+        if self._plain:
+            return self.n
+        return self._get(
+            "raw_n", lambda: _finite_pair_count(self._p_raw, self._s_raw)
+        )
+
+    @property
     def n(self):
         if self._clean:
             return self._get(
@@ -369,17 +382,26 @@ class _Moments:
     # np.nanstd is exactly sqrt(mean of squared deviations) over the non-NaN
     # entries, which is what these two are -- computed from sum_dp2 rather
     # than by a second np.nanstd pass over the matrix.
+    def _std_from(self, sum_d2):
+        """sqrt(sum of squared deviations / count), NaN for an empty row.
+
+        The NaN matters. np.nanstd returns NaN for an all-NaN slice, and
+        dropping that would be invisible without add_epsilon -- a zero
+        denominator forces NaN anyway -- but with epsilon the denominator
+        becomes 1e-6 and a row with no finite pairs at all would report a
+        finite 0.0 for relative_standard_deviation and pearson_correlation.
+        """
+        with np.errstate(invalid="ignore"):
+            out = np.sqrt(sum_d2 / np.maximum(self.n, 1))
+        return np.where(self.n == 0, np.nan, out)
+
     @property
     def std_p(self):
-        return self._get(
-            "std_p", lambda: np.sqrt(self.sum_dp2 / np.maximum(self.n, 1))
-        )
+        return self._get("std_p", lambda: self._std_from(self.sum_dp2))
 
     @property
     def std_s(self):
-        return self._get(
-            "std_s", lambda: np.sqrt(self.sum_ds2 / np.maximum(self.n, 1))
-        )
+        return self._get("std_s", lambda: self._std_from(self.sum_ds2))
 
     # -- difference accumulators -------------------------------------------
     #
@@ -454,17 +476,6 @@ def _pearson_r_from(m: _Moments, add_epsilon: bool) -> np.ndarray:
         return _vec_divide(m.sum_dpds, denom)
 
 
-def _vec_pearson_r(p: np.ndarray, s: np.ndarray, add_epsilon: bool) -> np.ndarray:
-    """Pre-transformed-matrix entry point, kept for callers outside this file."""
-    m = _Moments.__new__(_Moments)
-    m._cache = {}
-    m._p_raw, m._s_raw, m._model = p, s, None
-    m.p, m.s = p, s
-    m._clean = not bool(np.isnan(p).any() or np.isnan(s).any())
-    m._plain = m._clean
-    return _pearson_r_from(m, add_epsilon)
-
-
 # --- Derivations ------------------------------------------------------------
 #
 # One function per metric, all reading accumulators rather than matrices.
@@ -513,7 +524,7 @@ def _nse_parts_from(m: _Moments, model) -> tuple:
     the RAW matrices, pre-transform and pre-mask, exactly as the scalar
     closures do.
     """
-    guard_nan = (m.n == 0) | (m.raw_sum_p == 0) | (m.raw_sum_s == 0)
+    guard_nan = (m.raw_n == 0) | (m.raw_sum_p == 0) | (m.raw_sum_s == 0)
     denominator = m.sum_dp2
     if model.add_epsilon:
         denominator = denominator + EPSILON
