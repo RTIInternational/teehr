@@ -113,6 +113,18 @@
   want to raise `minimum_sample_size` explicitly.
 
 ### Changed
+- The vectorized bootstrap engine computes its shared accumulators once per chunk instead of
+  once per metric. Every two-field metric it covers is a function of the same sums
+  (`n, Σp, Σs, Σ(p-mp)², Σ(s-ms)², Σ(p-mp)(s-ms), Σ(p-s)²`), but each kernel was re-deriving
+  them and re-applying the finite mask over the same `(reps, n)` matrices. A chunk with no NaN
+  in it now also takes plain `np.sum`/`np.mean`/`np.min` rather than the `nan*` variants, whose
+  `_replace_nan` pass tests and copies the whole matrix for a case that only arises on gappy
+  input, and `RelativeMedian` reaches `np.median` (partition, O(n)) instead of `np.nanmedian`
+  (full sort) on those chunks. Measured on a production-shaped group -- 9 bootstrapped metrics,
+  n=1600, 1000 replicates -- the shared-bootstrap UDF went from 103 ms to 44 ms; at n=5500,
+  304 ms to 136 ms. **Results are unchanged**: the per-metric kernels are now thin wrappers over
+  the same derivations the batched path uses, so there is still one implementation of each
+  formula, and the guards that read the pre-transform matrices still do.
 - **Bootstrapped metrics now use the vectorized engine by default**, roughly 19x faster than
   the per-replicate loop for a group of covered metrics (measured at n=1000, reps=1000). Set
   `TEEHR_BOOTSTRAP_ENGINE=legacy` to fall back; on a Spark cluster that must be set on the

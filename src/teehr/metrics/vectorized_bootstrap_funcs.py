@@ -129,6 +129,19 @@ def _vectorized_transform(
       transform being set (it used to be, which is what made the two paths
       disagree on gappy data).
     """
+    p, s, _ = _vectorized_transform_flagged(p, s, model)
+    return p, s
+
+
+def _vectorized_transform_flagged(p, s, model) -> tuple:
+    """``_vectorized_transform``, also reporting whether the mask fired.
+
+    The flag lets _Moments take plain ``np.sum``/``np.mean``/``np.min`` on a
+    chunk with no NaN in it. numpy's ``nan*`` reductions run ``_replace_nan``
+    first, which tests every element and copies the array when any is NaN --
+    real cost on a 12.8 MB matrix, repeated per reduction, to handle a case
+    that mostly does not arise: the mask only fires on gappy input.
+    """
     transform = getattr(model, "transform", None)
     add_epsilon = getattr(model, "add_epsilon", False)
 
@@ -137,11 +150,12 @@ def _vectorized_transform(
         s = _apply_transform_1d(s, transform, add_epsilon)
 
     invalid = ~(np.isfinite(p) & np.isfinite(s))
-    if np.any(invalid):
+    has_invalid = bool(np.any(invalid))
+    if has_invalid:
         p = np.where(invalid, np.nan, p)
         s = np.where(invalid, np.nan, s)
 
-    return p, s
+    return p, s, has_invalid
 
 
 def _vectorized_signature_transform(
@@ -197,7 +211,228 @@ def _finite_pair_count(p: np.ndarray, s: np.ndarray) -> np.ndarray:
     return np.sum(np.isfinite(p) & np.isfinite(s), axis=1)
 
 
-def _vec_pearson_r(p: np.ndarray, s: np.ndarray, add_epsilon: bool) -> np.ndarray:
+# --- Shared per-chunk accumulators -----------------------------------------
+#
+# Every two-field metric here is a function of the same handful of sums over
+# the same (reps, n) matrices. Computed per kernel, as they were, a group of
+# nine metrics walked those matrices ~30 times and applied the finite mask
+# nine times: 51 ms of the 87 ms spent in kernels for a production-shaped
+# group (n=1600, reps=1000, measured on an M-series laptop). ``_Moments``
+# computes each accumulator at most once and hands it to every metric that
+# needs it.
+#
+# There is one implementation of each formula, not two: the per-metric
+# entries in VECTORIZED_METRIC_FUNCS are thin wrappers over the same
+# ``_derive_*`` functions the batch path calls, so the single-metric and
+# shared paths cannot drift, and the existing kernel-vs-scalar parity tests
+# cover both.
+#
+# Accumulators are lazy -- a group asking only for RelativeMinimum never pays
+# for a covariance pass -- and every one of them reproduces exactly the
+# expression the kernel used before, including which matrices (raw or
+# transformed) each legacy guard reads.
+
+
+def _transform_key(model) -> tuple:
+    """Key identifying metrics whose transformed matrices are identical.
+
+    Metrics in one bootstrap group may differ in ``transform`` and
+    ``add_epsilon`` -- ``bootstrap_group_key`` deliberately excludes both, so
+    that unrelated metrics can still share draws. Only ``log`` and ``inv``
+    consult ``add_epsilon`` while transforming (the rest ignore it and apply
+    it at the final division), so it belongs in the key only for those two.
+    Keeping it out otherwise is what lets a mixed add_epsilon group -- the
+    common case -- share one set of accumulators.
+    """
+    transform = getattr(model, "transform", None)
+    if transform in (TransformEnum.log, TransformEnum.inv):
+        return (transform, getattr(model, "add_epsilon", False))
+    return (transform, None)
+
+
+class _Moments:
+    """Lazily computed accumulators over one ``(reps, n)`` resample chunk.
+
+    ``raw_*`` properties read the matrices as passed in; everything else
+    reads them after ``_vectorized_transform``. The distinction is not
+    cosmetic: the NSE and KGE guards are evaluated pre-transform (and, for
+    NSE, pre-mask), so reproducing them exactly means keeping both.
+    """
+
+    __slots__ = (
+        "_p_raw", "_s_raw", "_model", "_cache", "p", "s", "_clean", "_plain"
+    )
+
+    def __init__(self, p_raw, s_raw, model):
+        self._p_raw = p_raw
+        self._s_raw = s_raw
+        self._model = model
+        self._cache = {}
+        self.p, self.s, has_invalid = _vectorized_transform_flagged(
+            p_raw, s_raw, model
+        )
+        # No NaN anywhere: the nan-aware reductions have nothing to skip, and
+        # the raw matrices are the transformed ones when no transform is set,
+        # so the pre-transform guards can reuse the same accumulators.
+        self._clean = not has_invalid
+        self._plain = self._clean and getattr(model, "transform", None) is None
+
+    def _get(self, name, fn):
+        if name not in self._cache:
+            self._cache[name] = fn()
+        return self._cache[name]
+
+    # Reduction pickers: identical results, one skips numpy's NaN machinery.
+    def _sum(self, x):
+        return np.sum(x, axis=1) if self._clean else np.nansum(x, axis=1)
+
+    def _mean(self, x):
+        return (
+            np.mean(x, axis=1, keepdims=True)
+            if self._clean
+            else np.nanmean(x, axis=1, keepdims=True)
+        )
+
+    # -- guards, read pre-transform to match the legacy kernels -------------
+    @property
+    def raw_sum_p(self):
+        if self._plain:
+            return self.sum_p
+        return self._get("raw_sum_p", lambda: np.nansum(self._p_raw, axis=1))
+
+    @property
+    def raw_sum_s(self):
+        if self._plain:
+            return self._get(
+                "sum_s", lambda: self._sum(self.s)
+            )
+        return self._get("raw_sum_s", lambda: np.nansum(self._s_raw, axis=1))
+
+    @property
+    def raw_std_p(self):
+        if self._plain:
+            return self.std_p
+        return self._get("raw_std_p", lambda: np.nanstd(self._p_raw, axis=1))
+
+    @property
+    def raw_std_s(self):
+        if self._plain:
+            return self.std_s
+        return self._get("raw_std_s", lambda: np.nanstd(self._s_raw, axis=1))
+
+    # -- counts and first moments ------------------------------------------
+    @property
+    def n(self):
+        if self._clean:
+            return self._get(
+                "n", lambda: np.full(self.p.shape[0], self.p.shape[1])
+            )
+        return self._get("n", lambda: _finite_pair_count(self.p, self.s))
+
+    @property
+    def mean_p(self):
+        return self._get("mean_p", lambda: self._mean(self.p))
+
+    @property
+    def mean_s(self):
+        return self._get("mean_s", lambda: self._mean(self.s))
+
+    @property
+    def sum_p(self):
+        return self._get("sum_p", lambda: self._sum(self.p))
+
+    # -- centered second moments -------------------------------------------
+    #
+    # dp/ds are materialized because six metrics want them; that is two more
+    # (reps, n) allocations, which the chunking in
+    # compute_vectorized_shared_bootstrap already bounds.
+    @property
+    def dp(self):
+        return self._get("dp", lambda: self.p - self.mean_p)
+
+    @property
+    def ds(self):
+        return self._get("ds", lambda: self.s - self.mean_s)
+
+    @property
+    def sum_dp2(self):
+        return self._get("sum_dp2", lambda: self._sum(self.dp**2))
+
+    @property
+    def sum_ds2(self):
+        return self._get("sum_ds2", lambda: self._sum(self.ds**2))
+
+    @property
+    def sum_dpds(self):
+        return self._get("sum_dpds", lambda: self._sum(self.dp * self.ds))
+
+    # np.nanstd is exactly sqrt(mean of squared deviations) over the non-NaN
+    # entries, which is what these two are -- computed from sum_dp2 rather
+    # than by a second np.nanstd pass over the matrix.
+    @property
+    def std_p(self):
+        return self._get(
+            "std_p", lambda: np.sqrt(self.sum_dp2 / np.maximum(self.n, 1))
+        )
+
+    @property
+    def std_s(self):
+        return self._get(
+            "std_s", lambda: np.sqrt(self.sum_ds2 / np.maximum(self.n, 1))
+        )
+
+    # -- difference accumulators -------------------------------------------
+    #
+    # sum_sdiff is its own reduction rather than sum_s - sum_p: the two agree
+    # to a rounding error that is negligible against either sum but not
+    # against their difference, which is the quantity relative_bias divides.
+    @property
+    def sum_diff2(self):
+        return self._get(
+            "sum_diff2", lambda: self._sum((self.p - self.s) ** 2)
+        )
+
+    @property
+    def sum_absdiff(self):
+        return self._get(
+            "sum_absdiff", lambda: self._sum(np.abs(self.p - self.s))
+        )
+
+    @property
+    def sum_sdiff(self):
+        return self._get("sum_sdiff", lambda: self._sum(self.s - self.p))
+
+    # -- extrema -----------------------------------------------------------
+    @property
+    def min_p(self):
+        return self._get(
+            "min_p",
+            lambda: (np.min if self._clean else np.nanmin)(self.p, axis=1),
+        )
+
+    @property
+    def min_s(self):
+        return self._get(
+            "min_s",
+            lambda: (np.min if self._clean else np.nanmin)(self.s, axis=1),
+        )
+
+    @property
+    def max_p(self):
+        return self._get(
+            "max_p",
+            lambda: (np.max if self._clean else np.nanmax)(self.p, axis=1),
+        )
+
+    @property
+    def max_s(self):
+        return self._get(
+            "max_s",
+            lambda: (np.max if self._clean else np.nanmax)(self.s, axis=1),
+        )
+
+
+def _pearson_r_from(m: _Moments, add_epsilon: bool) -> np.ndarray:
     """Row-wise Pearson correlation, matching ``pearson_correlation_inner``.
 
     ``add_epsilon=False`` mirrors ``np.corrcoef(s, p)[0][1]``.
@@ -206,262 +441,141 @@ def _vec_pearson_r(p: np.ndarray, s: np.ndarray, add_epsilon: bool) -> np.ndarra
 
     Both branches use a consistent ddof=0, so the two differ only by the
     ``+EPSILON`` divide-by-zero guard. An earlier version paired ``np.cov``'s
-    default ddof=1 with ddof=0 standard deviations; those do not cancel and the
-    result was ``r * n/(n-1)``, which exceeds 1.0 on small well-correlated
-    samples. The mismatch was documented as intentional but produced a quantity
-    that is not a correlation coefficient.
+    default ddof=1 with ddof=0 standard deviations; those do not cancel and
+    the result was ``r * n/(n-1)``, which exceeds 1.0 on small
+    well-correlated samples. The mismatch was documented as intentional but
+    produced a quantity that is not a correlation coefficient.
     """
-    n = np.sum(np.isfinite(p) & np.isfinite(s), axis=1)
-    p_mean = np.nanmean(p, axis=1, keepdims=True)
-    s_mean = np.nanmean(s, axis=1, keepdims=True)
-    dp = p - p_mean
-    ds = s - s_mean
-    cov_sum = np.nansum(dp * ds, axis=1)
-
     with np.errstate(invalid="ignore", divide="ignore"):
         if add_epsilon:
-            # ddof=0 (population covariance), matching np.cov(..., ddof=0) and
-            # the ddof=0 nanstd denominator below.
-            cov = cov_sum / np.maximum(n, 1)
-            denom = np.nanstd(p, axis=1) * np.nanstd(s, axis=1) + EPSILON
-            return _vec_divide(cov, denom)
-        else:
-            # np.corrcoef is ddof-invariant (any consistent ddof cancels).
-            denom = np.sqrt(np.nansum(dp**2, axis=1) * np.nansum(ds**2, axis=1))
-            return _vec_divide(cov_sum, denom)
+            cov = m.sum_dpds / np.maximum(m.n, 1)
+            return _vec_divide(cov, m.std_p * m.std_s + EPSILON)
+        denom = np.sqrt(m.sum_dp2 * m.sum_ds2)
+        return _vec_divide(m.sum_dpds, denom)
 
 
-def _vec_relative_mean(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    p_mean = np.nanmean(p, axis=1)
-    s_mean = np.nanmean(s, axis=1)
+def _vec_pearson_r(p: np.ndarray, s: np.ndarray, add_epsilon: bool) -> np.ndarray:
+    """Pre-transformed-matrix entry point, kept for callers outside this file."""
+    m = _Moments.__new__(_Moments)
+    m._cache = {}
+    m._p_raw, m._s_raw, m._model = p, s, None
+    m.p, m.s = p, s
+    m._clean = not bool(np.isnan(p).any() or np.isnan(s).any())
+    m._plain = m._clean
+    return _pearson_r_from(m, add_epsilon)
+
+
+# --- Derivations ------------------------------------------------------------
+#
+# One function per metric, all reading accumulators rather than matrices.
+
+
+def _derive_relative_mean(m: _Moments, model) -> np.ndarray:
+    mean_p, mean_s = m.mean_p[:, 0], m.mean_s[:, 0]
     if model.add_epsilon:
-        return _vec_divide(s_mean, p_mean + EPSILON)
-    return _vec_divide(s_mean, p_mean)
+        return _vec_divide(mean_s, mean_p + EPSILON)
+    return _vec_divide(mean_s, mean_p)
 
 
-def _vec_relative_median(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    p_med = np.nanmedian(p, axis=1)
-    s_med = np.nanmedian(s, axis=1)
+def _derive_relative_minimum(m: _Moments, model) -> np.ndarray:
     if model.add_epsilon:
-        return _vec_divide(s_med, p_med + EPSILON)
-    return _vec_divide(s_med, p_med)
+        return _vec_divide(m.min_s, m.min_p + EPSILON)
+    return _vec_divide(m.min_s, m.min_p)
 
 
-def _vec_relative_minimum(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    p_min = np.nanmin(p, axis=1)
-    s_min = np.nanmin(s, axis=1)
+def _derive_relative_maximum(m: _Moments, model) -> np.ndarray:
     if model.add_epsilon:
-        return _vec_divide(s_min, p_min + EPSILON)
-    return _vec_divide(s_min, p_min)
+        return _vec_divide(m.max_s, m.max_p + EPSILON)
+    return _vec_divide(m.max_s, m.max_p)
 
 
-def _vec_relative_maximum(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    p_max = np.nanmax(p, axis=1)
-    s_max = np.nanmax(s, axis=1)
+def _derive_relative_standard_deviation(m: _Moments, model) -> np.ndarray:
     if model.add_epsilon:
-        return _vec_divide(s_max, p_max + EPSILON)
-    return _vec_divide(s_max, p_max)
+        return _vec_divide(m.std_s, m.std_p + EPSILON)
+    return _vec_divide(m.std_s, m.std_p)
 
 
-def _vec_relative_standard_deviation(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    p_std = np.nanstd(p, axis=1)
-    s_std = np.nanstd(s, axis=1)
+def _derive_relative_bias(m: _Moments, model) -> np.ndarray:
     if model.add_epsilon:
-        return _vec_divide(s_std, p_std + EPSILON)
-    return _vec_divide(s_std, p_std)
+        return _vec_divide(m.sum_sdiff, m.sum_p + EPSILON)
+    return _vec_divide(m.sum_sdiff, m.sum_p)
 
 
-def _vec_relative_bias(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    diff_sum = np.nansum(s - p, axis=1)
-    p_sum = np.nansum(p, axis=1)
-    if model.add_epsilon:
-        return _vec_divide(diff_sum, p_sum + EPSILON)
-    return _vec_divide(diff_sum, p_sum)
+def _derive_max_value_delta(m: _Moments, model) -> np.ndarray:
+    return m.max_s - m.max_p
 
 
-def _vec_nse_parts(p, s, model) -> tuple:
+def _nse_parts_from(m: _Moments, model) -> tuple:
     """Numerator, denominator and NaN guard shared by NSE and normalized NSE.
 
     The two scalar closures are identical up to their final expression, so
-    sharing the parts keeps the guards from drifting apart.
+    sharing the parts keeps the guards from drifting apart. The guard reads
+    the RAW matrices, pre-transform and pre-mask, exactly as the scalar
+    closures do.
     """
-    # Legacy guards (per-row, before transform): empty or all-zero-sum rows -> NaN.
-    n_valid = _finite_pair_count(p, s)
-    p_sum_raw = np.nansum(p, axis=1)
-    s_sum_raw = np.nansum(s, axis=1)
-    guard_nan = (n_valid == 0) | (p_sum_raw == 0) | (s_sum_raw == 0)
-
-    p, s = _vectorized_transform(p, s, model)
-    numerator = np.nansum((p - s) ** 2, axis=1)
-    p_mean = np.nanmean(p, axis=1, keepdims=True)
-    denominator = np.nansum((p - p_mean) ** 2, axis=1)
+    guard_nan = (m.n == 0) | (m.raw_sum_p == 0) | (m.raw_sum_s == 0)
+    denominator = m.sum_dp2
     if model.add_epsilon:
         denominator = denominator + EPSILON
+    return m.sum_diff2, denominator, guard_nan | (denominator == 0)
 
-    return numerator, denominator, guard_nan | (denominator == 0)
 
-
-def _vec_nash_sutcliffe_efficiency(p, s, model) -> np.ndarray:
-    numerator, denominator, guard_nan = _vec_nse_parts(p, s, model)
+def _derive_nash_sutcliffe_efficiency(m: _Moments, model) -> np.ndarray:
+    numerator, denominator, guard_nan = _nse_parts_from(m, model)
     with np.errstate(invalid="ignore", divide="ignore"):
         result = 1.0 - numerator / denominator
     return np.where(guard_nan, np.nan, result)
 
 
-def _vec_nash_sutcliffe_efficiency_normalized(p, s, model) -> np.ndarray:
-    numerator, denominator, guard_nan = _vec_nse_parts(p, s, model)
+def _derive_nash_sutcliffe_efficiency_normalized(m: _Moments, model) -> np.ndarray:
+    numerator, denominator, guard_nan = _nse_parts_from(m, model)
     with np.errstate(invalid="ignore", divide="ignore"):
-        # Written as the scalar closure writes it (1/(1 + num/den)) rather than
-        # the algebraically equal 1/(2 - NSE): same value, but bit-identical to
-        # deterministic_funcs and no second division.
+        # Written as the scalar closure writes it (1/(1 + num/den)) rather
+        # than the algebraically equal 1/(2 - NSE): same value, but
+        # bit-identical to deterministic_funcs and no second division.
         result = 1.0 / (1.0 + numerator / denominator)
     return np.where(guard_nan, np.nan, result)
 
 
-def _vec_kling_gupta_efficiency(p, s, model) -> np.ndarray:
+def _derive_kling_gupta_efficiency(m: _Moments, model) -> np.ndarray:
     # Legacy guard (pre-transform): zero std on either side -> NaN.
-    guard_nan = (np.nanstd(s, axis=1) == 0) | (np.nanstd(p, axis=1) == 0)
+    guard_nan = (m.raw_std_s == 0) | (m.raw_std_p == 0)
+    r = _pearson_r_from(m, add_epsilon=False)  # kge always uses plain corrcoef
+    mean_p, mean_s = m.mean_p[:, 0], m.mean_s[:, 0]
 
-    p, s = _vectorized_transform(p, s, model)
-    r = _vec_pearson_r(p, s, add_epsilon=False)  # kge always uses plain corrcoef
-
-    p_std = np.nanstd(p, axis=1)
-    s_std = np.nanstd(s, axis=1)
-    p_mean = np.nanmean(p, axis=1)
-    s_mean = np.nanmean(s, axis=1)
-
-    with np.errstate(invalid="ignore", divide="ignore"):
-        if model.add_epsilon:
-            rel_var = _vec_divide(s_std, p_std + EPSILON)
-            rel_mean = _vec_divide(s_mean, p_mean + EPSILON)
-        else:
-            rel_var = _vec_divide(s_std, p_std)
-            rel_mean = _vec_divide(s_mean, p_mean)
+    if model.add_epsilon:
+        rel_var = _vec_divide(m.std_s, m.std_p + EPSILON)
+        rel_mean = _vec_divide(mean_s, mean_p + EPSILON)
+    else:
+        rel_var = _vec_divide(m.std_s, m.std_p)
+        rel_mean = _vec_divide(mean_s, mean_p)
 
     euclidean = np.sqrt(
         model.sr * (r - 1.0) ** 2
         + model.sa * (rel_var - 1.0) ** 2
         + model.sb * (rel_mean - 1.0) ** 2
     )
-    result = 1.0 - euclidean
-    return np.where(guard_nan, np.nan, result)
+    return np.where(guard_nan, np.nan, 1.0 - euclidean)
 
 
-def _vec_pearson_correlation(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    return _vec_pearson_r(p, s, add_epsilon=model.add_epsilon)
+def _derive_kling_gupta_efficiency_mod1(m: _Moments, model) -> np.ndarray:
+    guard_nan = (m.raw_std_s == 0) | (m.raw_std_p == 0)
+    r = _pearson_r_from(m, add_epsilon=False)
+    mean_p, mean_s = m.mean_p[:, 0], m.mean_s[:, 0]
 
-
-def _vec_r_squared(p, s, model) -> np.ndarray:
-    # r_squared_inner is pearson_correlation_inner with the result squared.
-    p, s = _vectorized_transform(p, s, model)
-    return _vec_pearson_r(p, s, add_epsilon=model.add_epsilon) ** 2
-
-
-def _vec_mean_error_core(p, s, model, power=1.0, root=False) -> np.ndarray:
-    """Row-wise ``deterministic_funcs._mean_error`` on transformed matrices.
-
-    Takes ALREADY-transformed inputs, mirroring the scalar helper, which its
-    callers likewise invoke after ``_transform``.
-
-    The denominator is the finite-pair count, not the row width: the scalar
-    helper divides by ``len(y_true)`` *after* ``_transform`` has dropped
-    non-finite pairs.
-    """
-    with np.errstate(invalid="ignore", divide="ignore"):
-        me = _vec_divide(
-            np.nansum(np.abs(p - s) ** power, axis=1),
-            _finite_pair_count(p, s),
+    if model.add_epsilon:
+        # Mod1's variability ratio is a ratio of coefficients of variation,
+        # unlike kge's ratio of raw standard deviations.
+        var_ratio = _vec_divide(
+            _vec_divide(m.std_s, mean_s + EPSILON),
+            _vec_divide(m.std_p, mean_p + EPSILON),
         )
-    return np.sqrt(me) if root else me
-
-
-def _vec_mean_error(p, s, model) -> np.ndarray:
-    # mean_error_inner uses np.sum(s - p)/len(p) directly, NOT _mean_error --
-    # note it is signed, and s - p rather than |p - s|.
-    p, s = _vectorized_transform(p, s, model)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        return _vec_divide(
-            np.nansum(s - p, axis=1), _finite_pair_count(p, s)
+        rel_mean = _vec_divide(mean_s, mean_p + EPSILON)
+    else:
+        var_ratio = _vec_divide(
+            _vec_divide(m.std_s, mean_s), _vec_divide(m.std_p, mean_p)
         )
-
-
-def _vec_mean_absolute_error(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    return _vec_mean_error_core(p, s, model)
-
-
-def _vec_mean_squared_error(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    return _vec_mean_error_core(p, s, model, power=2.0)
-
-
-def _vec_root_mean_squared_error(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    return _vec_mean_error_core(p, s, model, power=2.0, root=True)
-
-
-def _vec_root_mean_standard_deviation_ratio(p, s, model) -> np.ndarray:
-    # Transforms ONCE then calls the core helper, mirroring
-    # root_mean_standard_deviation_ratio_inner calling _root_mean_squared_error
-    # (the helper that does no transform of its own). Delegating to
-    # _vec_root_mean_squared_error instead would transform twice.
-    p, s = _vectorized_transform(p, s, model)
-    rmse = _vec_mean_error_core(p, s, model, power=2.0, root=True)
-    p_std = np.nanstd(p, axis=1)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        if model.add_epsilon:
-            return _vec_divide(rmse, p_std + EPSILON)
-        return _vec_divide(rmse, p_std)
-
-
-def _vec_mean_absolute_relative_error(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    numerator = np.nansum(np.abs(s - p), axis=1)
-    p_sum = np.nansum(p, axis=1)          # np.sum(p): p only, not pairwise
-    with np.errstate(invalid="ignore", divide="ignore"):
-        if model.add_epsilon:
-            return _vec_divide(numerator, p_sum + EPSILON)
-        return _vec_divide(numerator, p_sum)
-
-
-def _vec_max_value_delta(p, s, model) -> np.ndarray:
-    p, s = _vectorized_transform(p, s, model)
-    return np.nanmax(s, axis=1) - np.nanmax(p, axis=1)
-
-
-def _vec_kling_gupta_efficiency_mod1(p, s, model) -> np.ndarray:
-    # Legacy guard (pre-transform): zero std on either side -> NaN.
-    guard_nan = (np.nanstd(s, axis=1) == 0) | (np.nanstd(p, axis=1) == 0)
-
-    p, s = _vectorized_transform(p, s, model)
-    r = _vec_pearson_r(p, s, add_epsilon=False)  # always plain corrcoef
-
-    p_std = np.nanstd(p, axis=1)
-    s_std = np.nanstd(s, axis=1)
-    p_mean = np.nanmean(p, axis=1)
-    s_mean = np.nanmean(s, axis=1)
-
-    with np.errstate(invalid="ignore", divide="ignore"):
-        if model.add_epsilon:
-            # Mod1's variability ratio is a ratio of coefficients of
-            # variation, unlike kge's ratio of raw standard deviations.
-            var_ratio = _vec_divide(
-                _vec_divide(s_std, s_mean + EPSILON),
-                _vec_divide(p_std, p_mean + EPSILON),
-            )
-            rel_mean = _vec_divide(s_mean, p_mean + EPSILON)
-        else:
-            var_ratio = _vec_divide(
-                _vec_divide(s_std, s_mean), _vec_divide(p_std, p_mean)
-            )
-            rel_mean = _vec_divide(s_mean, p_mean)
+        rel_mean = _vec_divide(mean_s, mean_p)
 
     euclidean = np.sqrt(
         model.sr * (r - 1.0) ** 2
@@ -471,34 +585,155 @@ def _vec_kling_gupta_efficiency_mod1(p, s, model) -> np.ndarray:
     return np.where(guard_nan, np.nan, 1.0 - euclidean)
 
 
-def _vec_kling_gupta_efficiency_mod2(p, s, model) -> np.ndarray:
-    # Legacy guard (pre-transform): zero std on either side -> NaN.
-    guard_nan = (np.nanstd(s, axis=1) == 0) | (np.nanstd(p, axis=1) == 0)
+def _derive_kling_gupta_efficiency_mod2(m: _Moments, model) -> np.ndarray:
+    guard_nan = (m.raw_std_s == 0) | (m.raw_std_p == 0)
+    r = _pearson_r_from(m, add_epsilon=False)
+    mean_p, mean_s = m.mean_p[:, 0], m.mean_s[:, 0]
 
-    p, s = _vectorized_transform(p, s, model)
-    r = _vec_pearson_r(p, s, add_epsilon=False)  # always plain corrcoef
-
-    p_std = np.nanstd(p, axis=1)
-    s_std = np.nanstd(s, axis=1)
-    p_mean = np.nanmean(p, axis=1)
-    s_mean = np.nanmean(s, axis=1)
-
-    with np.errstate(invalid="ignore", divide="ignore"):
-        if model.add_epsilon:
-            rel_var = _vec_divide(s_std, p_std + EPSILON)
-            bias = _vec_divide(
-                (s_mean - p_mean) ** 2, (p_std ** 2) + EPSILON
-            )
-        else:
-            rel_var = _vec_divide(s_std, p_std)
-            bias = _vec_divide((s_mean - p_mean) ** 2, p_std ** 2)
+    if model.add_epsilon:
+        rel_var = _vec_divide(m.std_s, m.std_p + EPSILON)
+        bias = _vec_divide((mean_s - mean_p) ** 2, (m.std_p**2) + EPSILON)
+    else:
+        rel_var = _vec_divide(m.std_s, m.std_p)
+        bias = _vec_divide((mean_s - mean_p) ** 2, m.std_p**2)
 
     euclidean = np.sqrt(
         model.sr * (r - 1.0) ** 2
         + model.sa * (rel_var - 1.0) ** 2
-        + model.sb * bias          # NOT squared, unlike the other two terms
+        + model.sb * bias  # NOT squared, unlike the other two terms
     )
     return np.where(guard_nan, np.nan, 1.0 - euclidean)
+
+
+def _derive_pearson_correlation(m: _Moments, model) -> np.ndarray:
+    return _pearson_r_from(m, add_epsilon=model.add_epsilon)
+
+
+def _derive_r_squared(m: _Moments, model) -> np.ndarray:
+    # r_squared_inner is pearson_correlation_inner with the result squared.
+    return _pearson_r_from(m, add_epsilon=model.add_epsilon) ** 2
+
+
+def _derive_mean_error(m: _Moments, model) -> np.ndarray:
+    # mean_error_inner uses np.sum(s - p)/len(p) directly, NOT _mean_error --
+    # note it is signed, and s - p rather than |p - s|.
+    return _vec_divide(m.sum_sdiff, m.n)
+
+
+def _derive_mean_absolute_error(m: _Moments, model) -> np.ndarray:
+    return _vec_divide(m.sum_absdiff, m.n)
+
+
+def _derive_mean_squared_error(m: _Moments, model) -> np.ndarray:
+    return _vec_divide(m.sum_diff2, m.n)
+
+
+def _derive_root_mean_squared_error(m: _Moments, model) -> np.ndarray:
+    return np.sqrt(_vec_divide(m.sum_diff2, m.n))
+
+
+def _derive_root_mean_standard_deviation_ratio(m: _Moments, model) -> np.ndarray:
+    rmse = np.sqrt(_vec_divide(m.sum_diff2, m.n))
+    if model.add_epsilon:
+        return _vec_divide(rmse, m.std_p + EPSILON)
+    return _vec_divide(rmse, m.std_p)
+
+
+def _derive_mean_absolute_relative_error(m: _Moments, model) -> np.ndarray:
+    if model.add_epsilon:
+        return _vec_divide(m.sum_absdiff, m.sum_p + EPSILON)
+    return _vec_divide(m.sum_absdiff, m.sum_p)
+
+
+#: Metrics computable from shared accumulators alone. The batch path builds
+#: one _Moments per (chunk, transform key) and calls these; the registry
+#: wrappers below call the same functions one metric at a time.
+MOMENT_DERIVED_FUNCS = {
+    "RelativeMean": _derive_relative_mean,
+    "MultiplicativeBias": _derive_relative_mean,
+    "RelativeMinimum": _derive_relative_minimum,
+    "RelativeMaximum": _derive_relative_maximum,
+    "RelativeStandardDeviation": _derive_relative_standard_deviation,
+    "VariabilityRatio": _derive_relative_standard_deviation,
+    "RelativeBias": _derive_relative_bias,
+    "MaxValueDelta": _derive_max_value_delta,
+    "NashSutcliffeEfficiency": _derive_nash_sutcliffe_efficiency,
+    "NormalizedNashSutcliffeEfficiency": (
+        _derive_nash_sutcliffe_efficiency_normalized
+    ),
+    "KlingGuptaEfficiency": _derive_kling_gupta_efficiency,
+    "KlingGuptaEfficiencyMod1": _derive_kling_gupta_efficiency_mod1,
+    "KlingGuptaEfficiencyMod2": _derive_kling_gupta_efficiency_mod2,
+    "PearsonCorrelation": _derive_pearson_correlation,
+    "Rsquared": _derive_r_squared,
+    "MeanError": _derive_mean_error,
+    "MeanAbsoluteError": _derive_mean_absolute_error,
+    "MeanSquareError": _derive_mean_squared_error,
+    "RootMeanSquareError": _derive_root_mean_squared_error,
+    "RootMeanStandardDeviationRatio": _derive_root_mean_standard_deviation_ratio,
+    "MeanAbsoluteRelativeError": _derive_mean_absolute_relative_error,
+}
+
+
+def _single(derive):
+    """Wrap a derivation as a one-metric ``(p, s, model)`` kernel."""
+
+    def kernel(p, s, model):
+        return derive(_Moments(p, s, model), model)
+
+    return kernel
+
+
+_vec_relative_mean = _single(_derive_relative_mean)
+_vec_relative_minimum = _single(_derive_relative_minimum)
+_vec_relative_maximum = _single(_derive_relative_maximum)
+_vec_relative_standard_deviation = _single(_derive_relative_standard_deviation)
+_vec_relative_bias = _single(_derive_relative_bias)
+_vec_max_value_delta = _single(_derive_max_value_delta)
+_vec_nash_sutcliffe_efficiency = _single(_derive_nash_sutcliffe_efficiency)
+_vec_nash_sutcliffe_efficiency_normalized = _single(
+    _derive_nash_sutcliffe_efficiency_normalized
+)
+_vec_kling_gupta_efficiency = _single(_derive_kling_gupta_efficiency)
+_vec_kling_gupta_efficiency_mod1 = _single(_derive_kling_gupta_efficiency_mod1)
+_vec_kling_gupta_efficiency_mod2 = _single(_derive_kling_gupta_efficiency_mod2)
+_vec_pearson_correlation = _single(_derive_pearson_correlation)
+_vec_r_squared = _single(_derive_r_squared)
+_vec_mean_error = _single(_derive_mean_error)
+_vec_mean_absolute_error = _single(_derive_mean_absolute_error)
+_vec_mean_squared_error = _single(_derive_mean_squared_error)
+_vec_root_mean_squared_error = _single(_derive_root_mean_squared_error)
+_vec_root_mean_standard_deviation_ratio = _single(
+    _derive_root_mean_standard_deviation_ratio
+)
+_vec_mean_absolute_relative_error = _single(_derive_mean_absolute_relative_error)
+
+
+def _vec_relative_median(p, s, model) -> np.ndarray:
+    """The one two-field metric no accumulator can serve.
+
+    An order statistic needs the values themselves, so this keeps its own
+    pass over the matrices.
+    """
+    p, s = _vectorized_transform(p, s, model)
+    p_med = _row_nanmedian(p)
+    s_med = _row_nanmedian(s)
+    if model.add_epsilon:
+        return _vec_divide(s_med, p_med + EPSILON)
+    return _vec_divide(s_med, p_med)
+
+
+def _row_nanmedian(x: np.ndarray) -> np.ndarray:
+    """Row-wise median, skipping NaN.
+
+    ``np.nanmedian`` copies the input and full-sorts each row. When the chunk
+    has no NaN at all -- the common case, since the mask only fires on gappy
+    input -- ``np.median`` reaches ``np.partition`` instead, which is O(n)
+    per row rather than O(n log n) and does not need the copy.
+    """
+    if not np.isnan(x).any():
+        return np.median(x, axis=1)
+    return np.nanmedian(x, axis=1)
 
 
 # --- Signature kernels -----------------------------------------------------
@@ -719,8 +954,23 @@ def compute_vectorized_shared_bootstrap(
         if covered:
             p_mat = p_arr[idx]
             s_mat = s_arr[idx] if s_arr is not None else None
+            # Metrics derivable from shared accumulators get one _Moments per
+            # distinct transform for the whole chunk, instead of each kernel
+            # re-walking the same matrices. Anything else (RelativeMedian, the
+            # single-field signatures) keeps its own kernel. Both routes end
+            # in the same _derive_* code, so they cannot disagree.
+            moments = {}
             for i, metric, kernel in covered:
-                values[done:done + k, i] = kernel(p_mat, s_mat, metric)
+                derive = MOMENT_DERIVED_FUNCS.get(type(metric).__name__)
+                if derive is not None and s_mat is not None:
+                    key = _transform_key(metric)
+                    shared = moments.get(key)
+                    if shared is None:
+                        shared = moments[key] = _Moments(p_mat, s_mat, metric)
+                    values[done:done + k, i] = derive(shared, metric)
+                else:
+                    values[done:done + k, i] = kernel(p_mat, s_mat, metric)
+            del moments
         for r in range(k):
             if not fallback:
                 break
