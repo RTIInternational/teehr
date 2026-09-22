@@ -1,5 +1,5 @@
 """Data types for the TEEHR schema."""
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 
@@ -17,10 +17,51 @@ USGS_CONFIGURATION_NAME = "usgs_observations"
 
 NWM_BUCKET = "national-water-model"
 
-NWM30_START_DATE = datetime(2023, 9, 19, 0)
-NWM21_START_DATE = datetime(2021, 4, 20, 0)  # v2.1 and 2.2 are the same
-NWM20_START_DATE = datetime(2019, 6, 19, 0)
+# First cycle of each NWM version, read from the files' own attributes and
+# pinned by test_nwm_version_boundaries. Switches land on a forecast cycle, not
+# midnight, so comparing whole days accepts up to 14 hours of the neighbouring
+# version. v1.2's entry is the earliest data teehr reads, not a switch.
+NWM31_START_DATE = datetime(2026, 8, 18, 0)   # t00z
+NWM30_START_DATE = datetime(2023, 9, 19, 12)  # t12z; t00z-t11z still v2.2
+NWM21_START_DATE = datetime(2021, 4, 20, 14)  # t14z; v2.1 and 2.2 are the same
+NWM20_START_DATE = datetime(2019, 6, 19, 14)  # t14z; t00z-t13z still v1.2
 NWM12_START_DATE = datetime(2018, 9, 17, 0)
+
+# The boundaries in order, each paired with the version in force from it until
+# the next. v2.2 has no entry: teehr treats v2.1 and v2.2 as one version. This
+# is NOAA's intent, not a promise about every file -- read the file's own
+# attribute (read_nwm_file_version) when it has to be exact.
+NWM_VERSION_BOUNDARIES = (
+    (NWM12_START_DATE, "1.2"),
+    (NWM20_START_DATE, "2.0"),
+    (NWM21_START_DATE, "2.1"),
+    (NWM30_START_DATE, "3.0"),
+    (NWM31_START_DATE, "3.1"),
+)
+
+# How long after a boundary a file still reporting the outgoing version is
+# accepted (with a warning) rather than raising. NOAA reruns some cycles on the
+# outgoing system mid-switch, scattered across cycles and configurations -- a
+# quarter of the files sampled on 2026-08-18 still said v3.0, interleaved with
+# v3.1 -- so they can be bounded in time but not enumerated. One day suffices:
+# 2026-08-19 through 08-21 sampled clean.
+NWM_VERSION_SWITCHOVER_GRACE = timedelta(days=1)
+
+# Version(s) each SupportedNWMOperationalVersionsEnum member accepts from a
+# file's attributes, normalized by _normalize_nwm_version_attr. The nwm12 era
+# writes model_version ("NWM 1.2"), later eras NWM_version_number ("v2.0"...).
+# nwm21 and nwm22 share an entry, as above.
+NWM_VERSION_ATTR_VALUES = {
+    "nwm12": frozenset({"1.2"}),
+    "nwm20": frozenset({"2.0"}),
+    "nwm21": frozenset({"2.1", "2.2"}),
+    "nwm22": frozenset({"2.1", "2.2"}),
+    "nwm30": frozenset({"3.0"}),
+    "nwm31": frozenset({"3.1"}),
+}
+
+# Global attributes that carry the model version, newest convention first.
+NWM_VERSION_ATTRS = ("NWM_version_number", "model_version")
 
 NWM_S3_JSON_PATH = "s3://ciroh-nwm-zarr-copy"
 
@@ -91,6 +132,20 @@ NWM_CONFIGURATION_DESCRIPTIONS = {
     "short_range_puertorico_no_da": "PRVI NWM short range, NAM-NEST forcing, initialized by no_da analysis_assim",
     "forcing_analysis_assim_puertorico": "PRVI MRMS mean areal forcing for NWM standard analysis",
     "forcing_short_range_puertorico": "PRVI NAM-NEST mean areal forcing for NWM short range",
+}
+
+# NWM 3.1 switched the PRVI short range forcing from NAM-NEST to NBM. Only the
+# entries that differ are written out; the rest are inherited, so a description
+# added above reaches 3.1 too.
+NWM31_CONFIGURATION_DESCRIPTIONS = NWM_CONFIGURATION_DESCRIPTIONS | {
+    "forcing_short_range_puertorico": "PRVI NBM mean areal forcing for NWM short range",
+    "short_range_puertorico": "PRVI NWM short range, NBM forcing",
+    "short_range_puertorico_no_da": "PRVI NWM short range, NBM forcing, initialized by no_da analysis_assim",
+}
+
+# Versions absent here use NWM_CONFIGURATION_DESCRIPTIONS.
+NWM_CONFIGURATION_DESCRIPTIONS_BY_VERSION = {
+    "nwm31": NWM31_CONFIGURATION_DESCRIPTIONS,
 }
 
 NWM_HAWAII_VARIABLE_MAPPER = {
