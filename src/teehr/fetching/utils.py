@@ -1417,15 +1417,12 @@ def _parse_nwm_cycle(remote_path: str) -> Optional[datetime]:
     Parsed as in :func:`parse_nwm_gcs_paths`, but for one path and without
     needing the configuration name. None if either part is absent.
     """
-    day_match = re.search(DAY_PATTERN, remote_path)
-    z_match = re.search(r"t([0-9]+)z", Path(remote_path).name)
+    day_match = re.search(r"nwm\.(\d{8})", remote_path)
+    z_match = re.search(r"t(\d{2})z", Path(remote_path).name)
     if day_match is None or z_match is None:
         return None
-    day = day_match.group().split(".")[1]
-    return (
-        datetime.strptime(day, "%Y%m%d")
-        + timedelta(hours=int(z_match.group(1)))
-    )
+    day = day_match.group(1)
+    return datetime.strptime(day, "%Y%m%d") + timedelta(hours=int(z_match.group(1)))
 
 
 def nwm_version_at(cycle: datetime) -> Optional[str]:
