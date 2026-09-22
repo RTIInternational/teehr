@@ -297,13 +297,24 @@ def resolve_cpu_processes(
         CPU budget to cap; resolved from the process-wide setting if omitted.
     memory_per_process : Optional[int]
         Bytes one worker is expected to peak at, measured by the caller for
-        its own work. Omit to bound by CPU alone.
+        its own work; must be positive. Omit to bound by CPU alone.
+
+    Raises
+    ------
+    ValueError
+        If ``memory_per_process`` is not positive.
     """
     workers = resolve_cpu_workers(workers)
-    memory = available_memory()
-    if memory_per_process and memory:
-        # Scale down on a small machine rather than risking an OOM kill.
-        workers = min(workers, max(1, memory // memory_per_process))
+    if memory_per_process is not None:
+        if memory_per_process <= 0:
+            raise ValueError(
+                "memory_per_process must be a positive number of bytes, got"
+                f" {memory_per_process}. Pass None to bound by CPU alone."
+            )
+        memory = available_memory()
+        if memory is not None:
+            # Scale down on a small machine rather than risking an OOM kill.
+            workers = min(workers, max(1, memory // memory_per_process))
     return max(1, workers)
 
 
@@ -329,7 +340,8 @@ def resolve_budget(
         ``processes``; omit unless you intend to use them.
     memory_per_item : Optional[int]
         Bytes one in-flight item is expected to peak at, measured by the
-        caller. Lowers ``io`` so the items in flight fit in
+        caller; must be positive, since neither zero nor a negative figure has
+        a sensible reading. Lowers ``io`` so the items in flight fit in
         :func:`available_memory`. Resolve it here, not at the call site:
         callers that divide a budget across worker processes divide ``io``
         too, whereas a cap each process computed for itself would multiply.
@@ -340,9 +352,15 @@ def resolve_budget(
     >>> budget = resolve_budget(io=8)      # ...only 8 requests in flight
     """
     io_value = resolve_io_concurrency(io)
-    memory = available_memory()
-    if memory_per_item and memory:
-        io_value = max(1, min(io_value, memory // memory_per_item))
+    if memory_per_item is not None:
+        if memory_per_item <= 0:
+            raise ValueError(
+                "memory_per_item must be a positive number of bytes, got"
+                f" {memory_per_item}. Pass None to bound by CPU alone."
+            )
+        memory = available_memory()
+        if memory is not None:
+            io_value = max(1, min(io_value, memory // memory_per_item))
     return ConcurrencyBudget(
         io=io_value,
         cpu=resolve_cpu_workers(cpu),

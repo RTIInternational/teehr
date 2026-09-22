@@ -444,3 +444,24 @@ def test_unknown_memory_leaves_io_alone(monkeypatch):
     """On a platform that cannot report memory, bound by io alone."""
     monkeypatch.setattr(concurrency, "available_memory", lambda: None)
     assert resolve_budget(io=48, memory_per_item=8 * 1024**3).io == 48
+
+
+@pytest.mark.parametrize("bad", [0, -1])
+def test_non_positive_memory_per_item_is_rejected(bad):
+    """Zero would skip the cap and a negative would pin io to one."""
+    with pytest.raises(ValueError, match="memory_per_item must be a positive"):
+        resolve_budget(io=48, memory_per_item=bad)
+
+
+@pytest.mark.parametrize("bad", [0, -1])
+def test_non_positive_memory_per_process_is_rejected(bad):
+    """Same for the worker-process budget."""
+    with pytest.raises(ValueError, match="memory_per_process must be a positive"):
+        resolve_cpu_processes(memory_per_process=bad)
+
+
+def test_bad_memory_budget_is_rejected_even_when_memory_is_unknown(monkeypatch):
+    """A caller bug must not hide on a platform that cannot report memory."""
+    monkeypatch.setattr(concurrency, "available_memory", lambda: None)
+    with pytest.raises(ValueError):
+        resolve_budget(io=48, memory_per_item=0)
