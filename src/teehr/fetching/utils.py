@@ -327,7 +327,11 @@ def validate_operational_start_end_date(
         if start_date < NWM30_START_DATE:
             raise ValueError(v3_err_msg)
         if end_date >= NWM31_START_DATE:
-            raise ValueError(err_msg)
+            raise ValueError(
+                f"The specified end date ({end_date}) is on/after the NWM "
+                f"v3.1 release date ({NWM31_START_DATE}); request 'nwm31' or "
+                "shorten the end date."
+            )
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         if (end_date >= NWM30_START_DATE) | (start_date < NWM21_START_DATE):
             raise ValueError(err_msg)
