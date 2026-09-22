@@ -362,7 +362,11 @@ def validate_operational_start_end_date(
         if start_date < NWM30_START_DATE:
             raise ValueError(v3_err_msg)
         if end_date >= NWM31_START_DATE:
-            raise ValueError(err_msg)
+            raise ValueError(
+                f"The specified end date ({end_date}) is on/after the NWM "
+                f"v3.1 release date ({NWM31_START_DATE}); request 'nwm31' or "
+                "shorten the end date."
+            )
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         if (end_date >= NWM30_START_DATE) | (start_date < NWM21_START_DATE):
             raise ValueError(err_msg)
@@ -1772,15 +1776,12 @@ def _parse_nwm_cycle(remote_path: str) -> Optional[datetime]:
     Parsed as in :func:`parse_nwm_gcs_paths`, but for one path and without
     needing the configuration name. None if either part is absent.
     """
-    day_match = re.search(DAY_PATTERN, remote_path)
-    z_match = re.search(r"t([0-9]+)z", Path(remote_path).name)
+    day_match = re.search(r"nwm\.(\d{8})", remote_path)
+    z_match = re.search(r"t(\d{2})z", Path(remote_path).name)
     if day_match is None or z_match is None:
         return None
-    day = day_match.group().split(".")[1]
-    return (
-        datetime.strptime(day, "%Y%m%d")
-        + timedelta(hours=int(z_match.group(1)))
-    )
+    day = day_match.group(1)
+    return datetime.strptime(day, "%Y%m%d") + timedelta(hours=int(z_match.group(1)))
 
 
 def nwm_version_at(cycle: datetime) -> Optional[str]:
