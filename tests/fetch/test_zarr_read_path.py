@@ -4,6 +4,7 @@ These build their own NetCDF files and kerchunk references, so they run
 offline and are fast enough to say something about correctness that the
 live-fetch tests -- a few timesteps against GCS -- cannot.
 """
+import asyncio
 from pathlib import Path
 
 import numpy as np
@@ -419,3 +420,45 @@ def test_existing_chunk_is_refetched_when_overwriting(tmp_path, monkeypatch):
         drop_overlapping_assimilation_values=True,
     )
     assert len(calls) == 1, "overwrite_output=True must fetch the chunk"
+
+
+def test_existence_checks_respect_one_concurrency_cap(monkeypatch):
+    """Listings and heads together must stay within io_concurrency.
+
+    They used to run as two gather_bounded calls under one asyncio.gather,
+    and a semaphore each meant twice the intended load on the store.
+    """
+    limit = 4
+    state = {"now": 0, "max": 0}
+
+    async def _tracked(fn):
+        state["now"] += 1
+        state["max"] = max(state["max"], state["now"])
+        try:
+            await asyncio.sleep(0.01)
+            return fn()
+        finally:
+            state["now"] -= 1
+
+    class _Store:
+        async def head_async(self, key):
+            return await _tracked(lambda: None)
+
+    monkeypatch.setattr(fetch_utils, "_public_store", lambda url: _Store())
+    monkeypatch.setattr(
+        fetch_utils, "_list_prefix",
+        lambda store, prefix: _tracked(lambda: [f"big/f{i:04d}" for i in range(200)]),
+    )
+
+    big = [f"s3://b/big/f{i:04d}" for i in range(200)]
+    small = [f"s3://b/small/f{i:04d}" for i in range(20)]
+    _, listable, heads = _plan_existence_checks(big + small)
+    assert listable and heads, "both branches must be exercised"
+
+    result = check_if_files_exist(big + small, io_concurrency=limit)
+
+    assert state["max"] <= limit, (
+        f"{state['max']} network calls in flight with io_concurrency={limit}"
+    )
+    assert all(result[p] for p in big), "listed keys must resolve to True"
+    assert list(result) == big + small

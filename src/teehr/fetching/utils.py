@@ -684,27 +684,31 @@ async def _check_if_files_exist_async(
     limit = resolve_budget(io=io_concurrency).io
     by_prefix, listable, heads = _plan_existence_checks(file_path_list)
 
-    async def _check(path: str) -> Tuple[str, bool]:
-        store, key = _resolve(path)
+    async def _run(item: Tuple[str, str]) -> Tuple[str, str, object]:
+        kind, target = item
+        store, key = _resolve(target)
+        if kind == "list":
+            return kind, target, set(await _list_prefix(store, key))
         try:
             await store.head_async(key)
-            return path, True
+            return kind, target, True
         except FileNotFoundError:
-            return path, False
+            return kind, target, False
 
-    async def _list(prefix: str) -> Tuple[str, set]:
-        store, key_prefix = _resolve(prefix)
-        return prefix, set(await _list_prefix(store, key_prefix))
+    # Listings and heads share one bounded pass rather than a gather_bounded
+    # each: separate semaphores would each allow `limit`, putting twice the
+    # intended concurrency on the store.
+    work = [("list", prefix) for prefix in listable]
+    work += [("head", path) for path in heads]
+    outcomes = await gather_bounded(_run, work, limit=limit)
 
-    listed, checked = await asyncio.gather(
-        gather_bounded(_list, listable, limit=limit),
-        gather_bounded(_check, heads, limit=limit),
-    )
-
-    results = dict(checked)
-    for prefix, keys in listed:
-        for path in by_prefix[prefix]:
-            results[path] = _resolve(path)[1] in keys
+    results: Dict[str, bool] = {}
+    for kind, target, outcome in outcomes:
+        if kind == "head":
+            results[target] = outcome
+            continue
+        for path in by_prefix[target]:
+            results[path] = _resolve(path)[1] in outcome
     # Returned in the order asked for; callers pair it with their path list.
     return {path: results[path] for path in file_path_list}
 
