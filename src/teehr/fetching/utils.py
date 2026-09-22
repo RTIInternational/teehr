@@ -13,7 +13,9 @@ import os
 import re
 import json
 import fnmatch
+import itertools
 import struct
+import threading
 import warnings
 from warnings import warn
 
@@ -25,6 +27,7 @@ from virtualizarr.manifests import ManifestStore
 from virtualizarr.manifests.manifest import validate_and_normalize_path_to_uri
 from virtualizarr.parsers import HDFParser
 from virtualizarr.parsers.kerchunk.translator import manifestgroup_from_kerchunk_refs
+import zarr
 from zarr.errors import UnstableSpecificationWarning
 from zarr.storage import ObjectStore
 import pandas as pd
@@ -57,12 +60,18 @@ from teehr.fetching.const import (
     NWM_HAWAII_VARIABLE_MAPPER,
     NWM_S3_JSON_PATH,
     S3_BUCKET_REGIONS,
+    NWM31_START_DATE,
     NWM30_START_DATE,
     NWM21_START_DATE,
     NWM20_START_DATE,
     NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
     NWM_CONFIGURATION_DESCRIPTIONS,
+    NWM_CONFIGURATION_DESCRIPTIONS_BY_VERSION,
+    NWM_VERSION_ATTRS,
+    NWM_VERSION_ATTR_VALUES,
+    NWM_VERSION_BOUNDARIES,
+    NWM_VERSION_SWITCHOVER_GRACE,
     UNIT_NAME,
     VARIABLE_NAME
 )
@@ -89,6 +98,39 @@ REFERENCE_WORKER_MEMORY = 2000 * 1024**2
 
 # Fewest files worth the ~3s per worker startup; measured break-even.
 REFERENCE_BUILD_MIN_ITEMS = 32
+
+# Peak bytes one in-flight file costs, so concurrency can be bounded by memory
+# rather than by core count.
+#
+# Point: a whole-domain chunk decoded to float64. Measured 25MB (v3.0) to 37MB
+# with a million locations requested; barely varies with how many are asked
+# for, since 3 and 100,000 decode the same chunk.
+POINT_READ_MEMORY = 40 * 1024**2
+
+# Grid: scales with the window, which spans a HUC10 to all of CONUS. Two
+# float64 copies per cell fits the measurements (283MB for the full
+# 3840x4608 grid), floored because even a one-cell window decodes the whole
+# source chunk it falls in (8.6MB measured).
+GRID_READ_BYTES_PER_CELL = 16
+GRID_READ_MEMORY_FLOOR = 16 * 1024**2
+
+
+def grid_window_memory(n_rows: int, n_cols: int) -> int:
+    """Peak bytes reading one gridded window of this size is expected to cost."""
+    return max(
+        n_rows * n_cols * GRID_READ_BYTES_PER_CELL, GRID_READ_MEMORY_FLOOR
+    )
+
+
+# Requested files under one prefix above which one listing beats one HEAD each.
+# Measured on the pre-built reference bucket: a 1728-key listing takes 0.38s,
+# 432 heads at io=48 take 1.08s.
+LIST_INSTEAD_OF_HEAD_MIN_KEYS = 100
+
+# Requested ids re-checked against a file's own feature_id when that is cheap.
+# A mismatched feature_id means a different routing network, so every element
+# moves -- a sample catches it.
+FEATURE_ID_SAMPLE_SIZE = 64
 
 # obstore's default backoff spends its 10 retries in ~2s, which is too fast for
 # a connection an object store resets under load: the same request usually
@@ -225,6 +267,9 @@ def format_nwm_configuration_metadata(
     Returns a dictionary with the formatted configuration name and member,
     which is parsed from the NWM configuration name if it's an ensemble
     (ie., medium range or long range streamflow).
+
+    Descriptions come from the version's own table where it has one,
+    otherwise the shared table.
     """
     ev_member = None
     # Try to parse the member from the configuration name.
@@ -235,10 +280,12 @@ def format_nwm_configuration_metadata(
     else:
         ev_config_name = nwm_version + "_" + nwm_config_name
     # Get the config description.
-    if nwm_config_name in NWM_CONFIGURATION_DESCRIPTIONS:
-        ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name]
-    else:
-        ev_config_desc = "NWM operational forecasts"  # default description
+    descriptions = NWM_CONFIGURATION_DESCRIPTIONS_BY_VERSION.get(
+        nwm_version, NWM_CONFIGURATION_DESCRIPTIONS
+    )
+    ev_config_desc = descriptions.get(
+        nwm_config_name, "NWM operational forecasts"  # default description
+    )
     return {
         "name": ev_config_name,
         "member": ev_member,
@@ -282,7 +329,13 @@ def validate_operational_start_end_date(
     start_date: Union[datetime, pd.Timestamp],
     end_date: Union[datetime, pd.Timestamp]
 ):
-    """Make sure start/end dates work with specified NWM version."""
+    """Make sure start/end dates work with specified NWM version.
+
+    Compares at z-hour resolution, since a switch lands on a forecast cycle,
+    not midnight: v3.0 begins at ``2023-09-19 t12z``, so that day's t00z-t11z
+    are still v2.2. Comparing whole days would accept up to 14 hours of the
+    neighbouring version. See :data:`NWM_VERSION_BOUNDARIES`.
+    """
     logger.debug("Checking dates against NWM version.")
 
     if end_date < start_date:
@@ -299,9 +352,21 @@ def validate_operational_start_end_date(
         f"v3.0 release date ({NWM30_START_DATE})"
     )
 
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm31:
+        if start_date < NWM31_START_DATE:
+            raise ValueError(
+                f"The specified start date ({start_date}) is before the NWM "
+                f"v3.1 release date ({NWM31_START_DATE})"
+            )
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         if start_date < NWM30_START_DATE:
             raise ValueError(v3_err_msg)
+        if end_date >= NWM31_START_DATE:
+            raise ValueError(
+                f"The specified end date ({end_date}) is on/after the NWM "
+                f"v3.1 release date ({NWM31_START_DATE}); request 'nwm31' or "
+                "shorten the end date."
+            )
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         if (end_date >= NWM30_START_DATE) | (start_date < NWM21_START_DATE):
             raise ValueError(err_msg)
@@ -477,6 +542,15 @@ def write_timeseries_parquet_file(
     """
     logger.debug(f"Writing parquet file: {filepath}")
 
+    # Before the conversion and validation below, all of which is thrown away
+    # when the file is already there.
+    if filepath.is_file() and not overwrite_output:
+        logger.info(
+            f"{filepath.name} already exists and overwrite_output=False;"
+            " skipping"
+        )
+        return filepath
+
     if isinstance(data, pa.Table):
         df = data.to_pandas()
     else:
@@ -517,13 +591,6 @@ def write_timeseries_parquet_file(
         )
         return None
 
-    if filepath.is_file() and not overwrite_output:
-        logger.info(
-            f"{filepath.name} already exists and overwrite_output=False;"
-            " skipping"
-        )
-        return filepath
-
     if filepath.is_file():
         logger.info(f"Overwriting {filepath.name}")
 
@@ -538,7 +605,7 @@ def list_to_np(lst):
 
 
 def _s3_region(url: str) -> str:
-    """The region an s3 bucket lives in, from :data:`S3_BUCKET_REGIONS`."""
+    """Get the region an s3 bucket lives in, from :data:`S3_BUCKET_REGIONS`."""
     bucket = url.split("://", 1)[-1].split("/", 1)[0]
     return S3_BUCKET_REGIONS.get(bucket, DEFAULT_S3_REGION)
 
@@ -557,7 +624,7 @@ def _public_store(url: str):
 
 
 def public_zarr_store(url: str) -> ObjectStore:
-    """A read-only zarr store for a public s3 zarr, backed by obstore.
+    """Create a read-only zarr store for a public s3 zarr, backed by obstore.
 
     Used instead of ``fsspec.get_mapper`` so the retrospective reads go
     through the same object store, region pinning, and retry budget as the
@@ -566,6 +633,40 @@ def public_zarr_store(url: str) -> ObjectStore:
     to read a selection in parallel.
     """
     return ObjectStore(_public_store(url), read_only=True)
+
+
+async def _list_prefix(store, prefix: str) -> List[str]:
+    """Every key under ``prefix``, following pagination."""
+    return [meta["path"] for meta in await obstore.list(store, prefix).collect_async()]
+
+
+def _plan_existence_checks(
+    file_path_list: List[str],
+) -> Tuple[Dict[str, List[str]], List[str], List[str]]:
+    """Decide which prefixes to list and which files to check one by one.
+
+    One listing answers for every file under a prefix, and NWM fetches ask
+    about hundreds from the same one. Below
+    :data:`LIST_INSTEAD_OF_HEAD_MIN_KEYS` a listing costs more than the heads
+    it saves, so small prefixes stay file by file.
+
+    Returns the paths grouped by prefix, the prefixes worth listing, and the
+    paths to check individually.
+    """
+    by_prefix: Dict[str, List[str]] = {}
+    for path in file_path_list:
+        by_prefix.setdefault(path.rsplit("/", 1)[0] + "/", []).append(path)
+
+    listable = [
+        prefix for prefix, paths in by_prefix.items()
+        if len(paths) >= LIST_INSTEAD_OF_HEAD_MIN_KEYS
+    ]
+    listed = set(listable)
+    heads = [
+        path for prefix, paths in by_prefix.items()
+        if prefix not in listed for path in paths
+    ]
+    return by_prefix, listable, heads
 
 
 async def _check_if_files_exist_async(
@@ -584,18 +685,36 @@ async def _check_if_files_exist_async(
             stores[prefix] = _public_store(prefix)
         return stores[prefix], key
 
-    async def _check(path: str) -> tuple:
-        store, key = _resolve(path)
+    limit = resolve_budget(io=io_concurrency).io
+    by_prefix, listable, heads = _plan_existence_checks(file_path_list)
+
+    async def _run(item: Tuple[str, str]) -> Tuple[str, str, object]:
+        kind, target = item
+        store, key = _resolve(target)
+        if kind == "list":
+            return kind, target, set(await _list_prefix(store, key))
         try:
             await store.head_async(key)
-            return path, True
+            return kind, target, True
         except FileNotFoundError:
-            return path, False
+            return kind, target, False
 
-    results = await gather_bounded(
-        _check, file_path_list, limit=resolve_budget(io=io_concurrency).io
-    )
-    return dict(results)
+    # Listings and heads share one bounded pass rather than a gather_bounded
+    # each: separate semaphores would each allow `limit`, putting twice the
+    # intended concurrency on the store.
+    work = [("list", prefix) for prefix in listable]
+    work += [("head", path) for path in heads]
+    outcomes = await gather_bounded(_run, work, limit=limit)
+
+    results: Dict[str, bool] = {}
+    for kind, target, outcome in outcomes:
+        if kind == "head":
+            results[target] = outcome
+            continue
+        for path in by_prefix[target]:
+            results[path] = _resolve(path)[1] in outcome
+    # Returned in the order asked for; callers pair it with their path list.
+    return {path: results[path] for path in file_path_list}
 
 
 def check_if_files_exist(
@@ -883,7 +1002,170 @@ def _manifest_store_from_refs(
     refs = ujson.loads(content)
     refs = _resolve_kerchunk_templates(refs)
     refs = _fix_kerchunk_fill_values(refs)
-    return ManifestStore(group=manifestgroup_from_kerchunk_refs(refs), registry=registry)
+    return ManifestStore(
+        group=manifestgroup_from_kerchunk_refs(refs), registry=registry
+    )
+
+
+class _FeatureIdPositions:
+    """Resolve requested NWM ids to positions, reusing the work across files.
+
+    Every file in a run repeats the same feature_id coordinate -- 2.7M values
+    for CONUS -- so resolving positions per file re-reads and re-decompresses
+    it once per file for an answer that does not change.
+
+    Positions are keyed on feature_id's shape and dtype, both free from the
+    file's metadata. That is the honest key: positions mean nothing across a
+    differently sized coordinate, and a resize is the only way feature_id can
+    vary within one call -- dates are clamped to a single NWM version by
+    ``validate_operational_start_end_date`` and the domain is fixed by the
+    configuration, so only a network revision (v2.2's 2,776,738 vs v3.0's
+    2,776,734) or a different domain can occur, and both change the shape.
+
+    Where feature_id is chunked, a sample of the requested ids is also
+    re-read from each file, which checks contents rather than just size.
+
+    Bind one instance to the run's ``location_ids`` and share it across files;
+    it is safe to use from several threads.
+    """
+
+    def __init__(self, location_ids: Iterable[int]):
+        self.location_ids = np.asarray(location_ids).astype(np.int64, copy=False)
+        self._positions: Dict[Tuple, np.ndarray] = {}
+        self._sample_counter = itertools.count()
+        self._lock = threading.Lock()
+
+    def resolve(self, group: zarr.Group) -> np.ndarray:
+        """Positions of ``location_ids`` in this file's feature_id."""
+        array = group["feature_id"]
+        key = (tuple(array.shape), str(array.dtype))
+
+        positions = self._positions.get(key)
+        if positions is None:
+            # Held across the read so files racing here wait for the first
+            # one's answer instead of each fetching feature_id themselves --
+            # without it every file in flight misses the empty cache at once
+            # and the cache saves nothing.
+            with self._lock:
+                positions = self._positions.get(key)
+                if positions is None:
+                    positions = _feature_id_positions(
+                        array[:], self.location_ids
+                    )
+                    self._positions[key] = positions
+                    return positions
+
+        if array.nchunks > 1:
+            self._verify_sample(array, positions)
+        return positions
+
+    def _verify_sample(self, array: zarr.Array, positions: np.ndarray) -> None:
+        """Re-read some requested ids from this file and check they match.
+
+        The sample is confined to one chunk so only that chunk is fetched, and
+        which chunk rotates per call, so consecutive files cover different
+        parts of the coordinate rather than all re-checking the same one.
+        """
+        if positions.size == 0:
+            return
+        chunk_len = array.chunks[0]
+        touched = np.unique(positions // chunk_len)
+        target = touched[next(self._sample_counter) % touched.size]
+        sampled = np.flatnonzero(positions // chunk_len == target)
+        sampled = sampled[:FEATURE_ID_SAMPLE_SIZE]
+
+        found = array.get_orthogonal_selection((positions[sampled],))
+        expected = self.location_ids[sampled]
+        if not np.array_equal(found, expected):
+            raise ValueError(
+                "This file's feature_id does not match the one the requested"
+                " locations were resolved against, though it is the same"
+                " shape. Refusing to return values that would be labelled"
+                f" with the wrong ids. Expected {expected[:5].tolist()},"
+                f" found {found[:5].tolist()}."
+            )
+
+
+def _decode(name: str, array: zarr.Array, values: np.ndarray) -> np.ndarray:
+    """Apply CF decoding to values already selected out of ``array``.
+
+    Uses xarray's own decoder, so scale_factor/add_offset/_FillValue and time
+    units are handled exactly as before -- just on the selection rather than
+    on the whole array, which is where the masked float64 intermediates came
+    from.
+    """
+    dims = tuple(f"dim_{i}" for i in range(values.ndim))
+    variable = xr.Variable(dims, values, attrs=dict(array.attrs))
+    return xr.conventions.decode_cf_variable(name, variable).values
+
+
+def _array_dims(array: zarr.Array) -> List[Optional[str]]:
+    """Dimension names of a zarr array, or Nones if it doesn't name them.
+
+    ManifestStore presents kerchunk's v2 metadata as v3, which moves the names
+    out of the ``_ARRAY_DIMENSIONS`` attribute and into ``dimension_names``.
+    """
+    names = getattr(array.metadata, "dimension_names", None)
+    if not names:
+        names = array.attrs.get("_ARRAY_DIMENSIONS")
+    if not names:
+        return [None] * array.ndim
+    return list(names)
+
+
+def _select_on_axis(
+    array: zarr.Array, positions: np.ndarray, axis: int
+) -> np.ndarray:
+    """Read ``array`` at ``positions`` along ``axis``.
+
+    zarr fetches only the chunks the selection touches, and returns them in
+    the order asked for, duplicates included -- matching numpy fancy indexing.
+    """
+    selection = tuple(
+        positions if i == axis else slice(None) for i in range(array.ndim)
+    )
+    return array.get_orthogonal_selection(selection)
+
+
+def _read_point_values(
+    content: bytes,
+    registry: ObjectStoreRegistry,
+    variable_name: str,
+    positions_cache: "_FeatureIdPositions",
+) -> Tuple[np.ndarray, np.ndarray, str]:
+    """Read one file's values for the requested locations.
+
+    Goes to the zarr store directly rather than through
+    ``to_virtual_dataset``: teehr wants a handful of values, not a virtual
+    dataset, and building one reads the full feature_id coordinate and (via
+    an upstream bug in VirtualiZarr's oversized-chunk warning) materializes
+    the whole data array before it can be subset.
+
+    Returns the decoded values, the file's time, and the NWM units.
+    """
+    group = zarr.open_group(_manifest_store_from_refs(content, registry), mode="r")
+
+    array = group[variable_name]
+    feature_id = group["feature_id"]
+    dims = _array_dims(array)
+    if "feature_id" not in dims:
+        raise ValueError(
+            f"'{variable_name}' has dimensions {dims}, with no feature_id to"
+            " select locations along."
+        )
+    axis = dims.index("feature_id")
+    # zarr indexes by position, so nothing else checks that the two agree.
+    if array.shape[axis] != feature_id.shape[0]:
+        raise ValueError(
+            f"'{variable_name}' spans {array.shape[axis]} features but"
+            f" feature_id has {feature_id.shape[0]}; the file disagrees"
+            " with itself."
+        )
+
+    positions = positions_cache.resolve(group)
+    values = _decode(variable_name, array, _select_on_axis(array, positions, axis))
+    time = _decode("time", group["time"], group["time"][:])
+    return values, time, array.attrs.get("units", "")
 
 
 async def _open_ref_virtualizarr(
@@ -891,25 +1173,13 @@ async def _open_ref_virtualizarr(
     registry: ObjectStoreRegistry,
     ignore_missing_file: bool,
     variable_name: str,
-    location_ids: np.ndarray,
+    positions_cache: "_FeatureIdPositions",
     executor: Optional[Executor] = None,
-) -> Optional[xr.Dataset]:
-    """Open a single kerchunk reference via VirtualiZarr and subset it to ``location_ids``.
+) -> Optional[Tuple[np.ndarray, np.ndarray, str]]:
+    """Download one kerchunk reference and read the requested locations from it.
 
-    Only ``variable_name`` and the coordinates needed to index it are
-    materialized; every other data variable stays virtual and is dropped, and
-    the requested locations are selected immediately, so a full per-file array
-    (2.7M values for CONUS) is never held once this returns.
-
-    ``feature_id`` is materialized and the requested ids are resolved against
-    *this file's own* coordinate, so a file whose feature_id differs from the
-    rest is caught rather than silently mapped to the wrong rows. Loading it
-    alongside ``variable_name`` costs little, since both sets of chunks are
-    fetched concurrently.
-
-    Only the download happens on this coroutine. Parsing the reference and
-    reading the data are both blocking and CPU-heavy, so they run in
-    ``executor``, leaving the loop free to keep other downloads moving.
+    Only the download happens on this coroutine; the read is blocking, so it
+    runs in ``executor`` and leaves the loop free for other downloads.
     """
     try:
         content = await _download_kerchunk_refs(url, registry)
@@ -919,27 +1189,14 @@ async def _open_ref_virtualizarr(
         logger.warning(f"Could not download reference file: {e}")
         return None
 
-    def _materialize() -> xr.Dataset:
-        manifest_store = _manifest_store_from_refs(content, registry)
-        # reference_time is deliberately not loaded: nothing downstream reads
-        # it (reference times come from the file path), and it is another
-        # full-width array per file.
-        ds = manifest_store.to_virtual_dataset(
-            loadable_variables=[variable_name, "time", "feature_id"],
-            decode_times=True,
-        )
-        # Resolved against this file's coordinate, and _feature_id_positions
-        # raises if any requested id isn't there -- the same guarantee .sel
-        # gives, without building a pandas index over every feature in the file.
-        positions = _feature_id_positions(ds.feature_id.values, location_ids)
-        keep_vars = [variable_name]
-        if "time" in ds.coords:
-            keep_vars.append("time")
-        return ds[keep_vars].isel(feature_id=positions)
-
     # Not guarded by ignore_missing_file: a location_id that isn't in the file
     # is a bad request, not a missing file, and must not be skipped silently.
-    return await run_in_executor(_materialize, executor)
+    return await run_in_executor(
+        lambda: _read_point_values(
+            content, registry, variable_name, positions_cache
+        ),
+        executor,
+    )
 
 
 async def _open_kerchunk_dataset_async(
@@ -1021,6 +1278,108 @@ def open_kerchunk_dataset(
     )
 
 
+def open_kerchunk_grid_window(
+    url: str,
+    variable_name: str,
+    row_min: int,
+    row_max: int,
+    col_min: int,
+    col_max: int,
+    ignore_missing_file: bool = True,
+    registry: Optional[ObjectStoreRegistry] = None,
+    x_dim: str = "x",
+    y_dim: str = "y",
+) -> Optional[Tuple[np.ndarray, np.ndarray, str]]:
+    """Read one gridded variable's bounding-box window from a kerchunk reference.
+
+    Slices before reading, so only the chunks the window covers are fetched --
+    NWM forcing grids are 5x5 tiles, so a small zone touches one of 25. The
+    row/col bounds are inclusive, matching ``get_weights_row_col_stats``.
+
+    Goes to the zarr store rather than ``open_kerchunk_dataset`` because
+    building an xarray Dataset materializes the whole grid before it can be
+    sliced. ``x``/``y`` are not read at all: only positions are needed here.
+
+    Parameters
+    ----------
+    url : str
+        Path (local or remote) to a kerchunk reference JSON file.
+    variable_name : str
+        Gridded variable to read.
+    row_min, row_max, col_min, col_max : int
+        Inclusive bounding box in grid positions.
+    ignore_missing_file : bool, optional
+        Whether to return None rather than raise on a missing file.
+    registry : Optional[ObjectStoreRegistry], optional
+        Pre-built registry covering ``url``; built fresh if omitted.
+    x_dim, y_dim : str
+        Dimension names, for grids that don't use NWM's usual "x"/"y".
+
+    Returns
+    -------
+    Optional[Tuple[np.ndarray, np.ndarray, str]]
+        ``(window, time_values, units)``, where ``window`` keeps the source
+        variable's dimensions with y/x sliced. None if the file was missing
+        and ``ignore_missing_file`` is True.
+    """
+    if registry is None:
+        registry = build_kerchunk_registry([url])
+    return run_sync(
+        _open_kerchunk_grid_window_async(
+            url, variable_name, row_min, row_max, col_min, col_max,
+            ignore_missing_file, registry, x_dim, y_dim,
+        )
+    )
+
+
+async def _open_kerchunk_grid_window_async(
+    url: str,
+    variable_name: str,
+    row_min: int,
+    row_max: int,
+    col_min: int,
+    col_max: int,
+    ignore_missing_file: bool,
+    registry: ObjectStoreRegistry,
+    x_dim: str,
+    y_dim: str,
+) -> Optional[Tuple[np.ndarray, np.ndarray, str]]:
+    """Async implementation backing :func:`open_kerchunk_grid_window`."""
+    try:
+        content = await _download_kerchunk_refs(url, registry)
+    except Exception as e:
+        if not ignore_missing_file:
+            raise
+        logger.warning(f"Could not download reference file: {e}")
+        return None
+
+    def _read() -> Tuple[np.ndarray, np.ndarray, str]:
+        group = zarr.open_group(
+            _manifest_store_from_refs(content, registry), mode="r"
+        )
+        array = group[variable_name]
+        dims = _array_dims(array)
+        if x_dim not in dims or y_dim not in dims:
+            raise ValueError(
+                f"'{variable_name}' has dimensions {dims}, which do not"
+                f" include '{y_dim}' and '{x_dim}'."
+            )
+        windows = {y_dim: slice(row_min, row_max + 1),
+                   x_dim: slice(col_min, col_max + 1)}
+        selection = tuple(windows.get(dim, slice(None)) for dim in dims)
+        window = _decode(variable_name, array, array[selection])
+        time = _decode("time", group["time"], group["time"][:])
+        return window, time, array.attrs.get("units", "")
+
+    try:
+        return await asyncio.to_thread(_read)
+    except Exception as e:
+        if not ignore_missing_file:
+            raise
+        logger.warning(f"Could not read grid window: {e}")
+        return None
+
+
 async def _combine_and_open_kerchunk_refs_async(
     json_paths: List[str],
     variable_name: str,
@@ -1044,31 +1403,52 @@ async def _combine_and_open_kerchunk_refs_async(
         registry = build_kerchunk_registry(json_paths)
     urls = [_json_path_to_url(path) for path in json_paths]
 
-    # Two budgets: many references download at once (network waits), while
-    # fewer are parsed at once (CPU work, and h5py mostly serializes it).
-    budget = resolve_budget(io=max_concurrent_files, cpu=cpu_workers)
+    budget = resolve_budget(
+        io=max_concurrent_files,
+        cpu=cpu_workers,
+        memory_per_item=POINT_READ_MEMORY,
+    )
 
     # Must happen before the pool exists; see the function's docstring.
     _warm_zarr_version_lookup()
 
-    with thread_pool(budget.cpu, len(urls)) as executor:
-        datasets = await gather_bounded(
+    # Shared across the chunk's files so feature_id is resolved once, not per
+    # file; see _FeatureIdPositions for what each file is still checked on.
+    positions_cache = _FeatureIdPositions(location_ids)
+
+    # Sized from io, not cpu: the work inside is mostly waiting on the object
+    # store with the GIL released, so bounding it by core count caps files in
+    # flight far below what io_concurrency asks for. Matters on a pod with
+    # fewer cores than a chunk has files -- measured 6.5s vs 2.9s for 18 files
+    # at 2 vs 18 threads.
+    with thread_pool(budget.io, len(urls)) as executor:
+        results = await gather_bounded(
             lambda url: _open_ref_virtualizarr(
                 url, registry, ignore_missing_file, variable_name,
-                location_ids, executor,
+                positions_cache, executor,
             ),
             urls,
             limit=budget.io,
         )
-    read_mask = [ds is not None for ds in datasets]
-    datasets = [ds for ds in datasets if ds is not None]
+    read_mask = [result is not None for result in results]
+    results = [result for result in results if result is not None]
 
-    if not datasets:
+    if not results:
         raise FileNotFoundError(
             "No NWM reference files could be read for the specified configuration."
         )
 
-    ds = xr.concat(datasets, dim=concat_dims[0], data_vars="all")
+    # Stacked rather than xr.concat'd: every file contributes the same
+    # locations in the same order, so there is nothing to align.
+    values, times, units = zip(*results)
+    ds = xr.Dataset(
+        {variable_name: ((concat_dims[0], "feature_id"), np.stack(values))},
+        coords={
+            concat_dims[0]: np.concatenate(times),
+            "feature_id": positions_cache.location_ids,
+        },
+    )
+    ds[variable_name].attrs["units"] = units[0]
     return ds, read_mask
 
 
@@ -1084,11 +1464,16 @@ def combine_and_open_kerchunk_refs(
 ) -> Tuple[xr.Dataset, List[bool]]:
     """Combine multiple kerchunk reference files into a single xarray Dataset.
 
-    Uses VirtualiZarr + an obstore-backed ObjectStoreRegistry rather than
-    fsspec/gcsfs/s3fs, avoiding the async filesystem lifecycle issues those
-    libraries can hit under zarr v3. Concurrency across files is handled with
-    asyncio (see :func:`_combine_and_open_kerchunk_refs_async`); this function
-    is a synchronous wrapper around that coroutine so existing callers (and
+    Each file is read through zarr directly, selecting ``location_ids`` before
+    any data is fetched, so only the chunks holding them are transferred and
+    the full per-file array is never materialized. Results are stacked along
+    ``concat_dims[0]``.
+
+    Uses VirtualiZarr's ManifestStore + an obstore-backed ObjectStoreRegistry
+    rather than fsspec/gcsfs/s3fs, avoiding the async filesystem lifecycle
+    issues those libraries can hit under zarr v3. Concurrency across files is
+    handled with asyncio (see :func:`_combine_and_open_kerchunk_refs_async`);
+    this function is a synchronous wrapper so existing callers (and
     Jupyter/script usage) don't need to change.
 
     Parameters
@@ -1100,8 +1485,8 @@ def combine_and_open_kerchunk_refs(
         Name of the single data variable to load from each file. Other data
         variables are left virtual and never materialized.
     location_ids : np.ndarray
-        NWM feature_ids to subset each file to immediately after loading
-        ``variable_name``, before results from all files are gathered.
+        NWM feature_ids to select from each file. Resolved to positions once
+        per run and re-checked per file; see :class:`_FeatureIdPositions`.
     ignore_missing_file : bool, optional
         Whether to ignore missing files, by default True.
     concat_dims : Optional[List[str]], optional
@@ -1298,6 +1683,249 @@ def gen_json_virtualizarr(
         return None
 
     return outf
+
+
+def read_nwm_global_attrs(
+    remote_path: str,
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> Dict:
+    """Read the global (root group) attributes of a remote NWM NetCDF file.
+
+    Fetches only the file's HDF5 metadata, through the same obstore-backed I/O
+    as :func:`gen_json_virtualizarr`, so it is cheap enough to run across a
+    file list before committing to a fetch.
+
+    Avoids ``ManifestStore.to_virtual_dataset``, which loads every indexed
+    coordinate -- for point output that means inlining ``feature_id`` at the
+    cost documented in :func:`gen_json_virtualizarr`. Reading the zarr group's
+    attributes is free once the file is parsed.
+
+    Parameters
+    ----------
+    remote_path : str
+        Path to the file in the remote location (ie, GCS bucket), as produced
+        by :func:`build_remote_nwm_filelist`.
+    registry : Optional[ObjectStoreRegistry]
+        Registry covering the source bucket. Defaults to the process-wide
+        cached NWM source registry; pass one only to read a different bucket.
+
+    Returns
+    -------
+    Dict
+        The file's global attributes, e.g. ``NWM_version_number``,
+        ``code_version``, ``model_configuration``,
+        ``model_output_valid_time``. Raises if the file is missing or corrupt.
+
+    Examples
+    --------
+    >>> attrs = read_nwm_global_attrs(gcs_component_paths[0])
+    >>> attrs["NWM_version_number"]
+    'v3.0'
+    """
+    if registry is None:
+        registry = _build_gcs_source_registry()
+
+    manifest_store = HDFParser()(url=remote_path, registry=registry)
+    return zarr.open_group(manifest_store, mode="r").attrs.asdict()
+
+
+def _normalize_nwm_version_attr(value: str) -> str:
+    """Reduce a model-version attribute to bare digits, e.g. ``"3.0"``.
+
+    Spelling varies by era (``"NWM 1.2"`` vs ``"v3.1"``), so both are reduced
+    to the form used in :data:`NWM_VERSION_ATTR_VALUES`.
+    """
+    return value.strip().removeprefix("NWM").strip().lstrip("vV")
+
+
+def read_nwm_file_version(
+    remote_path: str,
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> Optional[str]:
+    """Read the model version a remote NWM file reports, e.g. ``"3.0"``.
+
+    Takes the file's global attributes (see :func:`read_nwm_global_attrs`) and
+    returns whichever of :data:`NWM_VERSION_ATTRS` is present, normalized to
+    bare digits so eras with different conventions compare cleanly.
+
+    Parameters
+    ----------
+    remote_path : str
+        Path to the file in the remote location (ie, GCS bucket).
+    registry : Optional[ObjectStoreRegistry]
+        Registry covering the source bucket; see
+        :func:`read_nwm_global_attrs`.
+
+    Returns
+    -------
+    Optional[str]
+        The normalized version, or None if the file carries no version
+        attribute at all -- nwm12-era *forcing* files record only their
+        initialization and valid times -- so absence is normal, not an error.
+    """
+    attrs = read_nwm_global_attrs(remote_path, registry=registry)
+    for attr in NWM_VERSION_ATTRS:
+        if attrs.get(attr):
+            return _normalize_nwm_version_attr(attrs[attr])
+    return None
+
+
+def _parse_nwm_cycle(remote_path: str) -> Optional[datetime]:
+    """Parse the cycle (day plus z-hour) a remote NWM path refers to.
+
+    Parsed as in :func:`parse_nwm_gcs_paths`, but for one path and without
+    needing the configuration name. None if either part is absent.
+    """
+    day_match = re.search(r"nwm\.(\d{8})", remote_path)
+    z_match = re.search(r"t(\d{2})z", Path(remote_path).name)
+    if day_match is None or z_match is None:
+        return None
+    day = day_match.group(1)
+    return datetime.strptime(day, "%Y%m%d") + timedelta(hours=int(z_match.group(1)))
+
+
+def nwm_version_at(cycle: datetime) -> Optional[str]:
+    """Look up the NWM version in force at ``cycle``.
+
+    Walks :data:`NWM_VERSION_BOUNDARIES`, which holds each version's first
+    cycle at z-hour resolution.
+
+    Parameters
+    ----------
+    cycle : datetime
+        A cycle time (day plus z-hour).
+
+    Returns
+    -------
+    Optional[str]
+        The normalized version, or None if ``cycle`` precedes the earliest
+        operational data teehr reads.
+    """
+    in_force = None
+    for boundary, boundary_version in NWM_VERSION_BOUNDARIES:
+        if cycle < boundary:
+            break
+        in_force = boundary_version
+    return in_force
+
+
+def _outgoing_version_within_grace(cycle: datetime) -> Optional[str]:
+    """Find the previous version still tolerated at ``cycle``.
+
+    Returns the version in force immediately *before* the most recent
+    boundary, when ``cycle`` falls within
+    :data:`NWM_VERSION_SWITCHOVER_GRACE` of it, else None.
+    """
+    latest = None
+    for index, (boundary, _) in enumerate(NWM_VERSION_BOUNDARIES):
+        if cycle < boundary:
+            break
+        latest = index
+    if not latest:  # None, or the first entry, which has no predecessor
+        return None
+
+    boundary = NWM_VERSION_BOUNDARIES[latest][0]
+    if cycle - boundary >= NWM_VERSION_SWITCHOVER_GRACE:
+        return None
+    return NWM_VERSION_BOUNDARIES[latest - 1][1]
+
+
+def validate_nwm_version_against_files(
+    remote_paths: List[str],
+    nwm_version: str,
+    registry: Optional[ObjectStoreRegistry] = None,
+) -> None:
+    """Raise if the source files disagree with the requested NWM version.
+
+    Catches a date range the requested ``nwm_version`` did not produce, which
+    otherwise succeeds and yields timeseries labelled with the wrong version,
+    by comparing each file's own attributes against
+    :data:`NWM_VERSION_ATTR_VALUES`.
+
+    Reads only the first and last of ``remote_paths``: that covers both a
+    version wrong for the whole range and a range straddling a boundary, where
+    only one end disagrees. Checking every file would double the run's
+    metadata reads, since reference building parses each file anyway.
+
+    A file reporting the previous version within
+    :data:`NWM_VERSION_SWITCHOVER_GRACE` of a boundary warns and is accepted,
+    since NOAA reruns some cycles on the outgoing system mid-switch. Outside
+    that window a mismatch raises.
+
+    Parameters
+    ----------
+    remote_paths : List[str]
+        Remote filepaths for the fetch, as produced by
+        :func:`build_remote_nwm_filelist`. An empty list is a no-op.
+    nwm_version : str
+        The requested version, a
+        :class:`SupportedNWMOperationalVersionsEnum` value. ``nwm21`` and
+        ``nwm22`` are treated as one version, so a file stamped either
+        satisfies a request for either.
+    registry : Optional[ObjectStoreRegistry]
+        Registry covering the source bucket; see
+        :func:`read_nwm_global_attrs`.
+
+    Raises
+    ------
+    ValueError
+        If a checked file reports a version outside the set accepted for
+        ``nwm_version``, or if ``nwm_version`` has no entry in
+        :data:`NWM_VERSION_ATTR_VALUES`.
+    """
+    if nwm_version not in NWM_VERSION_ATTR_VALUES:
+        raise ValueError(
+            f"No model version attribute values are known for"
+            f" '{nwm_version}'; add an entry to NWM_VERSION_ATTR_VALUES."
+        )
+    if not remote_paths:
+        return
+
+    expected = NWM_VERSION_ATTR_VALUES[nwm_version]
+    # dict.fromkeys so a single-file list is read once, not twice.
+    to_check = dict.fromkeys([remote_paths[0], remote_paths[-1]])
+
+    mismatches = []
+    for path in to_check:
+        found = read_nwm_file_version(path, registry=registry)
+        if found is None:
+            # Normal for some eras (see read_nwm_file_version); nothing to
+            # compare against, so this file cannot confirm or deny.
+            logger.debug(f"No model version attribute to check in {path}.")
+            continue
+        if found in expected:
+            continue
+
+        # An outgoing-version file just after a switchover is an archive
+        # artifact, not the wrong request, so warn rather than fail the fetch.
+        cycle = _parse_nwm_cycle(path)
+        outgoing = (
+            _outgoing_version_within_grace(cycle)
+            if cycle is not None else None
+        )
+        if outgoing is not None and found == outgoing:
+            logger.warning(
+                f"{path} reports NWM version {found}, but its cycle is within"
+                f" {NWM_VERSION_SWITCHOVER_GRACE} of the"
+                f" v{nwm_version_at(cycle)} switchover, where NOAA reruns some"
+                " cycles on the outgoing system. Treating it as"
+                f" v{nwm_version_at(cycle)} rather than a version mismatch."
+            )
+            continue
+
+        mismatches.append((path, found))
+
+    if mismatches:
+        detail = "; ".join(f"{path} reports {found}" for path, found in mismatches)
+        raise ValueError(
+            f"NWM version mismatch: requested '{nwm_version}' which expects"
+            f" {'/'.join(sorted(expected))}, but {detail}. Check the start and"
+            " end dates against the requested version."
+        )
+    logger.debug(
+        f"Checked {len(to_check)} file(s) against requested NWM version"
+        f" '{nwm_version}'."
+    )
 
 
 async def _build_zarr_references_virtualizarr_async(
@@ -1660,23 +2288,31 @@ def build_remote_nwm_filelist(
             skip_signature=True,
             retry_config=REMOTE_RETRY_CONFIG,
         )
-        component_paths = []
-        for dt in dates:
-            dt_str = dt.strftime("%Y%m%d")
-            prefix = f"nwm.{dt_str}/{configuration}/"
+        prefixes = [
+            f"nwm.{dt.strftime('%Y%m%d')}/{configuration}/" for dt in dates
+        ]
+
+        # One listing per day, run concurrently: each is ~0.85s of waiting, so
+        # a year of them in sequence is minutes before any data is touched.
+        async def _list_day(prefix: str) -> List[str]:
             pattern = f"{prefix}nwm.*.{output_type}*"
-            keys = [
-                meta["path"]
-                for batch in obstore.list(store, prefix)
-                for meta in batch
-            ]
+            keys = await _list_prefix(store, prefix)
             result = [key for key in keys if fnmatch.fnmatch(key, pattern)]
-            if (len(result) == 0) & (not ignore_missing_file):
+            if len(result) == 0 and not ignore_missing_file:
                 raise FileNotFoundError(
                     f"No NWM files found in {gcs_dir}/{pattern}"
                 )
-            component_paths.extend(f"{NWM_BUCKET}/{key}" for key in result)
-        component_paths = sorted([f"gcs://{path}" for path in component_paths])
+            return result
+
+        per_day = run_sync(
+            gather_bounded(
+                _list_day, prefixes, limit=resolve_budget().io
+            )
+        )
+        # Sorted at the end, so listing order does not affect the result.
+        component_paths = sorted(
+            f"gcs://{NWM_BUCKET}/{key}" for keys in per_day for key in keys
+        )
 
         if "assim" in configuration:
             parsed_df = parse_nwm_gcs_paths(

@@ -10,6 +10,7 @@ import pyarrow as pa
 from obspec_utils.registry import ObjectStoreRegistry
 
 from teehr.fetching.utils import (
+    POINT_READ_MEMORY,
     write_timeseries_parquet_file,
     split_dataframe,
     format_nwm_configuration_metadata,
@@ -32,6 +33,43 @@ from teehr.fetching.const import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def chunk_output_filename(
+    df: pd.DataFrame,
+    configuration: str,
+    process_by_z_hour: bool,
+) -> str:
+    """Name of the parquet file a chunk will be written to.
+
+    Derived from the chunk's file list alone, so a caller can work out where
+    a chunk lands before reading any data -- which is how
+    ``fetch_and_format_nwm_points`` skips chunks that are already written.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        One chunk, as produced by ``build_file_chunks``.
+    configuration : str
+        NWM configuration name; assimilation chunks are named by t-minus hour
+        rather than forecast hour.
+    process_by_z_hour : bool
+        How the chunk was grouped, which decides the naming scheme.
+    """
+    df = df.sort_values(by="filepath")
+    if process_by_z_hour:
+        row = df.iloc[0]
+        return f"{row.day}T{row.z_hour[1:3]}.parquet"
+
+    # Start and end include the forecast hour, or t-minus hour for
+    # assimilation, since a chunk can span several reference times.
+    hour_pattern = r'\.tm(\d+)\.' if "assim" in configuration else r'\.f(\d+)\.'
+    marker = "M" if "assim" in configuration else "F"
+    start_hour = re.search(hour_pattern, df.filepath.iloc[0]).group(1)
+    end_hour = re.search(hour_pattern, df.filepath.iloc[-1]).group(1)
+    start = f"{df.day.iloc[0]}T{df.z_hour.iloc[0][1:3]}{marker}{start_hour}"
+    end = f"{df.day.iloc[-1]}T{df.z_hour.iloc[-1][1:3]}{marker}{end_hour}"
+    return f"{start}_{end}.parquet"
 
 
 def process_chunk_of_files(
@@ -58,10 +96,12 @@ def process_chunk_of_files(
     run, so obstore's stores/connection pools are reused across chunks rather
     than rebuilt per chunk. Built fresh from this chunk alone if omitted.
 
-    ``max_concurrent_files`` bounds how many of this chunk's files are read
-    at once and ``cpu_workers`` how many are parsed at once. Both default to
-    the process-wide budget; divide them among callers running several chunks
-    at the same time, since the two levels multiply.
+    ``max_concurrent_files`` bounds how many of this chunk's files are read at
+    once; the work is mostly waiting on the object store, so it takes the io
+    budget and is lowered automatically if that many would not fit in memory.
+    ``cpu_workers`` no longer bounds reading and is kept for callers that pass
+    it. Divide the budget among callers running several chunks at the same
+    time, since their concurrency adds up.
 
     Returns the path to the parquet file written for this chunk, or ``None``
     if the chunk produced no data.
@@ -107,10 +147,13 @@ def process_chunk_of_files(
         variable_name, nwm_units, variable_mapper
     )
 
-    ref_times = [
-        pd.to_datetime(r.day) + pd.to_timedelta(int(r.z_hour[1:3]), unit="h")
-        for r in df_valid.itertuples()
-    ]
+    ref_times = np.array(
+        [
+            pd.to_datetime(r.day) + pd.to_timedelta(int(r.z_hour[1:3]), unit="h")
+            for r in df_valid.itertuples()
+        ],
+        dtype="datetime64[ms]",
+    )
     ref_times_arr = np.repeat(ref_times, n_locations)
     valid_times_arr = np.repeat(ds.time.values, n_locations)
     teehr_location_ids = [
@@ -138,24 +181,7 @@ def process_chunk_of_files(
         schema=schema,
     )
 
-    df.sort_values(by="filepath", inplace=True)
-    if process_by_z_hour:
-        row = df.iloc[0]
-        filename = f"{row.day}T{row.z_hour[1:3]}.parquet"
-    else:
-        # Use start and end dates including forecast hour or t-minus hour (assimilation)
-        # for the output file name.
-        if "assim" in configuration:
-            start_tm_hour = re.search(r'\.tm(\d+)\.', df.filepath.iloc[0]).group(1)
-            end_tm_hour = re.search(r'\.tm(\d+)\.', df.filepath.iloc[-1]).group(1)
-            start = f"{df.day.iloc[0]}T{df.z_hour.iloc[0][1:3]}M{start_tm_hour}"
-            end = f"{df.day.iloc[-1]}T{df.z_hour.iloc[-1][1:3]}M{end_tm_hour}"
-        else:
-            start_forecast_hour = re.search(r'\.f(\d+)\.', df.filepath.iloc[0]).group(1)
-            end_forecast_hour = re.search(r'\.f(\d+)\.', df.filepath.iloc[-1]).group(1)
-            start = f"{df.day.iloc[0]}T{df.z_hour.iloc[0][1:3]}F{start_forecast_hour}"
-            end = f"{df.day.iloc[-1]}T{df.z_hour.iloc[-1][1:3]}F{end_forecast_hour}"
-        filename = f"{start}_{end}.parquet"
+    filename = chunk_output_filename(df, configuration, process_by_z_hour)
 
     if drop_overlapping_assimilation_values and "assim" in configuration:
         # Set reference_time to NaT for assimilation values
@@ -300,12 +326,14 @@ def fetch_and_format_nwm_points(
 
     dfs = build_file_chunks(file_paths, process_by_z_hour, stepsize)
 
-    budget = resolve_budget(io=io_concurrency, cpu=cpu_workers)
+    budget = resolve_budget(
+        io=io_concurrency, cpu=cpu_workers, memory_per_item=POINT_READ_MEMORY
+    )
     n_files = int(sum(len(df) for df in dfs))
     logger.info(
         f"Processing {n_files} files in {len(dfs)} chunks for configuration:"
         f" {configuration}, variable: {variable_name}. Reading up to"
-        f" {budget.io} files at once using {budget.cpu} threads."
+        f" {budget.io} files at once."
     )
 
     non_null_paths = [path for path in file_paths if path is not None]
@@ -324,6 +352,21 @@ def fetch_and_format_nwm_points(
     registry = build_kerchunk_registry(non_null_paths)
     output_paths = []
     for number, df in enumerate(dfs, start=1):
+        # Checked before reading, not after: the output name follows from the
+        # file list, so a resumed run can skip a written chunk instead of
+        # re-fetching it only to discard the result at write time.
+        existing = Path(
+            output_parquet_dir,
+            chunk_output_filename(df, configuration, process_by_z_hour),
+        )
+        if existing.is_file() and not overwrite_output:
+            logger.info(
+                f"Chunk {number} of {len(dfs)}: {existing.name} already"
+                " exists and overwrite_output=False; skipping"
+            )
+            output_paths.append(existing)
+            continue
+
         # Logged before the work, not after: a chunk takes a while, and
         # silence until it finishes looks like a hang.
         logger.info(

@@ -16,6 +16,7 @@ from teehr.fetching.utils import (
     generate_json_paths,
     build_remote_nwm_filelist,
     validate_operational_start_end_date,
+    validate_nwm_version_against_files,
     start_on_z_hour,
     end_on_z_hour,
     get_end_date_from_ingest_days
@@ -181,10 +182,13 @@ def plan_nwm_point_fetch(
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         from teehr.fetching.models.nwm30_point import PointConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm31:
+        from teehr.fetching.models.nwm31_point import PointConfigurationModel
+        analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
         raise ValueError(
             "nwm_version must equal "
-            "'nwm12', 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
+            "'nwm12', 'nwm20', 'nwm21', 'nwm22', 'nwm30', or 'nwm31'"
         )
 
     # Parse input parameters to validate configuration
@@ -250,6 +254,12 @@ def plan_nwm_point_fetch(
             raise ValueError(
                 "No NWM files found for the specified input arguments."
             )
+
+        # Validate the requested NWM version against file metadata
+        validate_nwm_version_against_files(
+            gcs_component_paths,
+            nwm_version
+        )
 
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(
@@ -318,17 +328,25 @@ def nwm_to_parquet(
         Path to the directory for the final parquet files.
     nwm_version : SupportedNWMOperationalVersionsEnum
         The NWM operational version.
-        "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+        "nwm12", "nwm20", "nwm21", "nwm22", "nwm30", or "nwm31".
         Note that there is no change in NWM configuration between
         version 2.1 and 2.2, and they are treated as the same version.
         They are both allowed here for convenience.
 
-        Availability of each version:
+        Availability of each version. A switchover lands on a forecast cycle
+        rather than at midnight, and the requested date range is validated at
+        that resolution:
 
-        - v1.2: 2018-09-17 - 2019-06-18
-        - v2.0: 2019-06-19 - 2021-04-19
-        - v2.1/2.2: 2021-04-20 - 2023-09-18
-        - v3.0: 2023-09-19 - present
+        - v1.2: 2018-09-17 t00z - 2019-06-19 t13z
+        - v2.0: 2019-06-19 t14z - 2021-04-20 t13z
+        - v2.1/2.2: 2021-04-20 t14z - 2023-09-19 t11z
+        - v3.0: 2023-09-19 t12z - 2026-08-17 t23z
+        - v3.1: 2026-08-18 t00z - present
+
+        These are NOAA's intended boundaries, not a promise about every file:
+        configurations do not all switch on the same cycle, so a file still
+        reporting the outgoing version within a day of a boundary is accepted
+        with a warning.
     start_date : Union[str, datetime, pd.Timestamp]
         Date and time to begin data ingest.
         Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
