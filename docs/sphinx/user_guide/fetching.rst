@@ -184,6 +184,10 @@ example, is rejected because those cycles were still produced by v2.2. TEEHR als
 version recorded in the source files themselves and fails before fetching if it disagrees
 with ``nwm_version``.
 
+The boundaries above are NOAA's intended switchovers rather than a promise about every file.
+Configurations do not all switch on the same cycle, so a file still reporting the outgoing
+version within a day of a boundary is accepted with a warning instead of an error.
+
 Forecast Configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
