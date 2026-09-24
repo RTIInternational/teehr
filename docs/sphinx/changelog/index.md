@@ -70,6 +70,13 @@
   [#815](https://github.com/RTIInternational/teehr/issues/815).
 
 ### Added
+- `plan_nwm_grid_fetch`, the grid counterpart of `plan_nwm_point_fetch`: everything
+  `nwm_grids_to_parquet` does before building kerchunk references (validating the configuration
+  and dates, listing and z-hour-trimming the GCS files, checking their NWM version), returned as
+  an `NwmGridFetchPlan`. `nwm_grids_to_parquet` now calls it, with no change in behaviour, so
+  external callers such as Prefect flows get the same file list without reimplementing it. The
+  point and grid planners now share those steps in `fetch_planning.plan_nwm_component_paths`
+  rather than each carrying a copy.
 - `sort_by` on every bootstrapper: field name(s) that order each group before it is resampled.
   `CircularBlock` and `Stationary` draw blocks of adjacent rows and `Gumboot` blocks by water
   year, so their results depend on the row order — which Spark does not define for a grouped
