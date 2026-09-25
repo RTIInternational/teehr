@@ -3,6 +3,18 @@
 ## Unreleased
 
 ### Breaking Changes
+- **`RelativeMedian` on the Spark-native path now uses the exact `percentile` instead of
+  `percentile_approx`.** The two do not differ by a tolerance: `percentile_approx` is
+  nearest-rank, returning an actual data value, so on an even-sized group it returned the lower
+  of the two middle values where `np.median` — and therefore `engine="python"` — interpolates
+  between them (2.0 vs 2.5 on `[1,2,3,4]`). The engines disagreed systematically, and the tests
+  papered over it with a 3e-2 tolerance that is now removed; they agree to ~1e-8, which is just
+  float32-vs-double width. **`relative_median` values change for anyone using `engine="spark"`
+  or `engine="auto"`**; the Python engine is unaffected. Exact is also not the slower choice at
+  these group sizes: the accuracy argument previously passed (10000) sized the sketch to 10k
+  entries, so a group below that was already buffering nearly every value — measured at 1000
+  rows/group the exact aggregate matched the approximate one (0.87s vs 0.88s over 2000 groups),
+  and only cost more at 10k rows/group (1.17s vs 0.60s over 200 groups).
 - **A metric that is not defined for a group is now NULL on every path, never NaN or `inf`.**
   The two engines already agreed a result was undefined and disagreed only on how to represent it.
   The Python path returns `np.nan`, which Arrow converts to NULL on the way out of the pandas
@@ -68,6 +80,11 @@
   land in which bin has changed, so previously computed lead-time-binned results are not
   comparable with new ones. Pass `closed="left"` to restore the old behaviour. See
   [#815](https://github.com/RTIInternational/teehr/issues/815).
+- **Removed `create_minio_spark_session()`.** Use `create_spark_session()`, which reads the
+  catalog S3 endpoint, path-style access and credentials from the `REMOTE_CATALOG_S3_*` and
+  `AWS_*` environment variables. It does not set the Hadoop `fs.s3a.endpoint`, so pass it
+  via `update_configs` if you read `s3a://` paths from a non-AWS store directly. See
+  [#834](https://github.com/RTIInternational/teehr/issues/834).
 
 ### Added
 - `plan_nwm_grid_fetch`, the grid counterpart of `plan_nwm_point_fetch`: everything
@@ -120,6 +137,18 @@
   want to raise `minimum_sample_size` explicitly.
 
 ### Changed
+- The vectorized bootstrap engine computes its shared accumulators once per chunk instead of
+  once per metric. Every two-field metric it covers is a function of the same sums
+  (`n, Σp, Σs, Σ(p-mp)², Σ(s-ms)², Σ(p-mp)(s-ms), Σ(p-s)²`), but each kernel was re-deriving
+  them and re-applying the finite mask over the same `(reps, n)` matrices. A chunk with no NaN
+  in it now also takes plain `np.sum`/`np.mean`/`np.min` rather than the `nan*` variants, whose
+  `_replace_nan` pass tests and copies the whole matrix for a case that only arises on gappy
+  input, and `RelativeMedian` reaches `np.median` (partition, O(n)) instead of `np.nanmedian`
+  (full sort) on those chunks. Measured on a production-shaped group -- 9 bootstrapped metrics,
+  n=1600, 1000 replicates -- the shared-bootstrap UDF went from 103 ms to 44 ms; at n=5500,
+  304 ms to 136 ms. **Results are unchanged**: the per-metric kernels are now thin wrappers over
+  the same derivations the batched path uses, so there is still one implementation of each
+  formula, and the guards that read the pre-transform matrices still do.
 - **Bootstrapped metrics now use the vectorized engine by default**, roughly 19x faster than
   the per-replicate loop for a group of covered metrics (measured at n=1000, reps=1000). Set
   `TEEHR_BOOTSTRAP_ENGINE=legacy` to fall back; on a Spark cluster that must be set on the

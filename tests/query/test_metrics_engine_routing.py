@@ -80,8 +80,11 @@ def test_engine_spark_relative_metrics_parity(module_scope_test_warehouse):
         "relative_maximum",
         "relative_standard_deviation",
     ]:
-        rtol = 3e-2 if col == "relative_median" else 1e-6
-        atol = 1e-6 if col == "relative_median" else 1e-8
+        # relative_median needed 3e-2 while the Spark path used
+        # percentile_approx (nearest-rank, so the lower middle value on an
+        # even-sized group). It now uses the exact percentile and matches to
+        # the same tolerance as the rest.
+        rtol, atol = 1e-6, 1e-8
         assert np.allclose(
             spark_df[col].values,
             expected_df[col].values,

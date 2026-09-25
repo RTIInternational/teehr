@@ -328,10 +328,24 @@ def _compute_deterministic_metrics(
     ]
 
     if needs_median:
+        # Exact percentile, not percentile_approx. The two disagree by more
+        # than a tolerance: percentile_approx is NEAREST-RANK, returning an
+        # actual data value, so on an even-sized group it gives the lower of
+        # the two middle values where np.median -- and so the Python engine --
+        # interpolates between them (2.0 vs 2.5 on [1,2,3,4]). That made
+        # relative_median differ systematically between the engines rather
+        # than noisily.
+        #
+        # It is also not the cheaper option at these group sizes. The accuracy
+        # argument this used to pass, 10000, sizes the sketch to 10k entries,
+        # so a group under that size was already buffering essentially every
+        # value: measured at 1000 rows/group the exact aggregate matched the
+        # approximate one (0.87s vs 0.88s over 2000 groups), and only pulled
+        # ahead at 10k rows/group (1.17s vs 0.60s over 200 groups).
         agg_exprs.extend(
             [
-                F.expr(f"percentile_approx(CAST({p_col} AS DOUBLE), 0.5, 10000)").alias("_median_p"),
-                F.expr(f"percentile_approx(CAST({s_col} AS DOUBLE), 0.5, 10000)").alias("_median_s"),
+                F.expr(f"percentile(CAST({p_col} AS DOUBLE), 0.5)").alias("_median_p"),
+                F.expr(f"percentile(CAST({s_col} AS DOUBLE), 0.5)").alias("_median_s"),
             ]
         )
     if needs_min:

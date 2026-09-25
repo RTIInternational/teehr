@@ -145,7 +145,10 @@ def _gappy_matrices(reps, n, seed=17):
 
 @pytest.mark.parametrize("metric_name", sorted(VECTORIZED_METRIC_FUNCS))
 @pytest.mark.parametrize("transform", [None, "sqrt", "log"])
-def test_kernel_matches_scalar_closure_on_gappy_data(metric_name, transform):
+@pytest.mark.parametrize("add_epsilon", [False, True])
+def test_kernel_matches_scalar_closure_on_gappy_data(
+    metric_name, transform, add_epsilon
+):
     """Kernels must match the scalar closures when the data has gaps.
 
     Regression test for two bugs that shipped together and were invisible to
@@ -164,9 +167,17 @@ def test_kernel_matches_scalar_closure_on_gappy_data(metric_name, transform):
     The scalar closure is called with **pd.Series**, not numpy rows: numpy rows
     would propagate NaN through every reduction and so validate a code path
     that arch never exercises (it passes Series).
+
+    ``add_epsilon`` is parametrized because it decides whether a degenerate
+    row is *visible*. On the all-NaN row a zero denominator normally forces
+    NaN, but with epsilon the denominator becomes 1e-6 and any error in the
+    numerator surfaces as a finite number instead. Leaving it at the default
+    hid a kernel returning 0.0 where the closure returns NaN.
     """
     reps, n = 6, 20
-    metric = _metric_class(metric_name)(transform=transform)
+    metric = _metric_class(metric_name)(
+        transform=transform, add_epsilon=add_epsilon
+    )
     scalar_func = metric.func(metric)
     kernel = VECTORIZED_METRIC_FUNCS[metric_name]
 
