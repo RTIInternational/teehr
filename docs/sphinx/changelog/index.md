@@ -3,6 +3,18 @@
 ## Unreleased
 
 ### Breaking Changes
+- **`RelativeMedian` on the Spark-native path now uses the exact `percentile` instead of
+  `percentile_approx`.** The two do not differ by a tolerance: `percentile_approx` is
+  nearest-rank, returning an actual data value, so on an even-sized group it returned the lower
+  of the two middle values where `np.median` — and therefore `engine="python"` — interpolates
+  between them (2.0 vs 2.5 on `[1,2,3,4]`). The engines disagreed systematically, and the tests
+  papered over it with a 3e-2 tolerance that is now removed; they agree to ~1e-8, which is just
+  float32-vs-double width. **`relative_median` values change for anyone using `engine="spark"`
+  or `engine="auto"`**; the Python engine is unaffected. Exact is also not the slower choice at
+  these group sizes: the accuracy argument previously passed (10000) sized the sketch to 10k
+  entries, so a group below that was already buffering nearly every value — measured at 1000
+  rows/group the exact aggregate matched the approximate one (0.87s vs 0.88s over 2000 groups),
+  and only cost more at 10k rows/group (1.17s vs 0.60s over 200 groups).
 - **A metric that is not defined for a group is now NULL on every path, never NaN or `inf`.**
   The two engines already agreed a result was undefined and disagreed only on how to represent it.
   The Python path returns `np.nan`, which Arrow converts to NULL on the way out of the pandas
@@ -70,6 +82,20 @@
   [#815](https://github.com/RTIInternational/teehr/issues/815).
 
 ### Added
+- `tests/query/test_metrics_result_stability.py`, guarding metric values against unintended
+  change in two ways the rest of the suite structurally cannot. First, every Spark-native metric
+  is computed through both `engine="python"` and `engine="spark"` on the same rows and compared
+  column by column, including NULL-vs-number — the existing engine tests check the Spark path
+  against numpy formulas written inline, which validates the arithmetic but carries none of the
+  closures' guards, so it was blind to the `inf`-vs-NULL and NaN-vs-NULL divergences. A second
+  case runs the same comparison over deliberately degenerate rows (zero denominators, a constant
+  series, pairwise nulls), and a coverage test fails if a metric in `SUPPORTED_METRICS` has no
+  cross-engine test. Second, a committed golden file pins the absolute values for both engines:
+  every other check is relational — the kernels are verified against the pandas closures, and the
+  closures are the reference — which cannot detect both paths moving together, as a change to a
+  closure does. Regenerate deliberately with `TEEHR_UPDATE_GOLDEN=1` and record the reason for
+  each changed value. Bootstrap columns are excluded from the golden file, since their values
+  follow arch's RNG stream and a dependency bump would otherwise become golden churn.
 - `sort_by` on every bootstrapper: field name(s) that order each group before it is resampled.
   `CircularBlock` and `Stationary` draw blocks of adjacent rows and `Gumboot` blocks by water
   year, so their results depend on the row order — which Spark does not define for a grouped
@@ -113,6 +139,18 @@
   want to raise `minimum_sample_size` explicitly.
 
 ### Changed
+- The vectorized bootstrap engine computes its shared accumulators once per chunk instead of
+  once per metric. Every two-field metric it covers is a function of the same sums
+  (`n, Σp, Σs, Σ(p-mp)², Σ(s-ms)², Σ(p-mp)(s-ms), Σ(p-s)²`), but each kernel was re-deriving
+  them and re-applying the finite mask over the same `(reps, n)` matrices. A chunk with no NaN
+  in it now also takes plain `np.sum`/`np.mean`/`np.min` rather than the `nan*` variants, whose
+  `_replace_nan` pass tests and copies the whole matrix for a case that only arises on gappy
+  input, and `RelativeMedian` reaches `np.median` (partition, O(n)) instead of `np.nanmedian`
+  (full sort) on those chunks. Measured on a production-shaped group -- 9 bootstrapped metrics,
+  n=1600, 1000 replicates -- the shared-bootstrap UDF went from 103 ms to 44 ms; at n=5500,
+  304 ms to 136 ms. **Results are unchanged**: the per-metric kernels are now thin wrappers over
+  the same derivations the batched path uses, so there is still one implementation of each
+  formula, and the guards that read the pre-transform matrices still do.
 - **Bootstrapped metrics now use the vectorized engine by default**, roughly 19x faster than
   the per-replicate loop for a group of covered metrics (measured at n=1000, reps=1000). Set
   `TEEHR_BOOTSTRAP_ENGINE=legacy` to fall back; on a Spark cluster that must be set on the
