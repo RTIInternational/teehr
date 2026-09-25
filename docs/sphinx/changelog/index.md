@@ -80,6 +80,11 @@
   land in which bin has changed, so previously computed lead-time-binned results are not
   comparable with new ones. Pass `closed="left"` to restore the old behaviour. See
   [#815](https://github.com/RTIInternational/teehr/issues/815).
+- **Removed `create_minio_spark_session()`.** Use `create_spark_session()`, which reads the
+  catalog S3 endpoint, path-style access and credentials from the `REMOTE_CATALOG_S3_*` and
+  `AWS_*` environment variables. It does not set the Hadoop `fs.s3a.endpoint`, so pass it
+  via `update_configs` if you read `s3a://` paths from a non-AWS store directly. See
+  [#834](https://github.com/RTIInternational/teehr/issues/834).
 
 ### Added
 - `tests/query/test_metrics_result_stability.py`, guarding metric values against unintended
