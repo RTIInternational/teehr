@@ -1,7 +1,6 @@
 """Module for fetching and processing NWM point data."""
 from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
-from dateutil.parser import parse
 from pathlib import Path
 from dataclasses import dataclass
 import logging
@@ -9,29 +8,16 @@ import pandas as pd
 
 from pydantic import validate_call, Field
 
+from teehr.fetching.nwm.fetch_planning import plan_nwm_component_paths
 from teehr.fetching.nwm.point_utils import (
     fetch_and_format_nwm_points,
 )
-from teehr.fetching.utils import (
-    generate_json_paths,
-    build_remote_nwm_filelist,
-    validate_operational_start_end_date,
-    validate_nwm_version_against_files,
-    start_on_z_hour,
-    end_on_z_hour,
-    get_end_date_from_ingest_days
-)
+from teehr.fetching.utils import generate_json_paths
 from teehr.fetching.models.utils import (
     SupportedNWMOperationalVersionsEnum,
     SupportedNWMDataSourcesEnum,
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
-)
-from teehr.fetching.const import (
-    NWM12_ANALYSIS_CONFIG,
-    NWM20_ANALYSIS_CONFIG,
-    NWM22_ANALYSIS_CONFIG,
-    NWM30_ANALYSIS_CONFIG,
 )
 
 logger = logging.getLogger(__name__)
@@ -150,126 +136,35 @@ def plan_nwm_point_fetch(
         f"Planning {configuration} fetch. Version: {nwm_version}"
     )
 
-    if isinstance(start_date, str):
-        start_date = parse(start_date)
-
-    if ingest_days is not None:
-        end_date = get_end_date_from_ingest_days(
+    component_paths, configuration, output_type, variable_name = (
+        plan_nwm_component_paths(
+            kind="point",
+            configuration=configuration,
+            output_type=output_type,
+            variable_name=variable_name,
+            nwm_version=nwm_version,
             start_date=start_date,
-            ingest_days=ingest_days
+            end_date=end_date,
+            ingest_days=ingest_days,
+            data_source=data_source,
+            prioritize_analysis_value_time=prioritize_analysis_value_time,
+            t_minus_hours=t_minus_hours,
+            ignore_missing_file=ignore_missing_file,
+            starting_z_hour=starting_z_hour,
+            ending_z_hour=ending_z_hour,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
         )
-    elif end_date is None:
-        raise ValueError(
-            "Either 'end_date' or 'ingest_days' must be specified."
-        )
+    )
 
-    if isinstance(end_date, str):
-        end_date = parse(end_date)
-
-    # Import appropriate config model and dicts based on NWM version
-    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
-        from teehr.fetching.models.nwm12_point import PointConfigurationModel
-        analysis_config_dict = NWM12_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
-        from teehr.fetching.models.nwm20_point import PointConfigurationModel
-        analysis_config_dict = NWM20_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
-        from teehr.fetching.models.nwm22_point import PointConfigurationModel
-        analysis_config_dict = NWM22_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
-        from teehr.fetching.models.nwm22_point import PointConfigurationModel
-        analysis_config_dict = NWM22_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
-        from teehr.fetching.models.nwm30_point import PointConfigurationModel
-        analysis_config_dict = NWM30_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm31:
-        from teehr.fetching.models.nwm31_point import PointConfigurationModel
-        analysis_config_dict = NWM30_ANALYSIS_CONFIG
-    else:
-        raise ValueError(
-            "nwm_version must equal "
-            "'nwm12', 'nwm20', 'nwm21', 'nwm22', 'nwm30', or 'nwm31'"
-        )
-
-    # Parse input parameters to validate configuration
-    vars = {
-        "configuration": configuration,
-        configuration: {
-            "output_type": output_type,
-            output_type: variable_name,
-        },
-    }
-    cm = PointConfigurationModel.model_validate(vars)
-    configuration = cm.configuration.name
-    forecast_obj = getattr(cm, configuration)
-    output_type = forecast_obj.output_type.name
-    variable_name = getattr(forecast_obj, output_type).name
-
-    # Check data_source
-    if data_source == SupportedNWMDataSourcesEnum.NOMADS:
-        # TODO
-        raise ValueError("Fetching from NOMADS is not yet implemented")
-    elif data_source == SupportedNWMDataSourcesEnum.DSTOR:
-        # TODO
-        raise ValueError("Fetching from DSTOR is not yet implemented")
-    else:
-
-        # Make sure start/end dates work with specified NWM version
-        validate_operational_start_end_date(
-            nwm_version,
-            start_date,
-            end_date
-        )
-
-        # Build paths to netcdf files on GCS
-        gcs_component_paths = build_remote_nwm_filelist(
-            configuration,
-            output_type,
-            start_date,
-            end_date,
-            analysis_config_dict,
-            t_minus_hours,
-            ignore_missing_file,
-            prioritize_analysis_value_time,
-            drop_overlapping_assimilation_values,
-            ingest_days
-        )
-
-        if starting_z_hour is None:
-            starting_z_hour = start_date.hour
-        if ending_z_hour is None:
-            ending_z_hour = end_date.hour
-
-        gcs_component_paths = start_on_z_hour(
-            start_z_hour=starting_z_hour,
-            gcs_component_paths=gcs_component_paths
-        )
-
-        gcs_component_paths = end_on_z_hour(
-            end_z_hour=ending_z_hour,
-            gcs_component_paths=gcs_component_paths
-        )
-
-        if len(gcs_component_paths) == 0:
-            raise ValueError(
-                "No NWM files found for the specified input arguments."
-            )
-
-        # Validate the requested NWM version against file metadata
-        validate_nwm_version_against_files(
-            gcs_component_paths,
-            nwm_version
-        )
-
-        # Create paths to local and/or remote kerchunk jsons
-        json_paths = generate_json_paths(
-            kerchunk_method,
-            gcs_component_paths,
-            json_dir,
-            ignore_missing_file,
-            io_concurrency,
-            cpu_workers
-        )
+    # Create paths to local and/or remote kerchunk jsons
+    json_paths = generate_json_paths(
+        kerchunk_method,
+        component_paths,
+        json_dir,
+        ignore_missing_file,
+        io_concurrency,
+        cpu_workers
+    )
 
     return NwmPointFetchPlan(
         json_paths=json_paths,
