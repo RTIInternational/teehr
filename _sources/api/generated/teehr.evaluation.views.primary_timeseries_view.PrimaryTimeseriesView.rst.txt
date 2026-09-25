@@ -1,0 +1,33 @@
+﻿PrimaryTimeseriesView
+=====================
+
+.. currentmodule:: teehr.evaluation.views.primary_timeseries_view
+
+.. autoclass:: PrimaryTimeseriesView
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~PrimaryTimeseriesView.add_attributes
+      ~PrimaryTimeseriesView.add_calculated_fields
+      ~PrimaryTimeseriesView.add_geometry
+      ~PrimaryTimeseriesView.aggregate
+      ~PrimaryTimeseriesView.filter
+      ~PrimaryTimeseriesView.order_by
+      ~PrimaryTimeseriesView.to_geopandas
+      ~PrimaryTimeseriesView.to_pandas
+      ~PrimaryTimeseriesView.to_sdf
+      ~PrimaryTimeseriesView.write
+      ~PrimaryTimeseriesView.write_to
+   
+   
+
+   
+   
+   
