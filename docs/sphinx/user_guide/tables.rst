@@ -15,7 +15,7 @@ The TEEHR Schema
 TEEHR uses a structured schema with three categories of tables:
 
 .. figure:: ../../images/getting_started/TEEHR_schema.png
-   :scale: 60%
+   :width: 520px
 
 **Domain Tables** (small reference data, CSV-like):
 
