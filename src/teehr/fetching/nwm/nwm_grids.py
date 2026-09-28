@@ -1,23 +1,19 @@
 """Module for fetching and processing NWM gridded data."""
 from typing import Union, List, Optional, Dict, Annotated
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from dateutil.parser import parse
+import logging
 
 from pydantic import validate_call, Field, InstanceOf
 from geopandas import GeoDataFrame
 import pandas as pd
 
+from teehr.fetching.nwm.fetch_planning import plan_nwm_component_paths
 from teehr.fetching.nwm.grid_utils import fetch_and_format_nwm_grids
 from teehr.fetching.utils import (
-    build_remote_nwm_filelist,
     generate_json_paths,
-    validate_operational_start_end_date,
-    validate_nwm_version_against_files,
-    start_on_z_hour,
-    end_on_z_hour,
     open_kerchunk_dataset,
-    get_end_date_from_ingest_days,
     log_temperature_conversion_message
 )
 from teehr.fetching.models.utils import (
@@ -26,13 +22,138 @@ from teehr.fetching.models.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
-from teehr.fetching.const import (
-    NWM12_ANALYSIS_CONFIG,
-    NWM20_ANALYSIS_CONFIG,
-    NWM22_ANALYSIS_CONFIG,
-    NWM30_ANALYSIS_CONFIG,
-)
 from teehr.utilities.generate_weights import generate_weights_file
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class NwmGridFetchPlan:
+    """What a grid fetch resolved to: which files to read, under which names.
+
+    Attributes
+    ----------
+    component_paths : List[str]
+        Remote NWM files to read, as produced by
+        :func:`build_remote_nwm_filelist` (``gcs://`` paths).
+    configuration : str
+        Validated configuration name.
+    output_type : str
+        Validated output type.
+    variable_name : str
+        Validated variable name.
+    """
+
+    component_paths: List[str]
+    configuration: str
+    output_type: str
+    variable_name: str
+
+
+@validate_call(config=dict(arbitrary_types_allowed=True))
+def plan_nwm_grid_fetch(
+    configuration: str,
+    output_type: str,
+    variable_name: str,
+    nwm_version: SupportedNWMOperationalVersionsEnum,
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
+    ingest_days: Optional[int] = None,
+    data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
+    prioritize_analysis_value_time: Optional[bool] = False,
+    t_minus_hours: Optional[List[int]] = None,
+    ignore_missing_file: Optional[bool] = True,
+    starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    drop_overlapping_assimilation_values: Optional[bool] = True,
+) -> NwmGridFetchPlan:
+    """Work out which NWM files a grid fetch needs, without reading them.
+
+    Everything :func:`nwm_grids_to_parquet` does before it builds kerchunk
+    references: validating the configuration and dates, listing the NWM files
+    in GCS, trimming to the requested z-hours, and checking the files' NWM
+    version.
+
+    Split out so a caller that reads the files itself -- a Prefect flow
+    ingesting grids into Icechunk, say -- gets the file list from the same code
+    path ``nwm_grids_to_parquet`` uses instead of reimplementing it.
+
+    Parameters
+    ----------
+    configuration : str
+        NWM forecast category, e.g. "forcing_short_range".
+    output_type : str
+        Output component of the configuration, e.g. "forcing".
+    variable_name : str
+        NWM data variable to fetch, e.g. "RAINRATE".
+    nwm_version : SupportedNWMOperationalVersionsEnum
+        NWM version of the requested data.
+    start_date : str, datetime or pd.Timestamp
+        Start of the period to fetch.
+    end_date : Optional[str, datetime or pd.Timestamp]
+        End of the period. Required unless ``ingest_days`` is given.
+    ingest_days : Optional[int]
+        Days to fetch from ``start_date``, instead of ``end_date``.
+    data_source : Optional[SupportedNWMDataSourcesEnum]
+        Where to fetch from; only GCS is implemented.
+    prioritize_analysis_value_time : Optional[bool]
+        For assimilation data, prefer value time over reference time.
+    t_minus_hours : Optional[List[int]]
+        Assimilation t-minus hours to include.
+    ignore_missing_file : Optional[bool]
+        Skip missing files rather than failing.
+    starting_z_hour : Optional[int]
+        First z-hour to include; defaults to the hour of ``start_date``.
+    ending_z_hour : Optional[int]
+        Last z-hour to include; defaults to the hour of ``end_date``.
+    drop_overlapping_assimilation_values : Optional[bool]
+        Drop assimilation values that overlap in value_time.
+
+    Returns
+    -------
+    NwmGridFetchPlan
+        The files to read and the validated names to read them with.
+
+    Examples
+    --------
+    >>> plan = plan_nwm_grid_fetch(
+    ...     configuration="forcing_analysis_assim", output_type="forcing",
+    ...     variable_name="RAINRATE", nwm_version="nwm31",
+    ...     start_date="2026-09-22", end_date="2026-09-23",
+    ... )
+    >>> plan.component_paths[0]
+    'gcs://national-water-model/nwm.20260922/forcing_analysis_assim/...'
+    """
+    logger.info(
+        f"Planning {configuration} fetch. Version: {nwm_version}"
+    )
+
+    component_paths, configuration, output_type, variable_name = (
+        plan_nwm_component_paths(
+            kind="grid",
+            configuration=configuration,
+            output_type=output_type,
+            variable_name=variable_name,
+            nwm_version=nwm_version,
+            start_date=start_date,
+            end_date=end_date,
+            ingest_days=ingest_days,
+            data_source=data_source,
+            prioritize_analysis_value_time=prioritize_analysis_value_time,
+            t_minus_hours=t_minus_hours,
+            ignore_missing_file=ignore_missing_file,
+            starting_z_hour=starting_z_hour,
+            ending_z_hour=ending_z_hour,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
+        )
+    )
+
+    return NwmGridFetchPlan(
+        component_paths=component_paths,
+        configuration=configuration,
+        output_type=output_type,
+        variable_name=variable_name,
+    )
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
@@ -265,174 +386,79 @@ def nwm_grids_to_parquet(
     >>>     overwrite_output=OVERWRITE_OUTPUT
     >>> )
     """ # noqa
-    if isinstance(start_date, str):
-        start_date = parse(start_date)
-
-    if ingest_days is not None:
-        end_date = get_end_date_from_ingest_days(
-            start_date=start_date,
-            ingest_days=ingest_days
-        )
-    elif end_date is None:
-        raise ValueError(
-            "Either 'end_date' or 'ingest_days' must be specified."
-        )
-
-    if isinstance(end_date, str):
-        end_date = parse(end_date)
-
     log_temperature_conversion_message(
         variable_name=variable_name,
         convert_k_to_c=convert_k_to_c
     )
 
-    # Import appropriate config model and dicts based on NWM version
-    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
-        from teehr.fetching.models.nwm12_grid import GridConfigurationModel
-        analysis_config_dict = NWM12_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
-        from teehr.fetching.models.nwm20_grid import GridConfigurationModel
-        analysis_config_dict = NWM20_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
-        from teehr.fetching.models.nwm22_grid import GridConfigurationModel
-        analysis_config_dict = NWM22_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
-        from teehr.fetching.models.nwm22_grid import GridConfigurationModel
-        analysis_config_dict = NWM22_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
-        from teehr.fetching.models.nwm30_grid import GridConfigurationModel
-        analysis_config_dict = NWM30_ANALYSIS_CONFIG
-    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm31:
-        from teehr.fetching.models.nwm31_grid import GridConfigurationModel
-        analysis_config_dict = NWM30_ANALYSIS_CONFIG
-    else:
-        raise ValueError(
-            "nwm_version must equal "
-            "'nwm12', 'nwm20', 'nwm21', 'nwm22', 'nwm30', or 'nwm31'"
-        )
+    plan = plan_nwm_grid_fetch(
+        configuration=configuration,
+        output_type=output_type,
+        variable_name=variable_name,
+        nwm_version=nwm_version,
+        start_date=start_date,
+        end_date=end_date,
+        ingest_days=ingest_days,
+        data_source=data_source,
+        prioritize_analysis_value_time=prioritize_analysis_value_time,
+        t_minus_hours=t_minus_hours,
+        ignore_missing_file=ignore_missing_file,
+        starting_z_hour=starting_z_hour,
+        ending_z_hour=ending_z_hour,
+        drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
+    )
 
-    # Parse input parameters to validate configuration
-    vars = {
-        "configuration": configuration,
-        configuration: {
-            "output_type": output_type,
-            output_type: variable_name,
-        },
-    }
+    # Create paths to local and/or remote kerchunk jsons
+    json_paths = generate_json_paths(
+        kerchunk_method,
+        plan.component_paths,
+        json_dir,
+        ignore_missing_file,
+        io_concurrency,
+        cpu_workers
+    )
 
-    cm = GridConfigurationModel.model_validate(vars)
-    configuration = cm.configuration.name
-    forecast_obj = getattr(cm, configuration)
-    output_type = forecast_obj.output_type.name
-    variable_name = getattr(forecast_obj, output_type).name
-
-    # Check data_source
-    if data_source == SupportedNWMDataSourcesEnum.NOMADS:
-        # TODO
-        raise ValueError("Fetching from NOMADS is not yet implemented")
-    elif data_source == SupportedNWMDataSourcesEnum.DSTOR:
-        # TODO
-        raise ValueError("Fetching from DSTOR is not yet implemented")
-    else:
-
-        # Make sure start/end dates work with specified NWM version
-        validate_operational_start_end_date(
-            nwm_version,
-            start_date,
-            end_date
-        )
-
-        # Build paths to netcdf files on GCS
-        gcs_component_paths = build_remote_nwm_filelist(
-            configuration,
-            output_type,
-            start_date,
-            end_date,
-            analysis_config_dict,
-            t_minus_hours,
-            ignore_missing_file,
-            prioritize_analysis_value_time,
-            drop_overlapping_assimilation_values,
-            ingest_days
-        )
-
-        if starting_z_hour is None:
-            starting_z_hour = start_date.hour
-        if ending_z_hour is None:
-            ending_z_hour = end_date.hour
-
-        gcs_component_paths = start_on_z_hour(
-            start_z_hour=starting_z_hour,
-            gcs_component_paths=gcs_component_paths
-        )
-
-        gcs_component_paths = end_on_z_hour(
-            end_z_hour=ending_z_hour,
-            gcs_component_paths=gcs_component_paths
-        )
-
-        if len(gcs_component_paths) == 0:
+    # If specified, generate zonal weights file here.
+    if calculate_zonal_weights:
+        if zone_polygons is None:
             raise ValueError(
-                "No NWM files found for the specified input arguments."
+                "The zone polygons must be provided"
+                " to calculate zonal weights. Can be a GeoDataFame"
+                " or a filepath."
             )
 
-        # Validate the requested NWM version against file metadata
-        validate_nwm_version_against_files(
-            gcs_component_paths,
-            nwm_version
+        # Get a single timestep to use as a template grid.
+        template_ds = open_kerchunk_dataset(
+            json_paths[0],
+            loadable_variables=[plan.variable_name, "x", "y", "crs"],
+            ignore_missing_file=False,
         )
 
-        # Create paths to local and/or remote kerchunk jsons
-        json_paths = generate_json_paths(
-            kerchunk_method,
-            gcs_component_paths,
-            json_dir,
-            ignore_missing_file,
-            io_concurrency,
-            cpu_workers
-        )
-
-        # If specified, generate zonal weights file here.
-        if calculate_zonal_weights:
-            if zone_polygons is None:
-                raise ValueError(
-                    "The zone polygons must be provided"
-                    " to calculate zonal weights. Can be a GeoDataFame"
-                    " or a filepath."
-                )
-
-            # Get a single timestep to use as a template grid.
-            template_ds = open_kerchunk_dataset(
-                json_paths[0],
-                loadable_variables=[variable_name, "x", "y", "crs"],
-                ignore_missing_file=False,
-            )
-
-            generate_weights_file(
-                zone_polygons=zone_polygons,
-                template_dataset=template_ds,
-                variable_name=variable_name,
-                crs_wkt=template_ds.crs.esri_pe_string,
-                output_weights_filepath=zonal_weights_filepath,
-                location_id_prefix=location_id_prefix,
-                unique_zone_id=unique_zone_id
-            )
-
-        # Fetch the data, saving to parquet files based on TEEHR data model
-        fetch_and_format_nwm_grids(
-            json_paths=json_paths,
-            nwm_configuration_name=configuration,
-            nwm_version=nwm_version,
-            variable_name=variable_name,
-            output_parquet_dir=output_parquet_dir,
-            zonal_weights_filepath=zonal_weights_filepath,
-            ignore_missing_file=ignore_missing_file,
-            overwrite_output=overwrite_output,
+        generate_weights_file(
+            zone_polygons=zone_polygons,
+            template_dataset=template_ds,
+            variable_name=plan.variable_name,
+            crs_wkt=template_ds.crs.esri_pe_string,
+            output_weights_filepath=zonal_weights_filepath,
             location_id_prefix=location_id_prefix,
-            variable_mapper=variable_mapper,
-            timeseries_type=timeseries_type,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,
-            convert_k_to_c=convert_k_to_c,
-            io_concurrency=io_concurrency,
-            cpu_workers=cpu_workers
+            unique_zone_id=unique_zone_id
         )
+
+    # Fetch the data, saving to parquet files based on TEEHR data model
+    fetch_and_format_nwm_grids(
+        json_paths=json_paths,
+        nwm_configuration_name=plan.configuration,
+        nwm_version=nwm_version,
+        variable_name=plan.variable_name,
+        output_parquet_dir=output_parquet_dir,
+        zonal_weights_filepath=zonal_weights_filepath,
+        ignore_missing_file=ignore_missing_file,
+        overwrite_output=overwrite_output,
+        location_id_prefix=location_id_prefix,
+        variable_mapper=variable_mapper,
+        timeseries_type=timeseries_type,
+        drop_overlapping_assimilation_values=drop_overlapping_assimilation_values,  # noqa
+        convert_k_to_c=convert_k_to_c,
+        io_concurrency=io_concurrency,
+        cpu_workers=cpu_workers
+    )

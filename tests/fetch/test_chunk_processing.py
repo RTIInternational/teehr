@@ -129,6 +129,7 @@ def test_min_items_gates_the_process_pool(monkeypatch):
 def test_concurrency_args_reach_the_chunk_loop(monkeypatch):
     """io_concurrency and cpu_workers must survive the trip from
     nwm_to_parquet down to the chunk loop, and to the planning step."""
+    import teehr.fetching.nwm.fetch_planning as fetch_planning
     import teehr.fetching.nwm.nwm_points as nwm_points
 
     seen = {}
@@ -148,7 +149,7 @@ def test_concurrency_args_reach_the_chunk_loop(monkeypatch):
            "nwm.t00z.short_range.channel_rt.f001.conus.nc")
     monkeypatch.setattr(nwm_points, "generate_json_paths", fake_json_paths)
     monkeypatch.setattr(
-        nwm_points, "build_remote_nwm_filelist", lambda *a, **k: [gcs])
+        fetch_planning, "build_remote_nwm_filelist", lambda *a, **k: [gcs])
 
     nwm_points.nwm_to_parquet(
         configuration="short_range",
