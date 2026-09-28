@@ -15,6 +15,9 @@ from teehr.evaluation.tables.location_attribute_table import (
 from teehr.evaluation.tables.location_crosswalk_table import (
     LocationCrosswalkTable
 )
+from teehr.evaluation.tables.location_id_alias_table import (
+    LocationIdAliasTable
+)
 from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.configuration_table import ConfigurationTable
@@ -30,6 +33,7 @@ __all__ = [
     "LocationTable",
     "LocationAttributeTable",
     "LocationCrosswalkTable",
+    "LocationIdAliasTable",
     "UnitTable",
     "VariableTable",
     "ConfigurationTable",

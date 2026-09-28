@@ -30,6 +30,6 @@ def test_list_tables_and_views(function_scope_evaluation_template):
     views_df = ev.list_views()
 
     # Not a complete test, but at least we know the function runs.
-    assert len(tbls_df) == 9
+    assert len(tbls_df) == 10
     assert len(views_df) == 1
     assert Path(ev.dir_path, ev.active_catalog.catalog_name, "cache").is_dir()

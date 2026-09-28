@@ -65,6 +65,13 @@ class View(TeehrDataFrameBase):
             namespace_name=self._namespace_name,
         )
 
+    def _get_location_id_aliases_sdf(self) -> ps.DataFrame:
+        """Get the location ID aliases from the view's catalog/namespace."""
+        return super()._get_location_id_aliases_sdf(
+            catalog_name=self._catalog_name,
+            namespace_name=self._namespace_name,
+        )
+
     @abstractmethod
     def _compute(self) -> ps.DataFrame:
         """Compute the view's DataFrame.

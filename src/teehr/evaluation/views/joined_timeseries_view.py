@@ -107,7 +107,10 @@ class JoinedTimeseriesView(View):
         """Perform the primary/secondary timeseries join.
 
         Joins primary and secondary timeseries based on location crosswalks,
-        value_time, unit_name, and variable name components. Variable names
+        value_time, unit_name, and variable name components. Primary
+        location IDs found in ``location_id_aliases`` are resolved to their
+        canonical ``primary_location_id`` before joining to the crosswalk;
+        the original ID is kept as ``primary_source_location_id``. Variable names
         are parsed into three parts: parameter, period, and statistic
         (e.g., "streamflow_hourly_inst" -> parameter="streamflow",
         period="hourly", statistic="inst").
@@ -141,6 +144,9 @@ class JoinedTimeseriesView(View):
         self._get_table("location_crosswalks").to_sdf().createOrReplaceTempView(
             "location_crosswalks"
         )
+        self._get_location_id_aliases_sdf().createOrReplaceTempView(
+            "location_id_aliases"
+        )
 
         # Execute the join query
         joined_df = self._ev.sql("""
@@ -166,6 +172,8 @@ class JoinedTimeseriesView(View):
             primary AS (
                 SELECT
                     pf.*,
+                    COALESCE(a.primary_location_id, pf.location_id)
+                        as canonical_location_id,
                     v.parameter,
                     v.period,
                     v.statistic
@@ -173,6 +181,8 @@ class JoinedTimeseriesView(View):
                     filtered_primary_timeseries pf
                 JOIN variables_parsed v
                     ON v.name = pf.variable_name
+                LEFT JOIN location_id_aliases a
+                    ON a.alternative_location_id = pf.location_id
             ),
             secondary AS (
                 SELECT
@@ -188,7 +198,7 @@ class JoinedTimeseriesView(View):
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
-                , pf.location_id as primary_location_id
+                , pf.canonical_location_id as primary_location_id
                 , sf.location_id as secondary_location_id
                 , pf.value as primary_value
                 , sf.value as secondary_value
@@ -196,11 +206,13 @@ class JoinedTimeseriesView(View):
                 , sf.unit_name
                 , sf.variable_name
                 , sf.member
+                , pf.configuration_name as primary_configuration_name
+                , pf.location_id as primary_source_location_id
             FROM secondary sf
             JOIN location_crosswalks cf
                 ON cf.secondary_location_id = sf.location_id
             JOIN primary pf
-                ON cf.primary_location_id = pf.location_id
+                ON cf.primary_location_id = pf.canonical_location_id
                 AND sf.value_time = pf.value_time
                 AND sf.unit_name = pf.unit_name
                 AND sf.parameter <=> pf.parameter
@@ -213,6 +225,7 @@ class JoinedTimeseriesView(View):
         self._ev.spark.catalog.dropTempView("filtered_secondary_timeseries")
         self._ev.spark.catalog.dropTempView("variables")
         self._ev.spark.catalog.dropTempView("location_crosswalks")
+        self._ev.spark.catalog.dropTempView("location_id_aliases")
 
         return joined_df
 

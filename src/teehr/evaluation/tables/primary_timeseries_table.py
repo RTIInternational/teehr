@@ -46,6 +46,12 @@ class PrimaryTimeseriesTable(TimeseriesTable):
             "column": "location_id",
             "domain_table": "locations",
             "domain_column": "id",
+            "alternate_domains": [
+                {
+                    "domain_table": "location_id_aliases",
+                    "domain_column": "alternative_location_id",
+                }
+            ],
         }
     ]
     schema_func = staticmethod(primary_timeseries_schema)

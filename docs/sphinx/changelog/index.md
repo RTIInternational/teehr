@@ -87,6 +87,19 @@
   [#834](https://github.com/RTIInternational/teehr/issues/834).
 
 ### Added
+- **`location_id_aliases` table** for locations with more than one primary data source
+  ([#836](https://github.com/RTIInternational/teehr/issues/836)). It maps
+  `alternative_location_id` to a `primary_location_id` in `locations`. Primary timeseries may
+  use either ID, and the joined timeseries view resolves aliases to the `locations` ID before
+  joining the crosswalk, so crosswalks and attributes still key on one ID. The table is
+  optional (migration `0009` creates it empty), and with no aliases the join is unchanged.
+  Attribute and geometry joins on primary timeseries also resolve aliases.
+- The joined timeseries view has two new columns: `primary_configuration_name` and
+  `primary_source_location_id` (the primary ID before alias resolution). Timeseries-aware
+  calculated fields now include `primary_configuration_name` in their default
+  `uniqueness_fields` when the column is present, so events are not mixed across primary
+  sources. Joined tables written before this change don't have the column and keep the old
+  defaults.
 - `tests/query/test_metrics_result_stability.py`, guarding metric values against unintended
   change in two ways the rest of the suite structurally cannot. First, every Spark-native metric
   is computed through both `engine="python"` and `engine="spark"` on the same rows and compared

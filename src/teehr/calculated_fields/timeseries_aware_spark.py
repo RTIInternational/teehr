@@ -17,15 +17,21 @@ from teehr.calculated_fields.models.timeseries_aware import (
     AbovePercentileEventDetection,
     AboveThresholdEventDetection,
 )
+from teehr.calculated_fields.timeseries_aware_pandas import (
+    resolve_default_uniqueness_fields,
+)
 from teehr.utils.spark import null_safe_join_on_columns
 
 
 def _normalize_fields(
     fields: str | list[str] | None,
     default_uniqueness_fields: Sequence[str],
+    columns: Sequence[str],
 ) -> list[str]:
     if fields is None:
-        return list(default_uniqueness_fields)
+        return resolve_default_uniqueness_fields(
+            list(default_uniqueness_fields), list(columns)
+        )
     if isinstance(fields, str):
         return [fields]
     return list(fields)
@@ -82,7 +88,7 @@ def apply_percentile_batch_spark(
 ) -> DataFrame:
     """Apply one Spark-native percentile detection batch for compatible fields."""
     first = cfs[0]
-    group_cols = _normalize_fields(first.uniqueness_fields, default_uniqueness_fields)
+    group_cols = _normalize_fields(first.uniqueness_fields, default_uniqueness_fields, sdf.columns)
     value_col = first.value_field_name
     time_col = first.value_time_field_name
 
@@ -143,7 +149,7 @@ def apply_threshold_batch_spark(
 ) -> DataFrame:
     """Apply one Spark-native threshold detection batch for compatible fields."""
     first = cfs[0]
-    group_cols = _normalize_fields(first.uniqueness_fields, default_uniqueness_fields)
+    group_cols = _normalize_fields(first.uniqueness_fields, default_uniqueness_fields, sdf.columns)
     value_col = first.value_field_name
     time_col = first.value_time_field_name
     threshold_col = first.threshold_field_name
@@ -180,7 +186,7 @@ def apply_exceedance_probability_spark(
     default_uniqueness_fields: Sequence[str],
 ) -> DataFrame:
     """Compute ExceedanceProbability via window RANK / (COUNT + 1)."""
-    group_cols = _normalize_fields(cf.uniqueness_fields, default_uniqueness_fields)
+    group_cols = _normalize_fields(cf.uniqueness_fields, default_uniqueness_fields, sdf.columns)
     value_col = cf.value_field_name
 
     rank_window = Window.partitionBy(*group_cols).orderBy(
@@ -209,7 +215,7 @@ def apply_baseflow_period_spark(
             "BaseflowPeriodDetection requires baseflow_field_name to be specified."
         )
 
-    group_cols = _normalize_fields(cf.uniqueness_fields, default_uniqueness_fields)
+    group_cols = _normalize_fields(cf.uniqueness_fields, default_uniqueness_fields, sdf.columns)
     streamflow = F.col(cf.value_field_name).cast("double")
     baseflow = F.col(cf.baseflow_field_name).cast("double")
     quickflow_adj = (streamflow - baseflow) * F.lit(float(cf.event_threshold))

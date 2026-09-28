@@ -139,6 +139,8 @@ def test_create_joined_timeseries(function_scope_evaluation_template):
         'configuration_name',
         'variable_name',
         'member',
+        'primary_configuration_name',
+        'primary_source_location_id',
         # 'season'
     ]
     # Make sure secondary geodataframe is created correctly
@@ -256,6 +258,8 @@ def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
         'configuration_name',
         'variable_name',
         'member',
+        'primary_configuration_name',
+        'primary_source_location_id',
         # 'season'
     ]
 

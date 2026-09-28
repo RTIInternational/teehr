@@ -29,6 +29,7 @@ TEEHR uses a structured schema with three categories of tables:
 - :class:`locations <teehr.evaluation.tables.location_table.LocationTable>` - Point geometries with IDs (e.g., USGS gage locations)
 - :class:`location_attributes <teehr.evaluation.tables.location_attribute_table.LocationAttributeTable>` - Attribute values for each location
 - :class:`location_crosswalks <teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable>` - Maps primary IDs to secondary IDs (e.g., USGS to NWM)
+- :class:`location_id_aliases <teehr.evaluation.tables.location_id_alias_table.LocationIdAliasTable>` - Optional. Maps alternative primary IDs (e.g., additional observation sources) to a location ID
 
 **Timeseries Data**:
 
@@ -231,6 +232,25 @@ Load crosswalks.
    )
 
 See also: :meth:`LocationCrosswalkTable.load_csv() <teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.load_csv>`
+
+Load location ID aliases (optional). Use these when a location has more than
+one primary data source, each with its own location ID. Primary timeseries
+can then be loaded under either ID, and the joined timeseries resolves aliases
+to the ``primary_location_id`` from ``locations``, keeping the original ID in
+``primary_source_location_id``. Crosswalks should reference the location ID,
+not the alias.
+
+.. code-block:: python
+
+   ev.location_id_aliases.load_csv(
+       in_path="./data/aliases.csv",
+       field_mapping={
+           "usgs_id": "primary_location_id",
+           "cbrfc_id": "alternative_location_id"
+       }
+   )
+
+See also: :meth:`LocationIdAliasTable.load_csv() <teehr.evaluation.tables.location_id_alias_table.LocationIdAliasTable.load_csv>`
 
 
 Loading Domain Data

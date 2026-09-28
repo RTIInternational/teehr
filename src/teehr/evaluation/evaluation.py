@@ -10,6 +10,7 @@ from teehr.evaluation.tables import (
     ConfigurationTable,
     LocationAttributeTable,
     LocationCrosswalkTable,
+    LocationIdAliasTable,
     LocationTable,
     PrimaryTimeseriesTable,
     SecondaryTimeseriesTable,
@@ -246,6 +247,11 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         return LocationCrosswalkTable(self)
 
     @property
+    def location_id_aliases(self) -> LocationIdAliasTable:
+        """Access the location ID aliases table."""
+        return LocationIdAliasTable(self)
+
+    @property
     def primary_timeseries(self) -> PrimaryTimeseriesTable:
         """Access the primary timeseries table."""
         return PrimaryTimeseriesTable(self)
@@ -295,6 +301,15 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         -------
         JoinedTimeseriesView
             A lazy view of the joined timeseries.
+
+        Notes
+        -----
+        Primary timeseries may use alternative location IDs listed in the
+        ``location_id_aliases`` table. These are resolved to the canonical
+        ``primary_location_id``, and the original ID is kept in
+        ``primary_source_location_id``. When multiple primary sources exist
+        at a location, include ``primary_configuration_name`` in
+        ``group_by`` to compute metrics per primary source.
 
         Examples
         --------

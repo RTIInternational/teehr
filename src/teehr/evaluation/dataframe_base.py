@@ -5,6 +5,7 @@ import logging
 
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import (
+    add_alias_rows,
     df_to_gdf,
     join_attributes,
     join_geometry,
@@ -88,10 +89,39 @@ class TeehrDataFrameBase(ABC):
         gdf = df_to_gdf(self.add_geometry().to_pandas())
         return gdf
 
+    def _get_location_id_aliases_sdf(
+        self,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
+    ) -> ps.DataFrame:
+        """Get the location ID aliases, or an empty DataFrame if none exist.
+
+        The aliases table is optional, so this returns an empty DataFrame
+        with the table schema when it has not been created yet.
+        """
+        sdf = self._ev.table(
+            "location_id_aliases",
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
+        ).to_sdf()
+        if sdf is None:
+            from teehr.models.pandera_dataframe_schemas import (
+                location_id_aliases_schema
+            )
+            sdf = self._ev.spark.createDataFrame(
+                [], location_id_aliases_schema().to_structtype()
+            )
+        return sdf
+
     def add_geometry(self):
         """Add geometry to the DataFrame by joining with the locations table."""
         sdf = self.to_sdf()
-        gdf = join_geometry(sdf, self._ev.locations.to_sdf())
+        locations_sdf = add_alias_rows(
+            self._ev.locations.to_sdf(),
+            self._get_location_id_aliases_sdf(),
+            "id",
+        )
+        gdf = join_geometry(sdf, locations_sdf)
         return self._with_sdf(gdf, has_geometry=True)
 
     def add_attributes(
@@ -163,6 +193,9 @@ class TeehrDataFrameBase(ABC):
             )
             return self._with_sdf(self.to_sdf())
 
+        attrs_sdf = add_alias_rows(
+            attrs_sdf, self._get_location_id_aliases_sdf(), "location_id"
+        )
         sdf = self.to_sdf()
         joined_sdf = join_attributes(sdf, attrs_sdf, location_id_col)
         return self._with_sdf(joined_sdf)
