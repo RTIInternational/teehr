@@ -21,6 +21,9 @@ from teehr.evaluation.tables.location_id_alias_table import (
 from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.configuration_table import ConfigurationTable
+from teehr.evaluation.tables.configuration_pair_table import (
+    ConfigurationPairTable
+)
 from teehr.evaluation.tables.attribute_table import AttributeTable
 from teehr.evaluation.tables.generic_table import get_table
 
@@ -37,6 +40,7 @@ __all__ = [
     "UnitTable",
     "VariableTable",
     "ConfigurationTable",
+    "ConfigurationPairTable",
     "AttributeTable",
     "get_table",
 ]

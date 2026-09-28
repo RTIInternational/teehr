@@ -110,7 +110,11 @@ class JoinedTimeseriesView(View):
         value_time, unit_name, and variable name components. Primary
         location IDs found in ``location_id_aliases`` are resolved to their
         canonical ``primary_location_id`` before joining to the crosswalk;
-        the original ID is kept as ``primary_source_location_id``. Variable names
+        the original ID is kept as ``primary_source_location_id``.
+
+        If a secondary configuration is listed in ``configuration_pairs``,
+        it is only joined to the primary configurations it is paired with;
+        otherwise it is joined to all primary configurations. Variable names
         are parsed into three parts: parameter, period, and statistic
         (e.g., "streamflow_hourly_inst" -> parameter="streamflow",
         period="hourly", statistic="inst").
@@ -144,8 +148,11 @@ class JoinedTimeseriesView(View):
         self._get_table("location_crosswalks").to_sdf().createOrReplaceTempView(
             "location_crosswalks"
         )
-        self._get_location_id_aliases_sdf().createOrReplaceTempView(
+        self._get_optional_table_sdf("location_id_aliases").createOrReplaceTempView(
             "location_id_aliases"
+        )
+        self._get_optional_table_sdf("configuration_pairs").createOrReplaceTempView(
+            "configuration_pairs"
         )
 
         # Execute the join query
@@ -168,6 +175,10 @@ class JoinedTimeseriesView(View):
                         THEN parts[2] ELSE NULL END as statistic
                 FROM
                     exploded_variables
+            ),
+            paired_secondaries AS (
+                SELECT DISTINCT secondary_configuration_name
+                FROM configuration_pairs
             ),
             primary AS (
                 SELECT
@@ -218,6 +229,14 @@ class JoinedTimeseriesView(View):
                 AND sf.parameter <=> pf.parameter
                 AND sf.statistic <=> pf.statistic
                 AND (sf.statistic = 'inst' OR sf.period <=> pf.period)
+            LEFT JOIN paired_secondaries ps
+                ON ps.secondary_configuration_name = sf.configuration_name
+            LEFT JOIN configuration_pairs cp
+                ON cp.secondary_configuration_name = sf.configuration_name
+                AND cp.primary_configuration_name = pf.configuration_name
+            -- Secondary configs without pairs join to all primary configs
+            WHERE ps.secondary_configuration_name IS NULL
+                OR cp.primary_configuration_name IS NOT NULL
         """)
 
         # Clean up temp views
@@ -226,6 +245,7 @@ class JoinedTimeseriesView(View):
         self._ev.spark.catalog.dropTempView("variables")
         self._ev.spark.catalog.dropTempView("location_crosswalks")
         self._ev.spark.catalog.dropTempView("location_id_aliases")
+        self._ev.spark.catalog.dropTempView("configuration_pairs")
 
         return joined_df
 

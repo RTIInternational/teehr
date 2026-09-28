@@ -13,6 +13,7 @@ from teehr.evaluation.tables import (
     UnitTable,
     VariableTable,
     ConfigurationTable,
+    ConfigurationPairTable,
     AttributeTable,
 )
 
@@ -28,6 +29,7 @@ TBL_CLASS_LOOKUP = {
     "units": UnitTable,
     "variables": VariableTable,
     "configurations": ConfigurationTable,
+    "configuration_pairs": ConfigurationPairTable,
     "attributes": AttributeTable,
 }
 

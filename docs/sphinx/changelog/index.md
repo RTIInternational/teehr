@@ -94,6 +94,11 @@
   joining the crosswalk, so crosswalks and attributes still key on one ID. The table is
   optional (migration `0009` creates it empty), and with no aliases the join is unchanged.
   Attribute and geometry joins on primary timeseries also resolve aliases.
+- **`configuration_pairs` table** (`primary_configuration_name`, `secondary_configuration_name`)
+  to control which primary sources each secondary configuration is joined to. A secondary
+  configuration listed in the table joins only to its paired primary configurations; one that
+  isn't listed joins to all of them, as before. Many-to-many pairs are allowed. Migration
+  `0010` creates the table empty.
 - The joined timeseries view has two new columns: `primary_configuration_name` and
   `primary_source_location_id` (the primary ID before alias resolution). Timeseries-aware
   calculated fields now include `primary_configuration_name` in their default

@@ -65,9 +65,10 @@ class View(TeehrDataFrameBase):
             namespace_name=self._namespace_name,
         )
 
-    def _get_location_id_aliases_sdf(self) -> ps.DataFrame:
-        """Get the location ID aliases from the view's catalog/namespace."""
-        return super()._get_location_id_aliases_sdf(
+    def _get_optional_table_sdf(self, table_name: str) -> ps.DataFrame:
+        """Get an optional table from the view's catalog/namespace."""
+        return super()._get_optional_table_sdf(
+            table_name,
             catalog_name=self._catalog_name,
             namespace_name=self._namespace_name,
         )

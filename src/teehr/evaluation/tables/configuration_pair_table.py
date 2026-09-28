@@ -1,0 +1,288 @@
+"""Configuration Pair Table."""
+from teehr.evaluation.tables.base_table import BaseTable
+from teehr.loading.utils import (
+    validate_input_is_csv,
+    validate_input_is_parquet
+)
+from teehr.models.pandera_dataframe_schemas import configuration_pairs_schema
+from pathlib import Path
+from typing import List, Dict, Union
+import logging
+from teehr.loading.configuration_pairs import (
+    convert_single_configuration_pairs
+)
+import pyspark.sql as ps
+import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+
+class ConfigurationPairTable(BaseTable):
+    """Access methods to configuration pairs table.
+
+    Lists which primary configurations each secondary configuration is
+    joined to in the joined timeseries. A secondary configuration with no
+    pairs is joined to all primary configurations.
+    """
+
+    # Table metadata
+    table_name = "configuration_pairs"
+    uniqueness_fields = [
+        "primary_configuration_name",
+        "secondary_configuration_name",
+    ]
+    foreign_keys: List[Dict[str, str]] = [
+        {
+            "column": "primary_configuration_name",
+            "domain_table": "configurations",
+            "domain_column": "name",
+        },
+        {
+            "column": "secondary_configuration_name",
+            "domain_table": "configurations",
+            "domain_column": "name",
+        },
+    ]
+    schema_func = staticmethod(configuration_pairs_schema)
+    strict_validation = True
+    validate_filter_field_types = True
+    extraction_func = staticmethod(convert_single_configuration_pairs)
+
+    def __init__(
+        self,
+        ev,
+        table_name: str = "configuration_pairs",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBaseModel
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        table_name : str, optional
+            The name of the table to operate on. Defaults to 'configuration_pairs'.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+        """
+        super().__init__(ev, table_name, namespace_name, catalog_name)
+        self._load = ev._load
+
+    def load_parquet(
+        self,
+        in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = None,
+        pattern: str = "**/*.parquet",
+        field_mapping: dict = None,
+        write_mode: str = "append",
+        drop_duplicates: bool = True,
+        **kwargs
+    ):
+        """Import configuration pairs from parquet file format.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            The input file or directory path.
+            Parquet file format.
+        namespace_name : str, optional
+            The namespace name to write to, by default None, which means the
+            namespace_name of the active catalog is used.
+        catalog_name : str, optional
+            The catalog name to write to, by default None, which means the
+            catalog_name of the active catalog is used.
+        extraction_function : callable, optional
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
+        pattern : str, optional
+            The glob pattern to use when searching for files in a directory.
+            Default is '**/*.parquet' to search for all parquet files recursively.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        write_mode : str, optional (default: "append")
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        **kwargs
+            Additional keyword arguments are passed to pd.read_csv()
+            or pd.read_parquet().
+
+        Notes
+        -----
+        The TEEHR Configuration Pair table schema includes fields:
+
+        - primary_configuration_name
+        - secondary_configuration_name
+        """
+        validate_input_is_parquet(in_path)
+        extraction_function = extraction_function or self.extraction_func
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.file(
+            in_path=in_path,
+            pattern=pattern,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
+            field_mapping=field_mapping,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
+            **kwargs
+        )
+        self._load_sdf()
+
+    def load_csv(
+        self,
+        in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = None,
+        pattern: str = "**/*.csv",
+        field_mapping: dict = None,
+        write_mode: str = "append",
+        drop_duplicates: bool = True,
+        **kwargs
+    ):
+        """Import configuration pairs from CSV file format.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            The input file or directory path.
+            CSV file format.
+        namespace_name : str, optional
+            The namespace name to write to, by default None, which means the
+            namespace_name of the active catalog is used.
+        catalog_name : str, optional
+            The catalog name to write to, by default None, which means the
+            catalog_name of the active catalog is used.
+        extraction_function : callable, optional
+            A custom function to extract and transform the data from the input
+            files to the TEEHR data model. If None (default), uses the table's
+            default extraction function.
+        pattern : str, optional
+            The glob pattern to use when searching for files in a directory.
+            Default is '**/*.csv' to search for all CSV files recursively.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        write_mode : str, optional (default: "append")
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        **kwargs
+            Additional keyword arguments are passed to pd.read_csv()
+            or pd.read_parquet().
+
+        Notes
+        -----
+        The TEEHR Configuration Pair table schema includes fields:
+
+        - primary_configuration_name
+        - secondary_configuration_name
+        """ # noqa
+        validate_input_is_csv(in_path)
+        extraction_function = extraction_function or self.extraction_func
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.file(
+            in_path=in_path,
+            pattern=pattern,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
+            field_mapping=field_mapping,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
+            **kwargs
+        )
+        self._load_sdf()
+
+    def load_dataframe(
+        self,
+        df: Union[pd.DataFrame, ps.DataFrame],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        write_mode: str = "append",
+        drop_duplicates: bool = True,
+    ):
+        """Import data from an in-memory dataframe.
+
+        Parameters
+        ----------
+        df : Union[pd.DataFrame, ps.DataFrame]
+            DataFrame to load into the table.
+        namespace_name : str, optional
+            The namespace name to write to. If None, uses the
+            active catalog's namespace.
+        catalog_name : str, optional
+            The catalog name to write to. If None, uses the
+            active catalog's catalog name.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
+        write_mode : str, optional (default: "append")
+            The write mode for the table. Options include:
+
+            - "insert": Insert new data without checking for duplicates.
+            - "append": Insert new data, skipping rows that already exist.
+            - "upsert": Update existing data, insert new data.
+            - "overwrite": Update table with new snapshot version preserving
+              historical versions.
+            - "create_or_replace": Drop and recreate the table with new data.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        """ # noqa
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.dataframe(
+            df=df,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates
+        )
+        self._load_sdf()

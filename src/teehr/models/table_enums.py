@@ -15,6 +15,7 @@ class TableNamesEnum(StrEnum):
     location_attributes = "location_attributes"
     location_crosswalks = "location_crosswalks"
     location_id_aliases = "location_id_aliases"
+    configuration_pairs = "configuration_pairs"
 
 
 class TableWriteEnum(StrEnum):

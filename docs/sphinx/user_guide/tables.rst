@@ -30,6 +30,7 @@ TEEHR uses a structured schema with three categories of tables:
 - :class:`location_attributes <teehr.evaluation.tables.location_attribute_table.LocationAttributeTable>` - Attribute values for each location
 - :class:`location_crosswalks <teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable>` - Maps primary IDs to secondary IDs (e.g., USGS to NWM)
 - :class:`location_id_aliases <teehr.evaluation.tables.location_id_alias_table.LocationIdAliasTable>` - Optional. Maps alternative primary IDs (e.g., additional observation sources) to a location ID
+- :class:`configuration_pairs <teehr.evaluation.tables.configuration_pair_table.ConfigurationPairTable>` - Optional. Restricts which primary configurations each secondary configuration is joined to
 
 **Timeseries Data**:
 
@@ -251,6 +252,21 @@ not the alias.
    )
 
 See also: :meth:`LocationIdAliasTable.load_csv() <teehr.evaluation.tables.location_id_alias_table.LocationIdAliasTable.load_csv>`
+
+With more than one primary source at a location, every primary configuration
+is joined to every secondary configuration by default. Load configuration
+pairs (optional) to control this. A secondary configuration listed in
+``configuration_pairs`` is only joined to the primary configurations it is
+paired with; one that is not listed is joined to all of them. A secondary
+configuration can be paired with more than one primary configuration.
+
+.. code-block:: python
+
+   ev.configuration_pairs.load_csv(
+       in_path="./data/configuration_pairs.csv"
+   )
+
+See also: :meth:`ConfigurationPairTable.load_csv() <teehr.evaluation.tables.configuration_pair_table.ConfigurationPairTable.load_csv>`
 
 
 Loading Domain Data

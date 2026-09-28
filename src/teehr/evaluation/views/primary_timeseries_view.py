@@ -120,7 +120,7 @@ class PrimaryTimeseriesView(View):
         # resolving any alias IDs to their canonical location
         df.createOrReplaceTempView("primary_ts")
         attrs_df.createOrReplaceTempView("attrs")
-        self._get_location_id_aliases_sdf().createOrReplaceTempView(
+        self._get_optional_table_sdf("location_id_aliases").createOrReplaceTempView(
             "location_id_aliases"
         )
 

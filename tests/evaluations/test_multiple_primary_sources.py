@@ -1,4 +1,4 @@
-"""Tests for the location_id_aliases table and alias-aware joins."""
+"""Tests for multiple primary sources: location ID aliases and config pairs."""
 from pathlib import Path
 
 import pandas as pd
@@ -192,3 +192,72 @@ def test_primary_timeseries_requires_location_or_alias(
 
     _load_alternative_source(ev)
     assert (ev.primary_timeseries.to_pandas()["location_id"] == "alt-A").any()
+
+
+def _load_pairs(ev, pairs):
+    ev.configuration_pairs.load_dataframe(
+        df=pd.DataFrame(
+            pairs,
+            columns=["primary_configuration_name", "secondary_configuration_name"],
+        )
+    )
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_configuration_pairs_restrict_join(function_scope_evaluation_template):
+    """Paired secondary configs join only to their primary configs."""
+    ev = function_scope_evaluation_template
+    _setup_evaluation(ev)
+    _load_alternative_source(ev)
+
+    # No pairs: both primary sources join at gage-A.
+    unpaired = ev.joined_timeseries_view().to_pandas()
+    assert set(unpaired["primary_configuration_name"]) == {
+        "usgs_observations", "alt_observations"
+    }
+
+    _load_pairs(ev, [("alt_observations", "nwm30_retrospective")])
+    df = ev.joined_timeseries_view().to_pandas()
+    assert set(df["primary_configuration_name"]) == {"alt_observations"}
+    assert set(df["primary_location_id"]) == {"gage-A"}
+    assert len(df) == (
+        unpaired["primary_configuration_name"] == "alt_observations"
+    ).sum()
+
+    # Pairing with both primaries restores the fan-out.
+    _load_pairs(ev, [("usgs_observations", "nwm30_retrospective")])
+    both = ev.joined_timeseries_view().to_pandas()
+    assert len(both) == len(unpaired)
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_unpaired_secondary_joins_all_primaries(
+    function_scope_evaluation_template
+):
+    """Pairs for one secondary config don't restrict other secondary configs."""
+    ev = function_scope_evaluation_template
+    _setup_evaluation(ev)
+    _load_alternative_source(ev)
+    ev.configurations.add(
+        Configuration(
+            name="other_forecast",
+            timeseries_type="secondary",
+            description="test secondary configuration",
+        )
+    )
+    _load_pairs(ev, [("usgs_observations", "other_forecast")])
+
+    df = ev.joined_timeseries_view().to_pandas()
+    assert set(df["primary_configuration_name"]) == {
+        "usgs_observations", "alt_observations"
+    }
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_configuration_pairs_validation(function_scope_evaluation_template):
+    """Pairs must reference existing configurations."""
+    ev = function_scope_evaluation_template
+    _setup_evaluation(ev)
+
+    with pytest.raises(ValueError, match="Foreign key constraint violation"):
+        _load_pairs(ev, [("not_a_config", "nwm30_retrospective")])

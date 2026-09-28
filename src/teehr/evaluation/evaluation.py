@@ -8,6 +8,7 @@ from pathlib import Path
 from teehr.evaluation.tables import (
     AttributeTable,
     ConfigurationTable,
+    ConfigurationPairTable,
     LocationAttributeTable,
     LocationCrosswalkTable,
     LocationIdAliasTable,
@@ -232,6 +233,11 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         return ConfigurationTable(self)
 
     @property
+    def configuration_pairs(self) -> ConfigurationPairTable:
+        """Access the configuration pairs table."""
+        return ConfigurationPairTable(self)
+
+    @property
     def locations(self) -> LocationTable:
         """Access the locations table."""
         return LocationTable(self)
@@ -309,7 +315,9 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         ``primary_location_id``, and the original ID is kept in
         ``primary_source_location_id``. When multiple primary sources exist
         at a location, include ``primary_configuration_name`` in
-        ``group_by`` to compute metrics per primary source.
+        ``group_by`` to compute metrics per primary source. Use the
+        ``configuration_pairs`` table to restrict which primary
+        configurations each secondary configuration is joined to.
 
         Examples
         --------

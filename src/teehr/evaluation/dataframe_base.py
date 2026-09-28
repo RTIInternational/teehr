@@ -89,27 +89,26 @@ class TeehrDataFrameBase(ABC):
         gdf = df_to_gdf(self.add_geometry().to_pandas())
         return gdf
 
-    def _get_location_id_aliases_sdf(
+    def _get_optional_table_sdf(
         self,
+        table_name: str,
         catalog_name: Union[str, None] = None,
         namespace_name: Union[str, None] = None,
     ) -> ps.DataFrame:
-        """Get the location ID aliases, or an empty DataFrame if none exist.
+        """Get an optional table, or an empty DataFrame if it does not exist.
 
-        The aliases table is optional, so this returns an empty DataFrame
-        with the table schema when it has not been created yet.
+        Used for optional tables (e.g., location_id_aliases,
+        configuration_pairs) that may not exist in older catalogs.
         """
-        sdf = self._ev.table(
-            "location_id_aliases",
+        tbl = self._ev.table(
+            table_name,
             catalog_name=catalog_name,
             namespace_name=namespace_name,
-        ).to_sdf()
+        )
+        sdf = tbl.to_sdf()
         if sdf is None:
-            from teehr.models.pandera_dataframe_schemas import (
-                location_id_aliases_schema
-            )
             sdf = self._ev.spark.createDataFrame(
-                [], location_id_aliases_schema().to_structtype()
+                [], tbl.schema_func().to_structtype()
             )
         return sdf
 
@@ -118,7 +117,7 @@ class TeehrDataFrameBase(ABC):
         sdf = self.to_sdf()
         locations_sdf = add_alias_rows(
             self._ev.locations.to_sdf(),
-            self._get_location_id_aliases_sdf(),
+            self._get_optional_table_sdf("location_id_aliases"),
             "id",
         )
         gdf = join_geometry(sdf, locations_sdf)
@@ -194,7 +193,7 @@ class TeehrDataFrameBase(ABC):
             return self._with_sdf(self.to_sdf())
 
         attrs_sdf = add_alias_rows(
-            attrs_sdf, self._get_location_id_aliases_sdf(), "location_id"
+            attrs_sdf, self._get_optional_table_sdf("location_id_aliases"), "location_id"
         )
         sdf = self.to_sdf()
         joined_sdf = join_attributes(sdf, attrs_sdf, location_id_col)
