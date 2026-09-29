@@ -326,6 +326,53 @@ def test_nwm30_grid_fetch_and_format_virtualizarr_built_reference(tmpdir):
     ).index.size == 1
 
 
+def test_plan_nwm_grid_fetch(monkeypatch):
+    """Plan a grid fetch: validated names and z-hour-clipped paths."""
+    import teehr.fetching.nwm.fetch_planning as fetch_planning
+    import teehr.fetching.nwm.nwm_grids as nwm_grids
+
+    base = "gcs://national-water-model"
+    listed = [
+        f"{base}/nwm.20260922/forcing_analysis_assim/nwm.t{h:02d}z.analysis_assim.forcing.tm00.conus.nc"  # noqa
+        for h in range(24)
+    ]
+    checked = []
+    monkeypatch.setattr(
+        fetch_planning, "build_remote_nwm_filelist", lambda *a: list(listed)
+    )
+    monkeypatch.setattr(
+        fetch_planning, "validate_nwm_version_against_files",
+        lambda paths, version: checked.append((paths, version))
+    )
+
+    plan = nwm_grids.plan_nwm_grid_fetch(
+        configuration="forcing_analysis_assim",
+        output_type="forcing",
+        variable_name="RAINRATE",
+        nwm_version="nwm31",
+        start_date="2026-09-22 03:00",
+        end_date="2026-09-22 05:00",
+    )
+
+    assert plan.configuration == "forcing_analysis_assim"
+    assert plan.output_type == "forcing"
+    assert plan.variable_name == "RAINRATE"
+    assert [p.split("/")[-1][:8] for p in plan.component_paths] == [
+        "nwm.t03z", "nwm.t04z", "nwm.t05z"
+    ]
+    assert checked == [(plan.component_paths, "nwm31")]
+
+    with pytest.raises(ValueError):
+        nwm_grids.plan_nwm_grid_fetch(
+            configuration="forcing_analysis_assim",
+            output_type="forcing",
+            variable_name="NOT_A_VARIABLE",
+            nwm_version="nwm31",
+            start_date="2026-09-22",
+            end_date="2026-09-23",
+        )
+
+
 def test_replace_location_id_prefix():
     """Test replacing location_id prefix."""
     df = pd.DataFrame({
