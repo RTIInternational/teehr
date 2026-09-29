@@ -313,7 +313,7 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         Primary timeseries may use alternative location IDs listed in the
         ``location_id_aliases`` table. These are resolved to the canonical
         ``primary_location_id``, and the original ID is kept in
-        ``primary_source_location_id``. When multiple primary sources exist
+        ``primary_timeseries_location_id``. When multiple primary sources exist
         at a location, include ``primary_configuration_name`` in
         ``group_by`` to compute metrics per primary source. Use the
         ``configuration_pairs`` table to restrict which primary

@@ -105,7 +105,7 @@ def test_joined_view_without_aliases_is_unchanged(
     df = ev.joined_timeseries_view().to_pandas()
 
     assert ev.location_id_aliases.to_pandas().empty
-    assert (df["primary_location_id"] == df["primary_source_location_id"]).all()
+    assert (df["primary_location_id"] == df["primary_timeseries_location_id"]).all()
     assert set(df["primary_configuration_name"]) == {"usgs_observations"}
 
 
@@ -129,7 +129,7 @@ def test_joined_view_resolves_aliases(function_scope_evaluation_template):
         "usgs_observations", "alt_observations"
     }
     alt_rows = gage_a[gage_a["primary_configuration_name"] == "alt_observations"]
-    assert set(alt_rows["primary_source_location_id"]) == {"alt-A"}
+    assert set(alt_rows["primary_timeseries_location_id"]) == {"alt-A"}
     # Attributes are joined via the canonical ID.
     assert alt_rows["drainage_area"].notna().all()
 

@@ -110,7 +110,7 @@ class JoinedTimeseriesView(View):
         value_time, unit_name, and variable name components. Primary
         location IDs found in ``location_id_aliases`` are resolved to their
         canonical ``primary_location_id`` before joining to the crosswalk;
-        the original ID is kept as ``primary_source_location_id``.
+        the original ID is kept as ``primary_timeseries_location_id``.
 
         If a secondary configuration is listed in ``configuration_pairs``,
         it is only joined to the primary configurations it is paired with;
@@ -218,7 +218,7 @@ class JoinedTimeseriesView(View):
                 , sf.variable_name
                 , sf.member
                 , pf.configuration_name as primary_configuration_name
-                , pf.location_id as primary_source_location_id
+                , pf.location_id as primary_timeseries_location_id
             FROM secondary sf
             JOIN location_crosswalks cf
                 ON cf.secondary_location_id = sf.location_id

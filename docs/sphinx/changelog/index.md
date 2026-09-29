@@ -100,7 +100,7 @@
   isn't listed joins to all of them, as before. Many-to-many pairs are allowed. Migration
   `0010` creates the table empty.
 - The joined timeseries view has two new columns: `primary_configuration_name` and
-  `primary_source_location_id` (the primary ID before alias resolution). Timeseries-aware
+  `primary_timeseries_location_id` (the primary ID before alias resolution). Timeseries-aware
   calculated fields now include `primary_configuration_name` in their default
   `uniqueness_fields` when the column is present, so events are not mixed across primary
   sources. Joined tables written before this change don't have the column and keep the old

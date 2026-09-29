@@ -48,6 +48,30 @@ The result is a unified table for analysis such as calculating metrics or genera
 
    Example joined timeseries table.
 
+Location ID and Configuration Columns
+-------------------------------------
+
+The location ID columns in the joined timeseries mirror the ``location_crosswalks``
+table. Plain ``primary_`` and ``secondary_`` IDs are the crosswalk's IDs, and a
+``_timeseries_`` ID is the raw value from that timeseries table.
+
+- ``primary_location_id`` - The location ID from ``locations``, the same value as
+  ``location_crosswalks.primary_location_id``. Location attributes and geometry join
+  on this column, and it is what metrics are usually grouped by.
+- ``secondary_location_id`` - The secondary timeseries location ID, the same value as
+  ``location_crosswalks.secondary_location_id``.
+- ``primary_timeseries_location_id`` - The ``location_id`` the primary timeseries
+  was loaded under. This is the same as ``primary_location_id`` unless the primary data
+  uses an alias from ``location_id_aliases``.
+- ``configuration_name`` - The secondary timeseries configuration.
+- ``primary_configuration_name`` - The primary timeseries configuration.
+
+When a location has more than one primary data source, each secondary value is joined
+to every primary source, unless ``configuration_pairs`` limits which primary
+configurations a secondary configuration is joined to. Include
+``primary_configuration_name`` in ``group_by`` to compute metrics per primary source.
+See :doc:`tables` for loading ``location_id_aliases`` and ``configuration_pairs``.
+
 Basic Usage
 -----------
 

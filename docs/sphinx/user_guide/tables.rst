@@ -238,7 +238,7 @@ Load location ID aliases (optional). Use these when a location has more than
 one primary data source, each with its own location ID. Primary timeseries
 can then be loaded under either ID, and the joined timeseries resolves aliases
 to the ``primary_location_id`` from ``locations``, keeping the original ID in
-``primary_source_location_id``. Crosswalks should reference the location ID,
+``primary_timeseries_location_id``. Crosswalks should reference the location ID,
 not the alias.
 
 .. code-block:: python
