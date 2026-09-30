@@ -227,6 +227,12 @@ class Validate:
                 - column: The name of the column in sdf that is the foreign key.
                 - domain_table: The name of the domain table to check against.
                 - domain_column: The name of the column in the domain table that is the primary key.
+                - alternate_domains (optional): A list of additional
+                  ``{"domain_table", "domain_column"}`` dicts. A value passes
+                  if it exists in any of the domains. Alternate domain tables
+                  that do not exist are skipped.
+                - exclude (optional): If True, invert the check so that values
+                  must NOT exist in the domain table.
 
         Raises
         ------
@@ -248,19 +254,30 @@ class Validate:
             )
         sdf.createOrReplaceTempView("temp_table")
         for fk in foreign_keys:
-            sql = f"""
-                SELECT t.* from temp_table t
-                LEFT ANTI JOIN {fk['domain_table']} d
-                ON t.{fk['column']} = d.{fk['domain_column']}
-            """
+            domains = [fk] + [
+                d for d in fk.get("alternate_domains", [])
+                if self._ev.spark.catalog.tableExists(d["domain_table"])
+            ]
+            join_type = "LEFT SEMI" if fk.get("exclude") else "LEFT ANTI"
+            joins = "\n".join(
+                f"{join_type} JOIN {d['domain_table']} d{i} "
+                f"ON t.{fk['column']} = d{i}.{d['domain_column']}"
+                for i, d in enumerate(domains)
+            )
+            sql = f"SELECT t.* from temp_table t\n{joins}"
             result_sdf = self._ev.sql(sql)
-            self._ev.spark.catalog.dropTempView(fk["domain_table"])
+            for d in domains:
+                self._ev.spark.catalog.dropTempView(d["domain_table"])
             if not result_sdf.isEmpty():
                 self._ev.spark.catalog.dropTempView("temp_table")
+                domain_names = " or ".join(
+                    f"the {d['domain_column']} column in {d['domain_table']}"
+                    for d in domains
+                )
+                found = "found in" if fk.get("exclude") else "not found in"
                 msg = (
                     f"Foreign key constraint violation: "
-                    f"A {fk['column']} entry is not found in "
-                    f"the {fk['domain_column']} column in {fk['domain_table']}"
+                    f"A {fk['column']} entry is {found} {domain_names}"
                     f"\nFirst offending record: {result_sdf.first()}"
                 )
                 logger.info(msg)

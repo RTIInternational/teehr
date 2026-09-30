@@ -5,6 +5,7 @@ import logging
 
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import (
+    add_alias_rows,
     df_to_gdf,
     join_attributes,
     join_geometry,
@@ -88,10 +89,38 @@ class TeehrDataFrameBase(ABC):
         gdf = df_to_gdf(self.add_geometry().to_pandas())
         return gdf
 
+    def _get_optional_table_sdf(
+        self,
+        table_name: str,
+        catalog_name: Union[str, None] = None,
+        namespace_name: Union[str, None] = None,
+    ) -> ps.DataFrame:
+        """Get an optional table, or an empty DataFrame if it does not exist.
+
+        Used for optional tables (e.g., location_id_aliases,
+        configuration_pairs) that may not exist in older catalogs.
+        """
+        tbl = self._ev.table(
+            table_name,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
+        )
+        sdf = tbl.to_sdf()
+        if sdf is None:
+            sdf = self._ev.spark.createDataFrame(
+                [], tbl.schema_func().to_structtype()
+            )
+        return sdf
+
     def add_geometry(self):
         """Add geometry to the DataFrame by joining with the locations table."""
         sdf = self.to_sdf()
-        gdf = join_geometry(sdf, self._ev.locations.to_sdf())
+        locations_sdf = add_alias_rows(
+            self._ev.locations.to_sdf(),
+            self._get_optional_table_sdf("location_id_aliases"),
+            "id",
+        )
+        gdf = join_geometry(sdf, locations_sdf)
         return self._with_sdf(gdf, has_geometry=True)
 
     def add_attributes(
@@ -163,6 +192,9 @@ class TeehrDataFrameBase(ABC):
             )
             return self._with_sdf(self.to_sdf())
 
+        attrs_sdf = add_alias_rows(
+            attrs_sdf, self._get_optional_table_sdf("location_id_aliases"), "location_id"
+        )
         sdf = self.to_sdf()
         joined_sdf = join_attributes(sdf, attrs_sdf, location_id_col)
         return self._with_sdf(joined_sdf)

@@ -9,9 +9,11 @@ from teehr.evaluation.tables import (
     LocationTable,
     LocationAttributeTable,
     LocationCrosswalkTable,
+    LocationIdAliasTable,
     UnitTable,
     VariableTable,
     ConfigurationTable,
+    ConfigurationPairTable,
     AttributeTable,
 )
 
@@ -23,9 +25,11 @@ TBL_CLASS_LOOKUP = {
     "locations": LocationTable,
     "location_attributes": LocationAttributeTable,
     "location_crosswalks": LocationCrosswalkTable,
+    "location_id_aliases": LocationIdAliasTable,
     "units": UnitTable,
     "variables": VariableTable,
     "configurations": ConfigurationTable,
+    "configuration_pairs": ConfigurationPairTable,
     "attributes": AttributeTable,
 }
 

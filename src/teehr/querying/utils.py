@@ -502,6 +502,45 @@ def join_attributes(
     return joined_df
 
 
+def add_alias_rows(
+    sdf: ps.DataFrame,
+    aliases_sdf: ps.DataFrame,
+    id_col: str,
+) -> ps.DataFrame:
+    """Duplicate location-keyed rows under each of their alias IDs.
+
+    Allows lookup tables keyed on canonical ``locations.id`` (e.g., pivoted
+    attributes or location geometry) to be joined to data that uses
+    location ID aliases.
+
+    Parameters
+    ----------
+    sdf : ps.DataFrame
+        The DataFrame keyed on canonical location ID.
+    aliases_sdf : ps.DataFrame
+        The location_id_aliases DataFrame.
+    id_col : str
+        The canonical location ID column in ``sdf``.
+
+    Returns
+    -------
+    ps.DataFrame
+        ``sdf`` plus one copy of each row per alias, with ``id_col`` set to
+        the alias ID.
+    """
+    aliases = aliases_sdf.select(
+        F.col("location_id").alias("_alias_location_id"),
+        "location_id_alias",
+    )
+    alias_rows = (
+        aliases.join(sdf, F.col("_alias_location_id") == F.col(id_col))
+        .drop(id_col, "_alias_location_id")
+        .withColumnRenamed("location_id_alias", id_col)
+        .select(sdf.columns)
+    )
+    return sdf.unionByName(alias_rows)
+
+
 def join_geometry(
     target_df: ps.DataFrame,
     location_df: ps.DataFrame,

@@ -540,6 +540,148 @@ def location_crosswalks_schema(
         ])
 
 
+def location_id_aliases_schema(
+        type: str = "pyspark",
+) -> ps.DataFrameSchema:
+    """Return the schema for location ID alias data."""
+    if type == "pandas":
+        return pa.DataFrameSchema(
+            columns={
+                "location_id": pa.Column(
+                    pa.String,
+                    coerce=True
+                ),
+                "location_id_alias": pa.Column(
+                    pa.String,
+                    coerce=True
+                ),
+                "created_at": pa.Column(
+                    pa.DateTime,
+                    parsers=pa.Parser(format_datetime64),
+                    nullable=True,
+                    coerce=True,
+                ),
+                "updated_at": pa.Column(
+                    pa.DateTime,
+                    parsers=pa.Parser(format_datetime64),
+                    nullable=True,
+                    coerce=True,
+                ),
+                "properties": pa.Column(
+                    object,
+                    nullable=True,
+                )
+            },
+            strict="filter"
+        )
+    if type == "pyspark":
+        return ps.DataFrameSchema(
+            columns={
+                "location_id": ps.Column(
+                    T.StringType(),
+                    nullable=False,
+                ),
+                "location_id_alias": ps.Column(
+                    T.StringType(),
+                    nullable=False,
+                ),
+                "created_at": ps.Column(
+                    T.TimestampNTZType(),
+                    nullable=True,
+                ),
+                "updated_at": ps.Column(
+                    T.TimestampNTZType(),
+                    nullable=True,
+                ),
+                "properties": ps.Column(
+                    T.MapType(T.StringType(), T.StringType()),
+                    nullable=True,
+                )
+            },
+            strict=True,
+            coerce=True,
+        )
+    if type == "arrow":
+        return pw.schema([
+            pw.field("location_id", pw.string()),
+            pw.field("location_id_alias", pw.string()),
+            pw.field("created_at", pw.timestamp("ms")),
+            pw.field("updated_at", pw.timestamp("ms")),
+            pw.field("properties", pw.map_(pw.string(), pw.string())),
+        ])
+
+
+def configuration_pairs_schema(
+        type: str = "pyspark",
+) -> ps.DataFrameSchema:
+    """Return the schema for configuration pair data."""
+    if type == "pandas":
+        return pa.DataFrameSchema(
+            columns={
+                "primary_configuration_name": pa.Column(
+                    pa.String,
+                    coerce=True
+                ),
+                "secondary_configuration_name": pa.Column(
+                    pa.String,
+                    coerce=True
+                ),
+                "created_at": pa.Column(
+                    pa.DateTime,
+                    parsers=pa.Parser(format_datetime64),
+                    nullable=True,
+                    coerce=True,
+                ),
+                "updated_at": pa.Column(
+                    pa.DateTime,
+                    parsers=pa.Parser(format_datetime64),
+                    nullable=True,
+                    coerce=True,
+                ),
+                "properties": pa.Column(
+                    object,
+                    nullable=True,
+                )
+            },
+            strict="filter"
+        )
+    if type == "pyspark":
+        return ps.DataFrameSchema(
+            columns={
+                "primary_configuration_name": ps.Column(
+                    T.StringType(),
+                    nullable=False,
+                ),
+                "secondary_configuration_name": ps.Column(
+                    T.StringType(),
+                    nullable=False,
+                ),
+                "created_at": ps.Column(
+                    T.TimestampNTZType(),
+                    nullable=True,
+                ),
+                "updated_at": ps.Column(
+                    T.TimestampNTZType(),
+                    nullable=True,
+                ),
+                "properties": ps.Column(
+                    T.MapType(T.StringType(), T.StringType()),
+                    nullable=True,
+                )
+            },
+            strict=True,
+            coerce=True,
+        )
+    if type == "arrow":
+        return pw.schema([
+            pw.field("primary_configuration_name", pw.string()),
+            pw.field("secondary_configuration_name", pw.string()),
+            pw.field("created_at", pw.timestamp("ms")),
+            pw.field("updated_at", pw.timestamp("ms")),
+            pw.field("properties", pw.map_(pw.string(), pw.string())),
+        ])
+
+
 def weights_file_schema() -> pa.DataFrameSchema:
     """Return the schema for a weights file."""
     return pa.DataFrameSchema(

@@ -15,6 +15,7 @@ UNIQUENESS_FIELDS = [
     'reference_time',
     'primary_location_id',
     'configuration_name',
+    'primary_configuration_name',
     'variable_name',
     'unit_name'
 ]
@@ -65,6 +66,7 @@ class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -160,6 +162,7 @@ class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -251,6 +254,7 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -335,6 +339,7 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -410,6 +415,7 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -489,6 +495,7 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -561,6 +568,7 @@ class LyneHollickBaseflow(CalculatedFieldABC,
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -630,6 +638,7 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -702,6 +711,7 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -779,6 +789,7 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -858,6 +869,7 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -937,6 +949,7 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -1013,6 +1026,7 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -1090,6 +1104,7 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]
@@ -1162,6 +1177,7 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                 'reference_time',
                 'primary_location_id',
                 'configuration_name',
+                'primary_configuration_name',
                 'variable_name',
                 'unit_name'
             ]

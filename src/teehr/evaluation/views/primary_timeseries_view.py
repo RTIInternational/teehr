@@ -116,9 +116,13 @@ class PrimaryTimeseriesView(View):
             )
             return df
 
-        # Join pivoted attributes to primary timeseries on location_id
+        # Join pivoted attributes to primary timeseries on location_id,
+        # resolving any alias IDs to their canonical location
         df.createOrReplaceTempView("primary_ts")
         attrs_df.createOrReplaceTempView("attrs")
+        self._get_optional_table_sdf("location_id_aliases").createOrReplaceTempView(
+            "location_id_aliases"
+        )
 
         # Get attr columns excluding location_id
         attr_cols = [c for c in attrs_df.columns if c != "location_id"]
@@ -129,11 +133,15 @@ class PrimaryTimeseriesView(View):
                 primary_ts.*,
                 {attr_select}
             FROM primary_ts
+            LEFT JOIN location_id_aliases a
+                ON a.location_id_alias = primary_ts.location_id
             JOIN attrs
-                ON primary_ts.location_id = attrs.location_id
+                ON COALESCE(a.location_id, primary_ts.location_id)
+                    = attrs.location_id
         """)
 
         self._ev.spark.catalog.dropTempView("primary_ts")
         self._ev.spark.catalog.dropTempView("attrs")
+        self._ev.spark.catalog.dropTempView("location_id_aliases")
 
         return result_df
