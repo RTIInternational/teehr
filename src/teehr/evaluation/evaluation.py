@@ -313,7 +313,7 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         The result has a ``location_id`` column (the ``locations`` ID) plus
         ``primary_``/``secondary_`` versions of the location ID, value,
         configuration name, and variable name. Primary timeseries may use
-        alternative location IDs listed in the ``location_id_aliases`` table;
+        location ID aliases listed in the ``location_id_aliases`` table;
         these are resolved to ``location_id``, while ``primary_location_id``
         keeps the ID from the primary timeseries. When multiple primary
         sources exist at a location, include ``primary_configuration_name``

@@ -134,9 +134,9 @@ class PrimaryTimeseriesView(View):
                 {attr_select}
             FROM primary_ts
             LEFT JOIN location_id_aliases a
-                ON a.alternative_location_id = primary_ts.location_id
+                ON a.location_id_alias = primary_ts.location_id
             JOIN attrs
-                ON COALESCE(a.primary_location_id, primary_ts.location_id)
+                ON COALESCE(a.location_id, primary_ts.location_id)
                     = attrs.location_id
         """)
 

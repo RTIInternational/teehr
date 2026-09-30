@@ -185,7 +185,7 @@ class JoinedTimeseriesView(View):
             primary AS (
                 SELECT
                     pf.*,
-                    COALESCE(a.primary_location_id, pf.location_id)
+                    COALESCE(a.location_id, pf.location_id)
                         as canonical_location_id,
                     v.parameter,
                     v.period,
@@ -195,7 +195,7 @@ class JoinedTimeseriesView(View):
                 JOIN variables_parsed v
                     ON v.name = pf.variable_name
                 LEFT JOIN location_id_aliases a
-                    ON a.alternative_location_id = pf.location_id
+                    ON a.location_id_alias = pf.location_id
             ),
             secondary AS (
                 SELECT

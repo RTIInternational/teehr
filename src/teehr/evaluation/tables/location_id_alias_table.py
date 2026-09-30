@@ -20,22 +20,22 @@ logger = logging.getLogger(__name__)
 class LocationIdAliasTable(BaseTable):
     """Access methods to location ID aliases table.
 
-    Maps alternative primary location IDs (e.g., the native IDs of
-    additional primary data sources) to a canonical ``locations.id``.
-    Primary timeseries may use either the canonical ID or an alias.
+    Maps location ID aliases (e.g., the native IDs of additional primary
+    data sources) to a ``locations.id``. Primary timeseries may use either
+    the location ID or an alias.
     """
 
     # Table metadata
     table_name = "location_id_aliases"
-    uniqueness_fields = ["alternative_location_id"]
+    uniqueness_fields = ["location_id_alias"]
     foreign_keys: List[Dict[str, str]] = [
         {
-            "column": "primary_location_id",
+            "column": "location_id",
             "domain_table": "locations",
             "domain_column": "id",
         },
         {
-            "column": "alternative_location_id",
+            "column": "location_id_alias",
             "domain_table": "locations",
             "domain_column": "id",
             "exclude": True,
@@ -45,9 +45,9 @@ class LocationIdAliasTable(BaseTable):
     strict_validation = True
     validate_filter_field_types = True
     extraction_func = staticmethod(convert_single_location_id_aliases)
-    primary_location_id_field = "primary_location_id"
+    primary_location_id_field = "location_id"
     # Load uses the secondary prefix slot for the alias column.
-    secondary_location_id_field = "alternative_location_id"
+    secondary_location_id_field = "location_id_alias"
 
     def __init__(
         self,
@@ -83,8 +83,8 @@ class LocationIdAliasTable(BaseTable):
         extraction_function: callable = None,
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
-        primary_location_id_prefix: str = None,
-        alternative_location_id_prefix: str = None,
+        location_id_prefix: str = None,
+        location_id_alias_prefix: str = None,
         write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
@@ -112,14 +112,13 @@ class LocationIdAliasTable(BaseTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-        primary_location_id_prefix : str, optional
-            The prefix to add to primary location IDs.
-            Used to ensure unique location IDs across configurations.
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        alternative_location_id_prefix : str, optional
-            The prefix to add to alternative location IDs.
+        location_id_alias_prefix : str, optional
+            The prefix to add to location ID aliases.
         write_mode : str, optional (default: "append")
             The write mode for the table. Options include:
 
@@ -139,8 +138,8 @@ class LocationIdAliasTable(BaseTable):
         -----
         The TEEHR Location ID Alias table schema includes fields:
 
-        - primary_location_id
-        - alternative_location_id
+        - location_id
+        - location_id_alias
         """
         validate_input_is_parquet(in_path)
         extraction_function = extraction_function or self.extraction_func
@@ -157,9 +156,9 @@ class LocationIdAliasTable(BaseTable):
             catalog_name=catalog_name,
             extraction_function=extraction_function,
             field_mapping=field_mapping,
-            primary_location_id_prefix=primary_location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             primary_location_id_field=self.primary_location_id_field,
-            secondary_location_id_prefix=alternative_location_id_prefix,
+            secondary_location_id_prefix=location_id_alias_prefix,
             secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
@@ -175,8 +174,8 @@ class LocationIdAliasTable(BaseTable):
         extraction_function: callable = None,
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
-        primary_location_id_prefix: str = None,
-        alternative_location_id_prefix: str = None,
+        location_id_prefix: str = None,
+        location_id_alias_prefix: str = None,
         write_mode: str = "append",
         drop_duplicates: bool = True,
         **kwargs
@@ -204,14 +203,13 @@ class LocationIdAliasTable(BaseTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-        primary_location_id_prefix : str, optional
-            The prefix to add to primary location IDs.
-            Used to ensure unique location IDs across configurations.
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        alternative_location_id_prefix : str, optional
-            The prefix to add to alternative location IDs.
+        location_id_alias_prefix : str, optional
+            The prefix to add to location ID aliases.
         write_mode : str, optional (default: "append")
             The write mode for the table. Options include:
 
@@ -231,8 +229,8 @@ class LocationIdAliasTable(BaseTable):
         -----
         The TEEHR Location ID Alias table schema includes fields:
 
-        - primary_location_id
-        - alternative_location_id
+        - location_id
+        - location_id_alias
         """ # noqa
         validate_input_is_csv(in_path)
         extraction_function = extraction_function or self.extraction_func
@@ -249,9 +247,9 @@ class LocationIdAliasTable(BaseTable):
             catalog_name=catalog_name,
             extraction_function=extraction_function,
             field_mapping=field_mapping,
-            primary_location_id_prefix=primary_location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             primary_location_id_field=self.primary_location_id_field,
-            secondary_location_id_prefix=alternative_location_id_prefix,
+            secondary_location_id_prefix=location_id_alias_prefix,
             secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
@@ -266,8 +264,8 @@ class LocationIdAliasTable(BaseTable):
         catalog_name: str = None,
         field_mapping: dict = None,
         constant_field_values: dict = None,
-        primary_location_id_prefix: str = None,
-        alternative_location_id_prefix: str = None,
+        location_id_prefix: str = None,
+        location_id_alias_prefix: str = None,
         write_mode: str = "append",
         drop_duplicates: bool = True,
     ):
@@ -289,14 +287,13 @@ class LocationIdAliasTable(BaseTable):
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}.
-        primary_location_id_prefix : str, optional
-            The prefix to add to primary location IDs.
-            Used to ensure unique location IDs across configurations.
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
-        alternative_location_id_prefix : str, optional
-            The prefix to add to alternative location IDs.
+        location_id_alias_prefix : str, optional
+            The prefix to add to location ID aliases.
         write_mode : str, optional (default: "append")
             The write mode for the table. Options include:
 
@@ -321,8 +318,8 @@ class LocationIdAliasTable(BaseTable):
             catalog_name=catalog_name,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            primary_location_id_prefix=primary_location_id_prefix,
-            secondary_location_id_prefix=alternative_location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
+            secondary_location_id_prefix=location_id_alias_prefix,
             primary_location_id_field=self.primary_location_id_field,
             secondary_location_id_field=self.secondary_location_id_field,
             write_mode=write_mode,

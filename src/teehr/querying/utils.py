@@ -547,7 +547,7 @@ def add_alias_rows(
 
     Allows lookup tables keyed on canonical ``locations.id`` (e.g., pivoted
     attributes or location geometry) to be joined to data that uses
-    alternative primary location IDs.
+    location ID aliases.
 
     Parameters
     ----------
@@ -564,11 +564,14 @@ def add_alias_rows(
         ``sdf`` plus one copy of each row per alias, with ``id_col`` set to
         the alias ID.
     """
+    aliases = aliases_sdf.select(
+        F.col("location_id").alias("_alias_location_id"),
+        "location_id_alias",
+    )
     alias_rows = (
-        aliases_sdf.select("primary_location_id", "alternative_location_id")
-        .join(sdf, F.col("primary_location_id") == F.col(id_col))
-        .drop(id_col, "primary_location_id")
-        .withColumnRenamed("alternative_location_id", id_col)
+        aliases.join(sdf, F.col("_alias_location_id") == F.col(id_col))
+        .drop(id_col, "_alias_location_id")
+        .withColumnRenamed("location_id_alias", id_col)
         .select(sdf.columns)
     )
     return sdf.unionByName(alias_rows)

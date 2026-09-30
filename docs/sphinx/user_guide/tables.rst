@@ -29,7 +29,7 @@ TEEHR uses a structured schema with three categories of tables:
 - :class:`locations <teehr.evaluation.tables.location_table.LocationTable>` - Point geometries with IDs (e.g., USGS gage locations)
 - :class:`location_attributes <teehr.evaluation.tables.location_attribute_table.LocationAttributeTable>` - Attribute values for each location
 - :class:`location_crosswalks <teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable>` - Maps primary IDs to secondary IDs (e.g., USGS to NWM)
-- :class:`location_id_aliases <teehr.evaluation.tables.location_id_alias_table.LocationIdAliasTable>` - Optional. Maps alternative primary IDs (e.g., additional observation sources) to a location ID
+- :class:`location_id_aliases <teehr.evaluation.tables.location_id_alias_table.LocationIdAliasTable>` - Optional. Maps location ID aliases (e.g., the IDs of additional observation sources) to a location ID
 - :class:`configuration_pairs <teehr.evaluation.tables.configuration_pair_table.ConfigurationPairTable>` - Optional. Restricts which primary configurations each secondary configuration is joined to
 
 **Timeseries Data**:
@@ -246,8 +246,8 @@ alias.
    ev.location_id_aliases.load_csv(
        in_path="./data/aliases.csv",
        field_mapping={
-           "usgs_id": "primary_location_id",
-           "cbrfc_id": "alternative_location_id"
+           "usgs_id": "location_id",
+           "cbrfc_id": "location_id_alias"
        }
    )
 
