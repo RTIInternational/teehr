@@ -308,7 +308,7 @@ class TeehrDataFrameBase(ABC):
     def aggregate(
         self,
         group_by: Union[str, List[str]],
-        metrics: List[MetricsBasemodel],
+        metrics: Union[MetricsBasemodel, List[MetricsBasemodel]],
         engine: str = "auto",
     ):
         """Aggregate data with grouping and metrics.
@@ -317,8 +317,8 @@ class TeehrDataFrameBase(ABC):
         ----------
         group_by : Union[str, List[str]]
             Fields to group by for metric calculation.
-        metrics : List[MetricsBasemodel]
-            Metrics to calculate.
+        metrics : Union[MetricsBasemodel, List[MetricsBasemodel]]
+            Metric or list of metrics to calculate.
         engine : str, optional
             Aggregation engine to use. Options are ``"auto"``,
             ``"python"``, or ``"spark"``. Default is ``"auto"``.
@@ -351,6 +351,9 @@ class TeehrDataFrameBase(ABC):
         >>> )
 
         """
+        if not isinstance(metrics, list):
+            metrics = [metrics]
+
         logger.info("Performing the aggregation.")
 
         logger.debug(

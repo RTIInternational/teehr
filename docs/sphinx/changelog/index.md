@@ -22,6 +22,11 @@
   sources. Joined tables written before this change don't have the column and keep the old
   defaults.
 
+### Fixed
+- `aggregate()` accepts a single metric model as well as a list
+  ([#820](https://github.com/RTIInternational/teehr/issues/820)). Passing one model
+  previously raised `AttributeError`.
+
 ## 0.8.0 - 2026-09-30
 
 ### Breaking Changes
