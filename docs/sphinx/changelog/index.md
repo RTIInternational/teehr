@@ -3,6 +3,44 @@
 ## Unreleased
 
 ### Breaking Changes
+- **Action required: regenerate joined timeseries tables.** The joined timeseries columns
+  are renamed so that every column that exists on both sides, and can differ, has a
+  `primary_` and a `secondary_` version, and `location_id` is the `locations` ID
+  ([#836](https://github.com/RTIInternational/teehr/issues/836)). This affects anyone with a
+  materialized joined table (for example one written with
+  `ev.joined_timeseries_view().write("joined_timeseries")`) or code that uses the old names.
+  The old names are not supported anywhere.
+
+  | 0.7 column | 0.8 column |
+  |---|---|
+  | `primary_location_id` (the `locations` ID) | `location_id` |
+  | `configuration_name` | `secondary_configuration_name` |
+  | `variable_name` | `secondary_variable_name` |
+  | (none) | `primary_location_id` (the `primary_timeseries` location ID) |
+  | (none) | `primary_configuration_name` |
+  | (none) | `primary_variable_name` |
+
+  `secondary_location_id`, `primary_value`, `secondary_value`, `unit_name`, `value_time`,
+  `reference_time` and `member` are unchanged. Regenerate each joined table, then re-apply
+  any calculated fields you had added to it:
+
+  ```python
+  ev.joined_timeseries_view(add_attrs=True).write("joined_timeseries")
+  ```
+
+  If a table is not regenerated, appends or upserts into it fail, and `aggregate()` and
+  calculated fields on it raise an error that points here. Saved code, and tables of metric
+  results, that group or filter on `primary_location_id` or `configuration_name` need
+  updating too. The `location_crosswalks`, `location_id_aliases` and timeseries tables, and
+  loader arguments such as `primary_location_id_prefix`, keep their names.
+
+  Timeseries-aware calculated fields (event detection, exceedance probability, baseflow)
+  now default to grouping by every series-identifying column present in the data, rather
+  than a fixed list, so the default works on joined tables, the primary and secondary
+  timeseries views and custom tables. The default now includes `member` and
+  `secondary_location_id`, so each ensemble member, and each secondary location crosswalked
+  to the same location, is its own series. **Results change** on ensemble data and on
+  many-to-one crosswalks. Set `uniqueness_fields` to control the grouping explicitly.
 - **`RelativeMedian` on the Spark-native path now uses the exact `percentile` instead of
   `percentile_approx`.** The two do not differ by a tolerance: `percentile_approx` is
   nearest-rank, returning an actual data value, so on an even-sized group it returned the lower
@@ -99,12 +137,6 @@
   configuration listed in the table joins only to its paired primary configurations; one that
   isn't listed joins to all of them, as before. Many-to-many pairs are allowed. Migration
   `0010` creates the table empty.
-- The joined timeseries view has two new columns: `primary_configuration_name` and
-  `primary_timeseries_location_id` (the primary ID before alias resolution). Timeseries-aware
-  calculated fields now include `primary_configuration_name` in their default
-  `uniqueness_fields` when the column is present, so events are not mixed across primary
-  sources. Joined tables written before this change don't have the column and keep the old
-  defaults.
 - `plan_nwm_grid_fetch`, the grid counterpart of `plan_nwm_point_fetch`: everything
   `nwm_grids_to_parquet` does before building kerchunk references (validating the configuration
   and dates, listing and z-hour-trimming the GCS files, checking their NWM version), returned as

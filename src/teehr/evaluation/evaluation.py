@@ -310,12 +310,14 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
 
         Notes
         -----
-        Primary timeseries may use alternative location IDs listed in the
-        ``location_id_aliases`` table. These are resolved to the canonical
-        ``primary_location_id``, and the original ID is kept in
-        ``primary_timeseries_location_id``. When multiple primary sources exist
-        at a location, include ``primary_configuration_name`` in
-        ``group_by`` to compute metrics per primary source. Use the
+        The result has a ``location_id`` column (the ``locations`` ID) plus
+        ``primary_``/``secondary_`` versions of the location ID, value,
+        configuration name, and variable name. Primary timeseries may use
+        alternative location IDs listed in the ``location_id_aliases`` table;
+        these are resolved to ``location_id``, while ``primary_location_id``
+        keeps the ID from the primary timeseries. When multiple primary
+        sources exist at a location, include ``primary_configuration_name``
+        in ``group_by`` to compute metrics per primary source. Use the
         ``configuration_pairs`` table to restrict which primary
         configurations each secondary configuration is joined to.
 
@@ -332,13 +334,13 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
 
         Chain operations:
 
-        >>> ev.joined_timeseries_view().filter("primary_location_id LIKE 'usgs%'").to_pandas()
+        >>> ev.joined_timeseries_view().filter("location_id LIKE 'usgs%'").to_pandas()
 
         Compute metrics and materialize:
 
         >>> ev.joined_timeseries_view().aggregate(
         ...     metrics=[KGE()],
-        ...     group_by=["primary_location_id"]
+        ...     group_by=["location_id"]
         ... ).write("location_kge")
 
         Materialize joined data:
@@ -352,7 +354,7 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
         ...     namespace_name="some_namespace"
         ... ).aggregate(
         ...     metrics=[KGE()],
-        ...     group_by=["primary_location_id"]
+        ...     group_by=["location_id"]
         ... ).write("location_kge")
         """
         return JoinedTimeseriesView(

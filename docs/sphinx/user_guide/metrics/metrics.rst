@@ -29,7 +29,7 @@ specified metrics grouped by selected fields:
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
 Aggregate Parameters
@@ -128,7 +128,7 @@ RelativeStandardDeviation
             DeterministicMetrics.NashSutcliffeEfficiency(),
             DeterministicMetrics.RelativeBias(),
         ],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
         engine="spark",
     ).to_pandas()
 
@@ -138,7 +138,7 @@ RelativeStandardDeviation
         DeterministicMetrics.MeanError(),                      # spark-native
         DeterministicMetrics.MeanError(transform="log"),      # python path (transform)
         ],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
 Group By Fields
@@ -151,17 +151,17 @@ The ``group_by`` parameter controls how metrics are aggregated. Common groupings
     import teehr.calculated_fields.models.row_level as rcf
 
     # Group by location only
-    jt.aggregate(metrics=[...], group_by=["primary_location_id"])
+    jt.aggregate(metrics=[...], group_by=["location_id"])
 
     # Group by location and configuration
-    jt.aggregate(metrics=[...], group_by=["primary_location_id", "configuration_name"])
+    jt.aggregate(metrics=[...], group_by=["location_id", "secondary_configuration_name"])
 
     # Group by calculated fields
     jt = ev.joined_timeseries_view().add_calculated_fields([
         rcf.Month(),
         rcf.WaterYear(),
     ])
-    jt.aggregate(metrics=[...], group_by=["primary_location_id", "water_year", "month"])
+    jt.aggregate(metrics=[...], group_by=["location_id", "water_year", "month"])
 
 
 Using Metrics
@@ -281,7 +281,7 @@ resampling in whatever order Spark supplies. TEEHR logs a warning when a
 
     metrics_df = jt.aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     # Results: kling_gupta_efficiency_0_05, _0_5, _0_95
@@ -319,9 +319,9 @@ Complete Example
                 DeterministicMetrics.RelativeBias(),
                 Signatures.Average(),
             ],
-            group_by=["primary_location_id", "season"],
+            group_by=["location_id", "season"],
         )
-        .order_by(["primary_location_id", "season"])
+        .order_by(["location_id", "season"])
         .to_pandas()
     )
 

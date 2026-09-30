@@ -35,7 +35,7 @@ def _create_warehouse(dir_path):
         geometry='geometry',
         crs="EPSG:4269"
         )
-    ev.locations.load_dataframe(df=gdf, write_mode="overwrite")
+    ev.locations.load_dataframe(df=gdf)
 
     # load crosswalk
     ev.location_crosswalks.load_parquet(

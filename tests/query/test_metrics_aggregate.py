@@ -41,13 +41,13 @@ def test_executing_deterministic_metrics(function_scope_test_warehouse):
 
     metrics_df = ev.table("joined_timeseries").aggregate(
         metrics=include_nonconditional_metrics,
-        group_by=["primary_location_id"],
-    ).order_by("primary_location_id").to_pandas()
+        group_by=["location_id"],
+    ).order_by("location_id").to_pandas()
 
     metrics_df2 = ev.table("joined_timeseries").aggregate(
         metrics=include_nonconditional_metrics,
-        group_by=["primary_location_id"],
-    ).order_by("primary_location_id").to_pandas()
+        group_by=["location_id"],
+    ).order_by("location_id").to_pandas()
 
     assert metrics_df.equals(metrics_df2)
     assert isinstance(metrics_df, pd.DataFrame)
@@ -78,8 +78,8 @@ def test_executing_deterministic_metrics(function_scope_test_warehouse):
         )
     ]).aggregate(
         metrics=include_conditional_metrics,
-        group_by=["primary_location_id"],
-    ).order_by("primary_location_id").to_pandas()
+        group_by=["location_id"],
+    ).order_by("location_id").to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
@@ -101,8 +101,8 @@ def test_executing_signatures(function_scope_test_warehouse):
 
     metrics_df = ev.table("joined_timeseries").aggregate(
         metrics=include_all_metrics,
-        group_by=["primary_location_id"],
-    ).order_by("primary_location_id").to_pandas()
+        group_by=["location_id"],
+    ).order_by("location_id").to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
@@ -196,7 +196,7 @@ def test_metrics_filter_and_geometry(module_scope_test_warehouse):
     # Define some filters.
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -206,8 +206,8 @@ def test_metrics_filter_and_geometry(module_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=include_metrics,
-        group_by=["primary_location_id"],
-    ).order_by("primary_location_id").to_geopandas()
+        group_by=["location_id"],
+    ).order_by("location_id").to_geopandas()
 
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
@@ -223,26 +223,26 @@ def test_metric_chaining(module_scope_test_warehouse):
 
     # Test chaining.
     metrics_df = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "month"],
+        group_by=["location_id", "month"],
         metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
             DeterministicMetrics.RelativeBias()
         ]
-    ).order_by(["primary_location_id", "month"]).aggregate(
-        group_by=["primary_location_id"],
+    ).order_by(["location_id", "month"]).aggregate(
+        group_by=["location_id"],
         metrics=[
             Signatures.Average(
                 input_field_names="relative_bias",
                 output_field_name="primary_average"
             )
         ]
-    ).order_by("primary_location_id").to_pandas()
+    ).order_by("location_id").to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert all(
-        metrics_df.columns == ["primary_location_id", "primary_average"]
+        metrics_df.columns == ["location_id", "primary_average"]
     )
 
 
@@ -252,7 +252,7 @@ def test_metric_explicit_field_names(module_scope_test_warehouse):
     ev = module_scope_test_warehouse
 
     metrics_df = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "month"],
+        group_by=["location_id", "month"],
         metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(
                 primary_field_name="primary_value",
@@ -264,7 +264,7 @@ def test_metric_explicit_field_names(module_scope_test_warehouse):
                 value_time_field_name="value_time",
             ),
         ],
-    ).order_by(["primary_location_id", "month"]).to_pandas()
+    ).order_by(["location_id", "month"]).to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert "kling_gupta_efficiency" in metrics_df.columns
@@ -277,14 +277,14 @@ def test_metric_legacy_input_field_override(module_scope_test_warehouse):
     ev = module_scope_test_warehouse
 
     metrics_df = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
         metrics=[
             Signatures.Average(
                 input_field_names="secondary_value",
                 output_field_name="secondary_average",
             )
         ],
-    ).order_by("primary_location_id").to_pandas()
+    ).order_by("location_id").to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert "secondary_average" in metrics_df.columns
@@ -313,10 +313,10 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
     metrics_df = ev.table("joined_timeseries").aggregate(
         metrics=include_metrics,
         group_by=[
-            "primary_location_id",
-            "configuration_name"
+            "location_id",
+            "secondary_configuration_name"
         ],
-    ).order_by(["primary_location_id", "configuration_name"]).to_pandas()
+    ).order_by(["location_id", "secondary_configuration_name"]).to_pandas()
 
     # check CRPS values
     assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 15.99071)
@@ -360,21 +360,21 @@ def test_metrics_transforms(module_scope_test_warehouse):
 
     # get metrics_df
     metrics_df_tansformed_e = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "configuration_name"],
+        group_by=["location_id", "secondary_configuration_name"],
         metrics=[
             kge_t_e,
             mvtd_t
         ]
     ).to_pandas()
     metrics_df_transformed = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "configuration_name"],
+        group_by=["location_id", "secondary_configuration_name"],
         metrics=[
             kge_t,
             mvtd_t
         ]
     ).to_pandas()
     metrics_df = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "configuration_name"],
+        group_by=["location_id", "secondary_configuration_name"],
         metrics=[
             kge,
             mvtd
@@ -415,7 +415,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
 
     # get metrics df control and assert divide by zero occurs
     metrics_df_e_control = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "configuration_name"],
+        group_by=["location_id", "secondary_configuration_name"],
         metrics=[
             r2,
             pearson
@@ -426,7 +426,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
 
     # get metrics df test and ensure no divide by zero occurs
     metrics_df_e_test = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "configuration_name"],
+        group_by=["location_id", "secondary_configuration_name"],
         metrics=[
             r2_e,
             pearson_e
@@ -455,7 +455,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
 
     # get metrics df control and assert divide by zero occurs
     metrics_df_e_control = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "configuration_name"],
+        group_by=["location_id", "secondary_configuration_name"],
         metrics=[
             r2,
             pearson
@@ -466,7 +466,7 @@ def test_metrics_transforms(module_scope_test_warehouse):
 
     # get metrics df test and ensure no divide by zero occurs
     metrics_df_e_test = ev.table("joined_timeseries").aggregate(
-        group_by=["primary_location_id", "configuration_name"],
+        group_by=["location_id", "secondary_configuration_name"],
         metrics=[
             r2_e,
             pearson_e
@@ -491,7 +491,7 @@ def test_adding_calculated_fields(function_scope_test_warehouse):
             rcf.Month()
         ])
         .aggregate(
-            group_by=["primary_location_id", "month"],
+            group_by=["location_id", "month"],
             metrics=[kge]
         )
         .to_pandas()
@@ -518,7 +518,7 @@ def test_generic_sql_calculated_field(function_scope_test_warehouse):
             )
         ])
         .aggregate(
-            group_by=["primary_location_id", "month_sql"],
+            group_by=["location_id", "month_sql"],
             metrics=[kge]
         )
         .to_pandas()
@@ -540,12 +540,12 @@ def test_table_based_metrics(function_scope_test_warehouse):
         "season = 'winter'"
     ).aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"],
-    ).order_by("primary_location_id").to_pandas()
+        group_by=["location_id"],
+    ).order_by("location_id").to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert "primary_location_id" in metrics_df.columns
+    assert "location_id" in metrics_df.columns
 
     primary_avg = Signatures.Average()
     primary_avg.input_field_names = ["value"]
