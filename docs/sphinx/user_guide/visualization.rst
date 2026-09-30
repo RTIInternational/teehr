@@ -74,11 +74,12 @@ Plot ensemble forecast with spread:
 
 .. code-block:: python
 
-    # Filter for forecast data with multiple members
-    df = ev.secondary_timeseries.filter(
+    # Filter for forecast data with multiple members. The secondary
+    # timeseries view adds primary_location_id (the locations ID).
+    df = ev.secondary_timeseries_view().filter([
         "configuration_name = 'nwm30_medium_range'",
         "primary_location_id = 'usgs-01184000'"
-    ).to_pandas()
+    ]).to_pandas()
 
     # Plot ensemble members
     plot = df.hvplot.line(
@@ -185,18 +186,18 @@ Compare observed and simulated hydrographs with metrics overlay:
     ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Get timeseries
-    df = ev.joined_timeseries_view().filter(
+    df = ev.joined_timeseries_view().filter([
         "location_id = 'usgs-01184000'",
         "secondary_configuration_name = 'nwm30_retrospective'"
-    ).to_pandas()
+    ]).to_pandas()
 
     # Calculate metrics
     from teehr.metrics import DeterministicMetrics
 
-    metrics = ev.joined_timeseries_view().filter(
+    metrics = ev.joined_timeseries_view().filter([
         "location_id = 'usgs-01184000'",
         "secondary_configuration_name = 'nwm30_retrospective'"
-    ).aggregate(
+    ]).aggregate(
         metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
