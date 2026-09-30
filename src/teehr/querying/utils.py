@@ -506,7 +506,7 @@ def join_attributes(
 
 
 def check_joined_column_names(sdf: ps.DataFrame) -> None:
-    """Raise if a joined timeseries DataFrame uses the pre-0.8 column names.
+    """Raise if a joined timeseries DataFrame uses the pre-0.9 column names.
 
     Joined timeseries written before the primary/secondary column renaming
     have ``configuration_name`` instead of ``secondary_configuration_name``.
@@ -528,7 +528,7 @@ def check_joined_column_names(sdf: ps.DataFrame) -> None:
         and "secondary_configuration_name" not in columns
     ):
         raise ValueError(
-            "This joined timeseries uses column names from before TEEHR 0.8 "
+            "This joined timeseries uses column names from before TEEHR 0.9 "
             "(e.g., 'configuration_name' instead of "
             "'secondary_configuration_name'). Regenerate it, for example: "
             "ev.joined_timeseries_view(add_attrs=True).write("

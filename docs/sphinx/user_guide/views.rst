@@ -83,11 +83,11 @@ See :doc:`tables` for loading ``location_id_aliases`` and ``configuration_pairs`
 
 .. note::
 
-   **Upgrading from 0.7.** These column names changed in TEEHR 0.8, and joined tables
+   **Upgrading from 0.8.** These column names changed in TEEHR 0.9, and joined tables
    written by earlier versions must be regenerated:
 
    ===================================  ================================
-   0.7 column                           0.8 column
+   0.8 column                           0.9 column
    ===================================  ================================
    ``primary_location_id``              ``location_id``
    ``configuration_name``               ``secondary_configuration_name``

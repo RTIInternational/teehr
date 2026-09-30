@@ -57,7 +57,7 @@ def _old_joined_sdf(spark):
 
 
 def test_metrics_reject_old_joined_names(spark_shared_session):
-    """Aggregating a pre-0.8 joined table raises a regenerate message."""
+    """Aggregating a pre-0.9 joined table raises a regenerate message."""
     sdf = _old_joined_sdf(spark_shared_session)
     with pytest.raises(ValueError, match="Regenerate it"):
         aggregate_metrics_with_engine(
@@ -66,7 +66,7 @@ def test_metrics_reject_old_joined_names(spark_shared_session):
 
 
 def test_calculated_fields_reject_old_joined_names(spark_shared_session):
-    """Calculated fields on a pre-0.8 joined table raise a regenerate message."""
+    """Calculated fields on a pre-0.9 joined table raise a regenerate message."""
     sdf = _old_joined_sdf(spark_shared_session)
     with pytest.raises(ValueError, match="Regenerate it"):
         apply_calculated_fields_with_engine(
