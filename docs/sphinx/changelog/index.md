@@ -1,219 +1,117 @@
 # Release Notes
 
-## Unreleased
+## 0.8.0 - 2026-09-30
 
 ### Breaking Changes
-- **`RelativeMedian` on the Spark-native path now uses the exact `percentile` instead of
-  `percentile_approx`.** The two do not differ by a tolerance: `percentile_approx` is
-  nearest-rank, returning an actual data value, so on an even-sized group it returned the lower
-  of the two middle values where `np.median` — and therefore `engine="python"` — interpolates
-  between them (2.0 vs 2.5 on `[1,2,3,4]`). The engines disagreed systematically, and the tests
-  papered over it with a 3e-2 tolerance that is now removed; they agree to ~1e-8, which is just
-  float32-vs-double width. **`relative_median` values change for anyone using `engine="spark"`
-  or `engine="auto"`**; the Python engine is unaffected. Exact is also not the slower choice at
-  these group sizes: the accuracy argument previously passed (10000) sized the sketch to 10k
-  entries, so a group below that was already buffering nearly every value — measured at 1000
-  rows/group the exact aggregate matched the approximate one (0.87s vs 0.88s over 2000 groups),
-  and only cost more at 10k rows/group (1.17s vs 0.60s over 200 groups).
-- **A metric that is not defined for a group is now NULL on every path, never NaN or `inf`.**
-  The two engines already agreed a result was undefined and disagreed only on how to represent it.
-  The Python path returns `np.nan`, which Arrow converts to NULL on the way out of the pandas
-  UDF; the Spark-native path emitted a literal NaN. So `IS NULL` found one and missed the other,
-  and an average over the column returned NaN rather than skipping the gap. Separately, a zero
-  denominator gave `inf` on the Python path (NumPy) and NULL on the Spark-native path
-  (`F.try_divide`) — and an `inf` is the worse of the two, because it survives Arrow, is written
-  into the warehouse, and turns every downstream mean over that column into `inf`. Both are now
-  NULL everywhere: `spark_native._nan()` is gone, and the pandas closures and the vectorized
-  bootstrap kernels divide through a shared guard. **Stored values change** for any metric that
-  was undefined for a group — spark-native NaN becomes NULL, and `relative_mean`,
-  `relative_median`, `relative_minimum`, `relative_maximum`, `relative_standard_deviation`,
-  `relative_bias`, `mean_absolute_relative_error`, `multiplicative_bias`, `variability_ratio`,
-  `root_mean_standard_deviation_ratio`, `spearman_correlation`, `annual_peak_relative_bias`,
-  `flow_duration_curve_slope` and the three `KlingGuptaEfficiency` variants no longer write
-  `inf`. Note `to_pandas()` shows NULL in a float column as `NaN`, so results read that way look
-  unchanged.
-- **Metrics that depend on `value_time` can no longer be bootstrapped.** `MaxValueTimeDelta`,
-  `AnnualPeakRelativeBias`, `MaxValueTime`, `CenterOfTiming` and
-  `StandardDeviationOfTiming` now raise a `ValueError` if given a `bootstrap` config.
-  Resampling reorders and repeats observations, so the time axis these metrics are defined on
-  no longer corresponds to the values beside it — the result is undefined rather than merely
-  imprecise. The combination did not work before either, it just failed inconsistently:
-  `MaxValueTimeDelta` and `MaxValueTime` raised, while the other three returned numbers
-  computed on a scrambled time axis. Under `Gumboot` all five raised, because the bootstrapper
-  consumes the trailing `value_time` argument for its own water-year blocking and never
-  forwards it to the metric. Supporting these under `Gumboot` — where water-year resampling
-  *does* preserve within-year time structure — would require plumbing `value_time` through to
-  the metric and reconstructing the resampled timestamps, and is not part of this change.
-- **Non-finite values are now dropped from every metric, not just transformed ones.**
-  `deterministic_funcs._transform` used to drop non-finite `(primary, secondary)` pairs only
-  when a `transform` was set, making it the one metric path in TEEHR that kept them. What that
-  meant in practice depended on which NumPy call a metric happened to use, because the
-  closures receive `pd.Series`: `np.sum`/`mean`/`std`/`min`/`max` dispatch to pandas and skip
-  NaN, while `np.median`/`np.cov`/`np.corrcoef` propagate it. So `relative_mean` ignored a gap
-  while `pearson_correlation` returned NaN for the same input, and `len(p)` in the
-  mean-error family counted rows the reduction above it had just skipped. Dropping is now
-  unconditional, matching `signature_funcs` and the Spark-native engine, which both already
-  did this. **Metric values change for any evaluation with gaps in the joined timeseries**,
-  and the ME/MAE/MSE/RMSE denominators are now the valid-pair count rather than the raw row
-  count.
-- **`pearson_correlation` and `r_squared` with `add_epsilon=True` return corrected values.**
-  That branch divided a `ddof=1` covariance (`np.cov`'s default) by `ddof=0` standard
-  deviations. Those do not cancel, so the result was `r * n/(n-1)` — which exceeds 1.0 on
-  small well-correlated samples (1.110 at n=10) and is therefore not a correlation
-  coefficient at all. Both paths now use a consistent `ddof=0`, matching the Spark-native
-  engine, which already paired `covar_pop` with `stddev_pop`. Values shift by `n/(n-1)` for
-  `pearson_correlation` and `(n/(n-1))²` for `r_squared`; the `add_epsilon=False` branch
-  (`np.corrcoef`) was already correct and is unchanged.
-- **Bootstrap quality guards now apply to single-metric requests.** The sample-size (n < 30),
-  mean (< 0.01) and variance (< 2.5e-5) guards lived on the shared-bootstrap path, which
-  groups of one bypassed. One bootstrapped metric would therefore compute on a 5-sample group
-  while the same metric requested alongside a second one returned nulls for both. All
-  bootstrap groups now take the same path, so small or degenerate groups that previously
-  returned a value will return null. Note a "group of one" is a *bootstrap-config* group —
-  metrics with different seeds, reps, quantiles or input fields do not share one, so several
-  bootstrapped metrics can still produce several singleton groups.
-- **`ForecastLeadTimeBins` lead time bins are now start-exclusive and end-inclusive**
-  (`closed="right"`, the new default). A lead time of exactly one bin width now falls in the
-  *first* bin, so an 18-hour forecast binned at 6 hours yields three bins covering hours
-  1-6, 7-12 and 13-18. Previously bins were start-inclusive and end-exclusive, which
-  produced a fourth bin holding only hour 18. Bin ID strings are unchanged, but which rows
-  land in which bin has changed, so previously computed lead-time-binned results are not
-  comparable with new ones. Pass `closed="left"` to restore the old behaviour. See
-  [#815](https://github.com/RTIInternational/teehr/issues/815).
+Several changes below alter metric values. Recompute stored metrics after upgrading if you
+compare them with results from 0.7.
+
+- **`RelativeMedian` on the Spark-native engine uses an exact median.** It previously used
+  `percentile_approx`, which returns the lower middle value on even-sized groups instead of
+  interpolating (2.0 instead of 2.5 for `[1, 2, 3, 4]`). The Spark and Python engines now
+  agree. **`relative_median` values change** with `engine="spark"` or `engine="auto"`; the
+  Python engine is unchanged.
+- **Undefined metric results are NULL on every engine.** A metric that cannot be computed
+  for a group, for example because of a zero denominator, previously returned NaN on the
+  Spark-native engine and `inf` on the Python engine. Both now return NULL, so `IS NULL`
+  filters and averages over a metric column behave consistently. **Stored values change**
+  wherever a metric was undefined. The relative metrics, `mean_absolute_relative_error`,
+  `multiplicative_bias`, `variability_ratio`, `root_mean_standard_deviation_ratio`,
+  `spearman_correlation`, `annual_peak_relative_bias`, `flow_duration_curve_slope` and the
+  three `KlingGuptaEfficiency` variants no longer write `inf`. (`to_pandas()` shows NULL in a
+  float column as `NaN`.)
+- **Non-finite values are dropped from every metric.** Pairs where either value is NaN or
+  infinite were previously dropped only when a `transform` was set, so some metrics skipped
+  gaps and others returned NaN. Every metric now drops them, as the Spark-native engine and
+  signatures already did. **Metric values change for evaluations with gaps** in the joined
+  timeseries. The ME/MAE/MSE/RMSE denominators are now the number of valid pairs.
+- **`pearson_correlation` and `r_squared` with `add_epsilon=True` are corrected.** They were
+  inflated by `n/(n-1)` and `(n/(n-1))²` respectively, and could exceed 1.0 on small samples.
+  They now match the Spark-native engine. `add_epsilon=False` is unchanged.
+- **Metrics that depend on `value_time` can't be bootstrapped.** `MaxValueTimeDelta`,
+  `AnnualPeakRelativeBias`, `MaxValueTime`, `CenterOfTiming` and `StandardDeviationOfTiming`
+  raise a `ValueError` when given a `bootstrap` config. Resampling scrambles the time axis
+  these metrics depend on; previously some raised and others returned meaningless values.
+- **Bootstrap quality guards apply to every bootstrapped metric.** The minimum sample size,
+  mean and variance checks were skipped when a bootstrap config was used by only one metric.
+  Small or degenerate groups that used to return a value now return NULL.
+- **`ForecastLeadTimeBins` bins are start-exclusive and end-inclusive** (`closed="right"`,
+  the new default). A lead time of exactly one bin width now falls in the first bin, so an
+  18-hour forecast binned at 6 hours gives three bins (1-6, 7-12, 13-18) instead of four.
+  Bin IDs are unchanged, but lead-time-binned results are not comparable with 0.7. Pass
+  `closed="left"` for the old behavior
+  ([#815](https://github.com/RTIInternational/teehr/issues/815)).
 - **Removed `create_minio_spark_session()`.** Use `create_spark_session()`, which reads the
-  catalog S3 endpoint, path-style access and credentials from the `REMOTE_CATALOG_S3_*` and
-  `AWS_*` environment variables. It does not set the Hadoop `fs.s3a.endpoint`, so pass it
-  via `update_configs` if you read `s3a://` paths from a non-AWS store directly. See
-  [#834](https://github.com/RTIInternational/teehr/issues/834).
+  catalog S3 endpoint and credentials from the `REMOTE_CATALOG_S3_*` and `AWS_*` environment
+  variables. To read `s3a://` paths from a non-AWS store directly, pass `fs.s3a.endpoint` via
+  `update_configs` ([#834](https://github.com/RTIInternational/teehr/issues/834)).
 
 ### Added
-- `plan_nwm_grid_fetch`, the grid counterpart of `plan_nwm_point_fetch`: everything
-  `nwm_grids_to_parquet` does before building kerchunk references (validating the configuration
-  and dates, listing and z-hour-trimming the GCS files, checking their NWM version), returned as
-  an `NwmGridFetchPlan`. `nwm_grids_to_parquet` now calls it, with no change in behaviour, so
-  external callers such as Prefect flows get the same file list without reimplementing it. The
-  point and grid planners now share those steps in `fetch_planning.plan_nwm_component_paths`
-  rather than each carrying a copy.
-- `sort_by` on every bootstrapper: field name(s) that order each group before it is resampled.
-  `CircularBlock` and `Stationary` draw blocks of adjacent rows and `Gumboot` blocks by water
-  year, so their results depend on the row order — which Spark does not define for a grouped
-  aggregation, and which the `seed` does not pin down (it fixes which positions are drawn, not
-  what sits at each position). Left unset the same query can return different intervals on a
-  different plan, e.g. `engine="auto"` versus `engine="python"`, and the blocks are drawn from an
-  arbitrary permutation rather than from the series, which stops preserving the serial
-  correlation a block method exists to preserve and understates the uncertainty. Which field is
-  right depends on the query: `value_time` on a joined timeseries, but `reference_time` where an
-  upstream aggregation has already collapsed `value_time` (each row then being one forecast), so
-  it is configurable rather than fixed. Accepts a list for a total order, since rows tied on the
-  key keep their arbitrary arrival order. Defaults to `None`, which keeps the previous behaviour;
-  a warning is logged when a `CircularBlock` or `Stationary` metric is bootstrapped without it.
-  `sort_by` is part of the bootstrap group key, so metrics sorting differently do not share
-  samples.
-- `closed` argument on `ForecastLeadTimeBins`, choosing which side of each bin interval is
-  inclusive: `"right"` for `(start, end]` (default) or `"left"` for `[start, end)`.
-- Explicit bin definitions accept generic `start` / `end` keys. The previous
-  `start_inclusive` / `end_exclusive` spellings are still accepted, but they name a
-  behaviour that `closed` now controls, so the generic keys are preferred.
-
-### Added
-- `DeterministicMetrics.VariabilityRatio` is now reachable. The metric was implemented,
-  announced in a previous release, documented in the user guide (with a `:class:` reference to
-  `teehr.DeterministicMetrics.VariabilityRatio`), tested for Spark/pandas parity and supported
-  on the Spark-native path — but was never added to the `DeterministicMetrics` container, so
-  following the documentation raised `AttributeError`. Its `display_name` is corrected from
-  "Variance Ratio" to "Variability Ratio", since the formula is a ratio of standard
-  deviations. It also gains a vectorized bootstrap kernel. Note its formula is identical to
-  `RelativeStandardDeviation`; whether the two should remain separate metrics is tracked
-  separately.
-- Bootstrap quality guards are now configurable on the `Bootstrappers` models:
+- **NWM v3.1** in operational point and gridded fetching (`nwm_version="nwm31"`, available
+  from 2026-08-18). Configurations are the same as v3.0. The Puerto Rico short range forcing
+  descriptions reflect its move from NAM-NEST to NBM.
+- **`plan_nwm_grid_fetch`**, the gridded counterpart of `plan_nwm_point_fetch`. It returns
+  the validated file list that `nwm_grids_to_parquet` would fetch, as an `NwmGridFetchPlan`,
+  so external callers such as Prefect flows can reuse it.
+- **`sort_by` on every bootstrapper**, naming the field(s) that order each group before
+  resampling. Block bootstrappers (`CircularBlock`, `Stationary`, `Gumboot`) depend on row
+  order, which Spark does not guarantee, so without it results can vary between runs and
+  blocks may not follow the series. Typically `value_time` for a joined timeseries, or
+  `reference_time` after `value_time` has been aggregated away. A list gives a total order.
+  Defaults to `None` (previous behavior), with a warning for `CircularBlock` and
+  `Stationary`.
+- **Configurable bootstrap quality guards** on the `Bootstrappers` models:
   `minimum_sample_size` (default 30), `minimum_mean` (0.01) and `minimum_variance`
-  (0.000025). A group failing any of them returns null for every metric sharing the config.
-  The thresholds were previously hardcoded with no user-facing override. They live on the
-  bootstrap config rather than the aggregation call because that is what they describe, and
-  because `bootstrap_group_key` already keys groups on the config — so they are now part of
-  that key, and two configs differing only in a guard no longer share a group. Note that for
-  `Gumboot` the meaningful sample size is the number of water years rather than timesteps,
-  while the guard measures input series length, so callers resampling few water years may
-  want to raise `minimum_sample_size` explicitly.
+  (0.000025). A group failing any of them returns NULL. For `Gumboot`, the guard counts
+  timesteps rather than water years, so consider raising `minimum_sample_size`.
+- **`closed` argument on `ForecastLeadTimeBins`**: `"right"` for `(start, end]` (default) or
+  `"left"` for `[start, end)`. Explicit bin definitions also accept generic `start`/`end`
+  keys, preferred over `start_inclusive`/`end_exclusive`, which are still accepted.
+- **`DeterministicMetrics.VariabilityRatio`** is now available. It was documented but missing
+  from the `DeterministicMetrics` container. Its display name is corrected to "Variability
+  Ratio", and it supports the vectorized bootstrap. Its formula is the same as
+  `RelativeStandardDeviation`.
+- **`key_list` argument on `unpack_sdf_dict_columns`**, to expand a MapType column without
+  reading its keys from the data.
 
 ### Changed
-- The vectorized bootstrap engine computes its shared accumulators once per chunk instead of
-  once per metric. Every two-field metric it covers is a function of the same sums
-  (`n, Σp, Σs, Σ(p-mp)², Σ(s-ms)², Σ(p-mp)(s-ms), Σ(p-s)²`), but each kernel was re-deriving
-  them and re-applying the finite mask over the same `(reps, n)` matrices. A chunk with no NaN
-  in it now also takes plain `np.sum`/`np.mean`/`np.min` rather than the `nan*` variants, whose
-  `_replace_nan` pass tests and copies the whole matrix for a case that only arises on gappy
-  input, and `RelativeMedian` reaches `np.median` (partition, O(n)) instead of `np.nanmedian`
-  (full sort) on those chunks. Measured on a production-shaped group -- 9 bootstrapped metrics,
-  n=1600, 1000 replicates -- the shared-bootstrap UDF went from 103 ms to 44 ms; at n=5500,
-  304 ms to 136 ms. **Results are unchanged**: the per-metric kernels are now thin wrappers over
-  the same derivations the batched path uses, so there is still one implementation of each
-  formula, and the guards that read the pre-transform matrices still do.
-- **Bootstrapped metrics now use the vectorized engine by default**, roughly 19x faster than
-  the per-replicate loop for a group of covered metrics (measured at n=1000, reps=1000). Set
-  `TEEHR_BOOTSTRAP_ENGINE=legacy` to fall back; on a Spark cluster that must be set on the
-  executors (`spark.executorEnv.TEEHR_BOOTSTRAP_ENGINE`), since the check runs inside the
-  pandas UDF. The two engines are numerically identical — verified bit-for-bit at reps=1000,
-  and to ~1e-15 once input dtype is held equal.
-- The vectorized bootstrap covers 27 metrics, up from 9: 21 of 31 deterministic and 6 of 10
-  signature. Metrics without a kernel now fall back **per metric** rather than forcing their
-  whole bootstrap group onto the legacy loop, which previously cost a mixed group ~8x.
-- Bootstrapped metrics accumulate in float64. Values are stored as float32, and the legacy
-  loop reduced in float32; results can therefore differ in the last couple of float32 ULPs
-  from previous releases (more under a `log` transform, which amplifies the input error).
-- NWM v3.1 is supported in operational point and gridded fetching (`nwm_version="nwm31"`,
-  available from 2026-08-18). Its configurations are unchanged from v3.0, so the v3.0
-  configuration models are reused. The only metadata difference is the PRVI short range
-  forcing, which moved from NAM-NEST to NBM: `short_range_puertorico` and
-  `short_range_puertorico_no_da` carry updated configuration descriptions under v3.1, while
-  every other description is inherited from the shared table.
-- Every operational fetch now checks the NWM version reported by the source files themselves
-  (`NWM_version_number` / `model_version`) against the requested `nwm_version`, and raises
-  before building references if they disagree. A date range the requested version never
-  produced previously succeeded and wrote timeseries labelled with the wrong version. Only the
-  first and last file of the range are read, which is enough to catch both a wholly wrong
-  version and a range straddling a boundary. A file still reporting the outgoing version
-  within a day of a switchover logs a warning and is accepted, since NOAA reruns some cycles
-  on the outgoing system mid-switch. Files carrying no version attribute at all — nwm12-era
-  forcing — are skipped rather than treated as a mismatch.
-- `unpack_sdf_dict_columns` accepts an optional `key_list` argument to expand a MapType column without reading its keys from the data.
-- `unpack_sdf_dict_columns` raises a clear `ValueError` when asked to unpack a non-MapType column, instead of an `AttributeError`.
+- **Bootstrapped metrics use the vectorized engine by default**, about 19x faster than the
+  per-replicate loop. It covers 27 metrics (21 deterministic, 6 signatures); metrics without
+  a vectorized kernel fall back individually instead of slowing their whole group. Results
+  match the previous engine. Set `TEEHR_BOOTSTRAP_ENGINE=legacy` to fall back; on a Spark
+  cluster, set it on the executors (`spark.executorEnv.TEEHR_BOOTSTRAP_ENGINE`).
+- **Bootstrapped metrics accumulate in float64.** Results can differ from 0.7 in the last few
+  float32 digits, more so with a `log` transform.
+- The vectorized bootstrap computes shared sums once per chunk rather than once per metric,
+  roughly halving bootstrap time for groups of several metrics. Results are unchanged.
+- **Operational NWM fetches check the version reported by the source files** against the
+  requested `nwm_version`, and raise if they disagree. A date range the requested version
+  never produced previously succeeded with mislabeled data. Files within a day of a
+  switchover that still report the outgoing version log a warning and are accepted, and
+  files without a version attribute (NWM 1.2-era forcing) are skipped.
+- `unpack_sdf_dict_columns` raises a clear `ValueError` for a non-MapType column.
 
 ### Fixed
-- NWM version start dates are now the real first cycle rather than midnight of the switchover
-  day, and operational date validation compares at z-hour resolution. v3.0 begins at
-  `2023-09-19 t12z`, v2.1 at `2021-04-20 t14z` and v2.0 at `2019-06-19 t14z`, so comparing
-  whole days accepted up to 14 hours of the neighbouring version — a `nwm30` fetch starting on
-  2023-09-19 silently pulled v2.2 files for t00z through t11z. Requesting `nwm30` for a range
-  extending past the v3.1 switchover is also rejected now, where before it was accepted.
-- `nash_sutcliffe_efficiency` and its normalized variant dropped a dead
-  `if numerator == np.nan or denominator == np.nan` guard: that comparison is always False, so it
-  never fired. A NaN numerator propagates through the division and lands as NULL, which is what
-  it should mean.
+- NWM version start dates are the first real cycle rather than midnight on the switchover
+  day (v3.0 starts `2023-09-19 t12z`, v2.1 `2021-04-20 t14z`, v2.0 `2019-06-19 t14z`).
+  Previously a `nwm30` fetch starting on 2023-09-19 silently included v2.2 files for t00z to
+  t11z. A `nwm30` range extending past the v3.1 switchover is now rejected.
+- `ForecastLeadTimeBins` honours `closed` on the Spark-native engine, the default for
+  `add_calculated_fields()`. It had kept the old start-inclusive binning after #815.
+- A forecast lead time outside every bin returns NULL, rather than landing in the first bin
+  (Spark-native) or an empty string (Python).
 - A repeated bootstrap quantile (e.g. `quantiles=[0.5, 0.50]`) no longer raises
-  `DUPLICATED_MAP_KEY` when the shared-bootstrap map is expanded. The UDF's dict collapses the
-  repeat, but the map reconstruction emitted the key twice.
-- A bootstrapped threshold metric with `threshold_field_name=None` now raises the same
-  explicit `ValueError` as the non-bootstrap path, instead of an opaque `TypeError` from
-  inside the UDF.
-- A forecast lead time that falls outside every bin now yields NULL instead of being folded
-  into the first bin. Previously the uniform-bin path cast a truncating division, so a
-  negative lead time silently landed in bin 0.
-- `ForecastLeadTimeBins` now honours `closed` (and its end-inclusive default) when the
-  Spark-native engine runs the field, which is the default for `add_calculated_fields()`.
-  That path carried its own copy of the binning arithmetic and was missed by the #815
-  change, so it stayed start-inclusive/end-exclusive: a lead time of exactly one bin width
-  opened the next bin and a lead time of zero landed in the first one. The duplicated
-  implementation is gone -- both engines now share one. The model's own `apply_to()` was
-  already correct, so only results computed through `add_calculated_fields()` (or
-  `engine="spark"`/`"auto"`) were affected.
-- The pandas execution path for `ForecastLeadTimeBins` returns NULL rather than an empty
-  string for a lead time in no bin, matching the Spark-native path.
-- Unpacking bootstrap quantile results (`unpack_results=True`) no longer triggers an eager Spark action per metric inside `aggregate()`. The map keys are now derived from the metric configuration, so the upstream bootstrap DAG is no longer re-executed once per metric.
-- Unpacked quantile columns are no longer silently dropped when the result is empty or the first row's map is null.
+  `DUPLICATED_MAP_KEY`.
+- A bootstrapped threshold metric with `threshold_field_name=None` raises a clear
+  `ValueError` instead of a `TypeError`.
+- Unpacking bootstrap quantile results (`unpack_results=True`) no longer re-runs the
+  bootstrap once per metric, and no longer drops quantile columns when the result is empty
+  or the first row's map is null.
 
 ### Dependencies
-- None
+- `requests>=2.31,<3` is now a declared dependency. It had only been installed through
+  other packages, so a clean install could fail to import TEEHR.
+- `dataretrieval>=1.3,<2` (was `>=1.1.2,<2`), required by the USGS fetching code.
 
 ## 0.7.0 - 2026-09-04
 
