@@ -52,21 +52,29 @@ def test_domains_upsert_new(function_scope_test_warehouse):
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
 
 
+def _created_at(table, where):
+    """Return the created_at value of the single row matching ``where``."""
+    return table.filter(where).to_sdf().select("created_at").first()[0]
+
+
 @pytest.mark.function_scope_test_warehouse
 def test_domains_upsert_existing(function_scope_test_warehouse):
     """Test creating a new study."""
     ev = function_scope_test_warehouse
 
     # Units
+    created_before = _created_at(ev.units, "name = 'm^3/s'")
     df = ev.units.filter("name = 'm^3/s'").to_sdf().select("name", "long_name").toPandas()
     ev._write.to_warehouse(df, "units", "upsert")
 
     sdf = ev.units.filter("name = 'm^3/s'").to_sdf()
     assert sorted(sdf.columns) == sorted(["name", "long_name", "created_at", "updated_at"])
-    assert sdf.filter("created_at IS NOT NULL").count() == 0
+    # Upserting an existing row keeps created_at and sets updated_at.
+    assert sdf.select("created_at").first()[0] == created_before
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
 
     # Configurations
+    created_before = _created_at(ev.configurations, "name = 'usgs_observations'")
     df = ev.configurations.filter(
         "name = 'usgs_observations'"
     ).to_sdf().select("name", "timeseries_type", "description").toPandas()
@@ -74,23 +82,28 @@ def test_domains_upsert_existing(function_scope_test_warehouse):
 
     sdf = ev.configurations.filter("name = 'usgs_observations'").to_sdf()
     assert sorted(sdf.columns) == sorted(["name", "timeseries_type", "description", "created_at", "updated_at", "properties"])
-    assert sdf.filter("created_at IS NOT NULL").count() == 0
+    # Upserting an existing row keeps created_at and sets updated_at.
+    assert sdf.select("created_at").first()[0] == created_before
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
 
     # Variables
+    created_before = _created_at(ev.variables, "name = 'streamflow_hourly_inst'")
     df = ev.variables.filter("name = 'streamflow_hourly_inst'").to_sdf().select("name", "long_name").toPandas()
     ev._write.to_warehouse(df, "variables", "upsert")
 
     sdf = ev.variables.filter("name = 'streamflow_hourly_inst'").to_sdf()
     assert sorted(sdf.columns) == sorted(["name", "long_name", "created_at", "updated_at"])
-    assert sdf.filter("created_at IS NOT NULL").count() == 0
+    # Upserting an existing row keeps created_at and sets updated_at.
+    assert sdf.select("created_at").first()[0] == created_before
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
 
     # Attributes
+    created_before = _created_at(ev.attributes, "name = 'drainage_area'")
     df = ev.attributes.filter("name = 'drainage_area'").to_sdf().select("name", "type", "description").toPandas()
     ev._write.to_warehouse(df, "attributes", "upsert")
 
     sdf = ev.attributes.filter("name = 'drainage_area'").to_sdf()
     assert sorted(sdf.columns) == sorted(["name", "type", "description", "created_at", "updated_at"])
-    assert sdf.filter("created_at IS NOT NULL").count() == 0
+    # Upserting an existing row keeps created_at and sets updated_at.
+    assert sdf.select("created_at").first()[0] == created_before
     assert sdf.filter("updated_at IS NOT NULL").count() == 1
