@@ -310,7 +310,7 @@ class BaseEvaluation(EvaluationBaseModel, ABC):
 
         Notes
         -----
-        Primary timeseries may use alternative location IDs listed in the
+        Primary timeseries may use location ID aliases listed in the
         ``location_id_aliases`` table. These are resolved to the canonical
         ``primary_location_id``, and the original ID is kept in
         ``primary_timeseries_location_id``. When multiple primary sources exist

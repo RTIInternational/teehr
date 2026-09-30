@@ -547,11 +547,11 @@ def location_id_aliases_schema(
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
-                "primary_location_id": pa.Column(
+                "location_id": pa.Column(
                     pa.String,
                     coerce=True
                 ),
-                "alternative_location_id": pa.Column(
+                "location_id_alias": pa.Column(
                     pa.String,
                     coerce=True
                 ),
@@ -577,11 +577,11 @@ def location_id_aliases_schema(
     if type == "pyspark":
         return ps.DataFrameSchema(
             columns={
-                "primary_location_id": ps.Column(
+                "location_id": ps.Column(
                     T.StringType(),
                     nullable=False,
                 ),
-                "alternative_location_id": ps.Column(
+                "location_id_alias": ps.Column(
                     T.StringType(),
                     nullable=False,
                 ),
@@ -603,8 +603,8 @@ def location_id_aliases_schema(
         )
     if type == "arrow":
         return pw.schema([
-            pw.field("primary_location_id", pw.string()),
-            pw.field("alternative_location_id", pw.string()),
+            pw.field("location_id", pw.string()),
+            pw.field("location_id_alias", pw.string()),
             pw.field("created_at", pw.timestamp("ms")),
             pw.field("updated_at", pw.timestamp("ms")),
             pw.field("properties", pw.map_(pw.string(), pw.string())),

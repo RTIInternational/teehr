@@ -88,8 +88,8 @@
 
 ### Added
 - **`location_id_aliases` table** for locations with more than one primary data source
-  ([#836](https://github.com/RTIInternational/teehr/issues/836)). It maps
-  `alternative_location_id` to a `primary_location_id` in `locations`. Primary timeseries may
+  ([#836](https://github.com/RTIInternational/teehr/issues/836)). It maps each
+  `location_id_alias` to a `location_id` in `locations`. Primary timeseries may
   use either ID, and the joined timeseries view resolves aliases to the `locations` ID before
   joining the crosswalk, so crosswalks and attributes still key on one ID. The table is
   optional (migration `0009` creates it empty), and with no aliases the join is unchanged.

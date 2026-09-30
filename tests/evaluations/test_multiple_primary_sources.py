@@ -70,12 +70,12 @@ def _setup_evaluation(ev):
     )
 
 
-def _load_alternative_source(ev):
+def _load_alias_source(ev):
     """Alias alt-A to gage-A and load a second primary source under alt-A."""
     ev.location_id_aliases.load_dataframe(
         df=pd.DataFrame({
-            "primary_location_id": ["gage-A"],
-            "alternative_location_id": ["alt-A"],
+            "location_id": ["gage-A"],
+            "location_id_alias": ["alt-A"],
         })
     )
     ev.primary_timeseries.load_dataframe(df=_alt_source_sdf(ev))
@@ -115,7 +115,7 @@ def test_joined_view_resolves_aliases(function_scope_evaluation_template):
     ev = function_scope_evaluation_template
     _setup_evaluation(ev)
     baseline = ev.joined_timeseries_view().to_pandas()
-    _load_alternative_source(ev)
+    _load_alias_source(ev)
 
     df = ev.joined_timeseries_view(add_attrs=True).to_pandas()
 
@@ -145,7 +145,7 @@ def test_primary_attributes_and_geometry_resolve_aliases(
     """Primary rows under an alias ID get the canonical attrs and geometry."""
     ev = function_scope_evaluation_template
     _setup_evaluation(ev)
-    _load_alternative_source(ev)
+    _load_alias_source(ev)
 
     view_df = ev.primary_timeseries_view(add_attrs=True).to_pandas()
     assert view_df[view_df["location_id"] == "alt-A"]["drainage_area"].notna().any()
@@ -166,16 +166,16 @@ def test_alias_validation(function_scope_evaluation_template):
     with pytest.raises(ValueError, match="Foreign key constraint violation"):
         ev.location_id_aliases.load_dataframe(
             df=pd.DataFrame({
-                "primary_location_id": ["not-a-location"],
-                "alternative_location_id": ["alt-A"],
+                "location_id": ["not-a-location"],
+                "location_id_alias": ["alt-A"],
             })
         )
 
     with pytest.raises(ValueError, match="is found in"):
         ev.location_id_aliases.load_dataframe(
             df=pd.DataFrame({
-                "primary_location_id": ["gage-A"],
-                "alternative_location_id": ["gage-B"],
+                "location_id": ["gage-A"],
+                "location_id_alias": ["gage-B"],
             })
         )
 
@@ -190,7 +190,7 @@ def test_primary_timeseries_requires_location_or_alias(
     with pytest.raises(ValueError, match="Foreign key constraint violation"):
         ev.primary_timeseries.load_dataframe(df=_alt_source_sdf(ev))
 
-    _load_alternative_source(ev)
+    _load_alias_source(ev)
     assert (ev.primary_timeseries.to_pandas()["location_id"] == "alt-A").any()
 
 
@@ -208,7 +208,7 @@ def test_configuration_pairs_restrict_join(function_scope_evaluation_template):
     """Paired secondary configs join only to their primary configs."""
     ev = function_scope_evaluation_template
     _setup_evaluation(ev)
-    _load_alternative_source(ev)
+    _load_alias_source(ev)
 
     # No pairs: both primary sources join at gage-A.
     unpaired = ev.joined_timeseries_view().to_pandas()
@@ -237,7 +237,7 @@ def test_unpaired_secondary_joins_all_primaries(
     """Pairs for one secondary config don't restrict other secondary configs."""
     ev = function_scope_evaluation_template
     _setup_evaluation(ev)
-    _load_alternative_source(ev)
+    _load_alias_source(ev)
     ev.configurations.add(
         Configuration(
             name="other_forecast",
