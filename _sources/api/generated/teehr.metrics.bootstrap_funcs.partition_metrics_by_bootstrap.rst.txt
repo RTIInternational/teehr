@@ -1,0 +1,6 @@
+teehr.metrics.bootstrap\_funcs.partition\_metrics\_by\_bootstrap
+================================================================
+
+.. currentmodule:: teehr.metrics.bootstrap_funcs
+
+.. autofunction:: partition_metrics_by_bootstrap
