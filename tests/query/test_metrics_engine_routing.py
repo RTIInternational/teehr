@@ -14,9 +14,9 @@ EPSILON = 1e-6
 def _base_groups(ev):
     """Return per-location NumPy arrays of primary/secondary values."""
     base = ev.table("joined_timeseries").to_pandas()
-    base = base[["primary_location_id", "primary_value", "secondary_value"]].dropna()
+    base = base[["location_id", "primary_value", "secondary_value"]].dropna()
     groups = {}
-    for loc, grp in base.groupby("primary_location_id"):
+    for loc, grp in base.groupby("location_id"):
         p = grp["primary_value"].astype(float).to_numpy()
         s = grp["secondary_value"].astype(float).to_numpy()
         groups[loc] = (p, s)
@@ -44,23 +44,23 @@ def test_engine_spark_relative_metrics_parity(module_scope_test_warehouse):
         ev.table("joined_timeseries")
         .aggregate(
             metrics=metrics,
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="spark",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
     )
 
     base_df = ev.table("joined_timeseries").to_pandas()
-    base_df = base_df[["primary_location_id", "primary_value", "secondary_value"]].dropna()
+    base_df = base_df[["location_id", "primary_value", "secondary_value"]].dropna()
 
     expected_rows = []
-    for location_id, group in base_df.groupby("primary_location_id"):
+    for location_id, group in base_df.groupby("location_id"):
         p = group["primary_value"].astype(float).to_numpy()
         s = group["secondary_value"].astype(float).to_numpy()
         expected_rows.append(
             {
-                "primary_location_id": location_id,
+                "location_id": location_id,
                 "relative_mean": np.mean(s) / (np.mean(p) + 1e-6),
                 "relative_median": np.median(s) / (np.median(p) + 1e-6),
                 "relative_minimum": np.min(s) / (np.min(p) + 1e-6),
@@ -69,8 +69,8 @@ def test_engine_spark_relative_metrics_parity(module_scope_test_warehouse):
             }
         )
 
-    expected_df = pd.DataFrame(expected_rows).sort_values("primary_location_id").reset_index(drop=True)
-    spark_df = spark_df.sort_values("primary_location_id").reset_index(drop=True)
+    expected_df = pd.DataFrame(expected_rows).sort_values("location_id").reset_index(drop=True)
+    spark_df = spark_df.sort_values("location_id").reset_index(drop=True)
 
     assert isinstance(spark_df, pd.DataFrame)
     for col in [
@@ -104,7 +104,7 @@ def test_engine_spark_unsupported_metric_raises(module_scope_test_warehouse):
             ev.table("joined_timeseries")
             .aggregate(
                 metrics=[DeterministicMetrics.RelativeBias(transform="log")],
-                group_by=["primary_location_id"],
+                group_by=["location_id"],
                 engine="spark",
             )
             .to_pandas()
@@ -125,7 +125,7 @@ def test_engine_auto_plan_includes_python_for_transform_metric(module_scope_test
         ev.table("joined_timeseries")
         .aggregate(
             metrics=metrics,
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
         )
         .to_sdf()
     )
@@ -155,10 +155,10 @@ def test_engine_spark_error_metrics_parity(module_scope_test_warehouse):
 
     spark_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=metrics, group_by=["primary_location_id"], engine="spark")
-        .order_by("primary_location_id")
+        .aggregate(metrics=metrics, group_by=["location_id"], engine="spark")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -167,7 +167,7 @@ def test_engine_spark_error_metrics_parity(module_scope_test_warehouse):
     for loc, (p, s) in sorted(groups.items()):
         n = len(p)
         rows.append({
-            "primary_location_id": loc,
+            "location_id": loc,
             "mean_error": np.sum(s - p) / n,
             "mean_absolute_error": np.sum(np.abs(s - p)) / n,
             "mean_square_error": np.sum((s - p) ** 2) / n,
@@ -177,7 +177,7 @@ def test_engine_spark_error_metrics_parity(module_scope_test_warehouse):
             "mean_absolute_relative_error": np.sum(np.abs(s - p)) / (np.sum(p) + EPSILON),
         })
 
-    expected = pd.DataFrame(rows).sort_values("primary_location_id").reset_index(drop=True)
+    expected = pd.DataFrame(rows).sort_values("location_id").reset_index(drop=True)
 
     for col in [
         "mean_error", "mean_absolute_error", "mean_square_error",
@@ -210,10 +210,10 @@ def test_engine_spark_efficiency_metrics_parity(module_scope_test_warehouse):
 
     spark_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=metrics, group_by=["primary_location_id"], engine="spark")
-        .order_by("primary_location_id")
+        .aggregate(metrics=metrics, group_by=["location_id"], engine="spark")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -261,7 +261,7 @@ def test_engine_spark_efficiency_metrics_parity(module_scope_test_warehouse):
             kge_m2 = 1.0 - np.sqrt((r - 1) ** 2 + (rv - 1) ** 2 + bias2)
 
         rows.append({
-            "primary_location_id": loc,
+            "location_id": loc,
             "nash_sutcliffe_efficiency": nse,
             "nash_sutcliffe_efficiency_normalized": nnse,
             "variability_ratio": vr,
@@ -273,7 +273,7 @@ def test_engine_spark_efficiency_metrics_parity(module_scope_test_warehouse):
             "kling_gupta_efficiency_mod2": kge_m2,
         })
 
-    expected = pd.DataFrame(rows).sort_values("primary_location_id").reset_index(drop=True)
+    expected = pd.DataFrame(rows).sort_values("location_id").reset_index(drop=True)
 
     for col in [
         "nash_sutcliffe_efficiency", "nash_sutcliffe_efficiency_normalized",
@@ -299,24 +299,24 @@ def test_engine_spark_add_epsilon_changes_result(module_scope_test_warehouse):
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[DeterministicMetrics.RelativeBias(add_epsilon=False)],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="spark",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
     eps_df = (
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[DeterministicMetrics.RelativeBias(add_epsilon=True)],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="spark",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -354,18 +354,18 @@ def test_engine_spark_vs_auto_same_output_for_native_metrics(module_scope_test_w
 
     spark_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=metrics, group_by=["primary_location_id"], engine="spark")
-        .order_by("primary_location_id")
+        .aggregate(metrics=metrics, group_by=["location_id"], engine="spark")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
     auto_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=metrics, group_by=["primary_location_id"], engine="auto")
-        .order_by("primary_location_id")
+        .aggregate(metrics=metrics, group_by=["location_id"], engine="auto")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -391,7 +391,7 @@ def test_engine_spark_no_pandas_udf_in_plan(module_scope_test_warehouse):
                 DeterministicMetrics.KlingGuptaEfficiency(),
                 DeterministicMetrics.NashSutcliffeEfficiency(),
             ],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="spark",
         )
         .to_sdf()
@@ -417,7 +417,7 @@ def test_engine_auto_mixed_columns_complete(module_scope_test_warehouse):
 
     result_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=metrics, group_by=["primary_location_id"])
+        .aggregate(metrics=metrics, group_by=["location_id"])
         .to_pandas()
     )
 
@@ -442,10 +442,10 @@ def test_engine_spark_signature_input_field_names_override(module_scope_test_war
 
     spark_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=[avg_secondary], group_by=["primary_location_id"], engine="spark")
-        .order_by("primary_location_id")
+        .aggregate(metrics=[avg_secondary], group_by=["location_id"], engine="spark")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -474,19 +474,19 @@ def test_engine_spark_newly_native_threshold_and_max_delta_parity(module_scope_t
 
     spark_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=metrics, group_by=["primary_location_id"], engine="spark")
-        .order_by("primary_location_id")
+        .aggregate(metrics=metrics, group_by=["location_id"], engine="spark")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
     python_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=metrics, group_by=["primary_location_id"], engine="python")
-        .order_by("primary_location_id")
+        .aggregate(metrics=metrics, group_by=["location_id"], engine="python")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -518,12 +518,12 @@ def test_engine_spark_fdc_slope_parity(module_scope_test_warehouse):
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[Signatures.FlowDurationCurveSlope(lower_quantile=lower_q, upper_quantile=upper_q)],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="spark",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -531,12 +531,12 @@ def test_engine_spark_fdc_slope_parity(module_scope_test_warehouse):
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[Signatures.FlowDurationCurveSlope(lower_quantile=lower_q, upper_quantile=upper_q)],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="python",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -553,12 +553,12 @@ def test_engine_spark_spearman_parity(module_scope_test_warehouse):
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[DeterministicMetrics.SpearmanCorrelation()],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="spark",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -566,12 +566,12 @@ def test_engine_spark_spearman_parity(module_scope_test_warehouse):
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[DeterministicMetrics.SpearmanCorrelation()],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="python",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -588,12 +588,12 @@ def test_engine_spark_max_value_timedelta_parity(module_scope_test_warehouse):
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[DeterministicMetrics.MaxValueTimeDelta()],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="spark",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -601,12 +601,12 @@ def test_engine_spark_max_value_timedelta_parity(module_scope_test_warehouse):
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[DeterministicMetrics.MaxValueTimeDelta()],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="python",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -623,12 +623,12 @@ def test_engine_spark_annual_peak_relative_bias_parity(module_scope_test_warehou
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[DeterministicMetrics.AnnualPeakRelativeBias()],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="spark",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -636,12 +636,12 @@ def test_engine_spark_annual_peak_relative_bias_parity(module_scope_test_warehou
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[DeterministicMetrics.AnnualPeakRelativeBias()],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             engine="python",
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -658,7 +658,7 @@ def _chained_relative_bias(ev, metric_kwargs, engine):
     return (
         ev.table("joined_timeseries")
         .aggregate(
-            group_by=["primary_location_id", "month"],
+            group_by=["location_id", "month"],
             metrics=[
                 Signatures.Maximum(
                     input_field_names=["primary_value"],
@@ -672,7 +672,7 @@ def _chained_relative_bias(ev, metric_kwargs, engine):
             engine=engine,
         )
         .aggregate(
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             metrics=[
                 DeterministicMetrics.RelativeBias(
                     output_field_name="event_max_relative_bias",
@@ -681,9 +681,9 @@ def _chained_relative_bias(ev, metric_kwargs, engine):
             ],
             engine=engine,
         )
-        .order_by("primary_location_id")
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -781,13 +781,13 @@ def test_confusion_matrix_unpacks_to_static_keys(module_scope_test_warehouse, en
     metrics_df = (
         ev.table("joined_timeseries")
         .aggregate(
-            metrics=[cm], group_by=["primary_location_id"], engine=engine
+            metrics=[cm], group_by=["location_id"], engine=engine
         )
         .to_pandas()
     )
 
     assert sorted(metrics_df.columns) == sorted(
-        ["primary_location_id", "TP", "TN", "FP", "FN"]
+        ["location_id", "TP", "TN", "FP", "FN"]
     )
 
 
@@ -805,13 +805,13 @@ def _undefined_data(spark):
         rows.append(("zero-min", float(i % 10), float(i % 7) + 1.0))
     return spark.createDataFrame(
         rows,
-        "primary_location_id string, primary_value double, "
+        "location_id string, primary_value double, "
         "secondary_value double",
     )
 
 
 def _row_by_group(sdf):
-    return {r["primary_location_id"]: r.asDict() for r in sdf.collect()}
+    return {r["location_id"]: r.asDict() for r in sdf.collect()}
 
 
 @pytest.mark.parametrize("engine", ["spark", "python"])
@@ -833,7 +833,7 @@ def test_undefined_metric_is_null_on_both_engines(spark_shared_session, engine):
     got = _row_by_group(
         aggregate_metrics_with_engine(
             sdf=sdf,
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             metrics=[
                 DeterministicMetrics.KlingGuptaEfficiency(),
                 DeterministicMetrics.NashSutcliffeEfficiency(),
@@ -863,7 +863,7 @@ def test_divide_by_zero_is_null_not_inf(spark_shared_session, engine):
     got = _row_by_group(
         aggregate_metrics_with_engine(
             sdf=sdf,
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
             metrics=[
                 DeterministicMetrics.RelativeMinimum(add_epsilon=False),
                 DeterministicMetrics.RelativeMean(add_epsilon=False),

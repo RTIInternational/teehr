@@ -31,7 +31,7 @@ def test_add_row_udfs_null_reference(function_scope_evaluation_template):
     nse = teehr.DeterministicMetrics.NashSutcliffeEfficiency()
     ev.table("joined_timeseries").aggregate(
         metrics=[nse],
-        group_by=["primary_location_id"]
+        group_by=["location_id"]
     ).write(table_name="metrics", write_mode="create_or_replace")
 
 
@@ -81,7 +81,7 @@ def test_add_row_udfs(session_scope_test_warehouse):
     _ = sdf.toPandas()
 
     cols = sdf.columns
-    check_sdf = sdf[sdf["primary_location_id"] == "gage-A"]
+    check_sdf = sdf[sdf["location_id"] == "gage-A"]
     check_sdf = check_sdf.orderBy("value_time")
 
     assert "month" in cols
@@ -313,7 +313,7 @@ def test_baseflow_methods(function_scope_two_location_warehouse):
     ev = function_scope_two_location_warehouse
 
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
 
     # set up input to baseflow package for native testing
@@ -403,7 +403,7 @@ def test_baseflow_period_detection(function_scope_two_location_warehouse):
     ev = function_scope_two_location_warehouse
 
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
 
     # compute lyne-hollick baseflow first (required input)
@@ -434,7 +434,7 @@ def test_percentile_event_detection(function_scope_two_location_warehouse):
 
     # above percentile with event ids (default)
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     ped = tcf.AbovePercentileEventDetection()
     sdf = ped.apply_to(sdf)
@@ -446,7 +446,7 @@ def test_percentile_event_detection(function_scope_two_location_warehouse):
 
     # above percentile skip_event_id
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     ped = tcf.AbovePercentileEventDetection(skip_event_id=True)
     sdf = ped.apply_to(sdf)
@@ -454,7 +454,7 @@ def test_percentile_event_detection(function_scope_two_location_warehouse):
 
     # above percentile add_quantile_field
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     ped = tcf.AbovePercentileEventDetection(add_quantile_field=True)
     sdf = ped.apply_to(sdf)
@@ -463,7 +463,7 @@ def test_percentile_event_detection(function_scope_two_location_warehouse):
 
     # below percentile with event ids
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     ped = tcf.BelowPercentileEventDetection()
     sdf = ped.apply_to(sdf)
@@ -493,7 +493,7 @@ def test_percentile_event_detection_grouped_spark(function_scope_two_location_wa
     )
 
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([cf1, cf2], engine="spark").to_sdf()
 
     assert "event_above_q85" in sdf.columns
@@ -518,21 +518,21 @@ def test_percentile_event_detection_grouped_spark_different_groups(
     # Same value/time fields, different uniqueness_fields/grouping.
     cf1 = tcf.AbovePercentileEventDetection(
         quantile=0.85,
-        uniqueness_fields=["primary_location_id", "configuration_name"],
+        uniqueness_fields=["location_id", "secondary_configuration_name"],
         output_event_field_name="event_above_cfg",
         output_event_id_field_name="event_above_cfg_id",
         skip_event_id=True,
     )
     cf2 = tcf.AbovePercentileEventDetection(
         quantile=0.85,
-        uniqueness_fields=["primary_location_id"],
+        uniqueness_fields=["location_id"],
         output_event_field_name="event_above_loc",
         output_event_id_field_name="event_above_loc_id",
         skip_event_id=True,
     )
 
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([cf1, cf2], engine="spark").to_sdf()
 
     assert "event_above_cfg" in sdf.columns
@@ -550,7 +550,7 @@ def test_threshold_event_detection(function_scope_two_location_warehouse):
 
     # above threshold, string value cast to float, skip event ids
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     sdf = sdf.withColumn("threshold", F.lit("50.0"))
     ted = tcf.AboveThresholdEventDetection(
@@ -563,7 +563,7 @@ def test_threshold_event_detection(function_scope_two_location_warehouse):
 
     # above threshold with event ids
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     sdf = sdf.withColumn("threshold", F.lit("50.0"))
     ted = tcf.AboveThresholdEventDetection(threshold_field_name="threshold")
@@ -578,7 +578,7 @@ def test_threshold_event_detection(function_scope_two_location_warehouse):
 
     # below threshold with event ids
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     sdf = sdf.withColumn("threshold", F.lit("50.0"))
     ted = tcf.BelowThresholdEventDetection(threshold_field_name="threshold")
@@ -598,7 +598,7 @@ def test_calculated_fields_auto_mixed_spark_and_python(function_scope_two_locati
     ev = function_scope_two_location_warehouse
 
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     sdf = sdf.withColumn("threshold", F.lit("50.0"))
 
@@ -616,7 +616,7 @@ def test_calculated_fields_auto_mixed_spark_and_python(function_scope_two_locati
     )
 
     result = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([ted, seasons], engine="auto").to_sdf()
 
     assert "event_above" in result.columns
@@ -632,7 +632,7 @@ def test_calculated_fields_auto_row_level_default_stays_spark(
     ev = function_scope_two_location_warehouse
 
     result = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([
         rcf.Month(output_field_name="month_default"),
         rcf.Seasons(output_field_name="season_default"),
@@ -651,14 +651,14 @@ def test_calculated_fields_python_row_level_explicit_engine(function_scope_two_l
     ev = function_scope_two_location_warehouse
 
     spark_result = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([
         rcf.Month(output_field_name="month_spark"),
         rcf.Seasons(output_field_name="season_spark"),
     ], engine="spark").to_sdf()
 
     python_result = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([
         rcf.Month(output_field_name="month_python"),
         rcf.Seasons(output_field_name="season_python"),
@@ -698,11 +698,11 @@ def test_calculated_fields_python_timeseries_aware_explicit_engine(function_scop
     )
 
     spark_result = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([spark_cf1], engine="spark").to_sdf()
 
     python_result = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([python_cf1], engine="python").to_sdf()
 
     result = spark_result.join(
@@ -724,7 +724,7 @@ def test_calculated_fields_spark_engine_accepts_row_level(function_scope_two_loc
     ev = function_scope_two_location_warehouse
 
     result = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).add_calculated_fields([
         rcf.Month(output_field_name="month_spark_only")
     ], engine="spark").to_sdf()
@@ -737,7 +737,7 @@ def test_exceedance_probability(function_scope_two_location_warehouse):
     ev = function_scope_two_location_warehouse
 
     sdf = ev.table("joined_timeseries").filter(
-        "primary_location_id = 'usgs-14316700'"
+        "location_id = 'usgs-14316700'"
     ).to_sdf()
     ep = tcf.ExceedanceProbability()
     sdf = ep.apply_to(sdf)
@@ -777,8 +777,8 @@ def test_location_event_detection(function_scope_test_warehouse):
     sdf = ev.table("joined_timeseries").add_calculated_fields(ped).filter(
         "event_above"
     ).aggregate(
-        group_by=["configuration_name",
-                  "primary_location_id",
+        group_by=["secondary_configuration_name",
+                  "location_id",
                   "event_above_id"],
         metrics=[
             teehr.Signatures.Maximum(
@@ -795,8 +795,8 @@ def test_location_event_detection(function_scope_test_warehouse):
     assert sdf.count() > 0
     assert sdf.filter(F.col("event_above_id").isNull()).count() == 0
 
-    assert "configuration_name" in sdf.columns
-    assert "primary_location_id" in sdf.columns
+    assert "secondary_configuration_name" in sdf.columns
+    assert "location_id" in sdf.columns
     assert "event_above_id" in sdf.columns
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns

@@ -105,7 +105,7 @@ def test_joined_view_without_aliases_is_unchanged(
     df = ev.joined_timeseries_view().to_pandas()
 
     assert ev.location_id_aliases.to_pandas().empty
-    assert (df["primary_location_id"] == df["primary_timeseries_location_id"]).all()
+    assert (df["location_id"] == df["primary_location_id"]).all()
     assert set(df["primary_configuration_name"]) == {"usgs_observations"}
 
 
@@ -119,23 +119,23 @@ def test_joined_view_resolves_aliases(function_scope_evaluation_template):
 
     df = ev.joined_timeseries_view(add_attrs=True).to_pandas()
 
-    # Only canonical IDs appear as primary_location_id.
-    assert "alt-A" not in set(df["primary_location_id"])
+    # Only canonical IDs appear as location_id.
+    assert "alt-A" not in set(df["location_id"])
 
-    gage_a = df[df["primary_location_id"] == "gage-A"]
-    n_baseline_a = (baseline["primary_location_id"] == "gage-A").sum()
+    gage_a = df[df["location_id"] == "gage-A"]
+    n_baseline_a = (baseline["location_id"] == "gage-A").sum()
     assert len(gage_a) == 2 * n_baseline_a
     assert set(gage_a["primary_configuration_name"]) == {
         "usgs_observations", "alt_observations"
     }
     alt_rows = gage_a[gage_a["primary_configuration_name"] == "alt_observations"]
-    assert set(alt_rows["primary_timeseries_location_id"]) == {"alt-A"}
+    assert set(alt_rows["primary_location_id"]) == {"alt-A"}
     # Attributes are joined via the canonical ID.
     assert alt_rows["drainage_area"].notna().all()
 
     # Other locations are unaffected.
-    others = df[df["primary_location_id"] != "gage-A"]
-    assert len(others) == (baseline["primary_location_id"] != "gage-A").sum()
+    others = df[df["location_id"] != "gage-A"]
+    assert len(others) == (baseline["location_id"] != "gage-A").sum()
 
 
 @pytest.mark.function_scope_evaluation_template
@@ -219,7 +219,7 @@ def test_configuration_pairs_restrict_join(function_scope_evaluation_template):
     _load_pairs(ev, [("alt_observations", "nwm30_retrospective")])
     df = ev.joined_timeseries_view().to_pandas()
     assert set(df["primary_configuration_name"]) == {"alt_observations"}
-    assert set(df["primary_location_id"]) == {"gage-A"}
+    assert set(df["location_id"]) == {"gage-A"}
     assert len(df) == (
         unpaired["primary_configuration_name"] == "alt_observations"
     ).sum()

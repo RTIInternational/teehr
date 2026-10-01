@@ -343,7 +343,7 @@ class BaseTable(TeehrDataFrameBase):
         Get distinct location prefixes from the joined timeseries table:
 
         >>> ev.table(table_name="joined_timeseries").distinct_values(
-        >>>     column='primary_location_id',
+        >>>     column='location_id',
         >>>     location_prefixes=True
         >>> )
         """

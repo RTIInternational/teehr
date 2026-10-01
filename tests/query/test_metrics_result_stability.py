@@ -121,12 +121,12 @@ def _degenerate_sdf(spark):
         rows.append(("gappy", p, s))
     return spark.createDataFrame(
         rows,
-        "primary_location_id string, primary_value double, "
+        "location_id string, primary_value double, "
         "secondary_value double",
     )
 
 
-def _by_group(sdf, group_col="primary_location_id"):
+def _by_group(sdf, group_col="location_id"):
     out = {}
     for row in sdf.collect():
         d = row.asDict()
@@ -172,11 +172,11 @@ def test_native_metrics_agree_across_engines(module_scope_test_warehouse):
     metrics = _two_field_metrics()
 
     python = _by_group(aggregate_metrics_with_engine(
-        sdf=sdf, group_by=["primary_location_id"], metrics=metrics,
+        sdf=sdf, group_by=["location_id"], metrics=metrics,
         engine="python",
     ))
     spark = _by_group(aggregate_metrics_with_engine(
-        sdf=sdf, group_by=["primary_location_id"], metrics=metrics,
+        sdf=sdf, group_by=["location_id"], metrics=metrics,
         engine="spark",
     ))
     _compare(python, spark, "python", "spark")
@@ -198,11 +198,11 @@ def test_native_metrics_agree_across_engines_on_degenerate_data(
     metrics = _two_field_metrics()
 
     python = _by_group(aggregate_metrics_with_engine(
-        sdf=sdf, group_by=["primary_location_id"], metrics=metrics,
+        sdf=sdf, group_by=["location_id"], metrics=metrics,
         engine="python",
     ))
     spark = _by_group(aggregate_metrics_with_engine(
-        sdf=sdf, group_by=["primary_location_id"], metrics=metrics,
+        sdf=sdf, group_by=["location_id"], metrics=metrics,
         engine="spark",
     ))
     _compare(python, spark, "python", "spark", skip_cols=APPROX_QUANTILE_COLS)
@@ -231,7 +231,7 @@ def test_metric_values_match_golden(module_scope_test_warehouse):
     actual = {}
     for engine in ("python", "spark"):
         by_group = _by_group(aggregate_metrics_with_engine(
-            sdf=sdf, group_by=["primary_location_id"], metrics=metrics,
+            sdf=sdf, group_by=["location_id"], metrics=metrics,
             engine=engine,
         ))
         actual[engine] = {

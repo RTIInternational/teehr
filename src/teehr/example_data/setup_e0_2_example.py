@@ -67,11 +67,11 @@ def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.LocalReadWriteEva
     # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
 
-    # Define tables to recreate
+    # Define tables to recreate. The archived joined_timeseries uses the
+    # pre-0.8 column names, so it is regenerated below instead.
     tables_to_recreate = [
         "primary_timeseries",
         "secondary_timeseries",
-        "joined_timeseries",
         "locations",
         "location_attributes",
         "location_crosswalks",
@@ -99,5 +99,6 @@ def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.LocalReadWriteEva
         spark=spark,
         check_evaluation_version=False
     )
+    ev.joined_timeseries_view(add_attrs=True).write("joined_timeseries")
 
     return ev

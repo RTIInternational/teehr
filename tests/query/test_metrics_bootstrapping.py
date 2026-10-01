@@ -83,8 +83,8 @@ def test_bootstrapping_signatures(session_scope_test_warehouse):
     fdc.unpack_results = True
     sig_metrics_df = ev.table("joined_timeseries").aggregate(
         metrics=[fdc],
-        group_by=["primary_location_id"],
-    ).order_by(["primary_location_id"]).to_pandas()
+        group_by=["location_id"],
+    ).order_by(["location_id"]).to_pandas()
 
     assert isinstance(sig_metrics_df, pd.DataFrame)
     assert sig_metrics_df.index.size == 3
@@ -110,7 +110,7 @@ def test_unpacking_bootstrap_results(session_scope_test_warehouse):
     kge.unpack_results = True
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -119,11 +119,11 @@ def test_unpacking_bootstrap_results(session_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
     cols = metrics_df.columns
     benchmark_cols = [
-        "primary_location_id",
+        "location_id",
         "kling_gupta_efficiency_0_95",
         "kling_gupta_efficiency_0_5",
         "kling_gupta_efficiency_0_05"
@@ -151,7 +151,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
 
     # Manual bootstrapping.
     df = ev.table("joined_timeseries").to_pandas()
-    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
+    df_gageA = df.groupby("location_id").get_group("gage-A")
 
     # float64, to match what teehr computes in. The warehouse stores these
     # as float32; the vectorized engine casts once via
@@ -178,7 +178,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -188,7 +188,7 @@ def test_circularblock_bootstrapping(session_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     # Unpack and compare the results.
@@ -222,7 +222,7 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
 
     # Manual bootstrapping.
     df = ev.table("joined_timeseries").to_pandas()
-    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
+    df_gageA = df.groupby("location_id").get_group("gage-A")
 
     # float64, to match what teehr computes in. The warehouse stores these
     # as float32; the vectorized engine casts once via
@@ -249,7 +249,7 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -259,7 +259,7 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"]
+        group_by=["location_id"]
     ).to_pandas()
 
     # Unpack and compare the results.
@@ -289,7 +289,7 @@ def test_circularblock_bootstrapping_auto_block_size(session_scope_test_warehous
     kge.bootstrap = boot
 
     df = ev.table("joined_timeseries").to_pandas()
-    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    df_gage_a = df.groupby("location_id").get_group("gage-A")
     p = df_gage_a.primary_value
     s = df_gage_a.secondary_value
 
@@ -312,7 +312,7 @@ def test_circularblock_bootstrapping_auto_block_size(session_scope_test_warehous
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A",
         )
@@ -322,7 +322,7 @@ def test_circularblock_bootstrapping_auto_block_size(session_scope_test_warehous
         filters=filters,
     ).aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     teehr_results = np.sort(np.asarray(metrics_df.kling_gupta_efficiency.values[0], dtype=float))
@@ -346,7 +346,7 @@ def test_stationary_bootstrapping_auto_block_size(session_scope_test_warehouse):
     kge.bootstrap = boot
 
     df = ev.table("joined_timeseries").to_pandas()
-    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    df_gage_a = df.groupby("location_id").get_group("gage-A")
     p = df_gage_a.primary_value
     s = df_gage_a.secondary_value
 
@@ -369,7 +369,7 @@ def test_stationary_bootstrapping_auto_block_size(session_scope_test_warehouse):
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A",
         )
@@ -379,7 +379,7 @@ def test_stationary_bootstrapping_auto_block_size(session_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     teehr_results = np.sort(np.asarray(metrics_df.kling_gupta_efficiency.values[0], dtype=float))
@@ -434,7 +434,7 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
 
     # Manually calling Gumboot.
     df = ev.table("joined_timeseries").to_pandas()
-    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
+    df_gageA = df.groupby("location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
     s = df_gageA.secondary_value
@@ -457,7 +457,7 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -467,14 +467,14 @@ def test_gumboot_bootstrapping(function_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=[kge, nse],
-        group_by=["primary_location_id"]
+        group_by=["location_id"]
     ).to_pandas()
 
     _ = ev.table("joined_timeseries").filter(
         filters=filters,
     ).aggregate(
         metrics=[kge, nse],
-        group_by=["primary_location_id"]
+        group_by=["location_id"]
     ).to_sdf()
 
     # Unpack and compare the results.
@@ -510,7 +510,7 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
 
     # Manual bootstrapping.
     df = ev.table("joined_timeseries").to_pandas()
-    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
+    df_gageA = df.groupby("location_id").get_group("gage-A")
 
     # float64, to match what teehr computes in. The warehouse stores these
     # as float32; the vectorized engine casts once via
@@ -537,7 +537,7 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -547,7 +547,7 @@ def test_bootstrapping_transforms(session_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     # Unpack and compare the results.
@@ -580,7 +580,7 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
     fdc.unpack_results = True
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A"
         )
@@ -589,12 +589,12 @@ def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=[fdc],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     cols = metrics_df.columns
     benchmark_cols = [
-        "primary_location_id",
+        "location_id",
         "flow_duration_curve_slope_0_95",
         "flow_duration_curve_slope_0_5",
         "flow_duration_curve_slope_0_05"
@@ -622,11 +622,11 @@ def test_shared_quantile_bootstrap_returns_map_when_not_unpacked(session_scope_t
     metrics_df = (
         ev.table("joined_timeseries")
         .filter([
-            "primary_location_id = 'gage-A'",
+            "location_id = 'gage-A'",
         ])
         .aggregate(
             metrics=[kge, nse],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
         )
         .to_pandas()
     )
@@ -681,7 +681,7 @@ def test_circularblock_bootstrapping_threshold_metric(function_scope_test_wareho
     pod.bootstrap = boot
 
     df = ev.table("joined_timeseries").to_pandas()
-    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    df_gage_a = df.groupby("location_id").get_group("gage-A")
     p = df_gage_a.primary_value
     s = df_gage_a.secondary_value
     t = df_gage_a.threshold_numeric
@@ -701,7 +701,7 @@ def test_circularblock_bootstrapping_threshold_metric(function_scope_test_wareho
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A",
         )
@@ -711,7 +711,7 @@ def test_circularblock_bootstrapping_threshold_metric(function_scope_test_wareho
         filters=filters,
     ).aggregate(
         metrics=[pod],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     teehr_results = np.sort(
@@ -749,7 +749,7 @@ def test_stationary_bootstrapping_threshold_metric(function_scope_test_warehouse
     pod.bootstrap = boot
 
     df = ev.table("joined_timeseries").to_pandas()
-    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    df_gage_a = df.groupby("location_id").get_group("gage-A")
     p = df_gage_a.primary_value
     s = df_gage_a.secondary_value
     t = df_gage_a.threshold_numeric
@@ -769,7 +769,7 @@ def test_stationary_bootstrapping_threshold_metric(function_scope_test_warehouse
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A",
         )
@@ -779,7 +779,7 @@ def test_stationary_bootstrapping_threshold_metric(function_scope_test_warehouse
         filters=filters,
     ).aggregate(
         metrics=[pod],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     teehr_results = np.sort(
@@ -817,7 +817,7 @@ def test_gumboot_bootstrapping_threshold_metric(function_scope_test_warehouse):
     pod.bootstrap = boot
 
     df = ev.table("joined_timeseries").to_pandas()
-    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    df_gage_a = df.groupby("location_id").get_group("gage-A")
     p = df_gage_a.primary_value
     s = df_gage_a.secondary_value
     t = df_gage_a.threshold_numeric
@@ -839,7 +839,7 @@ def test_gumboot_bootstrapping_threshold_metric(function_scope_test_warehouse):
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A",
         )
@@ -849,7 +849,7 @@ def test_gumboot_bootstrapping_threshold_metric(function_scope_test_warehouse):
         filters=filters,
     ).aggregate(
         metrics=[pod],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     teehr_results = np.sort(
@@ -886,10 +886,10 @@ def test_shared_bootstrap_quantile_columns_correct(
 
     shared_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=[kge, nse], group_by=["primary_location_id"])
-        .order_by("primary_location_id")
+        .aggregate(metrics=[kge, nse], group_by=["location_id"])
+        .order_by("location_id")
         .to_pandas()
-        .sort_values("primary_location_id")
+        .sort_values("location_id")
         .reset_index(drop=True)
     )
 
@@ -948,13 +948,13 @@ def test_shared_bootstrap_singleton_takes_shared_path(
 
     result_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=[kge], group_by=["primary_location_id"])
-        .order_by("primary_location_id")
+        .aggregate(metrics=[kge], group_by=["location_id"])
+        .order_by("location_id")
         .to_pandas()
     )
 
     expected_cols = {
-        "primary_location_id",
+        "location_id",
         "kling_gupta_efficiency_0_05",
         "kling_gupta_efficiency_0_5",
         "kling_gupta_efficiency_0_95",
@@ -987,7 +987,7 @@ def test_duplicate_quantiles_expand_to_one_column(
 
     result_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=[kge], group_by=["primary_location_id"])
+        .aggregate(metrics=[kge], group_by=["location_id"])
         .to_pandas()
     )
 
@@ -1021,7 +1021,7 @@ def test_singleton_group_is_routed_through_the_shared_path(
     kge = DeterministicMetrics.KlingGuptaEfficiency()
     kge.bootstrap = boot
 
-    gp = ev.table("joined_timeseries").to_sdf().groupBy("primary_location_id")
+    gp = ev.table("joined_timeseries").to_sdf().groupBy("location_id")
     _, boot_groups = partition_metrics_by_bootstrap([kge])
     assert [len(g) for g in boot_groups.values()] == [1]
 
@@ -1120,8 +1120,8 @@ def test_sample_size_guard_nulls_small_groups_end_to_end(
         return (
             ev.table("joined_timeseries")
             .filter(filters=small_group)
-            .aggregate(metrics=[kge], group_by=["primary_location_id"])
-            .order_by("primary_location_id")
+            .aggregate(metrics=[kge], group_by=["location_id"])
+            .order_by("location_id")
             .to_pandas()
         )
 
@@ -1285,7 +1285,7 @@ def test_shared_bootstrap_different_configs_not_shared(
 
     result_df = (
         ev.table("joined_timeseries")
-        .aggregate(metrics=[kge, nse], group_by=["primary_location_id"])
+        .aggregate(metrics=[kge, nse], group_by=["location_id"])
         .to_pandas()
     )
 
@@ -1323,7 +1323,7 @@ def test_shared_bootstrap_mixed_with_non_bootstrap_metric(
         ev.table("joined_timeseries")
         .aggregate(
             metrics=[kge, nse, me],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
         )
         .to_pandas()
     )
@@ -1351,7 +1351,7 @@ def test_shared_bootstrap_raw_arrays_no_quantiles(
 
     filters = [
         TableFilter(
-            column="primary_location_id",
+            column="location_id",
             operator=ops.eq,
             value="gage-A",
         )
@@ -1360,7 +1360,7 @@ def test_shared_bootstrap_raw_arrays_no_quantiles(
     metrics_df = (
         ev.table("joined_timeseries")
         .filter(filters=filters)
-        .aggregate(metrics=[kge, nse], group_by=["primary_location_id"])
+        .aggregate(metrics=[kge, nse], group_by=["location_id"])
         .to_pandas()
     )
 
@@ -1374,7 +1374,7 @@ def test_shared_bootstrap_raw_arrays_no_quantiles(
 
     # Compare against manual bootstrapping with the same seed/config.
     df = ev.table("joined_timeseries").to_pandas()
-    df_gage_a = df.groupby("primary_location_id").get_group("gage-A")
+    df_gage_a = df.groupby("location_id").get_group("gage-A")
     p = df_gage_a.primary_value
     s = df_gage_a.secondary_value
 
@@ -1435,7 +1435,7 @@ def test_aggregate_triggers_no_spark_jobs_for_unpacked_bootstrap(
     try:
         results = accessor.aggregate(
             metrics=metrics,
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
         )
     finally:
         # PySpark 4 removed SparkContext.clearJobGroup(); clearing the local
@@ -1477,19 +1477,19 @@ def test_unpacked_bootstrap_columns_present_when_result_is_empty(
     metrics_df = ev.table("joined_timeseries").filter(
         filters=[
             TableFilter(
-                column="primary_location_id",
+                column="location_id",
                 operator=ops.eq,
                 value="gage-does-not-exist"
             )
         ],
     ).aggregate(
         metrics=[kge],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_pandas()
 
     assert metrics_df.empty
     assert sorted(metrics_df.columns) == sorted([
-        "primary_location_id",
+        "location_id",
         "kling_gupta_efficiency_0_05",
         "kling_gupta_efficiency_0_5",
         "kling_gupta_efficiency_0_95",
@@ -1513,7 +1513,7 @@ def test_unpack_results_requires_quantiles(session_scope_test_warehouse):
     with pytest.raises(ValueError, match="MapType"):
         ev.table("joined_timeseries").aggregate(
             metrics=[kge],
-            group_by=["primary_location_id"],
+            group_by=["location_id"],
         )
 
 
@@ -1530,7 +1530,7 @@ def test_unpack_sdf_dict_columns_static_keys_survive_null_map(
     ev = session_scope_test_warehouse
 
     schema = T.StructType([
-        T.StructField("primary_location_id", T.StringType(), True),
+        T.StructField("location_id", T.StringType(), True),
         T.StructField(
             "kling_gupta_efficiency",
             T.MapType(T.StringType(), T.FloatType()),
@@ -1554,7 +1554,7 @@ def test_unpack_sdf_dict_columns_static_keys_survive_null_map(
     ).toPandas()
 
     assert sorted(static_df.columns) == sorted([
-        "primary_location_id",
+        "location_id",
         "kling_gupta_efficiency_0_05",
         "kling_gupta_efficiency_0_5",
     ])
@@ -1564,7 +1564,7 @@ def test_unpack_sdf_dict_columns_static_keys_survive_null_map(
     # Without static keys the same frame loses both quantile columns, which is
     # exactly why key_list exists.
     discovered_df = unpack_sdf_dict_columns(sdf, "kling_gupta_efficiency")
-    assert discovered_df.columns == ["primary_location_id"]
+    assert discovered_df.columns == ["location_id"]
 
 
 def test_derive_map_key_list():
@@ -1638,10 +1638,10 @@ def _sorted_and_shuffled_bootstrap(ev, boot):
     out = []
     for sdf in (base, base.orderBy(F.col("value_time").desc())):
         agg = apply_aggregation_metrics(
-            gp=group_df(sdf, ["primary_location_id"]), include_metrics=[nse]
+            gp=group_df(sdf, ["location_id"]), include_metrics=[nse]
         )
         out.append(
-            {r["primary_location_id"]: r["nse_boot"] for r in agg.collect()}
+            {r["location_id"]: r["nse_boot"] for r in agg.collect()}
         )
     assert len(out[0]) == 3
     return out[0], out[1]
@@ -1700,7 +1700,7 @@ def test_sort_by_accepts_multiple_fields_and_existing_inputs(
                   minimum_sample_size=0)
 
     multi = Bootstrappers.Stationary(
-        sort_by=["value_time", "primary_location_id"], **kwargs
+        sort_by=["value_time", "location_id"], **kwargs
     )  # value_time alone is already a total order here; the second key is
     #    carried through to prove multiple keys are accepted
     as_read, reordered = _sorted_and_shuffled_bootstrap(ev, multi)
@@ -1735,7 +1735,7 @@ def test_sort_by_unknown_field_raises(session_scope_test_warehouse):
     with pytest.raises(ValueError, match="not_a_column"):
         (
             ev.table("joined_timeseries")
-            .aggregate(metrics=[nse], group_by=["primary_location_id"])
+            .aggregate(metrics=[nse], group_by=["location_id"])
             .to_pandas()
         )
 
@@ -1761,8 +1761,8 @@ def test_sort_by_with_gumboot_keeps_its_value_time(
         nse.unpack_results = True
         return (
             ev.table("joined_timeseries")
-            .aggregate(metrics=[nse], group_by=["primary_location_id"])
-            .order_by("primary_location_id")
+            .aggregate(metrics=[nse], group_by=["location_id"])
+            .order_by("location_id")
             .to_pandas()
         )
 
@@ -1823,8 +1823,8 @@ def test_sort_by_agrees_across_bootstrap_engines(
         nse.unpack_results = True
         return (
             ev.table("joined_timeseries")
-            .aggregate(metrics=[nse], group_by=["primary_location_id"])
-            .order_by("primary_location_id")
+            .aggregate(metrics=[nse], group_by=["location_id"])
+            .order_by("location_id")
             .to_pandas()
         )
 
@@ -1859,7 +1859,7 @@ def test_block_bootstrap_without_sort_by_warns(
             seed=1, quantiles=[0.5], reps=5, **boot_kwargs
         )
         return ev.table("joined_timeseries").aggregate(
-            metrics=[nse], group_by=["primary_location_id"]
+            metrics=[nse], group_by=["location_id"]
         )
 
     with caplog.at_level(logging.WARNING, logger="teehr.metrics.format"):

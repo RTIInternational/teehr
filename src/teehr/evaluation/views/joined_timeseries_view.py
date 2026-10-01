@@ -4,6 +4,7 @@ import logging
 
 from teehr.evaluation.views.base_view import View
 from teehr.models.filters import TableFilter
+from teehr.querying.utils import join_attributes
 
 import pyspark.sql as ps
 
@@ -33,7 +34,7 @@ class JoinedTimeseriesView(View):
 
     >>> ev.join_timeseries_view().aggregate(
     ...     metrics=[KGE()],
-    ...     group_by=["primary_location_id"]
+    ...     group_by=["location_id"]
     ... ).write("location_kge")
 
     Materialize the joined data:
@@ -109,8 +110,9 @@ class JoinedTimeseriesView(View):
         Joins primary and secondary timeseries based on location crosswalks,
         value_time, unit_name, and variable name components. Primary
         location IDs found in ``location_id_aliases`` are resolved to their
-        canonical ``primary_location_id`` before joining to the crosswalk;
-        the original ID is kept as ``primary_timeseries_location_id``.
+        ``locations`` ID (output as ``location_id``) before joining to the
+        crosswalk; the primary timeseries ID is kept as
+        ``primary_location_id``.
 
         If a secondary configuration is listed in ``configuration_pairs``,
         it is only joined to the primary configurations it is paired with;
@@ -209,16 +211,17 @@ class JoinedTimeseriesView(View):
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
-                , pf.canonical_location_id as primary_location_id
+                , pf.canonical_location_id as location_id
+                , pf.location_id as primary_location_id
                 , sf.location_id as secondary_location_id
                 , pf.value as primary_value
                 , sf.value as secondary_value
-                , sf.configuration_name
-                , sf.unit_name
-                , sf.variable_name
-                , sf.member
                 , pf.configuration_name as primary_configuration_name
-                , pf.location_id as primary_timeseries_location_id
+                , sf.configuration_name as secondary_configuration_name
+                , pf.variable_name as primary_variable_name
+                , sf.variable_name as secondary_variable_name
+                , sf.unit_name
+                , sf.member
             FROM secondary sf
             JOIN location_crosswalks cf
                 ON cf.secondary_location_id = sf.location_id
@@ -280,20 +283,4 @@ class JoinedTimeseriesView(View):
             )
             return joined_df
 
-        # Join pivoted attributes to the joined timeseries
-        joined_df.createOrReplaceTempView("joined")
-        attrs_df.createOrReplaceTempView("attrs")
-
-        joined_df = self._ev.sql("""
-            SELECT
-                joined.*
-                , attrs.*
-            FROM joined
-            JOIN attrs
-                ON joined.primary_location_id = attrs.location_id
-        """).drop("location_id")
-
-        self._ev.spark.catalog.dropTempView("joined")
-        self._ev.spark.catalog.dropTempView("attrs")
-
-        return joined_df
+        return join_attributes(joined_df, attrs_df, "location_id")

@@ -214,18 +214,18 @@ def calculate_metric_skill_score(
     """
     logger.debug("Calculating skill score.")
     group_by_strings = parse_fields_to_list(group_by)
-    # TODO: Raise error if configuration_name is not in group_by?
-    group_by_strings.remove("configuration_name")
+    # TODO: Raise error if secondary_configuration_name is not in group_by?
+    group_by_strings.remove("secondary_configuration_name")
 
     pivot_sdf = (
         metrics_sdf
         .groupBy(group_by_strings).
-        pivot("configuration_name").
+        pivot("secondary_configuration_name").
         agg(F.first(metric_field))
     )
     # Get all configuration names except the reference configuration
-    configurations = metrics_sdf.select("configuration_name").distinct().collect()
-    configurations = [row.configuration_name for row in configurations]
+    configurations = metrics_sdf.select("secondary_configuration_name").distinct().collect()
+    configurations = [row.secondary_configuration_name for row in configurations]
     configurations.remove(reference_configuration)
 
     skill_score_col = f"{metric_field}_skill_score"
@@ -238,7 +238,7 @@ def calculate_metric_skill_score(
             temp_col,
             1 - F.try_divide(F.col(config), F.col(reference_configuration))
         ).withColumn(
-            "configuration_name",
+            "secondary_configuration_name",
             F.lit(config)
         )
         # warn user if try_divide results in nulls (division by zero)
@@ -251,7 +251,7 @@ def calculate_metric_skill_score(
                 f"{null_count} null values were produced."
             )
         # Join skill score values from the pivot table.
-        join_cols = group_by_strings + ["configuration_name"]
+        join_cols = group_by_strings + ["secondary_configuration_name"]
         sdf = sdf.join(
             pivot_sdf,
             on=join_cols,
@@ -266,7 +266,7 @@ def calculate_metric_skill_score(
         sdf = sdf.withColumn(
             skill_score_col,
             F.when(
-                sdf["configuration_name"] == f"{config}",
+                sdf["secondary_configuration_name"] == f"{config}",
                 sdf[temp_col]
             ).otherwise(sdf[skill_score_col])
         ).select(
@@ -498,8 +498,44 @@ def join_attributes(
 
     attrs_df = attrs_df.select([target_location_id] + attr_cols)
 
-    joined_df = target_df.join(attrs_df, on=target_location_id)
+    # Keep the target's column order (join moves the key to the front).
+    joined_df = target_df.join(attrs_df, on=target_location_id).select(
+        target_df.columns + attr_cols
+    )
     return joined_df
+
+
+def check_joined_column_names(sdf: ps.DataFrame) -> None:
+    """Raise if a joined timeseries DataFrame uses the pre-0.9 column names.
+
+    Joined timeseries written before the primary/secondary column renaming
+    have ``configuration_name`` instead of ``secondary_configuration_name``.
+    Such tables must be regenerated; the old names are not supported.
+
+    Parameters
+    ----------
+    sdf : ps.DataFrame
+        The DataFrame to check.
+
+    Raises
+    ------
+    ValueError
+        If the DataFrame looks like a joined timeseries with the old names.
+    """
+    columns = set(sdf.columns)
+    if (
+        {"primary_value", "secondary_value", "configuration_name"} <= columns
+        and "secondary_configuration_name" not in columns
+    ):
+        raise ValueError(
+            "This joined timeseries uses column names from before TEEHR 0.9 "
+            "(e.g., 'configuration_name' instead of "
+            "'secondary_configuration_name'). Regenerate it, for example: "
+            "ev.joined_timeseries_view(add_attrs=True).write("
+            "'joined_timeseries'), and re-apply any calculated fields. "
+            "See the 'Action required: regenerate joined timeseries tables' "
+            "entry in the TEEHR changelog."
+        )
 
 
 def add_alias_rows(
