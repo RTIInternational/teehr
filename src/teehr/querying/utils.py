@@ -63,34 +63,11 @@ def post_process_metric_results(
     """
     for model in include_metrics:
         if model.reference_configuration is not None:
-            """
-            self.df = self._calculate_metric_skill_score(
-                model.output_field_name,
-                model.reference_configuration,
-                group_by
-            )
-            """
-            # 1) get the original cols ahead of skill score join
-            original_cols = metrics_sdf.columns
-            # 2) calculate skill score sdf
-            sdf = calculate_metric_skill_score(
+            metrics_sdf = calculate_metric_skill_score(
                 metrics_sdf,
                 model.output_field_name,
                 model.reference_configuration,
                 group_by
-            )
-            # 3) remove original metric column from skill score sdf
-            sdf = sdf.drop(model.output_field_name)
-            # 3) get join columns
-            join_cols = parse_fields_to_list(group_by)
-            # 4) join returned table back to self.df, trim
-            metrics_sdf = metrics_sdf.join(
-                sdf,
-                on=join_cols,
-                how="left"
-            ).select(
-                *original_cols,
-                F.col(f"{model.output_field_name}_skill_score")
             )
 
         if model.unpack_results:
@@ -208,74 +185,54 @@ def calculate_metric_skill_score(
     group_by : Union[str, List[str]]
         Fields used for grouping in the metrics calculation.
 
-    Calculate the skill score of metric values for each configuration
-    relative to the reference configuration. The skill score is calculated
-    as `1 - (metric_value / reference_metric_value)`.
+    Returns
+    -------
+    ps.DataFrame
+        ``metrics_sdf`` with an added ``{metric_field}_skill_score`` column.
+
+    Notes
+    -----
+    The skill score of each configuration relative to the reference
+    configuration is ``1 - (metric_value / reference_metric_value)``. It is
+    NULL for the reference configuration itself, for groups with no reference
+    row, and where the reference value is zero.
+
+    Each row is joined to the reference row with the same values for the
+    other ``group_by`` fields, so no Spark action runs and the upstream plan
+    is not re-executed.
     """
     logger.debug("Calculating skill score.")
-    group_by_strings = parse_fields_to_list(group_by)
-    # TODO: Raise error if configuration_name is not in group_by?
-    group_by_strings.remove("configuration_name")
-
-    pivot_sdf = (
-        metrics_sdf
-        .groupBy(group_by_strings).
-        pivot("configuration_name").
-        agg(F.first(metric_field))
-    )
-    # Get all configuration names except the reference configuration
-    configurations = metrics_sdf.select("configuration_name").distinct().collect()
-    configurations = [row.configuration_name for row in configurations]
-    configurations.remove(reference_configuration)
-
+    key_cols = [
+        c for c in parse_fields_to_list(group_by) if c != "configuration_name"
+    ]
     skill_score_col = f"{metric_field}_skill_score"
-    sdf = metrics_sdf.withColumn(skill_score_col, F.lit(None))
+    ref_value_col = f"_{metric_field}_reference_value"
+    ref_key_cols = {c: f"_reference_{c}" for c in key_cols}
 
-    for config in configurations:
-        # Pivot and calculate the skill score.
-        temp_col = f"{config}_{metric_field}_skill"
-        pivot_sdf = pivot_sdf.withColumn(
-            temp_col,
-            1 - F.try_divide(F.col(config), F.col(reference_configuration))
-        ).withColumn(
-            "configuration_name",
-            F.lit(config)
+    reference_sdf = (
+        metrics_sdf
+        .filter(F.col("configuration_name") == reference_configuration)
+        .select(
+            *[F.col(c).alias(ref_key_cols[c]) for c in key_cols],
+            F.col(metric_field).alias(ref_value_col),
         )
-        # warn user if try_divide results in nulls (division by zero)
-        null_count = pivot_sdf.filter(F.col(temp_col).isNull()).count()
-        if null_count > 0:
-            logger.warning(
-                f"Division by zero encountered when calculating skill "
-                f"score for configuration '{config}' relative to "
-                f"reference configuration '{reference_configuration}'. "
-                f"{null_count} null values were produced."
-            )
-        # Join skill score values from the pivot table.
-        join_cols = group_by_strings + ["configuration_name"]
-        sdf = sdf.join(
-            pivot_sdf,
-            on=join_cols,
-            how="left"
-        ).select(
-            *join_cols,
-            F.col(f"{metric_field}"),
-            F.col(temp_col),
-            F.col(skill_score_col)
-        )
-        # Now update the column based on the configuration name.
-        sdf = sdf.withColumn(
+    )
+    join_condition = [
+        F.col(c).eqNullSafe(F.col(ref_key_cols[c])) for c in key_cols
+    ] or F.lit(True)
+
+    return (
+        metrics_sdf
+        .join(reference_sdf, on=join_condition, how="left")
+        .withColumn(
             skill_score_col,
             F.when(
-                sdf["configuration_name"] == f"{config}",
-                sdf[temp_col]
-            ).otherwise(sdf[skill_score_col])
-        ).select(
-            *join_cols,
-            F.col(f"{metric_field}"),
-            F.col(skill_score_col)
+                F.col("configuration_name") != reference_configuration,
+                1 - F.try_divide(F.col(metric_field), F.col(ref_value_col)),
+            ).cast("double")
         )
-
-    return sdf
+        .drop(ref_value_col, *ref_key_cols.values())
+    )
 
 
 def unpack_sdf_dict_columns(

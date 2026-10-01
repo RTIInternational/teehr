@@ -22,6 +22,13 @@
   sources. Joined tables written before this change don't have the column and keep the old
   defaults.
 
+### Fixed
+- **Skill scores no longer re-run the query.** Setting `reference_configuration` on a metric
+  made `aggregate()` execute the whole upstream plan 4 + N times for N non-reference
+  configurations, including any bootstrap resampling
+  ([#814](https://github.com/RTIInternational/teehr/issues/814)). `aggregate()` is now lazy
+  with skill scores. The divide-by-zero warning is gone; those skill scores are still NULL.
+
 ## 0.8.0 - 2026-09-30
 
 ### Breaking Changes
