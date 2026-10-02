@@ -86,6 +86,8 @@ EXCLUDED = {
     "SpearmanCorrelation": "test_engine_spark_spearman_parity",
     "MaxValueTimeDelta": "test_engine_spark_max_value_timedelta_parity",
     "AnnualPeakRelativeBias": "test_engine_spark_annual_peak_relative_bias_parity",
+    "CRPS": "test_engine_spark_probabilistic_parity",
+    "BrierScore": "same",
     "MaxValueTime": "value_time axis; test_metrics_aggregate",
     "CenterOfTiming": "value_time axis; test_metrics_aggregate",
     "StandardDeviationOfTiming": "value_time axis; test_metrics_aggregate",

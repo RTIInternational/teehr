@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 from teehr.models.filters import TableFilter
+from teehr.metrics.probabilistic_funcs import _pivot_by_member
 from teehr import TimeseriesAwareCalculatedFields as tcf
 from teehr import RowLevelCalculatedFields as rcf
 
@@ -291,20 +292,19 @@ def test_metric_legacy_input_field_override(module_scope_test_warehouse):
 
 
 @pytest.mark.function_scope_large_ensemble_warehouse
-def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
+@pytest.mark.parametrize("engine", ["spark", "python"])
+def test_ensemble_metrics(function_scope_large_ensemble_warehouse, engine):
     """Test get_metrics method with ensemble metrics."""
     ev = function_scope_large_ensemble_warehouse
 
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
-    crps.summary_func = np.mean
     crps.estimator = "pwm"
     crps.backend = "numba"
     crps.reference_configuration = "benchmark_forecast_daily_normals"
 
     bs = ProbabilisticMetrics.BrierScore()
     bs.threshold = 0.75
-    bs.summary_func = np.mean
     bs.backend = "numba"
     bs.reference_configuration = "benchmark_forecast_daily_normals"
 
@@ -316,25 +316,69 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
             "location_id",
             "secondary_configuration_name"
         ],
+        engine=engine,
     ).order_by(["location_id", "secondary_configuration_name"]).to_pandas()
 
     # check CRPS values
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 15.99071)
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 16.27986)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 17.372536)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 18.704124)
     assert np.isclose(
-        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.4226622
+        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.372772
     )
     assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[2])
 
     # check Brier Score values
-    assert np.isclose(metrics_df.mean_brier_score.values[0], 0.14653)
-    assert np.isclose(metrics_df.mean_brier_score.values[1], 0.144068)
+    assert np.isclose(metrics_df.mean_brier_score.values[0], 0.164410)
+    assert np.isclose(metrics_df.mean_brier_score.values[1], 0.162310)
     assert np.isclose(
-        metrics_df.mean_brier_score_skill_score.values[0], 0.432196
+        metrics_df.mean_brier_score_skill_score.values[0], 0.362911
     )
     assert np.isnan(
         metrics_df.mean_brier_score_skill_score.values[2]
     )
+
+
+def test_pivot_by_member_row_order():
+    """Member pivot must not depend on row order."""
+    rng = np.random.default_rng(0)
+    ref = pd.date_range("2020-01-01", periods=3, freq="D")
+    lead = pd.to_timedelta(np.arange(4), unit="h")
+    df = pd.DataFrame(
+        [(r, r + l, m) for r in ref for l in lead for m in range(5)],
+        columns=["reference_time", "value_time", "member"],
+    )
+    df["primary_value"] = df.groupby(
+        ["reference_time", "value_time"]
+    ).ngroup().astype(float)
+    df["secondary_value"] = rng.normal(size=len(df))
+
+    def pivot(d):
+        return _pivot_by_member(
+            d.primary_value,
+            d.secondary_value,
+            d.member,
+            d.reference_time,
+            d.value_time,
+        )
+
+    expected = pivot(df)
+    actual = pivot(df.sample(frac=1, random_state=1))
+    np.testing.assert_array_equal(expected["primary"], actual["primary"])
+    np.testing.assert_array_equal(expected["secondary"], actual["secondary"])
+    assert expected["secondary"].shape == (12, 5)
+
+
+def test_pivot_by_member_rejects_duplicate_rows():
+    """A repeated (reference_time, value_time, member) row is ambiguous."""
+    t = pd.Timestamp("2020-01-01")
+    df = pd.DataFrame({
+        "p": [1.0, 1.0, 1.0],
+        "s": [1.0, 2.0, 3.0],
+        "member": ["a", "b", "b"],
+        "time": [t, t, t],
+    })
+    with pytest.raises(ValueError, match="Duplicate"):
+        _pivot_by_member(df.p, df.s, df.member, df.time, df.time)
 
 
 @pytest.mark.module_scope_test_warehouse
