@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Iterable, List, Tuple
 
-import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 
@@ -156,10 +155,10 @@ def supports_spark_native(metric_model: MetricsBasemodel) -> bool:
     class_name = _metric_class_name(metric_model)
     bootstrap = getattr(metric_model, "bootstrap", None)
     transform = getattr(metric_model, "transform", None)
-    # Native probabilistic metrics compute the mean score only.
-    if (
-        class_name in SUPPORTED_PROBABILISTIC_METRICS
-        and metric_model.summary_func is not np.mean
+    # Per-time-step arrays and custom summary_func run on Python.
+    if class_name in SUPPORTED_PROBABILISTIC_METRICS and (
+        metric_model.summary_statistic is None
+        or metric_model.summary_func is not None
     ):
         return False
     return (
@@ -963,7 +962,7 @@ def _probabilistic_fields(metrics: List[MetricsBasemodel]) -> Tuple[str, ...]:
 
 
 def _crps_expr(estimator: str):
-    """Mean CRPS over time steps, from sorted-member estimator forms.
+    """Per-time-step CRPS, from sorted-member estimator forms.
 
     With x_(i) the i-th smallest of m members at a time step:
       nrg:  mean|x - y| - sum((2i - m - 1) x_(i)) / m^2
@@ -982,7 +981,7 @@ def _crps_expr(estimator: str):
         score = mae - _divide(spread, m * (m - 1))
     else:
         score = mae + sum_x / m - 2 * _divide(sum_ix - sum_x, m * (m - 1))
-    return F.avg(F.when(m > 1, score).otherwise(mae))
+    return F.when(m > 1, score).otherwise(mae)
 
 
 def _compute_probabilistic_metrics(
@@ -990,7 +989,7 @@ def _compute_probabilistic_metrics(
     group_by_cols: List[str],
     metrics: List[MetricsBasemodel],
 ) -> DataFrame:
-    """Compute mean CRPS and Brier Score.
+    """Compute summarized CRPS and Brier Score.
 
     Members are aligned on (reference_time, value_time), matching the Python
     path's pivot.
@@ -1046,11 +1045,16 @@ def _compute_probabilistic_metrics(
     agg_exprs = []
     for m in metrics:
         if _metric_class_name(m) == "CRPS":
-            expr = _crps_expr(m.estimator)
+            score = _crps_expr(m.estimator)
         else:
             c = q_cols[m.threshold]
             observed = (F.col("_p") >= F.col(c)).cast("double")
-            expr = F.avg(F.pow(F.col(f"{c}_frac") - observed, 2))
+            score = F.pow(F.col(f"{c}_frac") - observed, 2)
+        if m.summary_statistic == "median":
+            # Exact, matching np.median; see _compute_deterministic_metrics.
+            expr = F.percentile(score, 0.5)
+        else:
+            expr = F.avg(score)
         agg_exprs.append(expr.alias(m.output_field_name))
     return steps.groupBy(*group_by_cols).agg(*agg_exprs)
 

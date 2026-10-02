@@ -5,7 +5,10 @@ import logging
 import pandas as pd
 import numpy as np
 
-from teehr.metrics.models.base import MetricsBasemodel
+from teehr.metrics.models.base import (
+    MetricsBasemodel,
+    SUMMARY_STATISTIC_FUNCS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +68,12 @@ def _pivot_by_member(
 
 
 def _summarize(model: MetricsBasemodel, scores: np.ndarray):
-    """Apply the model's summary_func, if any, to per-time-step scores."""
+    """Summarize per-time-step scores per the model's summary settings."""
     if model.summary_func is not None:
         return model.summary_func(scores)
-    return scores
+    if model.summary_statistic is None:
+        return scores
+    return SUMMARY_STATISTIC_FUNCS[model.summary_statistic](scores)
 
 
 def ensemble_crps(model: MetricsBasemodel) -> Callable:

@@ -2,6 +2,8 @@
 import warnings
 from typing import Union, Callable, List, Dict, Any, ClassVar
 
+import numpy as np
+
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import unpack_sdf_dict_columns
 
@@ -31,6 +33,19 @@ class MetricsBasemodel(PydanticBaseModel):
     )
 
 
+class SummaryStatisticEnum(StrEnum):
+    """Statistics summarizing per-time-step probabilistic scores."""
+
+    mean = "mean"
+    median = "median"
+
+
+SUMMARY_STATISTIC_FUNCS = {
+    SummaryStatisticEnum.mean: np.mean,
+    SummaryStatisticEnum.median: np.median,
+}
+
+
 class ProbabilisticBasemodel(MetricsBasemodel):
     """Probabilistic Basemodel configuration.
 
@@ -43,9 +58,11 @@ class ProbabilisticBasemodel(MetricsBasemodel):
         The transformation to apply to the data, by default None.
     backend : str
         The backend to use, by default "numba". Can be ("numba" or "numpy").
-    summary_func : Callable
-        The function to apply to the results, by default None.
-        ``np.mean`` runs on the Spark-native engine; anything else on Python.
+    summary_statistic : Union[SummaryStatisticEnum, None]
+        Statistic summarizing the per-time-step scores, by default "mean".
+        None returns the per-time-step scores as an array (Python engine).
+    summary_func : Union[Callable, None]
+        Deprecated; use ``summary_statistic``.
     primary_field_name : Union[str, StrEnum]
         Field name for the observed/primary value column.
     secondary_field_name : Union[str, StrEnum]
@@ -62,6 +79,9 @@ class ProbabilisticBasemodel(MetricsBasemodel):
 
     transform: Any = Field(default=None)  # TransformEnum, set below after enum defined
     backend: str = Field(default="numba")
+    summary_statistic: Union[SummaryStatisticEnum, None] = Field(
+        default=SummaryStatisticEnum.mean
+    )
     summary_func: Union[Callable, None] = Field(default=None)
     primary_field_name: Union[str, StrEnum] = Field(default="primary_value")
     secondary_field_name: Union[str, StrEnum] = Field(default="secondary_value")
@@ -77,14 +97,36 @@ class ProbabilisticBasemodel(MetricsBasemodel):
         None,
     ] = Field(default=None)
 
-    @model_validator(mode="before")
-    def update_return_type(cls, values):
-        """Update the return type based on the summary function."""
-        if values.get("summary_func") is None:
-            values["return_type"] = T.ArrayType(T.FloatType())
-        elif values.get("summary_func") is not None:
-            values["return_type"] = "float"
-        return values
+    @model_validator(mode="after")
+    def resolve_summary(self):
+        """Map deprecated summary_func onto summary_statistic; set return_type.
+
+        Writes go to __dict__ so validate_assignment does not recurse.
+        """
+        if "summary_func" in self.model_fields_set:
+            warnings.warn(
+                "The 'summary_func' parameter is deprecated and will be "
+                "removed in a future release. Use summary_statistic='mean', "
+                "'median' or None instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.model_fields_set.discard("summary_func")
+            func = self.summary_func
+            stats = {f: s for s, f in SUMMARY_STATISTIC_FUNCS.items()}
+            if func is None:
+                self.__dict__["summary_statistic"] = None
+            elif func in stats:
+                self.__dict__["summary_statistic"] = stats[func]
+                self.__dict__["summary_func"] = None
+        scalar = (
+            self.summary_statistic is not None
+            or self.summary_func is not None
+        )
+        self.__dict__["return_type"] = (
+            "float" if scalar else T.ArrayType(T.FloatType())
+        )
+        return self
 
     @model_validator(mode="after")
     def build_input_field_names(self):

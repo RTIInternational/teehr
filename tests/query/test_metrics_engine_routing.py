@@ -887,18 +887,20 @@ def _probabilistic_metrics():
         *(
             pm.CRPS(
                 estimator=e,
-                summary_func=np.mean,
-                output_field_name=f"crps_{e}",
+                summary_statistic=stat,
+                output_field_name=f"crps_{e}_{stat}",
             )
             for e in ("pwm", "nrg", "fair")
+            for stat in ("mean", "median")
         ),
         *(
             pm.BrierScore(
                 threshold=t,
-                summary_func=np.mean,
-                output_field_name=f"brier_{int(t * 100)}",
+                summary_statistic=stat,
+                output_field_name=f"brier_{int(t * 100)}_{stat}",
             )
             for t in (0.5, 0.75)
+            for stat in ("mean", "median")
         ),
     ]
 
@@ -929,15 +931,49 @@ def test_engine_spark_probabilistic_parity(
     for m in _probabilistic_metrics():
         _allclose(spark_df[m.output_field_name], python_df[m.output_field_name])
 
+    # Per-time-step scores (Python only) average to the summarized value.
+    steps_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[ProbabilisticMetrics.CRPS(
+                summary_statistic=None, output_field_name="crps_steps"
+            )],
+            group_by=group_by,
+        )
+        .to_pandas()
+        .sort_values(group_by)
+        .reset_index(drop=True)
+    )
+    _allclose(steps_df["crps_steps"].map(np.mean), spark_df["crps_pwm_mean"])
+
 
 @pytest.mark.parametrize(
-    "summary_func, native",
-    [(np.mean, True), (None, False), (np.median, False)],
+    "kwargs, native",
+    [
+        ({}, True),
+        ({"summary_statistic": "median"}, True),
+        ({"summary_statistic": None}, False),
+        ({"summary_func": np.nanmean}, False),
+    ],
 )
-def test_probabilistic_native_only_for_mean(summary_func, native):
-    """Only the mean score is native; other summaries fall back to Python."""
-    for metric in (
-        ProbabilisticMetrics.CRPS(summary_func=summary_func),
-        ProbabilisticMetrics.BrierScore(summary_func=summary_func),
-    ):
-        assert supports_spark_native(metric) is native
+def test_probabilistic_native_routing(kwargs, native):
+    """Per-time-step arrays and custom summary_func run on Python."""
+    for cls in (ProbabilisticMetrics.CRPS, ProbabilisticMetrics.BrierScore):
+        assert supports_spark_native(cls(**kwargs)) is native
+
+
+@pytest.mark.parametrize(
+    "func, statistic",
+    [(np.mean, "mean"), (np.median, "median"), (None, None)],
+)
+def test_summary_func_deprecated(func, statistic):
+    """summary_func maps onto summary_statistic, at init and on assignment."""
+    with pytest.warns(DeprecationWarning, match="summary_func"):
+        at_init = ProbabilisticMetrics.CRPS(summary_func=func)
+    assigned = ProbabilisticMetrics.CRPS()
+    with pytest.warns(DeprecationWarning, match="summary_func"):
+        assigned.summary_func = func
+    for m in (at_init, assigned):
+        assert m.summary_statistic == statistic
+        assert m.summary_func is None
+        assert (m.return_type == "float") is (statistic is not None)

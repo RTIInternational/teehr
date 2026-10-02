@@ -89,8 +89,8 @@ KlingGuptaEfficiency, KlingGuptaEfficiencyMod1, KlingGuptaEfficiencyMod2,
 RelativeMean, RelativeMedian, RelativeMinimum, RelativeMaximum,
 RelativeStandardDeviation
 
-*Probabilistic metrics:* CRPS, BrierScore (only with ``summary_func=np.mean``;
-other summaries run on the Python path)
+*Probabilistic metrics:* CRPS, BrierScore (``summary_statistic`` of ``"mean"``
+or ``"median"``; ``None`` returns per-time-step arrays on the Python path)
 
 .. note::
 

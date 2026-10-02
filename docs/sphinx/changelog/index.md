@@ -42,9 +42,15 @@
   to the same location, is its own series. **Results change** on ensemble data and on
   many-to-one crosswalks. Set `uniqueness_fields` to control the grouping explicitly.
 
+- **`summary_statistic` replaces `summary_func` on CRPS and Brier Score**, and defaults
+  to `"mean"`, so `CRPS()` now returns the mean score rather than per-time-step arrays.
+  Pass `summary_statistic=None` for the arrays. `summary_func` is deprecated: `np.mean`
+  and `np.median` map to the new setting, and other callables still run on the Python
+  engine.
+
 ### Added
-- **Spark-native CRPS and Brier Score** when `summary_func=np.mean`. Other summaries
-  and `engine="python"` still use scoringrules.
+- **Spark-native CRPS and Brier Score** for `summary_statistic` `"mean"` or `"median"`.
+  Per-time-step arrays and `engine="python"` still use scoringrules.
 - **`location_id_aliases` table** for locations with more than one primary data source
   ([#836](https://github.com/RTIInternational/teehr/issues/836)). It maps each
   `location_id_alias` to a `location_id` in `locations`. Primary timeseries may

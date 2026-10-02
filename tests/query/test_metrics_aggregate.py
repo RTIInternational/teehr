@@ -299,14 +299,12 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse, engine):
 
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
-    crps.summary_func = np.mean
     crps.estimator = "pwm"
     crps.backend = "numba"
     crps.reference_configuration = "benchmark_forecast_daily_normals"
 
     bs = ProbabilisticMetrics.BrierScore()
     bs.threshold = 0.75
-    bs.summary_func = np.mean
     bs.backend = "numba"
     bs.reference_configuration = "benchmark_forecast_daily_normals"
 
