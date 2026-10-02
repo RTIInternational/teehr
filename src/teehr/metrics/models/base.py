@@ -45,12 +45,17 @@ class ProbabilisticBasemodel(MetricsBasemodel):
         The backend to use, by default "numba". Can be ("numba" or "numpy").
     summary_func : Callable
         The function to apply to the results, by default None.
+        ``np.mean`` runs on the Spark-native engine; anything else on Python.
     primary_field_name : Union[str, StrEnum]
         Field name for the observed/primary value column.
     secondary_field_name : Union[str, StrEnum]
         Field name for the forecast/secondary value column.
     member_field_name : Union[str, StrEnum]
         Field name for the ensemble member column.
+    reference_time_field_name : Union[str, StrEnum]
+        Field name for the reference time column, used to align members.
+    value_time_field_name : Union[str, StrEnum]
+        Field name for the value time column, used to align members.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]], None]
         Optional legacy override for positional metric inputs.
     """
@@ -61,6 +66,10 @@ class ProbabilisticBasemodel(MetricsBasemodel):
     primary_field_name: Union[str, StrEnum] = Field(default="primary_value")
     secondary_field_name: Union[str, StrEnum] = Field(default="secondary_value")
     member_field_name: Union[str, StrEnum] = Field(default="member")
+    reference_time_field_name: Union[str, StrEnum] = Field(
+        default="reference_time"
+    )
+    value_time_field_name: Union[str, StrEnum] = Field(default="value_time")
     input_field_names: Union[
         str,
         StrEnum,
@@ -85,6 +94,8 @@ class ProbabilisticBasemodel(MetricsBasemodel):
                 self.primary_field_name,
                 self.secondary_field_name,
                 self.member_field_name,
+                self.reference_time_field_name,
+                self.value_time_field_name,
             ]
         return self
 
@@ -95,6 +106,8 @@ class ProbabilisticBasemodel(MetricsBasemodel):
                 self.primary_field_name,
                 self.secondary_field_name,
                 self.member_field_name,
+                self.reference_time_field_name,
+                self.value_time_field_name,
             ]
         elif isinstance(self.input_field_names, list):
             names = list(self.input_field_names)

@@ -4,8 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from teehr import DeterministicMetrics, Signatures
+from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
 from teehr.metrics.engine import aggregate_metrics_with_engine
+from teehr.metrics.spark_native import supports_spark_native
 from teehr.metrics.models.deterministic import VariabilityRatio
 
 EPSILON = 1e-6
@@ -876,3 +877,67 @@ def test_divide_by_zero_is_null_not_inf(spark_shared_session, engine):
     # Not a blanket null: the mean of the same group is well defined.
     assert got["zero-min"]["relative_mean"] is not None
     assert np.isfinite(got["zero-min"]["relative_mean"])
+
+
+# Kept last: the ensemble fixture repoints the shared catalog, breaking
+# module-scoped tests that run after it.
+def _probabilistic_metrics():
+    pm = ProbabilisticMetrics
+    return [
+        *(
+            pm.CRPS(
+                estimator=e,
+                summary_func=np.mean,
+                output_field_name=f"crps_{e}",
+            )
+            for e in ("pwm", "nrg", "fair")
+        ),
+        *(
+            pm.BrierScore(
+                threshold=t,
+                summary_func=np.mean,
+                output_field_name=f"brier_{int(t * 100)}",
+            )
+            for t in (0.5, 0.75)
+        ),
+    ]
+
+
+@pytest.mark.function_scope_large_ensemble_warehouse
+def test_engine_spark_probabilistic_parity(
+    function_scope_large_ensemble_warehouse,
+):
+    """Spark CRPS (each estimator) and Brier Score should match scoringrules."""
+    ev = function_scope_large_ensemble_warehouse
+    group_by = ["location_id", "secondary_configuration_name"]
+
+    def run(engine):
+        return (
+            ev.table("joined_timeseries")
+            .aggregate(
+                metrics=_probabilistic_metrics(),
+                group_by=group_by,
+                engine=engine,
+            )
+            .to_pandas()
+            .sort_values(group_by)
+            .reset_index(drop=True)
+        )
+
+    spark_df, python_df = run("spark"), run("python")
+    assert list(spark_df.columns) == list(python_df.columns)
+    for m in _probabilistic_metrics():
+        _allclose(spark_df[m.output_field_name], python_df[m.output_field_name])
+
+
+@pytest.mark.parametrize(
+    "summary_func, native",
+    [(np.mean, True), (None, False), (np.median, False)],
+)
+def test_probabilistic_native_only_for_mean(summary_func, native):
+    """Only the mean score is native; other summaries fall back to Python."""
+    for metric in (
+        ProbabilisticMetrics.CRPS(summary_func=summary_func),
+        ProbabilisticMetrics.BrierScore(summary_func=summary_func),
+    ):
+        assert supports_spark_native(metric) is native

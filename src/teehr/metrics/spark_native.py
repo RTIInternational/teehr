@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Iterable, List, Tuple
 
+import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 
@@ -84,6 +85,11 @@ SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS = {
     "StandardDeviationOfTiming"
 }
 
+SUPPORTED_PROBABILISTIC_METRICS = {
+    "CRPS",
+    "BrierScore",
+}
+
 SUPPORTED_METRICS = (
     SUPPORTED_SIGNATURE_METRICS
     | SUPPORTED_DETERMINISTIC_METRICS
@@ -93,6 +99,7 @@ SUPPORTED_METRICS = (
     | SUPPORTED_ANNUAL_PEAK_METRICS
     | SUPPORTED_CENTER_OF_TIMING_METRICS
     | SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS
+    | SUPPORTED_PROBABILISTIC_METRICS
 )
 
 
@@ -140,11 +147,21 @@ def _is_standard_deviation_of_timing_metric(metric: MetricsBasemodel) -> bool:
     return _metric_class_name(metric) in SUPPORTED_STANDARD_DEVIATION_OF_TIMING_METRICS
 
 
+def _is_probabilistic_metric(metric: MetricsBasemodel) -> bool:
+    return _metric_class_name(metric) in SUPPORTED_PROBABILISTIC_METRICS
+
+
 def supports_spark_native(metric_model: MetricsBasemodel) -> bool:
     """Return True when a metric can run on the Spark-native path."""
     class_name = _metric_class_name(metric_model)
     bootstrap = getattr(metric_model, "bootstrap", None)
     transform = getattr(metric_model, "transform", None)
+    # Native probabilistic metrics compute the mean score only.
+    if (
+        class_name in SUPPORTED_PROBABILISTIC_METRICS
+        and metric_model.summary_func is not np.mean
+    ):
+        return False
     return (
         bootstrap is None
         and transform is None
@@ -926,6 +943,118 @@ def _compute_spearman_metric(
     )
 
 
+def _probabilistic_fields(metrics: List[MetricsBasemodel]) -> Tuple[str, ...]:
+    fields = {
+        (
+            _field_name(m.primary_field_name),
+            _field_name(m.secondary_field_name),
+            _field_name(m.reference_time_field_name),
+            _field_name(m.value_time_field_name),
+        )
+        for m in metrics
+    }
+    if len(fields) != 1:
+        raise ValueError(
+            "Spark-native probabilistic metrics require shared primary, "
+            "secondary, reference_time and value_time field names in one "
+            "aggregate call."
+        )
+    return next(iter(fields))
+
+
+def _crps_expr(estimator: str):
+    """Mean CRPS over time steps, from sorted-member estimator forms.
+
+    With x_(i) the i-th smallest of m members at a time step:
+      nrg:  mean|x - y| - sum((2i - m - 1) x_(i)) / m^2
+      fair: mean|x - y| - sum((2i - m - 1) x_(i)) / (m(m - 1))
+      pwm:  mean|x - y| + mean(x) - 2 sum((i - 1) x_(i)) / (m(m - 1))
+    A single member reduces to |x - y|.
+    """
+    m = F.col("_m")
+    mae = F.col("_mae")
+    sum_x = F.col("_sum_x")
+    sum_ix = F.col("_sum_ix")
+    spread = 2 * sum_ix - (m + 1) * sum_x
+    if estimator == "nrg":
+        score = mae - _divide(spread, m * m)
+    elif estimator == "fair":
+        score = mae - _divide(spread, m * (m - 1))
+    else:
+        score = mae + sum_x / m - 2 * _divide(sum_ix - sum_x, m * (m - 1))
+    return F.avg(F.when(m > 1, score).otherwise(mae))
+
+
+def _compute_probabilistic_metrics(
+    sdf: DataFrame,
+    group_by_cols: List[str],
+    metrics: List[MetricsBasemodel],
+) -> DataFrame:
+    """Compute mean CRPS and Brier Score.
+
+    Members are aligned on (reference_time, value_time), matching the Python
+    path's pivot.
+    """
+    from pyspark.sql import Window as W
+
+    p_col, s_col, rt_col, vt_col = _probabilistic_fields(metrics)
+    validate_fields_exist(
+        sdf.columns, group_by_cols + [p_col, s_col, rt_col, vt_col]
+    )
+    step_cols = list(dict.fromkeys(group_by_cols + [rt_col, vt_col]))
+
+    p = F.col(p_col).cast("double")
+    s = F.col(s_col).cast("double")
+    rows = sdf.where(p.isNotNull() & s.isNotNull()).select(
+        *step_cols, p.alias("_p"), s.alias("_s")
+    )
+
+    # Brier thresholds are quantiles of the observations, one per time step.
+    thresholds = sorted({
+        m.threshold for m in metrics if _metric_class_name(m) == "BrierScore"
+    })
+    q_cols = {t: f"_q{i}" for i, t in enumerate(thresholds)}
+    if thresholds:
+        obs = rows.groupBy(*step_cols).agg(F.first("_p").alias("_p"))
+        q = obs.groupBy(*group_by_cols).agg(*[
+            F.percentile("_p", t).alias(c) for t, c in q_cols.items()
+        ])
+        rows = null_safe_join_on_columns(rows, q, join_columns=group_by_cols)
+
+    needs_crps = any(_metric_class_name(m) == "CRPS" for m in metrics)
+    if needs_crps:
+        w = W.partitionBy(*step_cols).orderBy("_s")
+        rows = rows.withColumn("_i", F.row_number().over(w).cast("double"))
+
+    step_aggs = [
+        F.first("_p").alias("_p"),
+        F.count(F.lit(1)).cast("double").alias("_m"),
+    ]
+    if needs_crps:
+        step_aggs += [
+            F.avg(F.abs(F.col("_s") - F.col("_p"))).alias("_mae"),
+            F.sum("_s").alias("_sum_x"),
+            F.sum(F.col("_i") * F.col("_s")).alias("_sum_ix"),
+        ]
+    for c in q_cols.values():
+        step_aggs += [
+            F.first(c).alias(c),
+            F.avg((F.col("_s") >= F.col(c)).cast("double")).alias(f"{c}_frac"),
+        ]
+    steps = rows.groupBy(*step_cols).agg(*step_aggs)
+
+    agg_exprs = []
+    for m in metrics:
+        if _metric_class_name(m) == "CRPS":
+            expr = _crps_expr(m.estimator)
+        else:
+            c = q_cols[m.threshold]
+            observed = (F.col("_p") >= F.col(c)).cast("double")
+            expr = F.avg(F.pow(F.col(f"{c}_frac") - observed, 2))
+        agg_exprs.append(expr.alias(m.output_field_name))
+    return steps.groupBy(*group_by_cols).agg(*agg_exprs)
+
+
 def _compute_max_value_timedelta_metric(
     sdf: DataFrame,
     group_by_cols: List[str],
@@ -1094,6 +1223,11 @@ SPARK_METRIC_ADAPTERS: tuple[MetricExecutionAdapter, ...] = (
         name="spark-deterministic-batch",
         supports=_is_deterministic_metric,
         apply_batch=_apply_deterministic_batch,
+    ),
+    contiguous_batch_adapter(
+        name="spark-probabilistic-batch",
+        supports=_is_probabilistic_metric,
+        apply_batch=_compute_probabilistic_metrics,
     ),
 )
 

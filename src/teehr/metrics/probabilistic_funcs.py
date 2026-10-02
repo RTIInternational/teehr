@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 
 from teehr.metrics.models.base import MetricsBasemodel
-from teehr.metrics.deterministic_funcs import _mean_error
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +13,14 @@ logger = logging.getLogger(__name__)
 def _pivot_by_member(
     p: pd.Series,
     s: pd.Series,
-    members: pd.Series
+    members: pd.Series,
+    reference_time: pd.Series,
+    value_time: pd.Series,
 ) -> Dict:
     """Pivot the timeseries data by members.
+
+    Rows are aligned on (reference_time, value_time), since Spark does not
+    guarantee row order within a group.
 
     Notes
     -----
@@ -26,31 +30,45 @@ def _pivot_by_member(
             The first dimension should be the time step, and the second
             dimension should be the ensemble member.
     """
-    if members.isna().all():  # No ensemble members
+    if members.isna().all() or members.nunique() == 1:
+        # No ensemble members, or only one
         return {
             "primary": p.values,
             "secondary": s.values
         }
-    unique_members, member_indices = np.unique(
-        members.values, return_inverse=True
+    # Hash-based factorize is much faster here than np.unique or df.pivot.
+    m_idx, m_uniques = pd.factorize(
+        members.values, sort=True, use_na_sentinel=False
     )
-    if unique_members.size == 1:  # Only one ensemble member
-        return {
-            "primary": p.values,
-            "secondary": s.values
-        }
-    # Assumes all members are same length.
-    forecast_length = member_indices[member_indices == member_indices[0]].size
-    n_members = unique_members.size
-    secondary_arr = np.full((forecast_length, n_members), np.nan)
-    for i in range(n_members):
-        mask = (member_indices == i)
-        secondary_arr[:, i] = s[mask]
-
+    rt_idx, _ = pd.factorize(
+        reference_time.values, sort=True, use_na_sentinel=False
+    )
+    vt_idx, vt_uniques = pd.factorize(
+        value_time.values, sort=True, use_na_sentinel=False
+    )
+    t_idx, t_uniques = pd.factorize(
+        rt_idx.astype("int64") * vt_uniques.size + vt_idx, sort=True
+    )
+    n_m = m_uniques.size
+    if np.bincount(t_idx * n_m + m_idx).max() > 1:
+        raise ValueError(
+            "Duplicate (reference_time, value_time, member) rows in group."
+        )
+    secondary = np.full((t_uniques.size, n_m), np.nan)
+    secondary[t_idx, m_idx] = s.values
+    primary = np.full(t_uniques.size, np.nan)
+    primary[t_idx] = p.values
     return {
-        "primary": p.values[member_indices == 0],
-        "secondary": secondary_arr
+        "primary": primary,
+        "secondary": secondary
     }
+
+
+def _summarize(model: MetricsBasemodel, scores: np.ndarray):
+    """Apply the model's summary_func, if any, to per-time-step scores."""
+    if model.summary_func is not None:
+        return model.summary_func(scores)
+    return scores
 
 
 def ensemble_crps(model: MetricsBasemodel) -> Callable:
@@ -61,6 +79,8 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
         p: pd.Series,
         s: pd.Series,
         members: pd.Series,
+        reference_time: pd.Series,
+        value_time: pd.Series,
     ) -> float:
         """Create a wrapper around scoringrules crps_ensemble.
 
@@ -72,6 +92,10 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
             The secondary values.
         members : pd.Series
             The member IDs.
+        reference_time : pd.Series
+            The reference times, used to align members.
+        value_time : pd.Series
+            The value times, used to align members.
 
         Returns
         -------
@@ -82,32 +106,21 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
         # lazy load scoringrules
         import scoringrules as sr
 
-        pivoted_dict = _pivot_by_member(p, s, members)
+        pivoted_dict = _pivot_by_member(
+            p, s, members, reference_time, value_time
+        )
+        obs = pivoted_dict["primary"]
+        fct = pivoted_dict["secondary"]
 
-        if model.summary_func is not None:
-            if len(pivoted_dict["secondary"].shape) == 1:
-                # CRPS is just mean absolute error for a deterministic forecast
-                return model.summary_func(
-                    _mean_error(pivoted_dict["primary"], pivoted_dict["secondary"])
-                )
-            return model.summary_func(
-                sr.crps_ensemble(
-                    pivoted_dict["primary"],
-                    pivoted_dict["secondary"],
-                    estimator=model.estimator,
-                    backend=model.backend
-                )
+        if fct.ndim == 1:
+            # CRPS of a deterministic forecast is the absolute error
+            return _summarize(model, np.abs(fct - obs))
+        return _summarize(
+            model,
+            sr.crps_ensemble(
+                obs, fct, estimator=model.estimator, backend=model.backend
             )
-        else:
-            if len(pivoted_dict["secondary"].shape) == 1:
-                # CRPS is just mean absolute error for a deterministic forecast
-                return _mean_error(pivoted_dict["primary"], pivoted_dict["secondary"])
-            return sr.crps_ensemble(
-                pivoted_dict["primary"],
-                pivoted_dict["secondary"],
-                estimator=model.estimator,
-                backend=model.backend
-            )
+        )
 
     return ensemble_crps_inner
 
@@ -148,6 +161,8 @@ def ensemble_brier_score(model: MetricsBasemodel) -> Callable:
         p: pd.Series,
         s: pd.Series,
         members: pd.Series,
+        reference_time: pd.Series,
+        value_time: pd.Series,
     ) -> float:
         """Create a wrapper around scoringrules brier_score.
 
@@ -159,8 +174,10 @@ def ensemble_brier_score(model: MetricsBasemodel) -> Callable:
             The secondary values.
         members : pd.Series
             The member IDs.
-        threshold : float
-            The threshold for the Brier Score calculation.
+        reference_time : pd.Series
+            The reference times, used to align members.
+        value_time : pd.Series
+            The value times, used to align members.
 
         Returns
         -------
@@ -171,28 +188,17 @@ def ensemble_brier_score(model: MetricsBasemodel) -> Callable:
         # lazy load scoringrules
         import scoringrules as sr
 
-        # p, s, value_time = _transform(p, s, model, value_time)
-        # pivoted_dict = _pivot_by_value_time(p, s, value_time)
-        pivoted_dict = _pivot_by_member(p, s, members)
-
-        bs_inputs = _get_brier_score_inputs(
-            pivoted_dict,
-            model.threshold
+        pivoted_dict = _pivot_by_member(
+            p, s, members, reference_time, value_time
         )
-
-        if model.summary_func is not None:
-            return model.summary_func(
-                sr.brier_score(
-                    bs_inputs["primary"],
-                    bs_inputs["secondary"],
-                    backend=model.backend
-                )
-            )
-        else:
-            return sr.brier_score(
+        bs_inputs = _get_brier_score_inputs(pivoted_dict, model.threshold)
+        return _summarize(
+            model,
+            sr.brier_score(
                 bs_inputs["primary"],
                 bs_inputs["secondary"],
                 backend=model.backend
             )
+        )
 
     return ensemble_brier_score_inner

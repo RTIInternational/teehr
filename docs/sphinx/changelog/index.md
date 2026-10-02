@@ -43,6 +43,8 @@
   many-to-one crosswalks. Set `uniqueness_fields` to control the grouping explicitly.
 
 ### Added
+- **Spark-native CRPS and Brier Score** when `summary_func=np.mean`. Other summaries
+  and `engine="python"` still use scoringrules.
 - **`location_id_aliases` table** for locations with more than one primary data source
   ([#836](https://github.com/RTIInternational/teehr/issues/836)). It maps each
   `location_id_alias` to a `location_id` in `locations`. Primary timeseries may
@@ -55,6 +57,12 @@
   configuration listed in the table joins only to its paired primary configurations; one that
   isn't listed joins to all of them, as before. Many-to-many pairs are allowed. Migration
   `0010` creates the table empty.
+
+### Fixed
+- **Ensemble CRPS and Brier Score now align members by time step.** Members were paired
+  by row order, which Spark does not guarantee, so results depended on file layout.
+  Rows are now matched on `(reference_time, value_time)`. Recompute any ensemble metrics
+  calculated with earlier versions.
 
 ## 0.8.0 - 2026-09-30
 
