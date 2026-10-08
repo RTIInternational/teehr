@@ -46,6 +46,8 @@ pyspark = {extras = ["pandas-on-spark"], version = "4.0.1"}
 # entry above). Anything older resolves to a broken install.
 dataretrieval = ">=1.3,<2"
 numba = ">=0.60.0,<1"
+# Sparse weights matrix in fetching/nwm/grid_utils.py; previously transitive.
+scipy = ">=1.13,<2"
 arch = ">=7.0.0,<8"
 pandera = {extras = ["pyspark"], version = ">=0.20.4,<1"}
 netcdf4 = "1.7.2"

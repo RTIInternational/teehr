@@ -158,8 +158,63 @@ def test_weighted_average_matches_exactextract_mean(tmpdir):
     )
     assert len(merged) == len(zones)
     for row in merged.itertuples():
-        # rel=1e-6: compute_weighted_average accumulates in float32.
+        # rel=1e-6: exactextract accumulates in float32.
         assert row.value == pytest.approx(row.mean, rel=1e-6)
+
+
+def _toy_weights():
+    """Two zones sharing pixel (0, 1); zone b covers half of pixel (1, 1)."""
+    return pd.DataFrame({
+        "location_id": ["b", "a", "a", "b"],
+        "row": [0, 0, 0, 1],
+        "col": [1, 0, 1, 1],
+        "weight": np.array([1.0, 1.0, 1.0, 0.5], dtype="float32"),
+    })
+
+
+def test_weighted_average_nan_pixel():
+    """A NaN pixel gives NaN by default and is skipped under min_coverage."""
+    from teehr.fetching.nwm.grid_utils import compute_weighted_average
+
+    weights = _toy_weights()
+    grid = np.array([[2.0, 4.0], [0.0, np.nan]])
+    values = grid[weights.row, weights.col]
+
+    default = compute_weighted_average(values, weights)
+    assert default.location_id.tolist() == ["a", "b"]
+    assert default.value.tolist() == pytest.approx([3.0, np.nan], nan_ok=True)
+
+    # b keeps 1.0 of 1.5 weight (0.67): renormalized at 0.6, dropped at 0.7.
+    lenient = compute_weighted_average(values, weights, min_coverage=0.6)
+    assert lenient.value.tolist() == pytest.approx([3.0, 4.0])
+    strict = compute_weighted_average(values, weights, min_coverage=0.7)
+    assert np.isnan(strict.value.iloc[1])
+
+
+def test_weights_matrix_matches_compute_weighted_average():
+    """Unique-pixel matrix gives the same means as row-aligned values."""
+    from teehr.fetching.nwm.grid_utils import (
+        build_weights_matrix,
+        compute_weighted_average,
+        weighted_average_from_matrix,
+    )
+
+    weights = _toy_weights()
+    rng = np.random.default_rng(0)
+    grid = rng.random((3, 2, 2))
+    grid[1, 1, 1] = np.nan
+
+    matrix, rows, cols, location_ids = build_weights_matrix(weights)
+    assert matrix.shape == (2, 3)
+    assert location_ids.tolist() == ["a", "b"]
+    got = weighted_average_from_matrix(matrix, grid[:, rows, cols], 0.5)
+
+    expected = compute_weighted_average(
+        grid[:, weights.row, weights.col], weights, min_coverage=0.5
+    )
+    assert got.ravel().tolist() == pytest.approx(
+        expected.value.tolist(), nan_ok=True
+    )
 
 
 def test_weights_row_col_are_absolute(tmpdir):
