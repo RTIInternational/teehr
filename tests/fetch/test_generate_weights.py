@@ -162,6 +162,27 @@ def test_weighted_average_matches_exactextract_mean(tmpdir):
         assert row.value == pytest.approx(row.mean, rel=1e-6)
 
 
+def test_weights_ignore_template_values(tmpdir):
+    """Template cells that are NaN (fill, masks) still get weights."""
+    import xarray as xr
+
+    ds = xr.open_dataset(TEMPLATE_FILEPATH)
+    nan_template = ds.copy()
+    nan_template["RAINRATE"] = ds["RAINRATE"].where(False)
+
+    def weights(template):
+        return generate_weights_file(
+            zone_polygons=ZONES_FILEPATH,
+            template_dataset=template,
+            variable_name="RAINRATE",
+            output_weights_filepath=None,
+            crs_wkt=CONUS_NWM_WKT,
+            unique_zone_id="id",
+        )
+
+    assert weights(nan_template).equals(weights(ds))
+
+
 def _toy_weights():
     """Two zones sharing pixel (0, 1); zone b covers half of pixel (1, 1)."""
     return pd.DataFrame({

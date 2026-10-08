@@ -179,7 +179,9 @@ def generate_weights_file(
     extra_dims = [d for d in src_da.dims if d not in ("x", "y")]
     if extra_dims:
         src_da = src_da.isel({d: 0 for d in extra_dims}, drop=True)
-    src_da = src_da.astype("float32")
+    # Zero-filled so weights depend only on geometry: exactextract skips NaN
+    # cells. Loaded so its window reads don't re-read lazy coordinates.
+    src_da = src_da.copy(data=np.zeros(src_da.shape, dtype="float32")).load()
     src_da = src_da.rio.write_crs(crs_wkt, inplace=True)
 
     df = _zone_pixel_coverage(src_da, zone_gdf, unique_zone_id)
