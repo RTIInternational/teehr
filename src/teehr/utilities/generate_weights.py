@@ -33,12 +33,17 @@ def _zone_pixel_coverage(
     """
     # A column named "id" is read as the OGR feature id, silently yielding
     # 0, 1, 2 ... instead of the real values, so pass the ids under a private
-    # name and hand over nothing else.
+    # name and hand over nothing else. Repairs keep only polygons:
+    # exactextract rejects a polygon mixed with collapsed lines, which
+    # reprojection can leave, and can't parse a zone that collapsed entirely.
     zones = GeoDataFrame(
         {"_teehr_zone_id": zone_gdf[unique_zone_id].astype(str).values},
-        geometry=zone_gdf.geometry.make_valid().values,
+        geometry=zone_gdf.geometry.make_valid(
+            method="structure", keep_collapsed=False
+        ).values,
         crs=zone_gdf.crs,
     )
+    zones = zones[~zones.is_empty]
 
     result = exact_extract(
         rast=src_da,

@@ -14,7 +14,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.15"
-geopandas = ">=1,<2"
+# make_valid(method="structure") in utilities/generate_weights.py
+geopandas = ">=1.1,<2"
+shapely = ">=2.1,<3"
 pydantic = ">=2.4.2,<3"
 exactextract = ">=0.3,<1"
 ujson = ">=5.8.0,<6"

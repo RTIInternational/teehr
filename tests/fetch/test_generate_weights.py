@@ -5,6 +5,7 @@ import geopandas as gpd
 from pathlib import Path
 import tempfile
 import pytest
+from shapely.geometry import box
 from teehr.utilities.generate_weights import generate_weights_file
 from teehr.fetching.const import CONUS_NWM_WKT
 
@@ -181,6 +182,43 @@ def test_weights_ignore_template_values(tmpdir):
         )
 
     assert weights(nan_template).equals(weights(ds))
+
+
+def test_weights_zone_repaired_into_mixed_geometry(tmpdir):
+    """A zone with a zero-width spike still gets weights.
+
+    Reprojecting detailed boundaries (e.g. into UTM) can leave such spikes.
+    The default repair turns them into a polygon plus a line, which
+    exactextract rejects as a mixed geometry. A zone that collapses entirely
+    gets no weights.
+    """
+    from shapely.geometry import Polygon
+
+    zones = gpd.read_parquet(ZONES_FILEPATH).to_crs(CONUS_NWM_WKT)
+    x0, y0, x1, y1 = zones.total_bounds
+    ym = (y0 + y1) / 2
+    spiked = Polygon([
+        (x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, ym), (x0 - 5000, ym),
+        (x0, ym), (x0, y0)
+    ])
+    collapsed = Polygon([(x0, y0), (x1, y0), (x0, y0)])
+    zones = gpd.GeoDataFrame(
+        {"id": ["spiked", "collapsed"]},
+        geometry=[spiked, collapsed],
+        crs=zones.crs,
+    )
+    df = generate_weights_file(
+        zone_polygons=zones,
+        template_dataset=TEMPLATE_FILEPATH,
+        variable_name="RAINRATE",
+        output_weights_filepath=None,
+        crs_wkt=CONUS_NWM_WKT,
+        unique_zone_id="id",
+    )
+    assert set(df.location_id) == {"spiked"}
+    assert df.weight.astype("float64").sum() == pytest.approx(
+        box(x0, y0, x1, y1).area / 1e6, rel=1e-6
+    )
 
 
 def _toy_weights():
