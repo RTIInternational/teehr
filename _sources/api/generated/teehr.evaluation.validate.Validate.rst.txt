@@ -1,0 +1,25 @@
+﻿Validate
+========
+
+.. currentmodule:: teehr.evaluation.validate
+
+.. autoclass:: Validate
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Validate.dataframe
+      ~Validate.sdf_filters
+      ~Validate.table_filters
+   
+   
+
+   
+   
+   

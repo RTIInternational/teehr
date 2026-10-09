@@ -1,0 +1,37 @@
+﻿Operators
+=========
+
+.. currentmodule:: teehr
+
+.. autoclass:: Operators
+   :members:
+   :special-members: __call__, __add__, __mul__
+   :no-inherited-members:
+   :exclude-members: model_config
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Operators.eq
+      ~Operators.gt
+      ~Operators.lt
+      ~Operators.gte
+      ~Operators.lte
+      ~Operators.islike
+      ~Operators.isin
+   
+   
+   
