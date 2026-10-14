@@ -4,8 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from teehr import DeterministicMetrics, Signatures
+from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
 from teehr.metrics.engine import aggregate_metrics_with_engine
+from teehr.metrics.spark_native import supports_spark_native
 from teehr.metrics.models.deterministic import VariabilityRatio
 
 EPSILON = 1e-6
@@ -876,3 +877,103 @@ def test_divide_by_zero_is_null_not_inf(spark_shared_session, engine):
     # Not a blanket null: the mean of the same group is well defined.
     assert got["zero-min"]["relative_mean"] is not None
     assert np.isfinite(got["zero-min"]["relative_mean"])
+
+
+# Kept last: the ensemble fixture repoints the shared catalog, breaking
+# module-scoped tests that run after it.
+def _probabilistic_metrics():
+    pm = ProbabilisticMetrics
+    return [
+        *(
+            pm.CRPS(
+                estimator=e,
+                summary_statistic=stat,
+                output_field_name=f"crps_{e}_{stat}",
+            )
+            for e in ("pwm", "nrg", "fair")
+            for stat in ("mean", "median")
+        ),
+        *(
+            pm.BrierScore(
+                threshold=t,
+                summary_statistic=stat,
+                output_field_name=f"brier_{int(t * 100)}_{stat}",
+            )
+            for t in (0.5, 0.75)
+            for stat in ("mean", "median")
+        ),
+    ]
+
+
+@pytest.mark.function_scope_large_ensemble_warehouse
+def test_engine_spark_probabilistic_parity(
+    function_scope_large_ensemble_warehouse,
+):
+    """Spark CRPS (each estimator) and Brier Score should match scoringrules."""
+    ev = function_scope_large_ensemble_warehouse
+    group_by = ["location_id", "secondary_configuration_name"]
+
+    def run(engine):
+        return (
+            ev.table("joined_timeseries")
+            .aggregate(
+                metrics=_probabilistic_metrics(),
+                group_by=group_by,
+                engine=engine,
+            )
+            .to_pandas()
+            .sort_values(group_by)
+            .reset_index(drop=True)
+        )
+
+    spark_df, python_df = run("spark"), run("python")
+    assert list(spark_df.columns) == list(python_df.columns)
+    for m in _probabilistic_metrics():
+        _allclose(spark_df[m.output_field_name], python_df[m.output_field_name])
+
+    # Per-time-step scores (Python only) average to the summarized value.
+    steps_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[ProbabilisticMetrics.CRPS(
+                summary_statistic=None, output_field_name="crps_steps"
+            )],
+            group_by=group_by,
+        )
+        .to_pandas()
+        .sort_values(group_by)
+        .reset_index(drop=True)
+    )
+    _allclose(steps_df["crps_steps"].map(np.mean), spark_df["crps_pwm_mean"])
+
+
+@pytest.mark.parametrize(
+    "kwargs, native",
+    [
+        ({}, True),
+        ({"summary_statistic": "median"}, True),
+        ({"summary_statistic": None}, False),
+        ({"summary_func": np.nanmean}, False),
+    ],
+)
+def test_probabilistic_native_routing(kwargs, native):
+    """Per-time-step arrays and custom summary_func run on Python."""
+    for cls in (ProbabilisticMetrics.CRPS, ProbabilisticMetrics.BrierScore):
+        assert supports_spark_native(cls(**kwargs)) is native
+
+
+@pytest.mark.parametrize(
+    "func, statistic",
+    [(np.mean, "mean"), (np.median, "median"), (None, None)],
+)
+def test_summary_func_deprecated(func, statistic):
+    """summary_func maps onto summary_statistic, at init and on assignment."""
+    with pytest.warns(DeprecationWarning, match="summary_func"):
+        at_init = ProbabilisticMetrics.CRPS(summary_func=func)
+    assigned = ProbabilisticMetrics.CRPS()
+    with pytest.warns(DeprecationWarning, match="summary_func"):
+        assigned.summary_func = func
+    for m in (at_init, assigned):
+        assert m.summary_statistic == statistic
+        assert m.summary_func is None
+        assert (m.return_type == "float") is (statistic is not None)
