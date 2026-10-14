@@ -876,3 +876,25 @@ def test_divide_by_zero_is_null_not_inf(spark_shared_session, engine):
     # Not a blanket null: the mean of the same group is well defined.
     assert got["zero-min"]["relative_mean"] is not None
     assert np.isfinite(got["zero-min"]["relative_mean"])
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_aggregate_accepts_single_metric(module_scope_test_warehouse):
+    """A single metric model should behave the same as a one-item list."""
+    ev = module_scope_test_warehouse
+    metric = DeterministicMetrics.KlingGuptaEfficiency()
+
+    for engine in ("python", "spark", "auto"):
+        single_df = (
+            ev.table("joined_timeseries")
+            .aggregate(metrics=metric, group_by=["primary_location_id"], engine=engine)
+            .order_by("primary_location_id")
+            .to_pandas()
+        )
+        list_df = (
+            ev.table("joined_timeseries")
+            .aggregate(metrics=[metric], group_by=["primary_location_id"], engine=engine)
+            .order_by("primary_location_id")
+            .to_pandas()
+        )
+        pd.testing.assert_frame_equal(single_df, list_df)
