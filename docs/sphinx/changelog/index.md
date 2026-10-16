@@ -43,17 +43,12 @@
   many-to-one crosswalks. Set `uniqueness_fields` to control the grouping explicitly.
 - **Keycloak token refresh helpers moved to `teehr.utils.keycloak_auth`.** They had nothing
   Spark- or Polaris-specific, so non-Spark code can now reuse them
-  ([#855](https://github.com/RTIInternational/teehr/issues/855)). The old names in
-  `teehr.evaluation.spark_session_utils` are removed, with no aliases:
-
-  | Removed | Use instead |
-  |---|---|
-  | `spark_session_utils.ensure_fresh_polaris_user_token` | `keycloak_auth.ensure_fresh_user_token` |
-  | `spark_session_utils.refresh_polaris_user_token` | `keycloak_auth.refresh_user_token` |
-
-  The new `keycloak_auth.refresh_user_token_from_env()` refreshes the token held in the
-  `POLARIS_*` environment variables and writes the new tokens back. Spark sessions
-  authenticate to Polaris exactly as before.
+  ([#855](https://github.com/RTIInternational/teehr/issues/855)). The old public functions
+  in `teehr.evaluation.spark_session_utils` are removed, with no aliases:
+  `ensure_fresh_polaris_user_token` and `refresh_polaris_user_token`. Use
+  `keycloak_auth.refresh_user_token_from_env()` instead: it refreshes the token held in the
+  `POLARIS_*` environment variables (the same ones the old functions were called with) and
+  writes the new tokens back. Spark sessions authenticate to Polaris exactly as before.
 
 ### Added
 - **`location_id_aliases` table** for locations with more than one primary data source

@@ -9,8 +9,8 @@ import requests
 
 from teehr.utils.keycloak_auth import (
     _token_expires_soon,
-    ensure_fresh_user_token,
-    refresh_user_token,
+    _ensure_fresh_user_token,
+    _refresh_user_token,
     refresh_user_token_from_env,
 )
 
@@ -69,7 +69,7 @@ def test_token_expires_soon():
 
 def test_refresh_user_token_sends_refresh_grant(token_endpoint):
     """The refresh grant carries the client id, secret and refresh token."""
-    access, refresh = refresh_user_token(
+    access, refresh = _refresh_user_token(
         "old-refresh", "jupyterhub", client_secret="secret"
     )
     assert (access, refresh) == ("new-access", "new-refresh")
@@ -86,13 +86,13 @@ def test_refresh_user_token_sends_refresh_grant(token_endpoint):
 def test_refresh_user_token_requires_refresh_token(token_endpoint):
     """A refresh without a refresh token raises."""
     with pytest.raises(RuntimeError):
-        refresh_user_token("", "jupyterhub")
+        _refresh_user_token("", "jupyterhub")
 
 
 def test_ensure_fresh_user_token_keeps_valid_token(token_endpoint):
     """A token outside the refresh window is returned without a request."""
     current = _jwt(600)
-    result = ensure_fresh_user_token(current, "jupyterhub", refresh_token="r")
+    result = _ensure_fresh_user_token(current, "jupyterhub", refresh_token="r")
     assert result == (current, "r", False)
     assert token_endpoint == []
 
@@ -100,7 +100,7 @@ def test_ensure_fresh_user_token_keeps_valid_token(token_endpoint):
 def test_ensure_fresh_user_token_without_refresh_token_raises(token_endpoint):
     """An expired token with no refresh token raises."""
     with pytest.raises(RuntimeError):
-        ensure_fresh_user_token(_jwt(-60), "jupyterhub")
+        _ensure_fresh_user_token(_jwt(-60), "jupyterhub")
 
 
 def test_from_env_refreshes_and_writes_back(token_endpoint, monkeypatch):

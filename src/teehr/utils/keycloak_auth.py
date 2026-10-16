@@ -59,7 +59,7 @@ def _request_oauth_tokens(
     return access_token, payload.get("refresh_token")
 
 
-def refresh_user_token(
+def _refresh_user_token(
     refresh_token: str,
     client_id: str,
     client_secret: Optional[str] = None,
@@ -99,7 +99,7 @@ def refresh_user_token(
     return _request_oauth_tokens(data=data, token_endpoint=token_endpoint)
 
 
-def ensure_fresh_user_token(
+def _ensure_fresh_user_token(
     current_token: Optional[str],
     client_id: str,
     client_secret: Optional[str] = None,
@@ -143,7 +143,7 @@ def ensure_fresh_user_token(
         return current_token, refresh_token, False
 
     if refresh_token:
-        refreshed_access, refreshed_refresh = refresh_user_token(
+        refreshed_access, refreshed_refresh = _refresh_user_token(
             refresh_token=refresh_token,
             client_id=client_id,
             client_secret=client_secret,
@@ -186,7 +186,7 @@ def refresh_user_token_from_env(
     RuntimeError
         If the token is expired and no valid refresh token is available.
     """
-    access_token, refresh_token, _ = ensure_fresh_user_token(
+    access_token, refresh_token, _ = _ensure_fresh_user_token(
         current_token=current_token or os.getenv("POLARIS_USER_TOKEN", ""),
         client_id=os.getenv("POLARIS_CLIENT_ID", "jupyterhub"),
         client_secret=os.getenv("POLARIS_CLIENT_SECRET"),
