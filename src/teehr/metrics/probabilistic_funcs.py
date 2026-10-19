@@ -23,7 +23,8 @@ def _pivot_by_member(
     """Pivot the timeseries data by members.
 
     Rows are aligned on (reference_time, value_time), since Spark does not
-    guarantee row order within a group.
+    guarantee row order within a group. Non-finite pairs are dropped, as on
+    the Spark path, so a member missing at a time step is NaN there.
 
     Notes
     -----
@@ -31,14 +32,13 @@ def _pivot_by_member(
 
     sec_arr: A 2-D array of simulations at each time step in the forecast.
             The first dimension should be the time step, and the second
-            dimension should be the ensemble member.
+            dimension should be the ensemble member. 1-D when there is only
+            one member.
     """
-    if members.isna().all() or members.nunique() == 1:
-        # No ensemble members, or only one
-        return {
-            "primary": p.values,
-            "secondary": s.values
-        }
+    valid = np.isfinite(p) & np.isfinite(s)
+    p, s = p[valid], s[valid]
+    members = members[valid]
+    reference_time, value_time = reference_time[valid], value_time[valid]
     # Hash-based factorize is much faster here than np.unique or df.pivot.
     m_idx, m_uniques = pd.factorize(
         members.values, sort=True, use_na_sentinel=False
@@ -53,7 +53,7 @@ def _pivot_by_member(
         rt_idx.astype("int64") * vt_uniques.size + vt_idx, sort=True
     )
     n_m = m_uniques.size
-    if np.bincount(t_idx * n_m + m_idx).max() > 1:
+    if np.any(np.bincount(t_idx * n_m + m_idx) > 1):
         raise ValueError(
             "Duplicate (reference_time, value_time, member) rows in group."
         )
@@ -63,7 +63,7 @@ def _pivot_by_member(
     primary[t_idx] = p.values
     return {
         "primary": primary,
-        "secondary": secondary
+        "secondary": secondary[:, 0] if n_m == 1 else secondary
     }
 
 
@@ -120,12 +120,19 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
         if fct.ndim == 1:
             # CRPS of a deterministic forecast is the absolute error
             return _summarize(model, np.abs(fct - obs))
-        return _summarize(
-            model,
-            sr.crps_ensemble(
-                obs, fct, estimator=model.estimator, backend=model.backend
-            )
+        scores = sr.crps_ensemble(
+            obs,
+            fct,
+            estimator=model.estimator,
+            nan_policy="omit",
+            backend=model.backend
         )
+        # Steps left with one member score as absolute error, as on Spark.
+        n_members = np.isfinite(fct).sum(axis=1)
+        scores = np.where(
+            n_members > 1, scores, np.abs(np.nanmean(fct, axis=1) - obs)
+        )
+        return _summarize(model, scores)
 
     return ensemble_crps_inner
 
@@ -135,19 +142,20 @@ def _get_brier_score_inputs(pivoted_dict: dict,
     """Obtain inputs for scoringrules.brier_score from pivoted dict."""
     # get quantile flow
     p = pivoted_dict['primary']
-    q_threshold = np.quantile(p, threshold)
+    q_threshold = np.quantile(p, threshold) if p.size else np.nan
 
     # get binary outcomes of observed exceeding threshold
     binary_p = np.where(p >= q_threshold, 1, 0)
 
     # get fraction of ensemble members exceeding threshold for each time step
     s = pivoted_dict['secondary']
-    binary_s = np.where(s >= q_threshold, 1, 0)
+    # (missing members are NaN and left out)
+    binary_s = np.where(np.isnan(s), np.nan, s >= q_threshold)
     if len(binary_s.shape) == 1:
         # only one ensemble member
         frac_exceeds_s = binary_s
     else:
-        frac_exceeds_s = np.mean(binary_s, axis=1)
+        frac_exceeds_s = np.nanmean(binary_s, axis=1)
 
     # assemble inputs dict
     brier_score_inputs = {

@@ -139,6 +139,16 @@ class ProbabilisticBasemodel(MetricsBasemodel):
                 self.reference_time_field_name,
                 self.value_time_field_name,
             ]
+        else:
+            names = self.input_field_names
+            if not isinstance(names, list):
+                names = [names]
+            if len(dict.fromkeys(names)) != 5:
+                raise ValueError(
+                    "input_field_names for probabilistic metrics must list "
+                    "five distinct fields: primary value, secondary value, "
+                    "member, reference time and value time, in that order."
+                )
         return self
 
     def get_input_field_names(self) -> List[Union[str, StrEnum]]:

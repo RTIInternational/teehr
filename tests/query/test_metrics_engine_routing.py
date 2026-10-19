@@ -879,6 +879,85 @@ def test_divide_by_zero_is_null_not_inf(spark_shared_session, engine):
     assert np.isfinite(got["zero-min"]["relative_mean"])
 
 
+def _ragged_ensemble_data(spark):
+    """One complete ensemble and one with missing members and values.
+
+    In "ragged", step 1 is missing a member, step 2 has a null forecast, step 3
+    has one member left and step 4 has a null observation.
+    """
+    rng = np.random.default_rng(0)
+    rt = pd.Timestamp("2020-01-01")
+    rows = []
+    for loc in ("complete", "ragged"):
+        for step in range(8):
+            vt = (rt + pd.Timedelta(hours=step)).to_pydatetime()
+            p = float(rng.normal(10, 2))
+            for member in range(4):
+                if loc == "ragged" and (
+                    (step == 1 and member == 2) or (step == 3 and member > 0)
+                ):
+                    continue
+                s = float(rng.normal(10, 3))
+                if loc == "ragged" and step == 2 and member == 0:
+                    s = None
+                obs = None if loc == "ragged" and step == 4 else p
+                rows.append((loc, rt.to_pydatetime(), vt, str(member), obs, s))
+    return spark.createDataFrame(
+        rows,
+        "location_id string, reference_time timestamp, value_time timestamp, "
+        "member string, primary_value double, secondary_value double",
+    )
+
+
+def test_probabilistic_missing_members_parity(spark_shared_session):
+    """Both engines leave missing members and values out of a time step."""
+    sdf = _ragged_ensemble_data(spark_shared_session)
+    metrics = [
+        *(
+            ProbabilisticMetrics.CRPS(
+                estimator=e, output_field_name=f"crps_{e}"
+            )
+            for e in ("pwm", "nrg", "fair")
+        ),
+        ProbabilisticMetrics.BrierScore(threshold=0.5),
+    ]
+    got = {
+        engine: _row_by_group(
+            aggregate_metrics_with_engine(
+                sdf=sdf,
+                group_by=["location_id"],
+                metrics=metrics,
+                engine=engine,
+            )
+        )
+        for engine in ("spark", "python")
+    }
+    for loc in ("complete", "ragged"):
+        for m in metrics:
+            spark_value = got["spark"][loc][m.output_field_name]
+            python_value = got["python"][loc][m.output_field_name]
+            assert spark_value is not None and np.isfinite(spark_value)
+            assert np.isclose(spark_value, python_value)
+
+
+@pytest.mark.parametrize("engine", ["spark", "python"])
+def test_probabilistic_duplicate_members_raise(spark_shared_session, engine):
+    """A repeated (reference_time, value_time, member) row is ambiguous."""
+    sdf = _ragged_ensemble_data(spark_shared_session)
+    sdf = sdf.unionByName(sdf.limit(1))
+    for metric in (
+        ProbabilisticMetrics.CRPS(),
+        ProbabilisticMetrics.BrierScore(),
+    ):
+        with pytest.raises(Exception, match="Duplicate"):
+            aggregate_metrics_with_engine(
+                sdf=sdf,
+                group_by=["location_id"],
+                metrics=[metric],
+                engine=engine,
+            ).collect()
+
+
 # Kept last: the ensemble fixture repoints the shared catalog, breaking
 # module-scoped tests that run after it.
 def _probabilistic_metrics():
@@ -977,3 +1056,13 @@ def test_summary_func_deprecated(func, statistic):
         assert m.summary_statistic == statistic
         assert m.summary_func is None
         assert (m.return_type == "float") is (statistic is not None)
+
+
+def test_probabilistic_input_field_names_requires_five():
+    """A legacy three-field override fails at construction, not in the UDF."""
+    fields = ["primary_value", "secondary_value", "member"]
+    for cls in (ProbabilisticMetrics.CRPS, ProbabilisticMetrics.BrierScore):
+        with pytest.raises(ValueError, match="five distinct fields"):
+            cls(input_field_names=fields)
+        m = cls(input_field_names=fields + ["reference_time", "value_time"])
+        assert len(m.get_input_field_names()) == 5

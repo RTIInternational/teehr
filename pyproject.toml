@@ -49,7 +49,7 @@ numba = ">=0.60.0,<1"
 arch = ">=7.0.0,<8"
 pandera = {extras = ["pyspark"], version = ">=0.20.4,<1"}
 netcdf4 = "1.7.2"
-scoringrules = ">=0.7.1,<1"
+scoringrules = ">=0.11.0,<1"
 lxml = ">=6.0,<7"
 obstore = ">=0.11.0,<0.12"
 virtualizarr = ">=2.7.1,<2.8"

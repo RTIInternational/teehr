@@ -48,6 +48,15 @@
   and `np.median` map to the new setting, and other callables still run on the Python
   engine.
 
+- **CRPS and Brier Score raise on duplicate `(reference_time, value_time, member)` rows**
+  in a group, on both engines. This usually means `group_by` is missing a field that
+  identifies the series, such as `secondary_configuration_name`, so members of different
+  ensembles were being pooled. Add the missing field to `group_by`.
+
+- **CRPS and Brier Score take five inputs**: primary value, secondary value, member,
+  reference time and value time. A legacy `input_field_names` override must list all
+  five, in that order, or the metric raises a `ValueError` when created.
+
 ### Added
 - **Spark-native CRPS and Brier Score** for `summary_statistic` `"mean"` or `"median"`.
   Per-time-step arrays and `engine="python"` still use scoringrules.
@@ -69,6 +78,10 @@
   by row order, which Spark does not guarantee, so results depended on file layout.
   Rows are now matched on `(reference_time, value_time)`. Recompute any ensemble metrics
   calculated with earlier versions.
+- **Ensemble CRPS and Brier Score skip missing members and values.** A member missing at
+  a time step is left out of that step, and rows with a null observation or forecast are
+  dropped, on both engines. Before, the Python engine returned NaN for CRPS and biased
+  Brier Score low. Requires `scoringrules>=0.11.0`.
 
 ## 0.8.0 - 2026-09-30
 

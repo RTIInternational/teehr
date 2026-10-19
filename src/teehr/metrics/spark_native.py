@@ -947,6 +947,7 @@ def _probabilistic_fields(metrics: List[MetricsBasemodel]) -> Tuple[str, ...]:
         (
             _field_name(m.primary_field_name),
             _field_name(m.secondary_field_name),
+            _field_name(m.member_field_name),
             _field_name(m.reference_time_field_name),
             _field_name(m.value_time_field_name),
         )
@@ -955,8 +956,8 @@ def _probabilistic_fields(metrics: List[MetricsBasemodel]) -> Tuple[str, ...]:
     if len(fields) != 1:
         raise ValueError(
             "Spark-native probabilistic metrics require shared primary, "
-            "secondary, reference_time and value_time field names in one "
-            "aggregate call."
+            "secondary, member, reference_time and value_time field names "
+            "in one aggregate call."
         )
     return next(iter(fields))
 
@@ -992,20 +993,20 @@ def _compute_probabilistic_metrics(
     """Compute summarized CRPS and Brier Score.
 
     Members are aligned on (reference_time, value_time), matching the Python
-    path's pivot.
+    path's pivot. A member missing at a time step is left out of that step.
     """
     from pyspark.sql import Window as W
 
-    p_col, s_col, rt_col, vt_col = _probabilistic_fields(metrics)
+    p_col, s_col, m_col, rt_col, vt_col = _probabilistic_fields(metrics)
     validate_fields_exist(
-        sdf.columns, group_by_cols + [p_col, s_col, rt_col, vt_col]
+        sdf.columns, group_by_cols + [p_col, s_col, m_col, rt_col, vt_col]
     )
     step_cols = list(dict.fromkeys(group_by_cols + [rt_col, vt_col]))
 
     p = F.col(p_col).cast("double")
     s = F.col(s_col).cast("double")
     rows = sdf.where(p.isNotNull() & s.isNotNull()).select(
-        *step_cols, p.alias("_p"), s.alias("_s")
+        *step_cols, F.col(m_col).alias("_member"), p.alias("_p"), s.alias("_s")
     )
 
     # Brier thresholds are quantiles of the observations, one per time step.
@@ -1028,6 +1029,8 @@ def _compute_probabilistic_metrics(
     step_aggs = [
         F.first("_p").alias("_p"),
         F.count(F.lit(1)).cast("double").alias("_m"),
+        # struct() so null members (deterministic data) are counted too.
+        F.countDistinct(F.struct("_member")).alias("_n_members"),
     ]
     if needs_crps:
         step_aggs += [
@@ -1050,6 +1053,11 @@ def _compute_probabilistic_metrics(
             c = q_cols[m.threshold]
             observed = (F.col("_p") >= F.col(c)).cast("double")
             score = F.pow(F.col(f"{c}_frac") - observed, 2)
+        score = F.when(F.col("_m") == F.col("_n_members"), score).otherwise(
+            F.raise_error(F.lit(
+                "Duplicate (reference_time, value_time, member) rows in group."
+            ))
+        )
         if m.summary_statistic == "median":
             # Exact, matching np.median; see _compute_deterministic_metrics.
             expr = F.percentile(score, 0.5)
