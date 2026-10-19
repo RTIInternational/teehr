@@ -42,7 +42,24 @@
   to the same location, is its own series. **Results change** on ensemble data and on
   many-to-one crosswalks. Set `uniqueness_fields` to control the grouping explicitly.
 
+- **`summary_statistic` replaces `summary_func` on CRPS and Brier Score**, and defaults
+  to `"mean"`, so `CRPS()` now returns the mean score rather than per-time-step arrays.
+  Pass `summary_statistic=None` for the arrays. `summary_func` is deprecated: `np.mean`
+  and `np.median` map to the new setting, and other callables still run on the Python
+  engine.
+
+- **CRPS and Brier Score raise on duplicate `(reference_time, value_time, member)` rows**
+  in a group, on both engines. This usually means `group_by` is missing a field that
+  identifies the series, such as `secondary_configuration_name`, so members of different
+  ensembles were being pooled. Add the missing field to `group_by`.
+
+- **CRPS and Brier Score take five inputs**: primary value, secondary value, member,
+  reference time and value time. A legacy `input_field_names` override must list all
+  five, in that order, or the metric raises a `ValueError` when created.
+
 ### Added
+- **Spark-native CRPS and Brier Score** for `summary_statistic` `"mean"` or `"median"`.
+  Per-time-step arrays and `engine="python"` still use scoringrules.
 - **`location_id_aliases` table** for locations with more than one primary data source
   ([#836](https://github.com/RTIInternational/teehr/issues/836)). It maps each
   `location_id_alias` to a `location_id` in `locations`. Primary timeseries may
@@ -55,6 +72,16 @@
   configuration listed in the table joins only to its paired primary configurations; one that
   isn't listed joins to all of them, as before. Many-to-many pairs are allowed. Migration
   `0010` creates the table empty.
+
+### Fixed
+- **Ensemble CRPS and Brier Score now align members by time step.** Members were paired
+  by row order, which Spark does not guarantee, so results depended on file layout.
+  Rows are now matched on `(reference_time, value_time)`. Recompute any ensemble metrics
+  calculated with earlier versions.
+- **Ensemble CRPS and Brier Score skip missing members and values.** A member missing at
+  a time step is left out of that step, and rows with a null observation or forecast are
+  dropped, on both engines. Before, the Python engine returned NaN for CRPS and biased
+  Brier Score low. Requires `scoringrules>=0.11.0`.
 
 ## 0.8.0 - 2026-09-30
 

@@ -4,8 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from teehr import DeterministicMetrics, Signatures
+from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
 from teehr.metrics.engine import aggregate_metrics_with_engine
+from teehr.metrics.spark_native import supports_spark_native
 from teehr.metrics.models.deterministic import VariabilityRatio
 
 EPSILON = 1e-6
@@ -876,3 +877,192 @@ def test_divide_by_zero_is_null_not_inf(spark_shared_session, engine):
     # Not a blanket null: the mean of the same group is well defined.
     assert got["zero-min"]["relative_mean"] is not None
     assert np.isfinite(got["zero-min"]["relative_mean"])
+
+
+def _ragged_ensemble_data(spark):
+    """One complete ensemble and one with missing members and values.
+
+    In "ragged", step 1 is missing a member, step 2 has a null forecast, step 3
+    has one member left and step 4 has a null observation.
+    """
+    rng = np.random.default_rng(0)
+    rt = pd.Timestamp("2020-01-01")
+    rows = []
+    for loc in ("complete", "ragged"):
+        for step in range(8):
+            vt = (rt + pd.Timedelta(hours=step)).to_pydatetime()
+            p = float(rng.normal(10, 2))
+            for member in range(4):
+                if loc == "ragged" and (
+                    (step == 1 and member == 2) or (step == 3 and member > 0)
+                ):
+                    continue
+                s = float(rng.normal(10, 3))
+                if loc == "ragged" and step == 2 and member == 0:
+                    s = None
+                obs = None if loc == "ragged" and step == 4 else p
+                rows.append((loc, rt.to_pydatetime(), vt, str(member), obs, s))
+    return spark.createDataFrame(
+        rows,
+        "location_id string, reference_time timestamp, value_time timestamp, "
+        "member string, primary_value double, secondary_value double",
+    )
+
+
+def test_probabilistic_missing_members_parity(spark_shared_session):
+    """Both engines leave missing members and values out of a time step."""
+    sdf = _ragged_ensemble_data(spark_shared_session)
+    metrics = [
+        *(
+            ProbabilisticMetrics.CRPS(
+                estimator=e, output_field_name=f"crps_{e}"
+            )
+            for e in ("pwm", "nrg", "fair")
+        ),
+        ProbabilisticMetrics.BrierScore(threshold=0.5),
+    ]
+    got = {
+        engine: _row_by_group(
+            aggregate_metrics_with_engine(
+                sdf=sdf,
+                group_by=["location_id"],
+                metrics=metrics,
+                engine=engine,
+            )
+        )
+        for engine in ("spark", "python")
+    }
+    for loc in ("complete", "ragged"):
+        for m in metrics:
+            spark_value = got["spark"][loc][m.output_field_name]
+            python_value = got["python"][loc][m.output_field_name]
+            assert spark_value is not None and np.isfinite(spark_value)
+            assert np.isclose(spark_value, python_value)
+
+
+@pytest.mark.parametrize("engine", ["spark", "python"])
+def test_probabilistic_duplicate_members_raise(spark_shared_session, engine):
+    """A repeated (reference_time, value_time, member) row is ambiguous."""
+    sdf = _ragged_ensemble_data(spark_shared_session)
+    sdf = sdf.unionByName(sdf.limit(1))
+    for metric in (
+        ProbabilisticMetrics.CRPS(),
+        ProbabilisticMetrics.BrierScore(),
+    ):
+        with pytest.raises(Exception, match="Duplicate"):
+            aggregate_metrics_with_engine(
+                sdf=sdf,
+                group_by=["location_id"],
+                metrics=[metric],
+                engine=engine,
+            ).collect()
+
+
+# Kept last: the ensemble fixture repoints the shared catalog, breaking
+# module-scoped tests that run after it.
+def _probabilistic_metrics():
+    pm = ProbabilisticMetrics
+    return [
+        *(
+            pm.CRPS(
+                estimator=e,
+                summary_statistic=stat,
+                output_field_name=f"crps_{e}_{stat}",
+            )
+            for e in ("pwm", "nrg", "fair")
+            for stat in ("mean", "median")
+        ),
+        *(
+            pm.BrierScore(
+                threshold=t,
+                summary_statistic=stat,
+                output_field_name=f"brier_{int(t * 100)}_{stat}",
+            )
+            for t in (0.5, 0.75)
+            for stat in ("mean", "median")
+        ),
+    ]
+
+
+@pytest.mark.function_scope_large_ensemble_warehouse
+def test_engine_spark_probabilistic_parity(
+    function_scope_large_ensemble_warehouse,
+):
+    """Spark CRPS (each estimator) and Brier Score should match scoringrules."""
+    ev = function_scope_large_ensemble_warehouse
+    group_by = ["location_id", "secondary_configuration_name"]
+
+    def run(engine):
+        return (
+            ev.table("joined_timeseries")
+            .aggregate(
+                metrics=_probabilistic_metrics(),
+                group_by=group_by,
+                engine=engine,
+            )
+            .to_pandas()
+            .sort_values(group_by)
+            .reset_index(drop=True)
+        )
+
+    spark_df, python_df = run("spark"), run("python")
+    assert list(spark_df.columns) == list(python_df.columns)
+    for m in _probabilistic_metrics():
+        _allclose(spark_df[m.output_field_name], python_df[m.output_field_name])
+
+    # Per-time-step scores (Python only) average to the summarized value.
+    steps_df = (
+        ev.table("joined_timeseries")
+        .aggregate(
+            metrics=[ProbabilisticMetrics.CRPS(
+                summary_statistic=None, output_field_name="crps_steps"
+            )],
+            group_by=group_by,
+        )
+        .to_pandas()
+        .sort_values(group_by)
+        .reset_index(drop=True)
+    )
+    _allclose(steps_df["crps_steps"].map(np.mean), spark_df["crps_pwm_mean"])
+
+
+@pytest.mark.parametrize(
+    "kwargs, native",
+    [
+        ({}, True),
+        ({"summary_statistic": "median"}, True),
+        ({"summary_statistic": None}, False),
+        ({"summary_func": np.nanmean}, False),
+    ],
+)
+def test_probabilistic_native_routing(kwargs, native):
+    """Per-time-step arrays and custom summary_func run on Python."""
+    for cls in (ProbabilisticMetrics.CRPS, ProbabilisticMetrics.BrierScore):
+        assert supports_spark_native(cls(**kwargs)) is native
+
+
+@pytest.mark.parametrize(
+    "func, statistic",
+    [(np.mean, "mean"), (np.median, "median"), (None, None)],
+)
+def test_summary_func_deprecated(func, statistic):
+    """summary_func maps onto summary_statistic, at init and on assignment."""
+    with pytest.warns(DeprecationWarning, match="summary_func"):
+        at_init = ProbabilisticMetrics.CRPS(summary_func=func)
+    assigned = ProbabilisticMetrics.CRPS()
+    with pytest.warns(DeprecationWarning, match="summary_func"):
+        assigned.summary_func = func
+    for m in (at_init, assigned):
+        assert m.summary_statistic == statistic
+        assert m.summary_func is None
+        assert (m.return_type == "float") is (statistic is not None)
+
+
+def test_probabilistic_input_field_names_requires_five():
+    """A legacy three-field override fails at construction, not in the UDF."""
+    fields = ["primary_value", "secondary_value", "member"]
+    for cls in (ProbabilisticMetrics.CRPS, ProbabilisticMetrics.BrierScore):
+        with pytest.raises(ValueError, match="five distinct fields"):
+            cls(input_field_names=fields)
+        m = cls(input_field_names=fields + ["reference_time", "value_time"])
+        assert len(m.get_input_field_names()) == 5
