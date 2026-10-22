@@ -41,6 +41,14 @@
   `secondary_location_id`, so each ensemble member, and each secondary location crosswalked
   to the same location, is its own series. **Results change** on ensemble data and on
   many-to-one crosswalks. Set `uniqueness_fields` to control the grouping explicitly.
+- **Keycloak token refresh helpers moved to `teehr.utils.keycloak_auth`.** They had nothing
+  Spark- or Polaris-specific, so non-Spark code can now reuse them
+  ([#855](https://github.com/RTIInternational/teehr/issues/855)). The old public functions
+  in `teehr.evaluation.spark_session_utils` are removed, with no aliases:
+  `ensure_fresh_polaris_user_token` and `refresh_polaris_user_token`. Use
+  `keycloak_auth.refresh_user_token_from_env()` instead: it refreshes the token held in the
+  `POLARIS_*` environment variables (the same ones the old functions were called with) and
+  writes the new tokens back. Spark sessions authenticate to Polaris exactly as before.
 
 - **`summary_statistic` replaces `summary_func` on CRPS and Brier Score**, and defaults
   to `"mean"`, so `CRPS()` now returns the mean score rather than per-time-step arrays.
