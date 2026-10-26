@@ -91,6 +91,11 @@
   dropped, on both engines. Before, the Python engine returned NaN for CRPS and biased
   Brier Score low. Requires `scoringrules>=0.11.0`.
 
+### Fixed
+- `aggregate()` accepts a single metric model as well as a list
+  ([#820](https://github.com/RTIInternational/teehr/issues/820)). Passing one model
+  previously raised `AttributeError`.
+
 ## 0.8.0 - 2026-09-30
 
 ### Breaking Changes
