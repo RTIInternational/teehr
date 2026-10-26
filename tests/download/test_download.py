@@ -373,3 +373,74 @@ def test_fetch_paginated_items_default_omits_limit(monkeypatch):
 
     assert [i["id"] for i in items] == ["1"]
     assert "limit" not in calls[0][1]
+
+
+def test_download_location_id_aliases(monkeypatch):
+    """location_id_aliases hits its collection and loads the expected table."""
+    loaded = []
+    ev = SimpleNamespace(
+        _load=SimpleNamespace(
+            dataframe=lambda df, table_name, write_mode: loaded.append(
+                (table_name, len(df))
+            )
+        )
+    )
+    download = Download(ev)
+    download.configure(api_base_url="https://api.example.com")
+
+    calls = []
+    item = {"location_id": "usgs-01", "location_id_alias": "nwps-01"}
+
+    def mock_get(url, params=None, headers=None, verify=None, timeout=None):
+        calls.append((url, params))
+        return MockResponse({"items": [item], "numberReturned": 1, "links": []})
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    df = download.location_id_aliases(
+        location_id=["usgs-01", "usgs-02"], location_id_alias_prefix="nwps"
+    )
+    assert df.to_dict(orient="records") == [item]
+    assert calls[0][0].endswith("/collections/location_id_aliases/items")
+    assert calls[0][1]["location_id"] == ["usgs-01", "usgs-02"]
+    assert calls[0][1]["location_id_alias_prefix"] == "nwps"
+
+    assert download.location_id_aliases(load=True) is None
+    assert loaded == [("location_id_aliases", 1)]
+
+
+def test_download_configuration_pairs(monkeypatch):
+    """configuration_pairs hits its collection and loads the expected table."""
+    loaded = []
+    ev = SimpleNamespace(
+        _load=SimpleNamespace(
+            dataframe=lambda df, table_name, write_mode: loaded.append(
+                (table_name, len(df))
+            )
+        )
+    )
+    download = Download(ev)
+    download.configure(api_base_url="https://api.example.com")
+
+    calls = []
+    item = {
+        "primary_configuration_name": "usgs_observations",
+        "secondary_configuration_name": "nwm30_retrospective",
+    }
+
+    def mock_get(url, params=None, headers=None, verify=None, timeout=None):
+        calls.append((url, params))
+        return MockResponse({"items": [item], "numberReturned": 1, "links": []})
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    df = download.configuration_pairs(
+        secondary_configuration_name="nwm30_retrospective"
+    )
+    assert df.to_dict(orient="records") == [item]
+    assert calls[0][0].endswith("/collections/configuration_pairs/items")
+    assert calls[0][1]["secondary_configuration_name"] == "nwm30_retrospective"
+    assert "primary_configuration_name" not in calls[0][1]
+
+    assert download.configuration_pairs(load=True) is None
+    assert loaded == [("configuration_pairs", 1)]
