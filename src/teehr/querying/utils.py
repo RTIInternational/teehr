@@ -203,7 +203,8 @@ def calculate_metric_skill_score(
     """
     logger.debug("Calculating skill score.")
     key_cols = [
-        c for c in parse_fields_to_list(group_by) if c != "configuration_name"
+        c for c in parse_fields_to_list(group_by)
+        if c != "secondary_configuration_name"
     ]
     skill_score_col = f"{metric_field}_skill_score"
     ref_value_col = f"_{metric_field}_reference_value"
@@ -211,7 +212,7 @@ def calculate_metric_skill_score(
 
     reference_sdf = (
         metrics_sdf
-        .filter(F.col("configuration_name") == reference_configuration)
+        .filter(F.col("secondary_configuration_name") == reference_configuration)
         .select(
             *[F.col(c).alias(ref_key_cols[c]) for c in key_cols],
             F.col(metric_field).alias(ref_value_col),
@@ -227,7 +228,7 @@ def calculate_metric_skill_score(
         .withColumn(
             skill_score_col,
             F.when(
-                F.col("configuration_name") != reference_configuration,
+                F.col("secondary_configuration_name") != reference_configuration,
                 1 - F.try_divide(F.col(metric_field), F.col(ref_value_col)),
             ).cast("double")
         )
@@ -455,8 +456,44 @@ def join_attributes(
 
     attrs_df = attrs_df.select([target_location_id] + attr_cols)
 
-    joined_df = target_df.join(attrs_df, on=target_location_id)
+    # Keep the target's column order (join moves the key to the front).
+    joined_df = target_df.join(attrs_df, on=target_location_id).select(
+        target_df.columns + attr_cols
+    )
     return joined_df
+
+
+def check_joined_column_names(sdf: ps.DataFrame) -> None:
+    """Raise if a joined timeseries DataFrame uses the pre-0.9 column names.
+
+    Joined timeseries written before the primary/secondary column renaming
+    have ``configuration_name`` instead of ``secondary_configuration_name``.
+    Such tables must be regenerated; the old names are not supported.
+
+    Parameters
+    ----------
+    sdf : ps.DataFrame
+        The DataFrame to check.
+
+    Raises
+    ------
+    ValueError
+        If the DataFrame looks like a joined timeseries with the old names.
+    """
+    columns = set(sdf.columns)
+    if (
+        {"primary_value", "secondary_value", "configuration_name"} <= columns
+        and "secondary_configuration_name" not in columns
+    ):
+        raise ValueError(
+            "This joined timeseries uses column names from before TEEHR 0.9 "
+            "(e.g., 'configuration_name' instead of "
+            "'secondary_configuration_name'). Regenerate it, for example: "
+            "ev.joined_timeseries_view(add_attrs=True).write("
+            "'joined_timeseries'), and re-apply any calculated fields. "
+            "See the 'Action required: regenerate joined timeseries tables' "
+            "entry in the TEEHR changelog."
+        )
 
 
 def add_alias_rows(

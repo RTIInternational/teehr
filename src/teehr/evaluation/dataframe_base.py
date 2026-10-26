@@ -164,9 +164,11 @@ class TeehrDataFrameBase(ABC):
         ...     attr_list=["drainage_area", "ecoregion"]
         ... ).to_pandas()
 
-        Specify join column explicitly:
+        Specify the join column explicitly, e.g. on the secondary timeseries
+        view, where ``location_id`` is the secondary ID and
+        ``primary_location_id`` is the ``locations`` ID:
 
-        >>> df = accessor.add_attributes(
+        >>> df = ev.secondary_timeseries_view().add_attributes(
         ...     location_id_col="primary_location_id"
         ... ).to_pandas()
 
@@ -177,7 +179,7 @@ class TeehrDataFrameBase(ABC):
         >>> df = (
         ...     ev.joined_timeseries_view()
         ...     .aggregate(
-        ...         group_by=["primary_location_id"],
+        ...         group_by=["location_id"],
         ...         metrics=[KGE()]
         ...     )
         ...     .add_attributes(attr_list=["drainage_area", "ecoregion"])
@@ -308,7 +310,7 @@ class TeehrDataFrameBase(ABC):
     def aggregate(
         self,
         group_by: Union[str, List[str]],
-        metrics: List[MetricsBasemodel],
+        metrics: Union[MetricsBasemodel, List[MetricsBasemodel]],
         engine: str = "auto",
     ):
         """Aggregate data with grouping and metrics.
@@ -317,8 +319,8 @@ class TeehrDataFrameBase(ABC):
         ----------
         group_by : Union[str, List[str]]
             Fields to group by for metric calculation.
-        metrics : List[MetricsBasemodel]
-            Metrics to calculate.
+        metrics : Union[MetricsBasemodel, List[MetricsBasemodel]]
+            Metric or list of metrics to calculate.
         engine : str, optional
             Aggregation engine to use. Options are ``"auto"``,
             ``"python"``, or ``"spark"``. Default is ``"auto"``.
@@ -332,7 +334,7 @@ class TeehrDataFrameBase(ABC):
         --------
         >>> df = accessor.aggregate(
         >>>     metrics=[KGE()],
-        >>>     group_by=["primary_location_id"]
+        >>>     group_by=["location_id"]
         >>> ).to_pandas()
 
         Chain with filter and order_by:
@@ -341,16 +343,19 @@ class TeehrDataFrameBase(ABC):
         >>>
         >>> df = (
         >>>     accessor
-        >>>     .filter("primary_location_id LIKE 'usgs%'")
+        >>>     .filter("location_id LIKE 'usgs%'")
         >>>     .aggregate(
-        >>>         group_by=["primary_location_id", "configuration_name"],
+        >>>         group_by=["location_id", "secondary_configuration_name"],
         >>>         metrics=[dm.KlingGuptaEfficiency(), dm.RelativeBias()]
         >>>     )
-        >>>     .order_by(["primary_location_id", "configuration_name"])
+        >>>     .order_by(["location_id", "secondary_configuration_name"])
         >>>     .to_pandas()
         >>> )
 
         """
+        if not isinstance(metrics, list):
+            metrics = [metrics]
+
         logger.info("Performing the aggregation.")
 
         logger.debug(
@@ -531,7 +536,7 @@ class TeehrDataFrameBase(ABC):
         --------
         >>> accessor.aggregate(
         ...     metrics=[KGE()],
-        ...     group_by=["primary_location_id"]
+        ...     group_by=["location_id"]
         ... ).write_to("location_metrics")
         """
         logger.info(f"Writing to table: {table_name}.")

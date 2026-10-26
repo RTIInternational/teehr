@@ -18,7 +18,11 @@ from teehr.metrics.spark_native import (
     compute_spark_native_metrics,
     supports_spark_native,
 )
-from teehr.querying.utils import group_df, parse_fields_to_list
+from teehr.querying.utils import (
+    check_joined_column_names,
+    group_df,
+    parse_fields_to_list,
+)
 from teehr.utils.spark import null_safe_join_on_columns
 
 
@@ -29,6 +33,7 @@ def aggregate_metrics_with_engine(
     engine: str = "auto",
 ) -> DataFrame:
     """Aggregate metrics using auto, python, or spark execution modes."""
+    check_joined_column_names(sdf)
     if not isinstance(metrics, list):
         metrics = [metrics]
 

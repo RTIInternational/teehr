@@ -10,6 +10,7 @@ from typing import Iterable
 
 from pyspark.sql import DataFrame
 
+from teehr.querying.utils import check_joined_column_names
 from teehr.calculated_fields.adapters import (
     CalculatedFieldAdapter,
     batched_adapter,
@@ -65,7 +66,6 @@ from teehr.calculated_fields.models.row_level import (
     HourOfYear,
 )
 from teehr.calculated_fields.models.timeseries_aware import (
-    UNIQUENESS_FIELDS,
     AbovePercentileEventDetection,
     BelowPercentileEventDetection,
     AboveThresholdEventDetection,
@@ -141,8 +141,9 @@ def supports_spark_native_cf(cf: CalculatedFieldBaseModel) -> bool:
 
 
 def _normalize_fields(fields: str | list[str] | None) -> list[str]:
+    # Batching key only: the default series key is resolved per DataFrame.
     if fields is None:
-        return list(UNIQUENESS_FIELDS)
+        return ["<default series key>"]
     if isinstance(fields, str):
         return [fields]
     return list(fields)
@@ -172,7 +173,6 @@ def _apply_percentile_batch(
     return apply_percentile_batch_spark(
         sdf=sdf,
         cfs=cfs,
-        default_uniqueness_fields=UNIQUENESS_FIELDS,
     )
 
 
@@ -183,7 +183,6 @@ def _apply_threshold_batch(
     return apply_threshold_batch_spark(
         sdf=sdf,
         cfs=cfs,
-        default_uniqueness_fields=UNIQUENESS_FIELDS,
     )
 
 
@@ -384,7 +383,6 @@ def _apply_exceedance_probability_spark(
     return apply_exceedance_probability_spark(
         sdf=sdf,
         cf=cf,
-        default_uniqueness_fields=UNIQUENESS_FIELDS,
     )
 
 
@@ -394,7 +392,6 @@ def _apply_baseflow_period_spark(
     return apply_baseflow_period_spark(
         sdf=sdf,
         cf=cf,
-        default_uniqueness_fields=UNIQUENESS_FIELDS,
     )
 
 
@@ -421,7 +418,6 @@ def _apply_percentile_batch_python(
             add_quantile_field=cf.add_quantile_field,
             skip_event_id=cf.skip_event_id,
             uniqueness_fields=cf.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
             is_above=isinstance(cf, AbovePercentileEventDetection),
         )
     return sdf
@@ -442,7 +438,6 @@ def _apply_threshold_batch_python(
             output_event_id_field_name=cf.output_event_id_field_name,
             skip_event_id=cf.skip_event_id,
             uniqueness_fields=cf.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
             is_above=isinstance(cf, AboveThresholdEventDetection),
         )
     return sdf
@@ -551,6 +546,7 @@ def apply_calculated_fields_with_engine(
     engine: str = "auto",
 ) -> DataFrame:
     """Apply calculated fields using auto, python, or spark execution modes."""
+    check_joined_column_names(sdf)
     cfs = list(cfs)
     engine = engine.lower()
     if engine not in {"auto", "python", "spark"}:

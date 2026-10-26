@@ -16,7 +16,13 @@ def update_datasets():
     ]
     for filename in filenames:
         df = pd.read_parquet(current_dir / filename)
-        df.loc[(df.variable_name == "rainfall_hourly_rate"), "variable_name"] = "rainrate_hourly_mean"
+        # The joined timeseries has prefixed variable name columns.
+        variable_cols = [
+            c for c in ["variable_name", "primary_variable_name", "secondary_variable_name"]
+            if c in df.columns
+        ]
+        for col in variable_cols:
+            df.loc[(df[col] == "rainfall_hourly_rate"), col] = "rainrate_hourly_mean"
         df.to_parquet(current_dir / filename, index=False)
 
 

@@ -116,13 +116,13 @@ def test_custom_table_upsert_uses_null_safe_uniqueness(
     schema = StructType([
         StructField("reference_time", TimestampNTZType(), False),
         StructField("value_time", TimestampNTZType(), False),
-        StructField("primary_location_id", StringType(), False),
+        StructField("location_id", StringType(), False),
         StructField("secondary_location_id", StringType(), False),
         StructField("primary_value", DoubleType(), False),
         StructField("secondary_value", DoubleType(), False),
-        StructField("configuration_name", StringType(), False),
+        StructField("secondary_configuration_name", StringType(), False),
         StructField("unit_name", StringType(), False),
-        StructField("variable_name", StringType(), False),
+        StructField("secondary_variable_name", StringType(), False),
         StructField("member", StringType(), True),
     ])
     initial_df = ev.spark.createDataFrame(
@@ -159,11 +159,11 @@ def test_custom_table_upsert_uses_null_safe_uniqueness(
     uniqueness_fields = [
         "reference_time",
         "value_time",
-        "primary_location_id",
+        "location_id",
         "secondary_location_id",
-        "configuration_name",
+        "secondary_configuration_name",
         "unit_name",
-        "variable_name",
+        "secondary_variable_name",
         "member",
     ]
 

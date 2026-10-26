@@ -126,6 +126,7 @@ def test_create_joined_timeseries(function_scope_evaluation_template):
     expected_columns = [
         'reference_time',
         'value_time',
+        'location_id',
         'primary_location_id',
         'secondary_location_id',
         'primary_value',
@@ -136,11 +137,11 @@ def test_create_joined_timeseries(function_scope_evaluation_template):
         # 'month',
         # 'year',
         # 'water_year',
-        'configuration_name',
-        'variable_name',
-        'member',
         'primary_configuration_name',
-        'primary_timeseries_location_id',
+        'secondary_configuration_name',
+        'primary_variable_name',
+        'secondary_variable_name',
+        'member',
         # 'season'
     ]
     # Make sure secondary geodataframe is created correctly
@@ -245,6 +246,7 @@ def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
     expected_columns = [
         'reference_time',
         'value_time',
+        'location_id',
         'primary_location_id',
         'secondary_location_id',
         'primary_value',
@@ -255,11 +257,11 @@ def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
         # 'month',
         # 'year',
         # 'water_year',
-        'configuration_name',
-        'variable_name',
-        'member',
         'primary_configuration_name',
-        'primary_timeseries_location_id',
+        'secondary_configuration_name',
+        'primary_variable_name',
+        'secondary_variable_name',
+        'member',
         # 'season'
     ]
 
@@ -348,10 +350,19 @@ def test_distinct_values(function_scope_test_warehouse):
     assert len(prefixes) == 1
     assert prefixes[0] == "fcst"
 
+    # test joined_timeseries for location_id with
+    # location_prefixes==True (valid)
+    prefixes = ev.table("joined_timeseries").distinct_values(
+        column='location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
     # test invalid column handling for location_prefixes==True
     with pytest.raises(ValueError):
         prefixes = ev.table("joined_timeseries").distinct_values(
-            column='location_id',
+            column='primary_timeseries_location_id',
             location_prefixes=True
         )
 
@@ -455,8 +466,9 @@ def test_inst_join_across_periods(function_scope_evaluation_template):
     # Should have rows because inst ignores period during join
     assert len(joined_df) > 0
 
-    # The variable_name in joined table should be from secondary (daily_inst)
-    assert all(joined_df['variable_name'] == 'streamflow_daily_inst')
+    # Each side keeps its own variable name
+    assert all(joined_df['secondary_variable_name'] == 'streamflow_daily_inst')
+    assert all(joined_df['primary_variable_name'] == 'streamflow_hourly_inst')
 
 
 @pytest.mark.function_scope_evaluation_template
@@ -650,5 +662,6 @@ def test_non_inst_join_with_matching_period(
     assert len(joined_df) > 0, \
         "non-inst statistic with matching period should join"
 
-    # The variable_name in joined table should be hourly_mean
-    assert all(joined_df['variable_name'] == 'streamflow_hourly_mean')
+    # The variable names in joined table should be hourly_mean
+    assert all(joined_df['secondary_variable_name'] == 'streamflow_hourly_mean')
+    assert all(joined_df['primary_variable_name'] == 'streamflow_hourly_mean')

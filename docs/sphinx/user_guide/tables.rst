@@ -236,10 +236,10 @@ See also: :meth:`LocationCrosswalkTable.load_csv() <teehr.evaluation.tables.loca
 
 Load location ID aliases (optional). Use these when a location has more than
 one primary data source, each with its own location ID. Primary timeseries
-can then be loaded under either ID, and the joined timeseries resolves aliases
-to the ``primary_location_id`` from ``locations``, keeping the original ID in
-``primary_timeseries_location_id``. Crosswalks should reference the location ID,
-not the alias.
+can then be loaded under either ID. The joined timeseries resolves aliases to
+``location_id`` (the ``locations`` ID) and keeps the primary timeseries ID in
+``primary_location_id``. Crosswalks should reference the location ID, not the
+alias.
 
 .. code-block:: python
 
@@ -364,16 +364,16 @@ Table methods return ``self`` to enable fluent method chaining:
    # Chain multiple operations
    result = (
        ev.joined_timeseries_view()
-       .filter("primary_location_id LIKE 'usgs%'")
+       .filter("location_id LIKE 'usgs%'")
        .add_calculated_fields([rcf.Month(), rcf.WaterYear()])
        .aggregate(
            metrics=[
                dm.KlingGuptaEfficiency(),
                dm.RelativeBias()
            ],
-           group_by=["primary_location_id", "month"]
+           group_by=["location_id", "month"]
        )
-       .order_by(["primary_location_id", "month"])
+       .order_by(["location_id", "month"])
        .to_pandas()
    )
 
@@ -388,7 +388,7 @@ Write query results to new tables:
    # Calculate metrics and save to a new table
    ev.joined_timeseries_view().aggregate(
        metrics=[dm.KlingGuptaEfficiency()],
-       group_by=["primary_location_id", "configuration_name"]
+       group_by=["location_id", "secondary_configuration_name"]
    ).write_to("location_metrics")
 
    # Access the new table
@@ -511,7 +511,7 @@ property to check whether a table is a core table before attempting to drop it.
    # Write a user-created table
    ev.joined_timeseries_view().aggregate(
        metrics=[dm.KlingGuptaEfficiency()],
-       group_by=["primary_location_id"]
+       group_by=["location_id"]
    ).write_to("location_metrics")
 
    # Check whether it's a core table (always False for user-created tables)

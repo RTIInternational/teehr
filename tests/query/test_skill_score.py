@@ -19,8 +19,8 @@ def _metrics_sdf(spark):
     ]
     return spark.createDataFrame(
         rows,
-        "primary_location_id string, member string, "
-        "configuration_name string, mae double",
+        "location_id string, member string, "
+        "secondary_configuration_name string, mae double",
     )
 
 
@@ -28,11 +28,11 @@ def test_skill_score_values(spark_shared_session):
     """Skill is relative to the matching reference row, NULL where undefined."""
     sdf = _metrics_sdf(spark_shared_session)
     result = calculate_metric_skill_score(
-        sdf, "mae", REF, ["primary_location_id", "member", "configuration_name"]
+        sdf, "mae", REF, ["location_id", "member", "secondary_configuration_name"]
     )
 
     assert result.columns == sdf.columns + ["mae_skill_score"]
-    df = result.toPandas().set_index(["primary_location_id", "configuration_name"])
+    df = result.toPandas().set_index(["location_id", "secondary_configuration_name"])
     skill = df["mae_skill_score"]
     # A null group key (member) still matches its reference row.
     assert skill[("loc_a", "fcst_1")] == pytest.approx(0.5)
@@ -46,12 +46,14 @@ def test_skill_score_values(spark_shared_session):
 
 
 def test_skill_score_group_by_configuration_only(spark_shared_session):
-    """With only configuration_name in group_by, every row uses the one reference."""
-    sdf = _metrics_sdf(spark_shared_session).filter("primary_location_id = 'loc_a'")
-    sdf = sdf.drop("primary_location_id", "member")
-    result = calculate_metric_skill_score(sdf, "mae", REF, "configuration_name")
+    """With only the configuration in group_by, every row uses one reference."""
+    sdf = _metrics_sdf(spark_shared_session).filter("location_id = 'loc_a'")
+    sdf = sdf.drop("location_id", "member")
+    result = calculate_metric_skill_score(
+        sdf, "mae", REF, "secondary_configuration_name"
+    )
 
-    df = result.toPandas().set_index("configuration_name")
+    df = result.toPandas().set_index("secondary_configuration_name")
     assert df.loc["fcst_1", "mae_skill_score"] == pytest.approx(0.5)
     assert pd.isna(df.loc[REF, "mae_skill_score"])
 
@@ -62,7 +64,7 @@ def test_aggregate_with_skill_score_runs_no_spark_jobs(module_scope_test_warehou
     ev = module_scope_test_warehouse
     accessor = ev.table("joined_timeseries")
     accessor.to_sdf()
-    reference = accessor.to_pandas()["configuration_name"].iloc[0]
+    reference = accessor.to_pandas()["secondary_configuration_name"].iloc[0]
 
     metric = DeterministicMetrics.MeanAbsoluteError()
     metric.reference_configuration = reference
@@ -73,7 +75,7 @@ def test_aggregate_with_skill_score_runs_no_spark_jobs(module_scope_test_warehou
     try:
         results = accessor.aggregate(
             metrics=[metric],
-            group_by=["primary_location_id", "configuration_name"],
+            group_by=["location_id", "secondary_configuration_name"],
         )
     finally:
         sc.setLocalProperty("spark.jobGroup.id", None)
