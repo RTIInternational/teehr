@@ -111,6 +111,29 @@ class Write:
 
         return timestamp_view
 
+    def _insert_by_name(
+        self,
+        timestamp_view: str,
+        table_name: str,
+        catalog_name: str,
+        namespace_name: str,
+        overwrite: bool = False,
+    ):
+        """INSERT INTO/OVERWRITE selecting columns in the target table's order.
+
+        Spark matches ``SELECT *`` to table columns by position, so the
+        source view's column order would otherwise have to match the table's.
+        """
+        full_table_name = f"{catalog_name}.{namespace_name}.{table_name}"
+        columns_sql = ", ".join(
+            f"`{col}`" for col in self._ev.spark.table(full_table_name).columns
+        )
+        insert_sql = "INSERT OVERWRITE TABLE" if overwrite else "INSERT INTO"
+        self._ev.sql(f"""
+            {insert_sql} {full_table_name}
+            SELECT {columns_sql} FROM {timestamp_view}
+        """)
+
     def _create_or_replace(
         self,
         source_view: str,
@@ -118,28 +141,40 @@ class Write:
         catalog_name: str,
         namespace_name: str,
         partition_by: List[str] | None = None,
+        write_ordered_by: List[str] | None = None,
     ):
         """Drop and recreate the table with source data.
 
         Creates the table if it doesn't exist. Loses table history/snapshots.
         Can change schema if source data has different columns.
         Sets both created_at and updated_at to current timestamp.
+
+        The table is created empty and the write order set before the data
+        is inserted, so the rows are written sorted by ``write_ordered_by``.
         """
         timestamp_view = self._add_timestamps_to_view(source_view)
+        partition_sql = ""
         if partition_by:
-            partition_sql = ", ".join(partition_by)
-            sql_query = f"""
-                CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
-                USING iceberg
-                PARTITIONED BY ({partition_sql})
-                AS SELECT * FROM {timestamp_view}
-            """  # noqa: E501
-        else:
-            sql_query = f"""
-                CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
-                AS SELECT * FROM {timestamp_view}
-            """  # noqa: E501
-        self._ev.sql(sql_query)
+            partition_sql = f"PARTITIONED BY ({', '.join(partition_by)})"
+        full_table_name = f"{catalog_name}.{namespace_name}.{table_name}"
+        self._ev.sql(f"""
+            CREATE OR REPLACE TABLE {full_table_name}
+            USING iceberg
+            {partition_sql}
+            AS SELECT * FROM {timestamp_view} LIMIT 0
+        """)
+        self._set_write_ordered_by(
+            table_name=table_name,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
+            write_ordered_by=write_ordered_by,
+        )
+        self._insert_by_name(
+            timestamp_view=timestamp_view,
+            table_name=table_name,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
+        )
         self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
     def _set_write_ordered_by(
@@ -585,11 +620,12 @@ class Write:
         Sets both created_at and updated_at to current timestamp.
         """
         timestamp_view = self._add_timestamps_to_view(source_view)
-        sql_query = f"""
-            INSERT INTO {catalog_name}.{namespace_name}.{table_name}
-            SELECT * FROM {timestamp_view}
-        """  # noqa: E501
-        self._ev.sql(sql_query)
+        self._insert_by_name(
+            timestamp_view=timestamp_view,
+            table_name=table_name,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
+        )
         self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
     def _overwrite(
@@ -606,11 +642,13 @@ class Write:
         Sets both created_at and updated_at to current timestamp.
         """
         timestamp_view = self._add_timestamps_to_view(source_view)
-        sql_query = f"""
-            INSERT OVERWRITE TABLE {catalog_name}.{namespace_name}.{table_name}
-            SELECT * FROM {timestamp_view}
-        """  # noqa: E501
-        self._ev.sql(sql_query)
+        self._insert_by_name(
+            timestamp_view=timestamp_view,
+            table_name=table_name,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
+            overwrite=True,
+        )
         self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
     def to_warehouse(
@@ -809,11 +847,6 @@ class Write:
                 catalog_name=catalog_name,
                 namespace_name=namespace_name,
                 partition_by=partition_by,
-            )
-            self._set_write_ordered_by(
-                table_name=table_name,
-                catalog_name=catalog_name,
-                namespace_name=namespace_name,
                 write_ordered_by=write_ordered_by,
             )
         elif write_mode == "overwrite":

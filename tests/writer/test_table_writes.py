@@ -481,6 +481,73 @@ def test_write_to_custom_table_with_write_ordered_by(
 
 
 @pytest.mark.function_scope_evaluation_template
+def test_create_or_replace_writes_rows_in_sort_order(
+    function_scope_evaluation_template
+):
+    """Test create_or_replace writes rows sorted by write_ordered_by."""
+    ev = function_scope_evaluation_template
+
+    names = [f"unit_{i:04d}" for i in range(500)]
+    shuffled = pd.DataFrame({"name": names, "long_name": names}).sample(
+        frac=1, random_state=42
+    )
+    # Single partition so an unsorted write lands as one unsorted file.
+    sdf = ev.spark.createDataFrame(shuffled).coalesce(1)
+
+    ev._write.to_warehouse(
+        source_data=sdf,
+        table_name="custom_sorted_units",
+        write_mode="create_or_replace",
+        write_ordered_by=["name"],
+    )
+
+    qualified_table_name = (
+        f"{ev.active_catalog.catalog_name}."
+        f"{ev.active_catalog.namespace_name}.custom_sorted_units"
+    )
+    rows = ev.spark.sql(
+        f"SELECT name, input_file_name() AS file FROM {qualified_table_name}"
+    ).collect()
+
+    names_by_file = {}
+    for row in rows:
+        names_by_file.setdefault(row.file, []).append(row.name)
+
+    assert sum(len(v) for v in names_by_file.values()) == len(names)
+    for file_names in names_by_file.values():
+        assert file_names == sorted(file_names)
+
+
+@pytest.mark.function_scope_evaluation_template
+@pytest.mark.parametrize("write_mode", ["insert", "overwrite"])
+def test_insert_and_overwrite_match_columns_by_name(
+    function_scope_evaluation_template, write_mode
+):
+    """Test insert/overwrite map columns by name, not position."""
+    ev = function_scope_evaluation_template
+
+    # Reverse of the units table's column order.
+    df = pd.DataFrame({
+        "long_name": ["Column order test unit"],
+        "name": ["col_order_unit"],
+    })
+
+    ev._write.to_warehouse(
+        source_data=df,
+        table_name="units",
+        write_mode=write_mode,
+    )
+
+    row = (
+        ev.units.to_sdf()
+        .filter("name = 'col_order_unit'")
+        .collect()
+    )
+    assert len(row) == 1
+    assert row[0].long_name == "Column order test unit"
+
+
+@pytest.mark.function_scope_evaluation_template
 def test_core_table_writer_rejects_override_metadata(
     function_scope_evaluation_template
 ):
