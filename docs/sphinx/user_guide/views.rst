@@ -48,29 +48,61 @@ The result is a unified table for analysis such as calculating metrics or genera
 
    Example joined timeseries table.
 
-Location ID and Configuration Columns
--------------------------------------
+Joined Timeseries Columns
+-------------------------
 
-The location ID columns in the joined timeseries mirror the ``location_crosswalks``
-table. Plain ``primary_`` and ``secondary_`` IDs are the crosswalk's IDs, and a
-``_timeseries_`` ID is the raw value from that timeseries table.
+Columns that exist on both the primary and secondary side, and can differ, have a
+``primary_`` and a ``secondary_`` version. ``location_id`` is the location in the
+``locations`` table.
 
-- ``primary_location_id`` - The location ID from ``locations``, the same value as
-  ``location_crosswalks.primary_location_id``. Location attributes and geometry join
-  on this column, and it is what metrics are usually grouped by.
-- ``secondary_location_id`` - The secondary timeseries location ID, the same value as
-  ``location_crosswalks.secondary_location_id``.
-- ``primary_timeseries_location_id`` - The ``location_id`` the primary timeseries
-  was loaded under. This is the same as ``primary_location_id`` unless the primary data
-  uses an alias from ``location_id_aliases``.
-- ``configuration_name`` - The secondary timeseries configuration.
-- ``primary_configuration_name`` - The primary timeseries configuration.
+- ``location_id`` - The location ID from ``locations``. Location attributes and
+  geometry join on this column, and it is what metrics are usually grouped by.
+- ``primary_location_id`` - The ``location_id`` from ``primary_timeseries``. It is the
+  same as ``location_id`` unless the primary data uses an alias from
+  ``location_id_aliases``.
+- ``secondary_location_id`` - The ``location_id`` from ``secondary_timeseries``.
+- ``primary_value`` / ``secondary_value`` - The paired values.
+- ``primary_configuration_name`` / ``secondary_configuration_name`` - The configuration
+  of each side.
+- ``primary_variable_name`` / ``secondary_variable_name`` - The variable of each side.
+  These can differ, for example when instantaneous values with different periods are
+  joined.
+- ``unit_name`` and ``value_time`` - Must be equal for a row to join, so there is one of
+  each.
+- ``reference_time`` and ``member`` - From the secondary timeseries.
+
+The ``location_crosswalks`` and ``location_id_aliases`` tables and the timeseries tables
+and views keep their own column names; for example, ``primary_location_id`` in
+``location_crosswalks`` is the ``locations`` ID.
 
 When a location has more than one primary data source, each secondary value is joined
 to every primary source, unless ``configuration_pairs`` limits which primary
 configurations a secondary configuration is joined to. Include
 ``primary_configuration_name`` in ``group_by`` to compute metrics per primary source.
 See :doc:`tables` for loading ``location_id_aliases`` and ``configuration_pairs``.
+
+.. note::
+
+   **Upgrading from 0.8.** These column names changed in TEEHR 0.9, and joined tables
+   written by earlier versions must be regenerated:
+
+   ===================================  ================================
+   0.8 column                           0.9 column
+   ===================================  ================================
+   ``primary_location_id``              ``location_id``
+   ``configuration_name``               ``secondary_configuration_name``
+   ``variable_name``                    ``secondary_variable_name``
+   (none)                               ``primary_location_id``
+   (none)                               ``primary_configuration_name``
+   (none)                               ``primary_variable_name``
+   ===================================  ================================
+
+   .. code-block:: python
+
+      ev.joined_timeseries_view(add_attrs=True).write("joined_timeseries")
+
+   Re-apply any calculated fields you had added, and update code that groups or
+   filters on the old names.
 
 Basic Usage
 -----------
@@ -122,7 +154,7 @@ Apply SQL-style filters to narrow results:
 
     # Filter by location pattern
     jt = ev.joined_timeseries_view().filter(
-        "primary_location_id LIKE 'usgs-02424000'"
+        "location_id LIKE 'usgs-02424000'"
     )
 
     # Filter by date range
@@ -132,9 +164,9 @@ Apply SQL-style filters to narrow results:
 
     # Multiple filter conditions
     jt = ev.joined_timeseries_view(add_attrs=True).filter("""
-        primary_location_id LIKE 'usgs-02424000'
+        location_id LIKE 'usgs-02424000'
         AND CAST(drainage_area AS DOUBLE) > 100
-        AND configuration_name = 'nwm30_retrospective'
+        AND secondary_configuration_name = 'nwm30_retrospective'
     """)
 
 Materializing Views to Tables
@@ -160,7 +192,7 @@ For repeated queries, materialize a view to an Iceberg table:
     # Later, query the materialized table directly
     df = ev.table("joined_with_attrs").aggregate(
         metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
-        group_by=["primary_location_id"]
+        group_by=["location_id"]
     ).to_pandas()
 
 
@@ -558,8 +590,8 @@ Chain multiple calculated fields together:
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],
-        group_by=["primary_location_id", "water_year", "season", "event_above_id"],
-    ).order_by(["primary_location_id", "water_year"]).to_pandas()
+        group_by=["location_id", "water_year", "season", "event_above_id"],
+    ).order_by(["location_id", "water_year"]).to_pandas()
 
 Materializing Computed Fields
 -----------------------------
@@ -576,7 +608,7 @@ For repeated use, write calculated fields to a table:
     # Query the materialized table
     metrics_df = ev.table("joined_timeseries").aggregate(
         metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
-        group_by=["primary_location_id", "event_above"],
+        group_by=["location_id", "event_above"],
     ).to_pandas()
 
 
@@ -612,7 +644,7 @@ A typical workflow combining views, calculated fields, and metrics:
 
     # Filter to specific criteria
     jt = jt.filter("""
-        primary_location_id LIKE 'usgs-%'
+        location_id LIKE 'usgs-%'
         AND value_time >= '2019-10-01'
         AND CAST(drainage_area AS DOUBLE) < 1000
     """)
@@ -624,8 +656,8 @@ A typical workflow combining views, calculated fields, and metrics:
             DeterministicMetrics.RelativeBias(),
             DeterministicMetrics.RootMeanSquareError(),
         ],
-        group_by=["primary_location_id", "water_year", "ecoregion", "event_above_id"],
-    ).order_by(["primary_location_id", "water_year"]).to_pandas()
+        group_by=["location_id", "water_year", "ecoregion", "event_above_id"],
+    ).order_by(["location_id", "water_year"]).to_pandas()
 
     print(metrics_df.head())
 

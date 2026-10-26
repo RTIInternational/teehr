@@ -11,15 +11,6 @@ from teehr.calculated_fields.timeseries_aware_pandas import (
     apply_threshold_event_detection_pandas,
 )
 
-UNIQUENESS_FIELDS = [
-    'reference_time',
-    'primary_location_id',
-    'configuration_name',
-    'primary_configuration_name',
-    'variable_name',
-    'unit_name'
-]
-
 
 class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     """Adds "event" and "event_id" columns to the DataFrame based on a percentile threshold.
@@ -59,17 +50,9 @@ class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
         Default: False
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     quantile: float = Field(
@@ -112,7 +95,6 @@ class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
             add_quantile_field=self.add_quantile_field,
             skip_event_id=self.skip_event_id,
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
             is_above=True,
         )
 
@@ -155,17 +137,9 @@ class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
         Default: False
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
     quantile: float = Field(
         default=0.15
@@ -207,7 +181,6 @@ class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
             add_quantile_field=self.add_quantile_field,
             skip_event_id=self.skip_event_id,
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
             is_above=False,
         )
 
@@ -247,17 +220,9 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
         Default: False
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     threshold_field_name: str = Field(
@@ -292,7 +257,6 @@ class AboveThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
             output_event_id_field_name=self.output_event_id_field_name,
             skip_event_id=self.skip_event_id,
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
             is_above=True,
         )
 
@@ -332,17 +296,9 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
         Default: False
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     threshold_field_name: str = Field(
@@ -377,7 +333,6 @@ class BelowThresholdEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel)
             output_event_id_field_name=self.output_event_id_field_name,
             skip_event_id=self.skip_event_id,
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
             is_above=False,
         )
 
@@ -408,17 +363,9 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "exceedance_probability"
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
 
     """
 
@@ -446,7 +393,6 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
             value_field_name=self.value_field_name,
             value_time_field_name=self.value_time_field_name,
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -488,17 +434,9 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "baseflow_period_id"
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -533,7 +471,6 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_baseflow_period_field_name=self.output_baseflow_period_field_name,
             output_baseflow_period_id_field_name=self.output_baseflow_period_id_field_name,
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -561,17 +498,9 @@ class LyneHollickBaseflow(CalculatedFieldABC,
         Default: 0.925
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -600,7 +529,6 @@ class LyneHollickBaseflow(CalculatedFieldABC,
             beta=self.beta,
             params=None,
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -631,17 +559,9 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -673,7 +593,6 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             beta=self.beta,
             params={"a": self.a},
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -704,17 +623,9 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -746,7 +657,6 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             beta=self.beta,
             params={"a": self.a},
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -782,17 +692,9 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -827,7 +729,6 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             beta=self.beta,
             params={"a": self.a, "c": self.c},
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -862,17 +763,9 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -907,7 +800,6 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             beta=self.beta,
             params={"a": self.a, "c": self.c},
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -942,17 +834,9 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -987,7 +871,6 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             beta=self.beta,
             params={"a": self.a, "BFImax": self.BFImax},
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -1019,17 +902,9 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -1061,7 +936,6 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             beta=self.beta,
             params={"e": self.e},
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -1097,17 +971,9 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -1142,7 +1008,6 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             beta=self.beta,
             params={"a": self.a, "w": self.w},
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 
@@ -1170,17 +1035,9 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: 0.925
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-
-        .. code-block:: python
-
-            Default: [
-                'reference_time',
-                'primary_location_id',
-                'configuration_name',
-                'primary_configuration_name',
-                'variable_name',
-                'unit_name'
-            ]
+        Default: the series key columns present in the data (from
+        ``reference_time``, the location IDs, configuration and variable
+        names, ``unit_name`` and ``member``).
     """
 
     value_time_field_name: str = Field(
@@ -1209,7 +1066,6 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             beta=self.beta,
             params=None,
             uniqueness_fields=self.uniqueness_fields,
-            default_uniqueness_fields=UNIQUENESS_FIELDS,
         )
 
 

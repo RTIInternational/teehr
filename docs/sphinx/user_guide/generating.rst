@@ -308,7 +308,7 @@ A typical workflow for generating benchmark forecasts:
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],
-        group_by=["primary_location_id", "configuration_name"],
+        group_by=["location_id", "secondary_configuration_name"],
     ).to_pandas()
 
     # Compare NWM forecast skill vs. benchmark climatology

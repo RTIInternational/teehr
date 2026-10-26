@@ -49,7 +49,7 @@ Plot observed vs. simulated timeseries for a single location:
 
     # Get joined timeseries for a specific location
     df = ev.joined_timeseries_view().filter(
-        "primary_location_id = 'usgs-01184000'"
+        "location_id = 'usgs-01184000'"
     ).to_pandas()
 
     # Plot primary (observed) vs secondary (simulated)
@@ -74,11 +74,12 @@ Plot ensemble forecast with spread:
 
 .. code-block:: python
 
-    # Filter for forecast data with multiple members
-    df = ev.secondary_timeseries.filter(
+    # Filter for forecast data with multiple members. The secondary
+    # timeseries view adds primary_location_id (the locations ID).
+    df = ev.secondary_timeseries_view().filter([
         "configuration_name = 'nwm30_medium_range'",
         "primary_location_id = 'usgs-01184000'"
-    ).to_pandas()
+    ]).to_pandas()
 
     # Plot ensemble members
     plot = df.hvplot.line(
@@ -144,14 +145,14 @@ Visualize performance metrics spatially:
 
     metrics_gdf = ev.joined_timeseries_view().aggregate(
         metrics=[DeterministicMetrics.KlingGuptaEfficiency()],
-        group_by=["primary_location_id"],
+        group_by=["location_id"],
     ).to_geopandas()
 
     # Create colored points based on KGE
     points = gv.Points(
         metrics_gdf,
         kdims=['geometry'],
-        vdims=['kling_gupta_efficiency', 'primary_location_id']
+        vdims=['kling_gupta_efficiency', 'location_id']
     ).opts(
         size=10,
         color='kling_gupta_efficiency',
@@ -185,23 +186,23 @@ Compare observed and simulated hydrographs with metrics overlay:
     ev = teehr.LocalReadWriteEvaluation(dir_path="/path/to/evaluation")
 
     # Get timeseries
-    df = ev.joined_timeseries_view().filter(
-        "primary_location_id = 'usgs-01184000'",
-        "configuration_name = 'nwm30_retrospective'"
-    ).to_pandas()
+    df = ev.joined_timeseries_view().filter([
+        "location_id = 'usgs-01184000'",
+        "secondary_configuration_name = 'nwm30_retrospective'"
+    ]).to_pandas()
 
     # Calculate metrics
     from teehr.metrics import DeterministicMetrics
 
-    metrics = ev.joined_timeseries_view().filter(
-        "primary_location_id = 'usgs-01184000'",
-        "configuration_name = 'nwm30_retrospective'"
-    ).aggregate(
+    metrics = ev.joined_timeseries_view().filter([
+        "location_id = 'usgs-01184000'",
+        "secondary_configuration_name = 'nwm30_retrospective'"
+    ]).aggregate(
         metrics=[
             DeterministicMetrics.KlingGuptaEfficiency(),
             DeterministicMetrics.NashSutcliffeEfficiency(),
         ],
-        group_by=["primary_location_id"]
+        group_by=["location_id"]
     ).to_pandas()
 
     kge = metrics['kling_gupta_efficiency'].values[0]

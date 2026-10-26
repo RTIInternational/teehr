@@ -13,31 +13,37 @@ import pyspark.sql.types as T
 from scipy.stats import rankdata
 
 
-# Default uniqueness fields that are dropped when not present in the data,
-# e.g., joined timeseries materialized before primary_configuration_name
-# was added.
-OPTIONAL_UNIQUENESS_FIELDS = ["primary_configuration_name"]
+# Columns that identify a timeseries, in grouping order. When
+# ``uniqueness_fields`` is not set, a timeseries-aware calculated field groups
+# by whichever of these are present, so the default fits any table or view.
+SERIES_KEY_FIELDS = [
+    "reference_time",
+    "location_id",
+    "primary_location_id",
+    "secondary_location_id",
+    "configuration_name",
+    "primary_configuration_name",
+    "secondary_configuration_name",
+    "variable_name",
+    "primary_variable_name",
+    "secondary_variable_name",
+    "unit_name",
+    "member",
+]
 
 
-def resolve_default_uniqueness_fields(
-    defaults: list[str],
-    columns: list[str],
-) -> list[str]:
-    """Drop optional default uniqueness fields missing from ``columns``."""
-    return [
-        f for f in defaults
-        if f not in OPTIONAL_UNIQUENESS_FIELDS or f in columns
-    ]
+def default_series_key(columns: Sequence[str]) -> list[str]:
+    """Return the ``SERIES_KEY_FIELDS`` present in ``columns``, in order."""
+    return [f for f in SERIES_KEY_FIELDS if f in columns]
 
 
 def _with_group_defaults(
     group_by: Sequence[str] | str | None,
-    defaults: list[str],
-    columns: list[str],
+    columns: Sequence[str],
 ) -> Sequence[str] | str:
-    """Return configured grouping columns, falling back to defaults when unset."""
+    """Return configured grouping columns, or the default series key."""
     if group_by is None:
-        return resolve_default_uniqueness_fields(defaults, columns)
+        return default_series_key(columns)
     return group_by
 
 
@@ -165,11 +171,10 @@ def apply_percentile_event_detection_pandas(
     add_quantile_field: bool,
     skip_event_id: bool,
     uniqueness_fields: Sequence[str] | str | None,
-    default_uniqueness_fields: list[str],
     is_above: bool,
 ) -> ps.DataFrame:
     """Run percentile event detection via grouped pandas execution."""
-    group_by = _with_group_defaults(uniqueness_fields, default_uniqueness_fields, sdf.columns)
+    group_by = _with_group_defaults(uniqueness_fields, sdf.columns)
 
     if add_quantile_field:
         sdf = _add_percentile_value(
@@ -211,11 +216,10 @@ def apply_threshold_event_detection_pandas(
     output_event_id_field_name: str,
     skip_event_id: bool,
     uniqueness_fields: Sequence[str] | str | None,
-    default_uniqueness_fields: list[str],
     is_above: bool,
 ) -> ps.DataFrame:
     """Run threshold event detection via grouped pandas execution."""
-    group_by = _with_group_defaults(uniqueness_fields, default_uniqueness_fields, sdf.columns)
+    group_by = _with_group_defaults(uniqueness_fields, sdf.columns)
 
     sdf = _add_threshold_event(
         sdf=sdf,
@@ -246,10 +250,9 @@ def apply_exceedance_probability_pandas(
     value_field_name: str,
     value_time_field_name: str,
     uniqueness_fields: Sequence[str] | str | None,
-    default_uniqueness_fields: list[str],
 ) -> ps.DataFrame:
     """Run exceedance probability via grouped pandas execution."""
-    group_by = _with_group_defaults(uniqueness_fields, default_uniqueness_fields, sdf.columns)
+    group_by = _with_group_defaults(uniqueness_fields, sdf.columns)
 
     input_schema = sdf.schema
     output_schema = T.StructType(input_schema.fields + [T.StructField(output_field_name, T.DoubleType(), True)])
@@ -285,10 +288,9 @@ def apply_baseflow_period_detection_pandas(
     output_baseflow_period_field_name: str,
     output_baseflow_period_id_field_name: str,
     uniqueness_fields: Sequence[str] | str | None,
-    default_uniqueness_fields: list[str],
 ) -> ps.DataFrame:
     """Run baseflow period detection via grouped pandas execution."""
-    group_by = _with_group_defaults(uniqueness_fields, default_uniqueness_fields, sdf.columns)
+    group_by = _with_group_defaults(uniqueness_fields, sdf.columns)
 
     if baseflow_field_name is None:
         raise ValueError("baseflow_field_name must be specified.")
@@ -364,10 +366,9 @@ def apply_baseflow_separation_pandas(
     beta: float,
     params: dict[str, float | None] | None,
     uniqueness_fields: Sequence[str] | str | None,
-    default_uniqueness_fields: list[str],
 ) -> ps.DataFrame:
     """Run grouped pandas baseflow separation for supported BYU methods."""
-    group_by = _with_group_defaults(uniqueness_fields, default_uniqueness_fields, sdf.columns)
+    group_by = _with_group_defaults(uniqueness_fields, sdf.columns)
     method = method.lower()
     params = params or {}
 

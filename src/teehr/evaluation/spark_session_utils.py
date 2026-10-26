@@ -1,13 +1,10 @@
 """Module to create and configure Spark sessions and Polaris auth helpers."""
 # flake8: noqa
-import base64
-import json
 import logging
 import os
 import socket
-import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 from urllib.parse import urlsplit, urlunsplit
 
 import psutil
@@ -18,6 +15,8 @@ from pyspark.sql import SparkSession
 from sedona.spark import SedonaContext
 import pandas as pd
 import botocore.session
+
+from teehr.utils.keycloak_auth import _token_expires_soon, refresh_user_token_from_env
 
 
 logging.basicConfig(level=logging.INFO)
@@ -871,118 +870,6 @@ def remove_or_update_configs(
     return
 
 
-def _decode_jwt_claims(token: str) -> Dict[str, object]:
-    payload = token.split(".")[1]
-    payload += "=" * (-len(payload) % 4)
-    return json.loads(base64.urlsafe_b64decode(payload.encode()))
-
-
-def _token_expires_soon(token: str, refresh_window_seconds: int = 120) -> bool:
-    try:
-        claims = _decode_jwt_claims(token)
-    except Exception:
-        return True
-    exp = int(claims.get("exp", 0))
-    now = int(time.time())
-    return exp <= now + max(refresh_window_seconds, 1)
-
-
-def _request_oauth_tokens(
-    data: Dict[str, str],
-    token_endpoint: Optional[str] = None,
-    timeout_seconds: int = 20,
-) -> Tuple[str, Optional[str]]:
-    endpoint = token_endpoint or os.getenv("POLARIS_OAUTH2_SERVER_URI")
-    if not endpoint:
-        raise RuntimeError("POLARIS_OAUTH2_SERVER_URI is required to mint or refresh a user token")
-
-    resp = requests.post(endpoint, data=data, timeout=timeout_seconds)
-    resp.raise_for_status()
-    payload = resp.json()
-
-    access_token = payload.get("access_token")
-    if not access_token:
-        raise RuntimeError("Token endpoint did not return access_token")
-
-    return access_token, payload.get("refresh_token")
-
-
-def refresh_polaris_user_token(
-    refresh_token: str,
-    client_id: str,
-    client_secret: Optional[str] = None,
-    token_endpoint: Optional[str] = None,
-) -> Tuple[str, Optional[str]]:
-    if not refresh_token:
-        raise RuntimeError("refresh_token is required for refresh grant")
-
-    data = {
-        "grant_type": "refresh_token",
-        "client_id": client_id,
-        "refresh_token": refresh_token,
-    }
-    if client_secret:
-        data["client_secret"] = client_secret
-
-    return _request_oauth_tokens(data=data, token_endpoint=token_endpoint)
-
-
-def ensure_fresh_polaris_user_token(
-    current_token: Optional[str],
-    client_id: str,
-    client_secret: Optional[str] = None,
-    refresh_token: Optional[str] = None,
-    refresh_window_seconds: int = 120,
-    token_endpoint: Optional[str] = None,
-) -> Tuple[str, Optional[str], bool]:
-    """Return a fresh Polaris access token, refreshing via refresh_token if needed.
-
-    Parameters
-    ----------
-    current_token : str, optional
-        The current access token. Returned as-is if still valid.
-    client_id : str
-        Keycloak client ID used for the refresh grant.
-    client_secret : str, optional
-        Keycloak client secret. Default is None.
-    refresh_token : str, optional
-        Refresh token used to acquire a new access token. Required when the
-        current token is expired or absent.
-    refresh_window_seconds : int
-        Seconds before expiry at which the token is considered stale and
-        proactively refreshed. Default is 120.
-    token_endpoint : str, optional
-        Override for the OAuth2 token endpoint URL. Defaults to the
-        ``POLARIS_OAUTH2_SERVER_URI`` environment variable.
-
-    Returns
-    -------
-    Tuple[str, Optional[str], bool]
-        ``(access_token, refresh_token, was_refreshed)``
-
-    Raises
-    ------
-    RuntimeError
-        If the token is expired and no valid refresh_token is available.
-    """
-    if current_token and not _token_expires_soon(current_token, refresh_window_seconds):
-        return current_token, refresh_token, False
-
-    if refresh_token:
-        refreshed_access, refreshed_refresh = refresh_polaris_user_token(
-            refresh_token=refresh_token,
-            client_id=client_id,
-            client_secret=client_secret,
-            token_endpoint=token_endpoint,
-        )
-        return refreshed_access, (refreshed_refresh or refresh_token), True
-
-    raise RuntimeError(
-        "Unable to obtain a fresh Polaris user token: no valid refresh_token available. "
-        "Set POLARIS_REFRESH_TOKEN in the session environment."
-    )
-
-
 def _as_bool_str(value: str, default: str = "true") -> str:
     normalized = (value or default).strip().lower()
     return "true" if normalized in ("1", "true", "t", "yes", "y", "on") else "false"
@@ -1116,22 +1003,13 @@ def _build_polaris_auth_configs(
             os.getenv("JUPYTERHUB_SERVER_NAME", "").strip() or authmanager_user_id
         )
         broker_audience = os.getenv("POLARIS_BROKER_AUDIENCE", "account")
-        refresh_token = os.getenv("POLARIS_REFRESH_TOKEN", "")
-        current_user_token = polaris_token or os.getenv("POLARIS_USER_TOKEN", "")
         broker_session_token = os.getenv("POLARIS_BROKER_SESSION_TOKEN", "")
         if broker_session_token and _token_expires_soon(broker_session_token, 300):
             broker_session_token = ""
-        current_user_token, refresh_token, _ = ensure_fresh_polaris_user_token(
-            current_token=current_user_token,
-            client_id=os.getenv("POLARIS_CLIENT_ID", "jupyterhub"),
-            client_secret=os.getenv("POLARIS_CLIENT_SECRET"),
-            refresh_token=refresh_token,
+        current_user_token, refresh_token = refresh_user_token_from_env(
+            current_token=polaris_token,
             refresh_window_seconds=300,
-            token_endpoint=os.getenv("POLARIS_OAUTH2_TOKEN_ENDPOINT"),
         )
-        os.environ["POLARIS_USER_TOKEN"] = current_user_token
-        if refresh_token:
-            os.environ["POLARIS_REFRESH_TOKEN"] = refresh_token
 
         if not broker_session_token:
             try:

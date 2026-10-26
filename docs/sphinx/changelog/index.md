@@ -2,7 +2,72 @@
 
 ## Unreleased
 
+### Breaking Changes
+- **Action required: regenerate joined timeseries tables.** The joined timeseries columns
+  are renamed so that every column that exists on both sides, and can differ, has a
+  `primary_` and a `secondary_` version, and `location_id` is the `locations` ID
+  ([#836](https://github.com/RTIInternational/teehr/issues/836)). This affects anyone with a
+  materialized joined table (for example one written with
+  `ev.joined_timeseries_view().write("joined_timeseries")`) or code that uses the old names.
+  The old names are not supported anywhere.
+
+  | 0.8 column | 0.9 column |
+  |---|---|
+  | `primary_location_id` (the `locations` ID) | `location_id` |
+  | `configuration_name` | `secondary_configuration_name` |
+  | `variable_name` | `secondary_variable_name` |
+  | (none) | `primary_location_id` (the `primary_timeseries` location ID) |
+  | (none) | `primary_configuration_name` |
+  | (none) | `primary_variable_name` |
+
+  `secondary_location_id`, `primary_value`, `secondary_value`, `unit_name`, `value_time`,
+  `reference_time` and `member` are unchanged. Regenerate each joined table, then re-apply
+  any calculated fields you had added to it:
+
+  ```python
+  ev.joined_timeseries_view(add_attrs=True).write("joined_timeseries")
+  ```
+
+  If a table is not regenerated, appends or upserts into it fail, and `aggregate()` and
+  calculated fields on it raise an error that points here. Saved code, and tables of metric
+  results, that group or filter on `primary_location_id` or `configuration_name` need
+  updating too. The `location_crosswalks`, `location_id_aliases` and timeseries tables, and
+  loader arguments such as `primary_location_id_prefix`, keep their names.
+
+  Timeseries-aware calculated fields (event detection, exceedance probability, baseflow)
+  now default to grouping by every series-identifying column present in the data, rather
+  than a fixed list, so the default works on joined tables, the primary and secondary
+  timeseries views and custom tables. The default now includes `member` and
+  `secondary_location_id`, so each ensemble member, and each secondary location crosswalked
+  to the same location, is its own series. **Results change** on ensemble data and on
+  many-to-one crosswalks. Set `uniqueness_fields` to control the grouping explicitly.
+- **Keycloak token refresh helpers moved to `teehr.utils.keycloak_auth`.** They had nothing
+  Spark- or Polaris-specific, so non-Spark code can now reuse them
+  ([#855](https://github.com/RTIInternational/teehr/issues/855)). The old public functions
+  in `teehr.evaluation.spark_session_utils` are removed, with no aliases:
+  `ensure_fresh_polaris_user_token` and `refresh_polaris_user_token`. Use
+  `keycloak_auth.refresh_user_token_from_env()` instead: it refreshes the token held in the
+  `POLARIS_*` environment variables (the same ones the old functions were called with) and
+  writes the new tokens back. Spark sessions authenticate to Polaris exactly as before.
+
+- **`summary_statistic` replaces `summary_func` on CRPS and Brier Score**, and defaults
+  to `"mean"`, so `CRPS()` now returns the mean score rather than per-time-step arrays.
+  Pass `summary_statistic=None` for the arrays. `summary_func` is deprecated: `np.mean`
+  and `np.median` map to the new setting, and other callables still run on the Python
+  engine.
+
+- **CRPS and Brier Score raise on duplicate `(reference_time, value_time, member)` rows**
+  in a group, on both engines. This usually means `group_by` is missing a field that
+  identifies the series, such as `secondary_configuration_name`, so members of different
+  ensembles were being pooled. Add the missing field to `group_by`.
+
+- **CRPS and Brier Score take five inputs**: primary value, secondary value, member,
+  reference time and value time. A legacy `input_field_names` override must list all
+  five, in that order, or the metric raises a `ValueError` when created.
+
 ### Added
+- **Spark-native CRPS and Brier Score** for `summary_statistic` `"mean"` or `"median"`.
+  Per-time-step arrays and `engine="python"` still use scoringrules.
 - **`location_id_aliases` table** for locations with more than one primary data source
   ([#836](https://github.com/RTIInternational/teehr/issues/836)). It maps each
   `location_id_alias` to a `location_id` in `locations`. Primary timeseries may
@@ -15,12 +80,16 @@
   configuration listed in the table joins only to its paired primary configurations; one that
   isn't listed joins to all of them, as before. Many-to-many pairs are allowed. Migration
   `0010` creates the table empty.
-- The joined timeseries view has two new columns: `primary_configuration_name` and
-  `primary_timeseries_location_id` (the primary ID before alias resolution). Timeseries-aware
-  calculated fields now include `primary_configuration_name` in their default
-  `uniqueness_fields` when the column is present, so events are not mixed across primary
-  sources. Joined tables written before this change don't have the column and keep the old
-  defaults.
+
+### Fixed
+- **Ensemble CRPS and Brier Score now align members by time step.** Members were paired
+  by row order, which Spark does not guarantee, so results depended on file layout.
+  Rows are now matched on `(reference_time, value_time)`. Recompute any ensemble metrics
+  calculated with earlier versions.
+- **Ensemble CRPS and Brier Score skip missing members and values.** A member missing at
+  a time step is left out of that step, and rows with a null observation or forecast are
+  dropped, on both engines. Before, the Python engine returned NaN for CRPS and biased
+  Brier Score low. Requires `scoringrules>=0.11.0`.
 
 ### Fixed
 - `aggregate()` accepts a single metric model as well as a list

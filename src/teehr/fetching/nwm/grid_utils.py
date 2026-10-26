@@ -7,6 +7,7 @@ import logging
 import numpy as np
 import pandas as pd
 import xarray as xr
+from scipy import sparse
 
 import teehr.models.pandera_dataframe_schemas as schemas
 from obspec_utils.registry import ObjectStoreRegistry
@@ -96,9 +97,126 @@ def update_location_id_prefix(
     return df
 
 
+def _zone_weights_matrix(
+    location_ids: np.ndarray,
+    pixel_codes: np.ndarray,
+    n_pixels: int,
+    weights: np.ndarray,
+) -> Tuple[sparse.csr_matrix, np.ndarray]:
+    """Sparse zone-by-pixel weights matrix, zones sorted by location_id."""
+    # Factorize (hash-based) rather than sorting the label column, then sort
+    # only the unique labels and remap -- sorting millions of location strings
+    # dominates otherwise.
+    codes, unique_locations = pd.factorize(location_ids)
+    label_order = np.argsort(unique_locations)
+    rank = np.empty_like(label_order)
+    rank[label_order] = np.arange(label_order.size)
+    codes = rank[codes]
+    unique_locations = unique_locations[label_order]
+
+    # Accumulate in float64; the weights and values are float32 and a zone can
+    # cover thousands of pixels.
+    matrix = sparse.csr_matrix(
+        (np.asarray(weights, dtype="float64"), (codes, pixel_codes)),
+        shape=(unique_locations.size, n_pixels),
+    )
+    total_weight = matrix @ np.ones(n_pixels)
+    if not (total_weight > 0).all():
+        empty = unique_locations[total_weight <= 0]
+        raise ValueError(
+            f"Total coverage weight is 0 for {empty.size} location(s), "
+            f"e.g. {empty[:5].tolist()}."
+        )
+    return matrix, unique_locations
+
+
+def build_weights_matrix(
+    weights_df: pd.DataFrame
+) -> Tuple[sparse.csr_matrix, np.ndarray, np.ndarray, np.ndarray]:
+    """Sparse zone-by-pixel weights matrix over the weights' unique pixels.
+
+    Pixels shared by several zones are read once, which matters for nested
+    basins.
+
+    Parameters
+    ----------
+    weights_df : pd.DataFrame
+        Weights with ``location_id``, ``row``, ``col`` and ``weight`` columns.
+
+    Returns
+    -------
+    Tuple[sparse.csr_matrix, np.ndarray, np.ndarray, np.ndarray]
+        The matrix, the ``row`` and ``col`` of each matrix column, and the
+        ``location_id`` of each matrix row (sorted).
+    """
+    rows = weights_df["row"].to_numpy("int64")
+    cols = weights_df["col"].to_numpy("int64")
+    width = int(cols.max()) + 1
+    pixels, pixel_codes = np.unique(rows * width + cols, return_inverse=True)
+    matrix, location_ids = _zone_weights_matrix(
+        weights_df[LOCATION_ID].to_numpy(),
+        pixel_codes,
+        pixels.size,
+        weights_df["weight"].to_numpy(),
+    )
+    return matrix, pixels // width, pixels % width, location_ids
+
+
+def weighted_average_from_matrix(
+    matrix: sparse.csr_matrix,
+    values: np.ndarray,
+    min_coverage: float = 1.0,
+) -> np.ndarray:
+    """Coverage-weighted mean per zone, ignoring NaN pixels.
+
+    Parameters
+    ----------
+    matrix : sparse.csr_matrix
+        Zone-by-pixel weights, e.g. from :func:`build_weights_matrix`.
+    values : np.ndarray
+        Pixel values in matrix column order, ``(n_pixels,)`` or
+        ``(n_times, n_pixels)``.
+    min_coverage : float
+        Minimum fraction of a zone's weight that must be on non-NaN pixels;
+        below it the zone's value is NaN. The mean is taken over the non-NaN
+        pixels. The default 1.0 makes any NaN pixel give NaN.
+
+    Returns
+    -------
+    np.ndarray
+        Means shaped ``(n_zones,)`` or ``(n_times, n_zones)``, matching
+        ``values``.
+    """
+    values = np.asarray(values, dtype="float64")
+    single_step = values.ndim == 1
+    if single_step:
+        values = values[np.newaxis, :]
+
+    total_weight = (matrix @ np.ones(matrix.shape[1]))[:, np.newaxis]
+    missing = np.isnan(values)
+    if missing.any():
+        sums = matrix @ np.where(missing, 0.0, values).T
+        # Exactly 0 with no NaN, so min_coverage=1.0 never rejects a full zone.
+        missing_weight = matrix @ missing.T.astype("float64")
+    else:
+        sums = matrix @ values.T
+        missing_weight = np.zeros_like(sums)
+
+    valid_weight = total_weight - missing_weight
+    with np.errstate(invalid="ignore", divide="ignore"):
+        means = sums / valid_weight
+    means[
+        (missing_weight > (1.0 - min_coverage) * total_weight)
+        | (valid_weight <= 0)
+    ] = np.nan
+    means = means.T
+    return means[0] if single_step else means
+
+
 def compute_weighted_average(
     grid_values: np.ndarray,
-    weights_df: pd.DataFrame
+    weights_df: pd.DataFrame,
+    min_coverage: float = 1.0,
 ) -> pd.DataFrame:
     """Coverage-weighted mean of grid pixels for each zone.
 
@@ -109,6 +227,8 @@ def compute_weighted_average(
         ``(n_pixels,)`` for one timestep or ``(n_times, n_pixels)`` for several.
     weights_df : pd.DataFrame
         Weights with ``location_id`` and ``weight`` columns.
+    min_coverage : float
+        See :func:`weighted_average_from_matrix`.
 
     Returns
     -------
@@ -121,41 +241,18 @@ def compute_weighted_average(
     ValueError
         If a zone's weights sum to zero, which would make the mean undefined.
     """
-    values = np.asarray(grid_values)
-    single_step = values.ndim == 1
-    if single_step:
-        values = values[np.newaxis, :]
+    n_rows = len(weights_df)
+    matrix, unique_locations = _zone_weights_matrix(
+        weights_df[LOCATION_ID].to_numpy(),
+        np.arange(n_rows),
+        n_rows,
+        weights_df["weight"].to_numpy(),
+    )
+    means = weighted_average_from_matrix(matrix, grid_values, min_coverage)
 
-    # Factorize (hash-based) rather than sorting the label column, then sort
-    # only the unique labels and remap -- sorting millions of location strings
-    # dominates otherwise.
-    codes, unique_locations = pd.factorize(weights_df[LOCATION_ID].to_numpy())
-    label_order = np.argsort(unique_locations)
-    rank = np.empty_like(label_order)
-    rank[label_order] = np.arange(label_order.size)
-    codes = rank[codes]
-    unique_locations = unique_locations[label_order]
-    weights = weights_df["weight"].to_numpy("float64")
-
-    n_zones = len(unique_locations)
-    total_weight = np.bincount(codes, weights=weights, minlength=n_zones)
-    if not (total_weight > 0).all():
-        empty = unique_locations[total_weight <= 0]
-        raise ValueError(
-            f"Total coverage weight is 0 for {empty.size} location(s), "
-            f"e.g. {empty[:5].tolist()}."
-        )
-
-    # Accumulate in float64; the weights and values are float32 and a zone can
-    # cover thousands of pixels.
-    weighted = np.stack([
-        np.bincount(codes, weights=weights * step, minlength=n_zones)
-        for step in values.astype("float64")
-    ])
-    means = weighted / total_weight
-
-    if single_step:
-        return pd.DataFrame({LOCATION_ID: unique_locations, VALUE: means[0]})
+    if means.ndim == 1:
+        return pd.DataFrame({LOCATION_ID: unique_locations, VALUE: means})
+    n_zones = unique_locations.size
     return pd.DataFrame({
         "time_index": np.repeat(np.arange(means.shape[0]), n_zones),
         LOCATION_ID: np.tile(unique_locations, means.shape[0]),
