@@ -90,11 +90,14 @@
   a time step is left out of that step, and rows with a null observation or forecast are
   dropped, on both engines. Before, the Python engine returned NaN for CRPS and biased
   Brier Score low. Requires `scoringrules>=0.11.0`.
-
-### Fixed
 - `aggregate()` accepts a single metric model as well as a list
   ([#820](https://github.com/RTIInternational/teehr/issues/820)). Passing one model
   previously raised `AttributeError`.
+- **Skill scores no longer re-run the query.** Setting `reference_configuration` on a metric
+  made `aggregate()` execute the whole upstream plan 4 + N times for N non-reference
+  configurations, including any bootstrap resampling
+  ([#814](https://github.com/RTIInternational/teehr/issues/814)). `aggregate()` is now lazy
+  with skill scores. The divide-by-zero warning is gone; those skill scores are still NULL.
 
 ## 0.8.0 - 2026-09-30
 
