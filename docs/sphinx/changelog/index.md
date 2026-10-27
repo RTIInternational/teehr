@@ -80,6 +80,10 @@
   configuration listed in the table joins only to its paired primary configurations; one that
   isn't listed joins to all of them, as before. Many-to-many pairs are allowed. Migration
   `0010` creates the table empty.
+- **`ev.download.location_id_aliases()` and `ev.download.configuration_pairs()`** to download
+  these tables from TEEHR Cloud ([#847](https://github.com/RTIInternational/teehr/issues/847)).
+  `ev.download.evaluation_subset()` now loads both, and fetches primary timeseries stored
+  under alias IDs.
 
 ### Fixed
 - **Ensemble CRPS and Brier Score now align members by time step.** Members were paired

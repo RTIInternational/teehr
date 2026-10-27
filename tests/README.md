@@ -36,6 +36,9 @@ VS Code's Python extension provides a visual Test Explorer for running and debug
 # Activate virtual environment first
 source .venv/bin/activate
 
+# Point Spark workers at the venv python, or pandas UDF tests fail
+export PYSPARK_PYTHON=$PWD/.venv/bin/python
+
 # Run all tests
 pytest
 
@@ -50,10 +53,30 @@ pytest tests/query/test_filters.py::test_chain_filter_single_str
 
 # Run tests matching a pattern
 pytest -k "filter"
-
-# Run local teehr-hub integration tests (opt-in)
-TEEHR_DOWNLOAD_API_KEY=your_key pytest -m local_api tests/download/test_download.py
 ```
+
+### teehr-hub API Integration Tests
+
+`tests/download/test_download.py` has opt-in tests that call a live teehr-hub API. They are
+skipped unless `TEEHR_DOWNLOAD_API_KEY` is set, and they come in two groups:
+
+| Marker | Target | Expects |
+|---|---|---|
+| `local_api` | Local KinD cluster (`https://api.teehr.local.app.garden`) | Warehouse loaded by `teehr-hub/warehouse/local/01_setup_local_warehouse.ipynb` |
+| `remote_api` | Production (`https://api.teehr.rtiamanzi.org`) | Production warehouse |
+
+The key un-skips both groups, so always select one with `-m`:
+
+```bash
+# Local: create a key on the local dashboards admin page
+TEEHR_DOWNLOAD_API_KEY=your_local_key pytest -m local_api tests/download/test_download.py
+
+# Production
+TEEHR_DOWNLOAD_API_KEY=your_prod_key pytest -m remote_api tests/download/test_download.py
+```
+
+`TEEHR_DOWNLOAD_API_BASE_URL` overrides the API URL for both groups. The local tests skip SSL
+verification for KinD's self-signed certificate.
 
 ## Common pytest Options
 
@@ -85,8 +108,8 @@ pytest -m session_scope_test_warehouse
 # Run tests NOT marked with marker
 pytest -m "not slow"
 
-# Exclude local API integration tests from default runs
-pytest -m "not local_api"
+# Exclude API integration tests from default runs
+pytest -m "not local_api and not remote_api"
 
 # Run tests matching keyword expression
 pytest -k "metrics and not bootstrap"
@@ -182,13 +205,10 @@ pytest -m function_scope_large_ensemble_warehouse
 pytest -m function_scope_small_ensemble_warehouse
 pytest -m function_scope_two_location_warehouse
 
-# Local teehr-hub integration tests (requires env vars)
+# teehr-hub API integration tests (see "teehr-hub API Integration Tests")
 pytest -m local_api
+pytest -m remote_api
 ```
-
-Required environment variables for local teehr-hub download tests:
-- `TEEHR_DOWNLOAD_API_KEY` (required)
-- `TEEHR_DOWNLOAD_API_BASE_URL` (optional, defaults to `https://api.teehr.local.app.garden`)
 
 ### Combining Options
 

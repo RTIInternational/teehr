@@ -803,6 +803,170 @@ class Download:
             return
         return df
 
+    def location_id_aliases(
+        self,
+        location_id: Union[str, List[str]] = None,
+        location_id_alias: Union[str, List[str]] = None,
+        location_id_prefix: str = None,
+        location_id_alias_prefix: str = None,
+        page_size: Optional[int] = None,
+        load: bool = False,
+        write_mode: str = "append",
+        timeout: int = None,
+        **kwargs
+    ) -> Union[pd.DataFrame, None]:
+        """Fetch location ID aliases from the warehouse API.
+
+        Parameters
+        ----------
+        location_id : str or list of str, optional
+            Filter by location ID(s) in the locations table.
+        location_id_alias : str or list of str, optional
+            Filter by alias ID(s).
+        location_id_prefix : str, optional
+            Filter aliases by location ID prefix (e.g., "usgs").
+            Passed as a query parameter to the API. Default: None
+        location_id_alias_prefix : str, optional
+            Filter aliases by alias ID prefix (e.g., "nwps").
+            Passed as a query parameter to the API. Default: None
+        page_size : int, optional
+            Number of location ID aliases to fetch per API request.
+            Decrease if timeout errors are encountered. If None, the API
+            determines page size based on server configuration and auth.
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "location_id_aliases" table. The referenced locations must
+            already be loaded. Default: False
+        write_mode : str, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
+        **kwargs
+            Additional query parameters to pass to the API
+
+        Returns
+        -------
+        Union[pd.DataFrame, None]
+            DataFrame containing location ID aliases, or None if load=True
+
+        Examples
+        --------
+        >>> # Fetch aliases for specific locations
+        >>> aliases = ev.download.location_id_aliases(
+        ...     location_id=["usgs-01010000", "usgs-01010500"]
+        ... )
+        >>> # Fetch and load into local evaluation
+        >>> ev.download.location_id_aliases(location_id_prefix="usgs", load=True)
+        """
+        params = {**kwargs}
+
+        if location_id:
+            params["location_id"] = location_id
+        if location_id_alias:
+            params["location_id_alias"] = location_id_alias
+        if location_id_prefix:
+            params["location_id_prefix"] = location_id_prefix
+        if location_id_alias_prefix:
+            params["location_id_alias_prefix"] = location_id_alias_prefix
+
+        items = self._fetch_paginated_items(
+            "collections/location_id_aliases/items",
+            params,
+            page_size=page_size,
+            timeout=self._resolve_timeout(timeout)
+        )
+        df = pd.DataFrame(items)
+
+        logger.info(f"Fetched {len(df)} location ID aliases from warehouse API")
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="location_id_aliases",
+                write_mode=write_mode
+            )
+            return
+        return df
+
+    def configuration_pairs(
+        self,
+        primary_configuration_name: Union[str, List[str]] = None,
+        secondary_configuration_name: Union[str, List[str]] = None,
+        page_size: Optional[int] = None,
+        load: bool = False,
+        write_mode: str = "append",
+        timeout: int = None,
+        **kwargs
+    ) -> Union[pd.DataFrame, None]:
+        """Fetch configuration pairs from the warehouse API.
+
+        Parameters
+        ----------
+        primary_configuration_name : str or list of str, optional
+            Filter by primary configuration name(s).
+        secondary_configuration_name : str or list of str, optional
+            Filter by secondary configuration name(s).
+        page_size : int, optional
+            Number of configuration pairs to fetch per API request.
+            If None, the API determines page size based on server
+            configuration and auth.
+        load : bool, optional
+            If True, load the downloaded data into the local evaluation
+            "configuration_pairs" table. Both configurations in each pair
+            must already be loaded. Default: False
+        write_mode : str, optional
+            Write mode when loading. Options: "append", "upsert",
+            "create_or_replace". Default: "append"
+        timeout : int, optional
+            Request timeout in seconds. If None, uses the instance default
+            (set via configure() or __init__, default: 60).
+        **kwargs
+            Additional query parameters to pass to the API
+
+        Returns
+        -------
+        Union[pd.DataFrame, None]
+            DataFrame containing configuration pairs, or None if load=True
+
+        Examples
+        --------
+        >>> # Fetch the primary configurations paired with a secondary
+        >>> pairs = ev.download.configuration_pairs(
+        ...     secondary_configuration_name="nwm30_retrospective"
+        ... )
+        >>> # Fetch and load into local evaluation
+        >>> ev.download.configuration_pairs(
+        ...     primary_configuration_name="usgs_observations",
+        ...     secondary_configuration_name="nwm30_retrospective",
+        ...     load=True
+        ... )
+        """
+        params = {**kwargs}
+
+        if primary_configuration_name:
+            params["primary_configuration_name"] = primary_configuration_name
+        if secondary_configuration_name:
+            params["secondary_configuration_name"] = secondary_configuration_name
+
+        items = self._fetch_paginated_items(
+            "collections/configuration_pairs/items",
+            params,
+            page_size=page_size,
+            timeout=self._resolve_timeout(timeout)
+        )
+        df = pd.DataFrame(items)
+
+        logger.info(f"Fetched {len(df)} configuration pairs from warehouse API")
+        if load:
+            self._load.dataframe(
+                df=df,
+                table_name="configuration_pairs",
+                write_mode=write_mode
+            )
+            return
+        return df
+
     def _fetch_paginated_items(
         self,
         endpoint: str,
@@ -1191,6 +1355,13 @@ class Download:
             load=True,
             timeout=request_timeout
         )
+        logger.info("Loading the configuration pairs")
+        self.configuration_pairs(
+            primary_configuration_name=primary_configuration_name,
+            secondary_configuration_name=secondary_configuration_name,
+            load=True,
+            timeout=request_timeout
+        )
         logger.info("Loading the locations table")
         self.locations(
             prefix=prefix,
@@ -1205,9 +1376,18 @@ class Download:
                            "No timeseries or location attributes will be loaded.")
             return
         location_ids = self._ev.locations.to_sdf().select("id").rdd.flatMap(lambda x: x).collect()
+        logger.info("Loading the location ID aliases")
+        aliases = self.location_id_aliases(
+            location_id=location_ids,
+            timeout=request_timeout
+        )
+        alias_ids = []
+        if not aliases.empty:
+            self._load.dataframe(df=aliases, table_name="location_id_aliases")
+            alias_ids = aliases["location_id_alias"].tolist()
         logger.info("Loading the primary timeseries data")
         self.primary_timeseries(
-            primary_location_id=location_ids,
+            primary_location_id=location_ids + alias_ids,
             configuration_name=primary_configuration_name,
             start_date=start_date,
             end_date=end_date,

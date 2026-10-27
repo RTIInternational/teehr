@@ -425,6 +425,41 @@ Download Crosswalks
 See also: :meth:`Download.location_crosswalks() <teehr.evaluation.download.Download.location_crosswalks>`
 
 
+Download Location ID Aliases
+----------------------------
+
+Aliases map alternate location IDs (for example, a second observation source at
+the same site) to a location ID in the ``locations`` table. Load the locations
+first.
+
+.. code-block:: python
+
+   # Download aliases for specific locations
+   ev.download.location_id_aliases(
+       location_id=["usgs-01010000", "usgs-01020000"],
+       load=True
+   )
+
+See also: :meth:`Download.location_id_aliases() <teehr.evaluation.download.Download.location_id_aliases>`
+
+
+Download Configuration Pairs
+----------------------------
+
+Configuration pairs control which primary configurations each secondary
+configuration is joined to. Load both configurations first.
+
+.. code-block:: python
+
+   # Download the pairs for a secondary configuration
+   ev.download.configuration_pairs(
+       secondary_configuration_name="nwm30_retrospective",
+       load=True
+   )
+
+See also: :meth:`Download.configuration_pairs() <teehr.evaluation.download.Download.configuration_pairs>`
+
+
 Download Timeseries
 -------------------
 
