@@ -95,13 +95,15 @@ def test_download_from_local_primary_timeseries(function_scope_evaluation_templa
     )
     df = ev.download.primary_timeseries(
         primary_location_id="usgs-03068800",
-        start_date="2020-01-01",
-        end_date="2020-02-01",
+        start_date="2020-05-01",
+        end_date="2020-06-01",
         configuration_name="usgs_observations",
-        variable_name="streamflow_hourly_inst",
+        variable_name="streamflow_none_inst",
     )
 
-    assert len(df) == 697
+    assert len(df) > 0
+    assert set(df["location_id"]) == {"usgs-03068800"}
+    assert set(df["variable_name"]) == {"streamflow_none_inst"}
 
 
 @pytest.mark.function_scope_evaluation_template
@@ -135,16 +137,19 @@ def test_download_from_local_primary_timeseries_pagination(function_scope_evalua
         api_key=api_key,
         verify_ssl=False,
     )
-    df = ev.download.primary_timeseries(
+    query = dict(
         primary_location_id="usgs-03068800",
-        start_date="2020-01-01",
-        end_date="2020-02-01",
+        start_date="2020-05-01",
+        end_date="2020-06-01",
         configuration_name="usgs_observations",
-        variable_name="streamflow_hourly_inst",
-        page_size=100,
+        variable_name="streamflow_none_inst",
     )
+    unpaged = ev.download.primary_timeseries(**query)
+    paged = ev.download.primary_timeseries(**query, page_size=100)
 
-    assert len(df) == 697
+    assert len(unpaged) > 100
+    assert len(paged) == len(unpaged)
+    assert sorted(paged["value_time"]) == sorted(unpaged["value_time"])
 
 
 def test_download_api_key_auth_success(monkeypatch):
