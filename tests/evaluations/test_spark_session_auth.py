@@ -102,6 +102,8 @@ def test_configure_iceberg_catalogs_s3_endpoint_override_is_opt_in():
         "http://polaris:8181",
     )
     assert not conf.contains("spark.sql.catalog.iceberg.s3.endpoint")
+    assert not conf.contains("spark.hadoop.fs.s3a.endpoint")
+    assert not conf.contains("spark.hadoop.fs.s3a.path.style.access")
 
 
 def test_configure_iceberg_catalogs_s3_endpoint_override_applies_when_set(
@@ -120,6 +122,9 @@ def test_configure_iceberg_catalogs_s3_endpoint_override_applies_when_set(
         conf.get("spark.sql.catalog.iceberg.s3.endpoint")
         == "http://custom-s3:9000"
     )
+    # S3A (used by e.g. remove_orphan_files) must hit the same store.
+    assert conf.get("spark.hadoop.fs.s3a.path.style.access") == "true"
+    assert conf.get("spark.hadoop.fs.s3a.endpoint") == "http://custom-s3:9000"
 
 
 def test_update_configs_and_packages_add_packages_when_key_unset():
