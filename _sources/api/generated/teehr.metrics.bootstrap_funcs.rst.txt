@@ -1,0 +1,37 @@
+﻿bootstrap\_funcs
+================
+
+
+.. automodule:: teehr.metrics.bootstrap_funcs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      bootstrap_group_key
+      create_circularblock_func
+      create_gumboot_func
+      create_shared_bootstrap_func
+      create_stationary_func
+      partition_metrics_by_bootstrap
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

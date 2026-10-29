@@ -1,0 +1,6 @@
+teehr.metrics.bootstrap\_funcs.create\_gumboot\_func
+====================================================
+
+.. currentmodule:: teehr.metrics.bootstrap_funcs
+
+.. autofunction:: create_gumboot_func

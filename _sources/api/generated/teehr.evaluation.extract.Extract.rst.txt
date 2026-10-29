@@ -1,0 +1,23 @@
+﻿Extract
+=======
+
+.. currentmodule:: teehr.evaluation.extract
+
+.. autoclass:: Extract
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Extract.to_cache
+   
+   
+
+   
+   
+   

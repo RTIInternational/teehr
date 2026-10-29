@@ -1,0 +1,6 @@
+teehr.metrics.deterministic\_funcs.annual\_peak\_relative\_bias
+===============================================================
+
+.. currentmodule:: teehr.metrics.deterministic_funcs
+
+.. autofunction:: annual_peak_relative_bias

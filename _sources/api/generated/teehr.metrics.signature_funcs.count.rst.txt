@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.count
+====================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: count

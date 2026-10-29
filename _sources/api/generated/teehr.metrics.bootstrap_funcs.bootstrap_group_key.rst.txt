@@ -1,0 +1,6 @@
+teehr.metrics.bootstrap\_funcs.bootstrap\_group\_key
+====================================================
+
+.. currentmodule:: teehr.metrics.bootstrap_funcs
+
+.. autofunction:: bootstrap_group_key

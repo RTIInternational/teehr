@@ -1,0 +1,57 @@
+﻿VariableTable
+=============
+
+.. currentmodule:: teehr.evaluation.tables.variable_table
+
+.. autoclass:: VariableTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~VariableTable.add
+      ~VariableTable.add_attributes
+      ~VariableTable.add_calculated_fields
+      ~VariableTable.add_geometry
+      ~VariableTable.aggregate
+      ~VariableTable.delete
+      ~VariableTable.distinct_values
+      ~VariableTable.drop
+      ~VariableTable.filter
+      ~VariableTable.load_csv
+      ~VariableTable.load_dataframe
+      ~VariableTable.load_parquet
+      ~VariableTable.order_by
+      ~VariableTable.to_geopandas
+      ~VariableTable.to_pandas
+      ~VariableTable.to_sdf
+      ~VariableTable.validate
+      ~VariableTable.write
+      ~VariableTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~VariableTable.foreign_keys
+      ~VariableTable.is_core_table
+      ~VariableTable.primary_location_id_field
+      ~VariableTable.secondary_location_id_field
+      ~VariableTable.strict_validation
+      ~VariableTable.table_name
+      ~VariableTable.uniqueness_fields
+      ~VariableTable.validate_filter_field_types
+   
+      ~VariableTable.extraction_func
+      ~VariableTable.schema_func
+   
+   
