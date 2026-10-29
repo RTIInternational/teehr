@@ -740,11 +740,16 @@ def _configure_iceberg_catalogs(
     # Optional S3 endpoint/path-style override for non-AWS S3-compatible endpoints
     # (e.g. a custom S3-compatible store). Not needed for plain AWS S3, so this
     # only applies when explicitly requested via REMOTE_CATALOG_S3_PATH_STYLE_ACCESS.
+    # S3A gets the same settings because some Iceberg procedures (e.g.
+    # remove_orphan_files) list table files through the Hadoop FileSystem rather
+    # than S3FileIO; without them S3A goes to AWS S3 instead of the custom store.
     if _as_bool_str(os.getenv("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "false")) == "true":
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access", "true")
+        conf.set("spark.hadoop.fs.s3a.path.style.access", "true")
         s3_endpoint = os.getenv("REMOTE_CATALOG_S3_ENDPOINT")
         if s3_endpoint:
             conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint", s3_endpoint)
+            conf.set("spark.hadoop.fs.s3a.endpoint", s3_endpoint)
 
 
 def _update_configs_and_packages(
