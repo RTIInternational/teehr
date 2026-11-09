@@ -548,6 +548,80 @@ def test_insert_and_overwrite_match_columns_by_name(
 
 
 @pytest.mark.function_scope_evaluation_template
+def test_replace_where_replaces_only_matching_rows(
+    function_scope_evaluation_template
+):
+    """replace_where is idempotent and drops rows a rerun no longer makes.
+
+    Other variables and location layers in the same partition are untouched.
+    """
+    ev = function_scope_evaluation_template
+
+    def rows(location_id, variable_name, hours, value):
+        return pd.DataFrame({
+            "reference_time": pd.Timestamp("2019-12-31"),
+            "value_time": pd.date_range("2020-01-01", periods=hours, freq="h"),
+            "value": value,
+            "unit_name": "mm/s",
+            "variable_name": variable_name,
+            "configuration_name": "replace_test",
+            "location_id": location_id,
+        })
+
+    ev._write.to_warehouse(
+        source_data=pd.concat([
+            rows("a-1", "p", 3, 1.0),
+            rows("a-1", "t", 3, 2.0),
+            rows("b-1", "p", 3, 3.0),
+        ]),
+        table_name="primary_timeseries",
+        write_mode="insert",
+    )
+    condition = (
+        "configuration_name = 'replace_test' AND variable_name = 'p' "
+        "AND startswith(location_id, 'a-')"
+    )
+    for _ in range(2):  # a rerun leaves one copy
+        ev._write.to_warehouse(
+            # The third hour is no longer produced
+            source_data=rows("a-1", "p", 2, 9.0),
+            table_name="primary_timeseries",
+            write_mode="replace_where",
+            replace_condition=condition,
+        )
+
+    got = (
+        ev.primary_timeseries.to_sdf()
+        .filter("configuration_name = 'replace_test'")
+        .groupBy("location_id", "variable_name")
+        .agg({"value": "max", "*": "count"})
+        .toPandas()
+        .set_index(["location_id", "variable_name"])
+        .sort_index()
+    )
+    assert got["count(1)"].to_dict() == {
+        ("a-1", "p"): 2, ("a-1", "t"): 3, ("b-1", "p"): 3
+    }
+    assert got["max(value)"].to_dict() == {
+        ("a-1", "p"): 9.0, ("a-1", "t"): 2.0, ("b-1", "p"): 3.0
+    }
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_replace_where_requires_condition(
+    function_scope_evaluation_template
+):
+    """replace_where without a condition is refused, not run on everything."""
+    ev = function_scope_evaluation_template
+    with pytest.raises(ValueError, match="replace_condition"):
+        ev._write.to_warehouse(
+            source_data=pd.DataFrame({"name": ["x"], "long_name": ["x"]}),
+            table_name="units",
+            write_mode="replace_where",
+        )
+
+
+@pytest.mark.function_scope_evaluation_template
 def test_core_table_writer_rejects_override_metadata(
     function_scope_evaluation_template
 ):
