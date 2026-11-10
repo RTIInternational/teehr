@@ -250,6 +250,29 @@ def test_remote_stores_retry_for_longer_than_two_seconds():
         assert store.retry_config["backoff"]["init_backoff"] >= timedelta(seconds=1)
 
 
+def test_gcs_stores_keep_dns_order():
+    """GCS stores keep DNS order, so an IPv6-first /etc/gai.conf holds and
+    reads skip a NAT gateway. S3 stores keep obstore's default shuffling."""
+    from teehr.fetching.utils import (
+        _build_gcs_source_registry,
+        _public_store,
+        build_kerchunk_registry,
+    )
+
+    registry = build_kerchunk_registry(["s3://ciroh-nwm-zarr-copy/some.json"])
+    gcs_stores = [
+        registry.resolve("gs://national-water-model/a")[0],
+        registry.resolve("https://storage.googleapis.com/a")[0],
+        _build_gcs_source_registry().resolve("gcs://national-water-model/a")[0],
+        _public_store("gs://national-water-model/"),
+    ]
+    for store in gcs_stores:
+        assert store.client_options.get("randomize_addresses") == "false", store
+
+    s3_store = registry.resolve("s3://ciroh-nwm-zarr-copy/a")[0]
+    assert "randomize_addresses" not in (s3_store.client_options or {})
+
+
 def test_public_buckets_are_pinned_to_their_own_region():
     """Every public bucket teehr reads has to be addressed in its own region.
     A wrong or missing pin surfaces as "Received redirect without LOCATION",
