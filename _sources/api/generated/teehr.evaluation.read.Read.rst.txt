@@ -1,0 +1,24 @@
+﻿Read
+====
+
+.. currentmodule:: teehr.evaluation.read
+
+.. autoclass:: Read
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Read.from_cache
+      ~Read.from_warehouse
+   
+   
+
+   
+   
+   

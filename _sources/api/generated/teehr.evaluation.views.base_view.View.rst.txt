@@ -1,0 +1,33 @@
+﻿View
+====
+
+.. currentmodule:: teehr.evaluation.views.base_view
+
+.. autoclass:: View
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~View.add_attributes
+      ~View.add_calculated_fields
+      ~View.add_geometry
+      ~View.aggregate
+      ~View.filter
+      ~View.order_by
+      ~View.to_geopandas
+      ~View.to_pandas
+      ~View.to_sdf
+      ~View.write
+      ~View.write_to
+   
+   
+
+   
+   
+   

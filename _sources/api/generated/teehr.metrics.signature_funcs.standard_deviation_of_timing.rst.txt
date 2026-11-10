@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.standard\_deviation\_of\_timing
+==============================================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: standard_deviation_of_timing

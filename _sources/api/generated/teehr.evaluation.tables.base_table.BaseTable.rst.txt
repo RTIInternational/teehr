@@ -1,0 +1,54 @@
+﻿BaseTable
+=========
+
+.. currentmodule:: teehr.evaluation.tables.base_table
+
+.. autoclass:: BaseTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BaseTable.add_attributes
+      ~BaseTable.add_calculated_fields
+      ~BaseTable.add_geometry
+      ~BaseTable.aggregate
+      ~BaseTable.delete
+      ~BaseTable.distinct_values
+      ~BaseTable.drop
+      ~BaseTable.filter
+      ~BaseTable.load_dataframe
+      ~BaseTable.order_by
+      ~BaseTable.to_geopandas
+      ~BaseTable.to_pandas
+      ~BaseTable.to_sdf
+      ~BaseTable.validate
+      ~BaseTable.write
+      ~BaseTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BaseTable.extraction_func
+      ~BaseTable.foreign_keys
+      ~BaseTable.is_core_table
+      ~BaseTable.primary_location_id_field
+      ~BaseTable.schema_func
+      ~BaseTable.secondary_location_id_field
+      ~BaseTable.strict_validation
+      ~BaseTable.table_name
+      ~BaseTable.uniqueness_fields
+      ~BaseTable.validate_filter_field_types
+   
+   
+   

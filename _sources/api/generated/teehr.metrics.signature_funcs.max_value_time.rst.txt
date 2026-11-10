@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.max\_value\_time
+===============================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: max_value_time

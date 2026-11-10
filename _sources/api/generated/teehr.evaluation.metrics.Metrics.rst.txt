@@ -1,0 +1,54 @@
+﻿Metrics
+=======
+
+.. currentmodule:: teehr.evaluation.metrics
+
+.. autoclass:: Metrics
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Metrics.add_attributes
+      ~Metrics.add_calculated_fields
+      ~Metrics.add_geometry
+      ~Metrics.aggregate
+      ~Metrics.delete
+      ~Metrics.distinct_values
+      ~Metrics.drop
+      ~Metrics.filter
+      ~Metrics.load_dataframe
+      ~Metrics.order_by
+      ~Metrics.to_geopandas
+      ~Metrics.to_pandas
+      ~Metrics.to_sdf
+      ~Metrics.validate
+      ~Metrics.write
+      ~Metrics.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Metrics.extraction_func
+      ~Metrics.foreign_keys
+      ~Metrics.is_core_table
+      ~Metrics.primary_location_id_field
+      ~Metrics.schema_func
+      ~Metrics.secondary_location_id_field
+      ~Metrics.strict_validation
+      ~Metrics.table_name
+      ~Metrics.uniqueness_fields
+      ~Metrics.validate_filter_field_types
+   
+   
+   
