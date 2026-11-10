@@ -102,6 +102,9 @@
   configurations, including any bootstrap resampling
   ([#814](https://github.com/RTIInternational/teehr/issues/814)). `aggregate()` is now lazy
   with skill scores. The divide-by-zero warning is gone; those skill scores are still NULL.
+- NWM fetches from GCS keep the DNS address order, so on a cluster with IPv6 egress and an
+  IPv6-first `/etc/gai.conf` they use IPv6 instead of a NAT gateway
+  ([#868](https://github.com/RTIInternational/teehr/issues/868)). No change elsewhere.
 
 ## 0.8.0 - 2026-09-30
 

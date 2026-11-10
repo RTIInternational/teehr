@@ -138,6 +138,12 @@ FEATURE_ID_SAMPLE_SIZE = 64
 # tens of seconds, still bounded by the 3 minute retry_timeout default.
 REMOTE_RETRY_CONFIG = {"backoff": {"init_backoff": timedelta(seconds=1)}}
 
+# object_store shuffles DNS answers by default, which undoes an IPv6-first
+# /etc/gai.conf. Keeping DNS order lets GCS reads use IPv6 egress, where a
+# cluster has it, instead of a NAT gateway. GCS only: S3 spreads load across
+# its addresses, and in-region S3 already skips the NAT.
+GCS_CLIENT_OPTIONS = {"randomize_addresses": False}
+
 # Coordinates embedded in a reference rather than pointed at: scalars and the
 # grid axes are small, and inlining them saves the read path a round trip per
 # file. feature_id is deliberately absent -- 2.7M values for CONUS -- and is
@@ -620,6 +626,8 @@ def _public_store(url: str):
     kwargs = {"skip_signature": True, "retry_config": REMOTE_RETRY_CONFIG}
     if url.startswith("s3://"):
         kwargs["region"] = _s3_region(url)
+    elif url.startswith(("gs://", "gcs://")):
+        kwargs["client_options"] = GCS_CLIENT_OPTIONS
     return from_url(url, **kwargs)
 
 
@@ -757,11 +765,7 @@ def build_kerchunk_registry(json_paths: List[str]) -> ObjectStoreRegistry:
     ``combine_and_open_kerchunk_refs`` call, instead of a fresh registry (and
     fresh obstore store/connection pool) being constructed per chunk.
     """
-    gcs_store = from_url(
-        f"gs://{NWM_BUCKET}/",
-        skip_signature=True,
-        retry_config=REMOTE_RETRY_CONFIG,
-    )
+    gcs_store = _public_store(f"gs://{NWM_BUCKET}/")
     s3_bucket = NWM_S3_JSON_PATH.split("://")[1]
     stores = {
         f"gcs://{NWM_BUCKET}/": gcs_store,
@@ -771,6 +775,7 @@ def build_kerchunk_registry(json_paths: List[str]) -> ObjectStoreRegistry:
         "https://storage.googleapis.com/": from_url(
             "https://storage.googleapis.com/",
             retry_config=REMOTE_RETRY_CONFIG,
+            client_options=GCS_CLIENT_OPTIONS,
         ),
         f"s3://{s3_bucket}/": _public_store(f"s3://{s3_bucket}/"),
     }
@@ -1533,11 +1538,7 @@ def _build_gcs_source_registry() -> ObjectStoreRegistry:
     first use rather than one per file.
     """
     return ObjectStoreRegistry({
-        f"gcs://{NWM_BUCKET}/": from_url(
-            f"gs://{NWM_BUCKET}/",
-            skip_signature=True,
-            retry_config=REMOTE_RETRY_CONFIG,
-        ),
+        f"gcs://{NWM_BUCKET}/": _public_store(f"gs://{NWM_BUCKET}/"),
     })
 
 
@@ -2283,11 +2284,7 @@ def build_remote_nwm_filelist(
             )
             component_paths = dropped_df["filepath"].tolist()
     else:
-        store = from_url(
-            f"gs://{NWM_BUCKET}/",
-            skip_signature=True,
-            retry_config=REMOTE_RETRY_CONFIG,
-        )
+        store = _public_store(f"gs://{NWM_BUCKET}/")
         prefixes = [
             f"nwm.{dt.strftime('%Y%m%d')}/{configuration}/" for dt in dates
         ]
