@@ -628,6 +628,46 @@ class Write:
         )
         self._ev.sql(f"DROP VIEW IF EXISTS {timestamp_view}")
 
+    def _replace_where(
+        self,
+        source_view: str,
+        table_name: str,
+        catalog_name: str,
+        namespace_name: str,
+        replace_condition: str,
+    ):
+        """Replace rows matching ``replace_condition`` with the source rows.
+
+        Inserts the source rows, then deletes the matching rows created before
+        the insert (or with no created_at, e.g. rows older than the audit
+        columns). Iceberg's overwrite-by-filter can't do this in one commit:
+        it refuses a condition matching only part of a data file. Inserting
+        first means a failure never leaves the range empty; a failed delete
+        leaves old and new rows until a rerun, which is idempotent. Every
+        source row must match the condition, or a rerun would duplicate it.
+        """
+        full_table_name = f"{catalog_name}.{namespace_name}.{table_name}"
+        if "created_at" not in self._ev.spark.table(full_table_name).columns:
+            raise ValueError(
+                f"replace_where needs a created_at column in '{table_name}'."
+            )
+        # Formatted and parsed in Spark's session time zone, never Python's
+        started = self._ev.sql(
+            "SELECT date_format(current_timestamp(), "
+            "'yyyy-MM-dd HH:mm:ss.SSSSSS') AS t"
+        ).first()["t"]
+        self._insert(
+            source_view=source_view,
+            table_name=table_name,
+            catalog_name=catalog_name,
+            namespace_name=namespace_name,
+        )
+        self._ev.sql(f"""
+            DELETE FROM {full_table_name}
+            WHERE ({replace_condition})
+            AND (created_at IS NULL OR created_at < TIMESTAMP '{started}')
+        """)
+
     def _overwrite(
         self,
         source_view: str,
@@ -662,7 +702,8 @@ class Write:
         write_ordered_by: List[str] | None = None,
         catalog_name: str = None,
         namespace_name: str = None,
-        use_partition_filters: bool = True
+        use_partition_filters: bool = True,
+        replace_condition: str | None = None,
     ):
         """Write the DataFrame to the specified target in the catalog.
 
@@ -683,6 +724,11 @@ class Write:
               uniqueness_fields (uses ``MERGE INTO``).
             - ``"upsert"``: Insert new rows; update existing rows matching
               uniqueness_fields.
+            - ``"replace_where"``: Replace the rows matching
+              ``replace_condition`` with the source rows: insert, then delete
+              matching rows created before the insert. Reruns are idempotent,
+              with no ``MERGE INTO``. Every source row must match the
+              condition.
             - ``"overwrite"``: Replace all data in table. Preserves table
               structure and history (can time-travel back).
             - ``"create_or_replace"``: Drop and recreate table. Loses history.
@@ -716,6 +762,10 @@ class Write:
             When True, adds literal predicates based on target partition
             fields and source data values/ranges.
             Default is ``True``.
+        replace_condition : str, optional
+            Spark SQL condition selecting the rows to replace, required for
+            ``write_mode="replace_where"``, e.g. ``"configuration_name = 'c'
+            AND startswith(location_id, 'huc10-')"``.
         """
         start_time = time.time()
         logger.info(f"Start writing to warehouse table '{table_name}'.")
@@ -849,6 +899,19 @@ class Write:
                 partition_by=partition_by,
                 write_ordered_by=write_ordered_by,
             )
+        elif write_mode == "replace_where":
+            if not replace_condition:
+                raise ValueError(
+                    "replace_condition must be provided for replace_where "
+                    "write mode."
+                )
+            self._replace_where(
+                source_view=source_view_name,
+                table_name=table_name,
+                catalog_name=catalog_name,
+                namespace_name=namespace_name,
+                replace_condition=replace_condition,
+            )
         elif write_mode == "overwrite":
             self._overwrite(
                 source_view=source_view_name,
@@ -859,7 +922,7 @@ class Write:
         else:
             raise ValueError(
                 "write_mode must be one of 'insert', 'append', 'upsert', "
-                "'overwrite', or 'create_or_replace'."
+                "'replace_where', 'overwrite', or 'create_or_replace'."
             )
 
         if created_temp_view:
