@@ -553,7 +553,8 @@ def test_replace_where_replaces_only_matching_rows(
 ):
     """replace_where is idempotent and drops rows a rerun no longer makes.
 
-    Other variables and location layers in the same partition are untouched.
+    Old rows without a created_at are replaced too. Other variables and
+    location layers in the same partition are untouched.
     """
     ev = function_scope_evaluation_template
 
@@ -580,6 +581,12 @@ def test_replace_where_replaces_only_matching_rows(
     condition = (
         "configuration_name = 'replace_test' AND variable_name = 'p' "
         "AND startswith(location_id, 'a-')"
+    )
+    # Rows written before the audit columns existed have no created_at
+    catalog = ev.active_catalog
+    ev.spark.sql(
+        f"UPDATE {catalog.catalog_name}.{catalog.namespace_name}"
+        f".primary_timeseries SET created_at = NULL WHERE {condition}"
     )
     for _ in range(2):  # a rerun leaves one copy
         ev._write.to_warehouse(

@@ -639,7 +639,8 @@ class Write:
         """Replace rows matching ``replace_condition`` with the source rows.
 
         Inserts the source rows, then deletes the matching rows created before
-        the insert. Iceberg's overwrite-by-filter can't do this in one commit:
+        the insert (or with no created_at, e.g. rows older than the audit
+        columns). Iceberg's overwrite-by-filter can't do this in one commit:
         it refuses a condition matching only part of a data file. Inserting
         first means a failure never leaves the range empty; a failed delete
         leaves old and new rows until a rerun, which is idempotent. Every
@@ -664,7 +665,7 @@ class Write:
         self._ev.sql(f"""
             DELETE FROM {full_table_name}
             WHERE ({replace_condition})
-            AND created_at < TIMESTAMP '{started}'
+            AND (created_at IS NULL OR created_at < TIMESTAMP '{started}')
         """)
 
     def _overwrite(

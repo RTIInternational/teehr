@@ -90,7 +90,7 @@
 - **`write_mode="replace_where"`** in `ev._write.to_warehouse`, with `replace_condition`
   ([#867](https://github.com/RTIInternational/teehr/issues/867)). It replaces the rows matching
   a Spark SQL condition: it inserts the source rows, then deletes matching rows created before
-  the insert. Reruns are idempotent without a `MERGE INTO`. Every source row must match the
+  the insert or with no `created_at`. Reruns are idempotent without a `MERGE INTO`. Every source row must match the
   condition.
 
 ### Fixed
