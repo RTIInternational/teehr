@@ -276,6 +276,29 @@ def test_weights_matrix_matches_compute_weighted_average():
     )
 
 
+def test_sums_then_means_match_weighted_average():
+    """Sums over two pixel subsets, added, give the one-shot average."""
+    from teehr.fetching.nwm.grid_utils import (
+        build_weights_matrix,
+        weighted_average_from_matrix,
+        weighted_means_from_sums,
+        weighted_sums_from_matrix,
+    )
+
+    matrix, _, _, _ = build_weights_matrix(_toy_weights())
+    values = np.random.default_rng(2).random((4, matrix.shape[1]))
+    values[1, ::2] = np.nan
+    half = matrix.shape[1] // 2
+    left = weighted_sums_from_matrix(matrix[:, :half], values[:, :half])
+    right = weighted_sums_from_matrix(matrix[:, half:], values[:, half:])
+    total = matrix @ np.ones(matrix.shape[1])
+    got = weighted_means_from_sums(
+        left[0] + right[0], left[1] + right[1], total, 0.5
+    )
+    expected = weighted_average_from_matrix(matrix, values, 0.5)
+    np.testing.assert_allclose(got, expected)
+
+
 def test_weights_row_col_are_absolute(tmpdir):
     """row/col index the full template grid, so layers share one space."""
     import xarray as xr
