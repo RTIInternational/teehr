@@ -9,7 +9,7 @@ authors = [
     "Sam Lamont <slamont@rti.org>",
     "Sam Landsteiner <slandsteiner@rti.org>",
 ]
-license = "GNU v3"
+license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
