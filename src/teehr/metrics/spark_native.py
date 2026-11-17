@@ -435,13 +435,13 @@ def _compute_deterministic_metrics(
             denom = F.col("_sum_p2") - (F.col("_n") * F.col("_mean_p") * F.col("_mean_p"))
             if metric.add_epsilon:
                 denom = denom + F.lit(EPSILON)
-            invalid = (F.col("_n") == 0) | (F.col("_sum_p") == 0) | (F.col("_sum_s") == 0) | (denom == 0)
+            invalid = (F.col("_n") == 0) | (denom == 0)
             expr = F.when(invalid, _undefined()).otherwise(F.lit(1.0) - _divide(F.col("_sum_sq_diff"), denom))
         elif class_name == "NormalizedNashSutcliffeEfficiency":
             denom = F.col("_sum_p2") - (F.col("_n") * F.col("_mean_p") * F.col("_mean_p"))
             if metric.add_epsilon:
                 denom = denom + F.lit(EPSILON)
-            invalid = (F.col("_n") == 0) | (F.col("_sum_p") == 0) | (F.col("_sum_s") == 0) | (denom == 0)
+            invalid = (F.col("_n") == 0) | (denom == 0)
             expr = F.when(invalid, _undefined()).otherwise(F.lit(1.0) / (F.lit(1.0) + _divide(F.col("_sum_sq_diff"), denom)))
         elif class_name == "KlingGuptaEfficiency":
             invalid = (F.col("_std_p") == 0) | (F.col("_std_s") == 0)
@@ -925,8 +925,8 @@ def _compute_spearman_metric(
         )
     )
 
-    # Match pandas ddof mixing: covar_samp (n-1) / (stddev_pop * stddev_pop)
-    cov_expr = F.covar_samp(F.col("_rank_p"), F.col("_rank_s"))
+    # Population covariance over population standard deviations.
+    cov_expr = F.covar_pop(F.col("_rank_p"), F.col("_rank_s"))
     std_p_expr = F.stddev_pop(F.col("_rank_p"))
     std_s_expr = F.stddev_pop(F.col("_rank_s"))
 
