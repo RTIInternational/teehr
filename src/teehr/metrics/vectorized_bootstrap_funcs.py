@@ -524,7 +524,7 @@ def _nse_parts_from(m: _Moments, model) -> tuple:
     the RAW matrices, pre-transform and pre-mask, exactly as the scalar
     closures do.
     """
-    guard_nan = (m.raw_n == 0) | (m.raw_sum_p == 0) | (m.raw_sum_s == 0)
+    guard_nan = m.n == 0  # no pairs left once gaps are dropped
     denominator = m.sum_dp2
     if model.add_epsilon:
         denominator = denominator + EPSILON
