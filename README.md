@@ -6,6 +6,9 @@ projects, datasets, uploads and evaluation runs from Python or the terminal.
 > This is the `v1` branch: TEEHR 1.0, in development. The current TEEHR package (0.x, Spark)
 > is on `main` and frozen until 1.0 replaces it (teehr-cloud-core ADR-0015).
 
+**The user guide is in [docs/guide](docs/guide/README.md)**: getting started, concepts, uploads,
+evaluations and runs, reading results, tokens, and Python.
+
 ## Install
 
 ```
