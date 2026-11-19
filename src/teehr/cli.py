@@ -54,16 +54,16 @@ variables = typer.Typer(
 )
 projects.add_typer(members, name="members")
 for sub, name in (
-    (units, "units"),
-    (periods, "periods"),
-    (variables, "variables"),
-    (datasets, "datasets"),
     (auth, "auth"),
     (tokens, "tokens"),
     (projects, "projects"),
+    (datasets, "datasets"),
     (uploads, "uploads"),
     (evaluations, "evaluations"),
     (runs, "runs"),
+    (variables, "variables"),
+    (units, "units"),
+    (periods, "periods"),
 ):
     app.add_typer(sub, name=name)
 
