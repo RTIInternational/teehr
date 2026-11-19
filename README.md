@@ -63,6 +63,20 @@ teehr runs list my_eval -p my_project
 
 `teehr evaluations show my_eval -p other > spec.yaml` copies a spec to start from.
 
+## Read data and results
+
+```
+teehr runs results <run id> -p my_project                       # the run's metrics
+teehr datasets list -p my_project                                # default project: public
+teehr datasets show public.usgs_streamflow
+teehr datasets read public.usgs_streamflow -n 20 -f "series_key = 'usgs-01646500'"
+teehr datasets read pairs_my_eval_v1 -p my_project --out pairs.parquet   # every row
+```
+
+Printing stops at 1000 rows (`-n` for more); `--out` writes every row to `.parquet`, `.csv` or
+`.arrow`. In Python, `client.read(project, dataset, filter=..., columns=...)` returns an Arrow
+table.
+
 ## From Python
 
 ```python

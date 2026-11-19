@@ -16,6 +16,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
 
+import pyarrow as pa
+import pyarrow.csv as pacsv
+import pyarrow.parquet as pq
 import typer
 import yaml
 from rich.console import Console
@@ -38,7 +41,9 @@ evaluations = typer.Typer(
     help="Saved evaluations: specs under a name, versioned.", no_args_is_help=True
 )
 runs = typer.Typer(help="Runs of saved evaluations.", no_args_is_help=True)
+datasets = typer.Typer(help="Datasets: list, describe, read.", no_args_is_help=True)
 for sub, name in (
+    (datasets, "datasets"),
     (auth, "auth"),
     (tokens, "tokens"),
     (projects, "projects"),
@@ -81,6 +86,31 @@ state = State()
 ProjectOpt = Annotated[
     str, typer.Option("--project", "-p", envvar="TEEHR_PROJECT", help="Project name.")
 ]
+#: For data commands, where the shared public datasets are the default.
+DataProjectOpt = Annotated[
+    str,
+    typer.Option("--project", "-p", envvar="TEEHR_PROJECT", help="Project name, or 'public'."),
+]
+#: Rows printed unless --limit says otherwise (--out writes every row).
+PRINT_LIMIT = 1000
+OutOpt = Annotated[
+    Path | None, typer.Option("--out", help="Write every row to a .parquet, .csv or .arrow file.")
+]
+LimitOpt = Annotated[
+    int | None,
+    typer.Option(
+        "--limit", "-n", min=1, help=f"At most this many rows (printing: {PRINT_LIMIT} by default)."
+    ),
+]
+ColumnsOpt = Annotated[
+    str | None, typer.Option("--columns", "-c", help="Comma-separated columns (default: all).")
+]
+FilterOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--filter", "-f", help="Rows to read, e.g. \"primary_series_key = 'usgs-01010000'\"."
+    ),
+]
 
 
 @app.callback(invoke_without_command=True)
@@ -118,6 +148,8 @@ def _cell(value: Any) -> str:
         return f"{value:.6g}"
     if isinstance(value, dict | list):
         return json.dumps(value, default=str)
+    if isinstance(value, bytes):
+        return f"<{len(value)} bytes>"  # e.g. a geometry (WKB)
     return str(value)
 
 
@@ -732,6 +764,122 @@ def runs_wait(run_id: str, project: ProjectOpt) -> None:
 def runs_cancel(run_id: str, project: ProjectOpt) -> None:
     """Stop a queued or running run."""
     emit(state.api().cancel_run(project, run_id), ["id", "status", "finished_at"])
+
+
+# -- datasets ------------------------------------------------------------------------
+
+
+#: Columns every run writes on each row (the same within a run).
+_LINEAGE = ("run_id", "spec_version", "engine_version")
+
+
+def _split_ref(ref: str, project: str) -> tuple[str, str]:
+    """``public.name`` names another project's dataset; a bare name is ``project``'s."""
+    owner, dot, name = ref.partition(".")
+    return (owner, name) if dot else (project, ref)
+
+
+def _read(
+    project: str,
+    dataset: str,
+    columns: str | None,
+    filter: str | None,
+    limit: int | None,
+    out: Path | None,
+) -> None:
+    """Read rows and print them (at most PRINT_LIMIT by default) or write them all."""
+    want = limit if limit is not None else (None if out is not None else PRINT_LIMIT)
+    table = state.api().read(
+        project,
+        dataset,
+        columns=[c.strip() for c in columns.split(",")] if columns else None,
+        filter=filter,
+        limit=None if want is None else want + 1,  # one more shows whether there are more
+    )
+    if want is not None and table.num_rows > want:
+        table = table.slice(0, want)
+        notes.print(
+            f"first {want} rows; there are more (--limit N for more"
+            + (", --out FILE for all)" if out is None else ")"),
+            style="yellow",
+        )
+    if out is None:
+        emit(table.to_pylist(), table.column_names)
+        return
+    suffix = out.suffix.lower()
+    if suffix == ".parquet":
+        pq.write_table(table, out, compression="zstd")
+    elif suffix == ".csv":
+        pacsv.write_csv(table, out)
+    elif suffix in (".arrow", ".feather"):
+        with pa.OSFile(str(out), "wb") as sink, pa.ipc.new_file(sink, table.schema) as w:
+            w.write_table(table)
+    else:
+        raise typer.BadParameter(f"unsupported file type {suffix!r}", param_hint="--out")
+    notes.print(f"Wrote {table.num_rows} rows to {out}", style="green")
+
+
+@datasets.command("list")
+def datasets_list(project: DataProjectOpt = "public") -> None:
+    """List a project's datasets."""
+    emit(state.api().list_datasets(project), ["name", "kind", "description", "created_at"])
+
+
+@datasets.command("show")
+def datasets_show(name: str, project: DataProjectOpt = "public") -> None:
+    """Describe a dataset: kind, metadata and columns."""
+    owner, dataset = _split_ref(name, project)
+    record = state.api().get_dataset(owner, dataset)
+    if state.output == Output.JSON:
+        emit(record)
+        return
+    meta = record.get("timeseries") or record.get("layer") or record.get("crosswalk") or {}
+    emit(
+        {"name": record["name"], "kind": record["kind"], "table": record.get("table"),
+         "key": record.get("key_columns"), "description": record.get("description"), **meta},
+    )  # fmt: skip
+    emit(record.get("columns") or [], ["name", "type", "required", "doc"])
+
+
+@datasets.command("read")
+def datasets_read(
+    name: str,
+    project: DataProjectOpt = "public",
+    columns: ColumnsOpt = None,
+    filter: FilterOpt = None,
+    limit: LimitOpt = None,
+    out: OutOpt = None,
+) -> None:
+    """Print a dataset's rows, or write them all to a file (--out)."""
+    owner, dataset = _split_ref(name, project)
+    _read(owner, dataset, columns, filter, limit, out)
+
+
+@runs.command("results")
+def runs_results(
+    run_id: str,
+    project: ProjectOpt,
+    columns: ColumnsOpt = None,
+    filter: FilterOpt = None,
+    limit: LimitOpt = None,
+    out: OutOpt = None,
+) -> None:
+    """Print a run's results, or write them all to a file (--out).
+
+    Printed, the lineage columns (run_id, spec_version, engine_version: the same on
+    every row) are left out unless --columns asks for them.
+    """
+    api = state.api()
+    run = api.get_run(project, run_id)
+    if run["status"] != "succeeded" or not run.get("results_dataset"):
+        raise typer.BadParameter(f"the run is {run['status']}; results come once it succeeds")
+    dataset = run["results_dataset"]
+    notes.print(dataset)
+    if columns is None and out is None and state.output == Output.TABLE:
+        names = [c["name"] for c in api.get_dataset(project, dataset).get("columns") or []]
+        kept = [c for c in names if c not in _LINEAGE]
+        columns = ",".join(kept) if kept else None
+    _read(project, dataset, columns, filter, limit, out)
 
 
 def run() -> None:

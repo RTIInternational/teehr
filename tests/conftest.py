@@ -6,6 +6,8 @@ import uuid
 from typing import ClassVar
 
 import httpx
+import pyarrow as pa
+import pyarrow.compute as pc
 import pytest
 
 API = "https://cp.test"
@@ -79,6 +81,8 @@ class FakeAPI:
                     t["revoked_at"] = "2026-11-19T01:00:00Z"
                     return httpx.Response(204)
             return httpx.Response(404, json={"detail": "No such token"})
+        if "/datasets" in path:
+            return self._datasets(request, method, path)
         if path.startswith(("/v1/projects/flood/evaluations", "/v1/projects/flood/runs")):
             return self._evaluations(request, method, path.removeprefix("/v1/projects/flood"))
         if path.startswith("/v1/projects/flood/uploads"):
@@ -217,6 +221,49 @@ class FakeAPI:
                     run["result"] = {"rows": 7053, "mode": "full"}
             return httpx.Response(200, json=run)
         return httpx.Response(404, json={"detail": f"no route {method} {path}"})
+
+    #: results_kge_v1 in flood: 250 rows, served in pages.
+    RESULTS: ClassVar[pa.Table] = pa.table({
+        "primary_series_key": [f"usgs-{i:03d}" for i in range(250)],
+        "kge": [i / 250 for i in range(250)],
+    })  # fmt: skip
+
+    def _datasets(self, request, method, path):
+        project, _, rest = path.removeprefix("/v1/projects/").partition("/datasets")
+        if rest == "":
+            return httpx.Response(200, json=[
+                {"name": "results_kge_v1", "kind": "table", "description": "results",
+                 "created_at": "2026-11-19T00:00:00Z"}
+            ])  # fmt: skip
+        name, _, action = rest.strip("/").partition("/")
+        if name != "results_kge_v1" or project != "flood":
+            return httpx.Response(404, json={"detail": f"No dataset '{name}'"})
+        if action == "":
+            return httpx.Response(200, json={
+                "name": name, "kind": "table", "description": "results",
+                "table": "flood.results_kge_v1", "key_columns": None,
+                "columns": [{"name": "primary_series_key", "type": "string"},
+                            {"name": "kge", "type": "float64"}],
+            })  # fmt: skip
+        assert request.headers["Accept"] == "application/vnd.apache.arrow.stream"
+        params = request.url.params
+        table = self.RESULTS
+        if params.get("filter"):
+            key = params["filter"].split("'")[1]
+            table = table.filter(pc.equal(table["primary_series_key"], key))
+        if params.get("columns"):
+            table = table.select(params["columns"].split(","))
+        page = min(int(params.get("limit", 1000)), 100)  # small pages: exercise the cursor
+        offset = int(params.get("cursor", 0))
+        rows = table.slice(offset, page)
+        sink = pa.BufferOutputStream()
+        with pa.ipc.new_stream(sink, rows.schema) as writer:
+            writer.write_table(rows)
+        headers = {}
+        if offset + page < table.num_rows:
+            headers["X-Next-Cursor"] = str(offset + page)
+        self.reads = getattr(self, "reads", 0) + 1
+        return httpx.Response(200, content=sink.getvalue().to_pybytes(), headers=headers)
 
 
 @pytest.fixture

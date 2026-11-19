@@ -20,10 +20,14 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import pyarrow as pa
 
 from teehr import config
 
 USER_AGENT = "teehr-sdk"
+ARROW = "application/vnd.apache.arrow.stream"
+#: Rows asked for per page when reading (the API allows up to a million in Arrow).
+READ_PAGE_ROWS = 100_000
 #: An upload's or run's statuses once it has ended.
 ENDED = ("succeeded", "failed", "cancelled")
 
@@ -295,6 +299,62 @@ class Client:
     def delete_upload(self, project: str, upload_id: str) -> None:
         """Delete an upload and its staged file (not data already loaded)."""
         self._request("DELETE", f"/v1/projects/{project}/uploads/{upload_id}")
+
+    # --- datasets ------------------------------------------------------------------
+
+    def list_datasets(self, project: str) -> list[dict[str, Any]]:
+        """List a project's datasets."""
+        datasets: list[dict[str, Any]] = self._request(
+            "GET", f"/v1/projects/{project}/datasets"
+        ).json()
+        return datasets
+
+    def get_dataset(self, project: str, dataset: str) -> dict[str, Any]:
+        """Return a dataset: kind, columns, key, and its kind's metadata."""
+        record: dict[str, Any] = self._request(
+            "GET", f"/v1/projects/{project}/datasets/{dataset}"
+        ).json()
+        return record
+
+    def read(
+        self,
+        project: str,
+        dataset: str,
+        *,
+        columns: list[str] | None = None,
+        filter: str | None = None,
+        limit: int | None = None,
+    ) -> pa.Table:
+        """Read a dataset's rows (all, or the first ``limit``) as an Arrow table.
+
+        ``filter`` is the API's expression language, e.g.
+        ``"primary_series_key = 'usgs-01010000'"``. Pages are read in Arrow, all from
+        one snapshot, so writes landing meanwhile don't shift them.
+        """
+        params: dict[str, Any] = {}
+        if columns:
+            params["columns"] = ",".join(columns)
+        if filter:
+            params["filter"] = filter
+        batches: list[pa.Table] = []
+        got, cursor = 0, None
+        while limit is None or got < limit:
+            page = READ_PAGE_ROWS if limit is None else min(READ_PAGE_ROWS, limit - got)
+            resp = self._request(
+                "GET",
+                f"/v1/projects/{project}/datasets/{dataset}/data",
+                params={**params, "limit": page, **({"cursor": cursor} if cursor else {})},
+                headers={"Accept": ARROW},
+            )
+            table = pa.ipc.open_stream(resp.content).read_all()
+            batches.append(table)
+            got += table.num_rows
+            cursor = resp.headers.get("X-Next-Cursor")
+            if not cursor:
+                break
+        if not batches:
+            return pa.table({})
+        return pa.concat_tables(batches, promote_options="default")
 
     # --- evaluations and runs --------------------------------------------------------
 
