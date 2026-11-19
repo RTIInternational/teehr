@@ -237,5 +237,16 @@ def api(monkeypatch, tmp_path):
     monkeypatch.delenv("TEEHR_TOKEN", raising=False)
 
     monkeypatch.setattr("time.sleep", lambda seconds: None)  # waiting is instant
+    # Plain, wide output wherever tests run (CI turns colours on).
+    monkeypatch.setenv("NO_COLOR", "1")
+    monkeypatch.setenv("COLUMNS", "200")
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    from rich.console import Console
+
+    from teehr import cli
+
+    monkeypatch.setattr(cli, "console", Console(color_system=None, width=200))
+    monkeypatch.setattr(cli, "notes", Console(stderr=True, color_system=None, width=200))
     monkeypatch.setattr("teehr.login.webbrowser.open", lambda url: True)
     return fake
