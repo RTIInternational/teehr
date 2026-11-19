@@ -7,6 +7,7 @@ from typing import List, Union
 from pathlib import Path
 
 import pyspark.sql as ps
+from pyspark.errors import AnalysisException
 import pandas as pd
 import pyspark.sql.types as pst
 from pyarrow import Schema as ArrowSchema
@@ -634,22 +635,61 @@ class Write:
         table_name: str,
         catalog_name: str,
         namespace_name: str,
-        replace_condition: str,
+        replace_filters: Union[
+            str, dict, TableFilter, List[Union[str, dict, TableFilter]]
+        ],
+        uniqueness_fields: List[str],
     ):
-        """Replace rows matching ``replace_condition`` with the source rows.
+        """Replace rows matching ``replace_filters`` with the source rows.
 
         Inserts the source rows, then deletes the matching rows created before
         the insert (or with no created_at, e.g. rows older than the audit
         columns). Iceberg's overwrite-by-filter can't do this in one commit:
         it refuses a condition matching only part of a data file. Inserting
         first means a failure never leaves the range empty; a failed delete
-        leaves old and new rows until a rerun, which is idempotent. Every
-        source row must match the condition, or a rerun would duplicate it.
+        leaves old and new rows until a rerun, which is idempotent.
+
+        Guards against deleting the wrong rows: filters may only use the
+        table's uniqueness fields, every source row must match them (or a
+        rerun would duplicate it), and an empty source deletes nothing.
         """
         full_table_name = f"{catalog_name}.{namespace_name}.{table_name}"
-        if "created_at" not in self._ev.spark.table(full_table_name).columns:
+        target = self._ev.spark.table(full_table_name)
+        if "created_at" not in target.columns:
             raise ValueError(
                 f"replace_where needs a created_at column in '{table_name}'."
+            )
+        if not uniqueness_fields:
+            raise ValueError(
+                "replace_where needs the table's uniqueness_fields."
+            )
+        # Parenthesized, since a string filter may hold an OR
+        condition = "(" + " AND ".join(
+            f"({f})" for f in self._ev._validate.sdf_filters(
+                sdf=target, filters=replace_filters, validate=False
+            )
+        ) + ")"
+        # Spark refuses an expression on columns it can't see, so this limits
+        # the filters to the uniqueness fields whatever their format. Not
+        # .filter(), which looks past the select for missing columns.
+        try:
+            target.select(*uniqueness_fields).selectExpr(condition)
+        except AnalysisException as e:
+            raise ValueError(
+                "replace_filters can only use the uniqueness fields "
+                f"{uniqueness_fields} of '{table_name}': {condition}"
+            ) from e
+        source = self._ev.spark.table(source_view)
+        if source.isEmpty():
+            logger.warning(
+                f"No rows to write to '{table_name}', so replace_where "
+                "deletes nothing."
+            )
+            return
+        if not source.filter(f"NOT coalesce({condition}, false)").isEmpty():
+            raise ValueError(
+                "Some rows to write don't match replace_filters "
+                f"({condition}); a rerun would duplicate them."
             )
         # Formatted and parsed in Spark's session time zone, never Python's
         started = self._ev.sql(
@@ -664,7 +704,7 @@ class Write:
         )
         self._ev.sql(f"""
             DELETE FROM {full_table_name}
-            WHERE ({replace_condition})
+            WHERE {condition}
             AND (created_at IS NULL OR created_at < TIMESTAMP '{started}')
         """)
 
@@ -703,7 +743,9 @@ class Write:
         catalog_name: str = None,
         namespace_name: str = None,
         use_partition_filters: bool = True,
-        replace_condition: str | None = None,
+        replace_filters: Union[
+            str, dict, TableFilter, List[Union[str, dict, TableFilter]]
+        ] | None = None,
     ):
         """Write the DataFrame to the specified target in the catalog.
 
@@ -725,10 +767,11 @@ class Write:
             - ``"upsert"``: Insert new rows; update existing rows matching
               uniqueness_fields.
             - ``"replace_where"``: Replace the rows matching
-              ``replace_condition`` with the source rows: insert, then delete
-              matching rows created before the insert. Reruns are idempotent,
-              with no ``MERGE INTO``. Every source row must match the
-              condition.
+              ``replace_filters`` with the source rows: insert, then delete
+              matching rows created before the insert. Rerunning gives the
+              same result, without the costlier ``MERGE INTO`` join that
+              ``"upsert"`` uses. Every source row must match the filters, and
+              an empty source deletes nothing.
             - ``"overwrite"``: Replace all data in table. Preserves table
               structure and history (can time-travel back).
             - ``"create_or_replace"``: Drop and recreate table. Loses history.
@@ -738,7 +781,8 @@ class Write:
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
-            Only used for ``"append"`` and ``"upsert"`` write modes.
+            Used for ``"append"`` and ``"upsert"`` write modes, and to check
+            ``replace_filters``.
         nullable_fields : List[str], optional
             List of fields that should use null-safe equality in MERGE ON
             clauses. If None, nullable fields are inferred from the target
@@ -762,10 +806,13 @@ class Write:
             When True, adds literal predicates based on target partition
             fields and source data values/ranges.
             Default is ``True``.
-        replace_condition : str, optional
-            Spark SQL condition selecting the rows to replace, required for
-            ``write_mode="replace_where"``, e.g. ``"configuration_name = 'c'
-            AND startswith(location_id, 'huc10-')"``.
+        replace_filters : str, dict, TableFilter, or a list of them, optional
+            Filters selecting the rows to replace, required for
+            ``write_mode="replace_where"`` and ignored by the other modes. Any
+            format ``delete_from`` takes; only the table's uniqueness fields
+            can be filtered on, e.g.
+            ``[{"column": "configuration_name", "operator": "=", "value":
+            "c"}, "location_id LIKE 'huc10-%'"]``.
         """
         start_time = time.time()
         logger.info(f"Start writing to warehouse table '{table_name}'.")
@@ -900,9 +947,9 @@ class Write:
                 write_ordered_by=write_ordered_by,
             )
         elif write_mode == "replace_where":
-            if not replace_condition:
+            if not replace_filters:
                 raise ValueError(
-                    "replace_condition must be provided for replace_where "
+                    "replace_filters must be provided for replace_where "
                     "write mode."
                 )
             self._replace_where(
@@ -910,7 +957,8 @@ class Write:
                 table_name=table_name,
                 catalog_name=catalog_name,
                 namespace_name=namespace_name,
-                replace_condition=replace_condition,
+                replace_filters=replace_filters,
+                uniqueness_fields=uniqueness_fields,
             )
         elif write_mode == "overwrite":
             self._overwrite(
