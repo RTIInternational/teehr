@@ -1,6 +1,5 @@
 """Functions for formatting filters for querying."""
 import pandas as pd
-import pandera.pandas as pa
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
@@ -12,6 +11,11 @@ from pyspark.sql.types import StructType, StringType, IntegerType, FloatType, Ti
 logger = logging.getLogger(__name__)
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def quote_string(value: str) -> str:
+    """Return a Spark SQL string literal, escaping backslashes and quotes."""
+    return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
 
 
 def get_datetime_list_string(values):
@@ -39,7 +43,7 @@ def format_iterable_value(
     """
     # string
     if isinstance(values[0], str):
-        return f"""({",".join([f"'{v}'" for v in values])})"""
+        return f"""({",".join([quote_string(v) for v in values])})"""
     # int or float
     elif isinstance(values[0], int) or isinstance(values[0], float):
         return f"""({",".join([f"{v}" for v in values])})"""
@@ -50,7 +54,7 @@ def format_iterable_value(
         logger.warning(
             "Treating value as string because didn't know what else to do."
         )
-        return f"""({",".join([f"'{str(v)}'" for v in values])})"""
+        return f"""({",".join([quote_string(str(v)) for v in values])})"""
 
 
 def format_timedelta_value(value: timedelta) -> str:
@@ -93,7 +97,7 @@ def format_filter(
     operator = filter.operator.value
 
     if isinstance(filter.value, str):
-        return f"""{column} {operator} '{filter.value}'"""
+        return f"""{column} {operator} {quote_string(filter.value)}"""
     elif (
         isinstance(filter.value, int)
         or isinstance(filter.value, float)
@@ -117,7 +121,7 @@ def format_filter(
             f"Treating value {filter.value} as string because "
             "didn't know what else to do."
         )
-        return f"""{column} {operator} '{str(filter.value)}'"""
+        return f"""{column} {operator} {quote_string(str(filter.value))}"""
 
 
 def validate_filter(

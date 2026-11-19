@@ -1,6 +1,7 @@
 """Test the Writer class."""
 
 import pyspark.sql as ps
+from pyspark.sql import functions as F
 from pyspark.sql.types import (
     StructType,
     StructField,
@@ -10,6 +11,8 @@ from pyspark.sql.types import (
 )
 import pytest
 import pandas as pd
+
+from teehr.models.filters import TableFilter
 
 
 @pytest.mark.function_scope_evaluation_template
@@ -545,6 +548,207 @@ def test_insert_and_overwrite_match_columns_by_name(
     )
     assert len(row) == 1
     assert row[0].long_name == "Column order test unit"
+
+
+def _replace_rows(location_id, variable_name, hours, value, configuration="replace_test"):
+    """Hourly primary_timeseries rows for the replace_where tests."""
+    return pd.DataFrame({
+        "reference_time": pd.Timestamp("2019-12-31"),
+        "value_time": pd.date_range("2020-01-01", periods=hours, freq="h"),
+        "value": value,
+        "unit_name": "mm/s",
+        "variable_name": variable_name,
+        "configuration_name": configuration,
+        "location_id": location_id,
+    })
+
+
+REPLACE_FILTERS = [
+    {"column": "configuration_name", "operator": "=", "value": "replace_test"},
+    {"column": "variable_name", "operator": "=", "value": "p"},
+    {"column": "location_id", "operator": "like", "value": "a-%"},
+]
+
+
+def _replace_counts(ev):
+    """Row count and max value per (configuration, location, variable) of the test's locations."""
+    return (
+        ev.primary_timeseries.to_sdf()
+        .filter("location_id IN ('a-1', 'b-1')")
+        .groupBy("configuration_name", "location_id", "variable_name")
+        .agg({"value": "max", "*": "count"})
+        .toPandas()
+        .set_index(["configuration_name", "location_id", "variable_name"])
+        .sort_index()
+    )
+
+
+@pytest.mark.function_scope_evaluation_template
+@pytest.mark.parametrize("replace_filters", [
+    REPLACE_FILTERS,
+    [TableFilter(**f) for f in REPLACE_FILTERS],
+    # Strings, one with an OR: without parentheses it would also match t
+    [
+        "location_id LIKE 'a-%' OR location_id LIKE 'c-%'",
+        "configuration_name = 'replace_test'",
+        "variable_name = 'p'",
+    ],
+], ids=["dicts", "table_filters", "strings"])
+def test_replace_where_replaces_only_matching_rows(
+    function_scope_evaluation_template, replace_filters
+):
+    """replace_where is idempotent and drops rows a rerun no longer makes.
+
+    Old rows without a created_at are replaced too. Other variables and
+    location layers in the same partition are untouched.
+    """
+    ev = function_scope_evaluation_template
+    ev._write.to_warehouse(
+        source_data=pd.concat([
+            _replace_rows("a-1", "p", 3, 1.0),
+            _replace_rows("a-1", "t", 3, 2.0),
+            _replace_rows("b-1", "p", 3, 3.0),
+        ]),
+        table_name="primary_timeseries",
+        write_mode="insert",
+    )
+    # Rows written before the audit columns existed have no created_at
+    catalog = ev.active_catalog
+    ev.spark.sql(
+        f"UPDATE {catalog.catalog_name}.{catalog.namespace_name}"
+        ".primary_timeseries SET created_at = NULL "
+        "WHERE variable_name = 'p' AND location_id = 'a-1'"
+    )
+    for _ in range(2):  # a rerun leaves one copy
+        ev._write.to_warehouse(
+            # The third hour is no longer produced
+            source_data=_replace_rows("a-1", "p", 2, 9.0),
+            table_name="primary_timeseries",
+            write_mode="replace_where",
+            replace_filters=replace_filters,
+        )
+
+    got = _replace_counts(ev).loc["replace_test"]
+    assert got["count(1)"].to_dict() == {
+        ("a-1", "p"): 2, ("a-1", "t"): 3, ("b-1", "p"): 3
+    }
+    assert got["max(value)"].to_dict() == {
+        ("a-1", "p"): 9.0, ("a-1", "t"): 2.0, ("b-1", "p"): 3.0
+    }
+
+
+@pytest.mark.function_scope_evaluation_template
+@pytest.mark.parametrize("replace_filters, source, match", [
+    (None, None, "replace_filters must be provided"),
+    ([{"column": "value", "operator": ">", "value": 0}], None, "uniqueness fields"),
+    (["configuration_name = 'replace_test' OR value > 0"], None, "uniqueness fields"),
+    # A source row outside the filters would be duplicated by a rerun
+    (REPLACE_FILTERS, _replace_rows("b-1", "p", 2, 9.0), "don't match"),
+])
+def test_replace_where_refuses_unsafe_filters(
+    function_scope_evaluation_template, replace_filters, source, match
+):
+    """Missing, non-key and too-narrow filters are refused, before anything is written."""
+    ev = function_scope_evaluation_template
+    ev._write.to_warehouse(
+        source_data=_replace_rows("a-1", "p", 3, 1.0),
+        table_name="primary_timeseries",
+        write_mode="insert",
+    )
+    before = _replace_counts(ev)
+    with pytest.raises(ValueError, match=match):
+        ev._write.to_warehouse(
+            source_data=source if source is not None else _replace_rows("a-1", "p", 2, 9.0),
+            table_name="primary_timeseries",
+            write_mode="replace_where",
+            replace_filters=replace_filters,
+        )
+    pd.testing.assert_frame_equal(_replace_counts(ev), before)
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_replace_where_empty_source_deletes_nothing(
+    function_scope_evaluation_template
+):
+    """An empty write leaves the matching rows in place."""
+    ev = function_scope_evaluation_template
+    ev._write.to_warehouse(
+        source_data=_replace_rows("a-1", "p", 3, 1.0),
+        table_name="primary_timeseries",
+        write_mode="insert",
+    )
+    before = _replace_counts(ev)
+    ev._write.to_warehouse(
+        source_data=ev.spark.createDataFrame(_replace_rows("a-1", "p", 1, 9.0)).limit(0),
+        table_name="primary_timeseries",
+        write_mode="replace_where",
+        replace_filters=REPLACE_FILTERS,
+    )
+    pd.testing.assert_frame_equal(_replace_counts(ev), before)
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_replace_where_time_range(function_scope_evaluation_template):
+    """Timestamp range filters replace only the rows in the range."""
+    ev = function_scope_evaluation_template
+    ev._write.to_warehouse(
+        source_data=_replace_rows("a-1", "p", 3, 1.0),
+        table_name="primary_timeseries",
+        write_mode="insert",
+    )
+    # Bounds taken from Spark's own values: pandas' naive times are read in
+    # the machine's time zone, which isn't UTC on every laptop
+    later = ev.spark.createDataFrame(
+        _replace_rows("a-1", "p", 3, 9.0).iloc[1:]
+    ).withColumn("value_time", F.col("value_time").cast("timestamp_ntz"))
+    first, last = later.selectExpr("min(value_time)", "max(value_time)").first()
+    ev._write.to_warehouse(
+        source_data=later,
+        table_name="primary_timeseries",
+        write_mode="replace_where",
+        replace_filters=REPLACE_FILTERS + [
+            {"column": "value_time", "operator": ">=", "value": first},
+            {"column": "value_time", "operator": "<=", "value": last},
+        ],
+    )
+    got = (
+        ev.primary_timeseries.to_sdf()
+        .filter("location_id = 'a-1'")
+        .toPandas()
+        .set_index("value_time")["value"]
+        .sort_index()
+    )
+    assert got.tolist() == [1.0, 9.0, 9.0]
+
+
+@pytest.mark.function_scope_evaluation_template
+def test_replace_where_quotes_filter_values(
+    function_scope_evaluation_template
+):
+    """A quote in a filter value is matched literally, never read as SQL."""
+    ev = function_scope_evaluation_template
+    quoted = "q' OR '1'='1"
+    ev._write.to_warehouse(
+        source_data=pd.concat([
+            _replace_rows("a-1", "p", 2, 1.0, configuration=quoted),
+            _replace_rows("a-1", "p", 2, 2.0),
+        ]),
+        table_name="primary_timeseries",
+        write_mode="insert",
+    )
+    ev._write.to_warehouse(
+        source_data=_replace_rows("a-1", "p", 2, 9.0, configuration=quoted),
+        table_name="primary_timeseries",
+        write_mode="replace_where",
+        replace_filters=[{"column": "configuration_name", "operator": "=", "value": quoted}],
+    )
+    got = _replace_counts(ev)
+    assert got["max(value)"].to_dict() == {
+        (quoted, "a-1", "p"): 9.0, ("replace_test", "a-1", "p"): 2.0
+    }
+    assert got["count(1)"].to_dict() == {
+        (quoted, "a-1", "p"): 2, ("replace_test", "a-1", "p"): 2
+    }
 
 
 @pytest.mark.function_scope_evaluation_template

@@ -187,12 +187,40 @@ def weighted_average_from_matrix(
         Means shaped ``(n_zones,)`` or ``(n_times, n_zones)``, matching
         ``values``.
     """
-    values = np.asarray(values, dtype="float64")
-    single_step = values.ndim == 1
-    if single_step:
-        values = values[np.newaxis, :]
+    single_step = np.ndim(values) == 1
+    sums, missing_weight = weighted_sums_from_matrix(matrix, values)
+    total_weight = matrix @ np.ones(matrix.shape[1])
+    means = weighted_means_from_sums(
+        sums, missing_weight, total_weight, min_coverage
+    )
+    return means[0] if single_step else means
 
-    total_weight = (matrix @ np.ones(matrix.shape[1]))[:, np.newaxis]
+
+def weighted_sums_from_matrix(
+    matrix: sparse.spmatrix,
+    values: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Per-zone weighted sums of non-NaN pixels, and the weight on NaN pixels.
+
+    Sums from several pixel subsets (e.g. bands of a grid read one at a time)
+    can be added before :func:`weighted_means_from_sums`.
+
+    Parameters
+    ----------
+    matrix : sparse.spmatrix
+        Zone-by-pixel weights for the pixels in ``values``.
+    values : np.ndarray
+        Pixel values in matrix column order, ``(n_pixels,)`` or
+        ``(n_times, n_pixels)``.
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray]
+        Weighted sums and NaN weight, each ``(n_zones, n_times)``.
+    """
+    values = np.asarray(values, dtype="float64")
+    if values.ndim == 1:
+        values = values[np.newaxis, :]
     missing = np.isnan(values)
     if missing.any():
         sums = matrix @ np.where(missing, 0.0, values).T
@@ -201,7 +229,32 @@ def weighted_average_from_matrix(
     else:
         sums = matrix @ values.T
         missing_weight = np.zeros_like(sums)
+    return sums, missing_weight
 
+
+def weighted_means_from_sums(
+    sums: np.ndarray,
+    missing_weight: np.ndarray,
+    total_weight: np.ndarray,
+    min_coverage: float = 1.0,
+) -> np.ndarray:
+    """Coverage-weighted means from :func:`weighted_sums_from_matrix` output.
+
+    Parameters
+    ----------
+    sums, missing_weight : np.ndarray
+        ``(n_zones, n_times)`` totals over all of each zone's pixels.
+    total_weight : np.ndarray
+        Each zone's total weight, ``(n_zones,)``.
+    min_coverage : float
+        See :func:`weighted_average_from_matrix`.
+
+    Returns
+    -------
+    np.ndarray
+        Means shaped ``(n_times, n_zones)``.
+    """
+    total_weight = np.asarray(total_weight, dtype="float64")[:, np.newaxis]
     valid_weight = total_weight - missing_weight
     with np.errstate(invalid="ignore", divide="ignore"):
         means = sums / valid_weight
@@ -209,8 +262,7 @@ def weighted_average_from_matrix(
         (missing_weight > (1.0 - min_coverage) * total_weight)
         | (valid_weight <= 0)
     ] = np.nan
-    means = means.T
-    return means[0] if single_step else means
+    return means.T
 
 
 def compute_weighted_average(

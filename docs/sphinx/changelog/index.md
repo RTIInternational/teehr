@@ -84,8 +84,20 @@
   these tables from TEEHR Cloud ([#847](https://github.com/RTIInternational/teehr/issues/847)).
   `ev.download.evaluation_subset()` now loads both, and fetches primary timeseries stored
   under alias IDs.
+- **`weighted_sums_from_matrix` and `weighted_means_from_sums`** split
+  `weighted_average_from_matrix`, so sums over pixel subsets (e.g. bands of a grid read one at a
+  time) can be added before dividing ([#867](https://github.com/RTIInternational/teehr/issues/867)).
+- **`write_mode="replace_where"`** in `ev._write.to_warehouse`, with `replace_filters`
+  ([#867](https://github.com/RTIInternational/teehr/issues/867)). It replaces the rows matching
+  the filters: it inserts the source rows, then deletes matching rows created before the insert
+  or with no `created_at`. Rerunning gives the same result, with a plain insert and delete
+  instead of the costlier `MERGE INTO` join that `upsert` uses. To guard against deleting the
+  wrong rows, filters may only use the table's uniqueness fields, every source row must match
+  them, and an empty source deletes nothing.
 
 ### Fixed
+- **Quotes and backslashes in filter values are escaped**, so a value like `O'Brien` is
+  matched literally instead of breaking or changing the SQL.
 - **Ensemble CRPS and Brier Score now align members by time step.** Members were paired
   by row order, which Spark does not guarantee, so results depended on file layout.
   Rows are now matched on `(reference_time, value_time)`. Recompute any ensemble metrics
