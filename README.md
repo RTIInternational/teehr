@@ -34,13 +34,35 @@ For CI, make a token once (`teehr auth login --name ci --days 30`) and give the 
 `TEEHR_API_URL` and `TEEHR_TOKEN`, or save it with `teehr auth login --token tpat_...`.
 A local cluster with a self-signed certificate needs `--insecure` at login.
 
+## Upload data
+
+```
+teehr uploads add obs.csv -p my_project --kind timeseries
+```
+
+It sends the file, then shows how it maps to a dataset and anything still needed, with the
+option that gives it. Load it with those, e.g.:
+
+```
+teehr uploads ingest <upload id> -p my_project --name usgs_obs --role observed \
+  --variable streamflow --unit '[cft_i]/s' --statistic inst --timezone America/New_York --wait
+```
+
+or do both at once with `uploads add ... -y --wait`. `teehr uploads list|show|wait|cancel|delete`
+manage them; `--map FIELD=VALUE` changes the proposed mapping (e.g. `--map value=flow_cfs`).
+`TEEHR_PROJECT` sets a default `-p`. Every command takes `-o json` (or `csv`).
+
 ## From Python
 
 ```python
+from pathlib import Path
+
 from teehr import Client
 
 client = Client.from_config()  # the token `teehr auth login` saved
 client.list_projects()
+upload = client.upload_file("my_project", Path("obs.csv"), "timeseries")
+print(upload["preview"]["needed"])
 ```
 
 ## Develop

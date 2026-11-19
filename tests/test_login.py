@@ -18,6 +18,7 @@ def test_sign_in_gives_up_when_not_approved(api):
     def sleep(seconds):
         now[0] += seconds
 
+    api.auto_approve = False
     with pytest.raises(SignInFailed):
         sign_in(Client(API), "nb", show=lambda _: None, open_browser=False,
                 sleep=sleep, clock=lambda: now[0])  # fmt: skip

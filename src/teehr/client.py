@@ -13,7 +13,10 @@ A client authenticates with a personal token (``tpat_...``, made by
 
 from __future__ import annotations
 
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -21,6 +24,8 @@ import httpx
 from teehr import config
 
 USER_AGENT = "teehr-sdk"
+#: An upload's statuses once its load has ended.
+UPLOAD_ENDED = ("succeeded", "failed", "cancelled")
 
 
 class TeehrError(Exception):
@@ -184,6 +189,112 @@ class Client:
     def revoke_token(self, token_id: str) -> None:
         """Revoke a personal token; jobs it started stop being able to act as you."""
         self._request("DELETE", f"/v1/tokens/{token_id}")
+
+    # --- uploads -------------------------------------------------------------------
+
+    def create_upload(
+        self, project: str, filename: str, kind: str, format: str | None = None
+    ) -> dict[str, Any]:
+        """Start an upload; its ``upload_url`` takes the file (see :meth:`put_file`)."""
+        body: dict[str, Any] = {"filename": filename, "kind": kind}
+        if format:
+            body["format"] = format
+        upload: dict[str, Any] = self._request(
+            "POST", f"/v1/projects/{project}/uploads", json=body
+        ).json()
+        return upload
+
+    def put_file(self, upload_url: str, path: Path) -> None:
+        """Send a file to an upload's presigned, short-lived URL.
+
+        It goes straight to staging storage, not through the API. One request, so at
+        most 5 GB.
+        """
+        with path.open("rb") as f:
+            resp = self._http.put(
+                upload_url, content=f, headers={"Content-Length": str(path.stat().st_size)}
+            )
+        if resp.status_code >= 400:
+            raise TeehrError(resp.status_code, f"staging refused the file: {resp.text[:300]}")
+
+    def inspect_upload(self, project: str, upload_id: str) -> dict[str, Any]:
+        """Read the start of the staged file and propose how it maps (``preview``)."""
+        upload: dict[str, Any] = self._request(
+            "POST", f"/v1/projects/{project}/uploads/{upload_id}/inspect"
+        ).json()
+        return upload
+
+    def upload_file(
+        self, project: str, path: Path, kind: str, format: str | None = None
+    ) -> dict[str, Any]:
+        """Upload and inspect a file.
+
+        Returns the upload, with the proposed mapping and what's still needed in its
+        ``preview``.
+        """
+        upload = self.create_upload(project, path.name, kind, format)
+        self.put_file(upload["upload_url"], path)
+        return self.inspect_upload(project, upload["id"])
+
+    def ingest_upload(
+        self,
+        project: str,
+        upload_id: str,
+        dataset: dict[str, Any] | None = None,
+        mapping: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Load an inspected upload.
+
+        ``dataset`` and ``mapping`` change what inspect proposed (a field left out
+        keeps it). Starts a job; see :meth:`wait_upload`.
+        """
+        upload: dict[str, Any] = self._request(
+            "POST",
+            f"/v1/projects/{project}/uploads/{upload_id}/ingest",
+            json={"dataset": dataset or {}, "mapping": mapping or {}},
+        ).json()
+        return upload
+
+    def get_upload(self, project: str, upload_id: str) -> dict[str, Any]:
+        """Return an upload: preview, status, progress, outcome and problems."""
+        upload: dict[str, Any] = self._request(
+            "GET", f"/v1/projects/{project}/uploads/{upload_id}"
+        ).json()
+        return upload
+
+    def list_uploads(self, project: str) -> list[dict[str, Any]]:
+        """List a project's uploads, newest first."""
+        uploads: list[dict[str, Any]] = self._request(
+            "GET", f"/v1/projects/{project}/uploads"
+        ).json()
+        return uploads
+
+    def wait_upload(
+        self,
+        project: str,
+        upload_id: str,
+        on_update: Callable[[dict[str, Any]], None] | None = None,
+        interval: float = 2.0,
+    ) -> dict[str, Any]:
+        """Wait for an upload's load to end; ``on_update`` sees each poll."""
+        while True:
+            upload = self.get_upload(project, upload_id)
+            if on_update:
+                on_update(upload)
+            if upload["status"] in UPLOAD_ENDED:
+                return upload
+            time.sleep(interval)
+
+    def cancel_upload(self, project: str, upload_id: str) -> dict[str, Any]:
+        """Stop a queued or running load (the upload can be ingested again)."""
+        upload: dict[str, Any] = self._request(
+            "POST", f"/v1/projects/{project}/uploads/{upload_id}/cancel"
+        ).json()
+        return upload
+
+    def delete_upload(self, project: str, upload_id: str) -> None:
+        """Delete an upload and its staged file (not data already loaded)."""
+        self._request("DELETE", f"/v1/projects/{project}/uploads/{upload_id}")
 
     # --- projects ------------------------------------------------------------------
 

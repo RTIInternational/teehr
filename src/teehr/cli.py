@@ -12,6 +12,7 @@ import json
 import platform
 import sys
 from enum import StrEnum
+from pathlib import Path
 from typing import Annotated, Any
 
 import typer
@@ -27,7 +28,16 @@ app = typer.Typer(help="TEEHR Cloud from the terminal.", no_args_is_help=True)
 auth = typer.Typer(help="Sign in, check who you are, sign out.", no_args_is_help=True)
 tokens = typer.Typer(help="Personal tokens (for scripts, CI, agents).", no_args_is_help=True)
 projects = typer.Typer(help="Projects you can use.", no_args_is_help=True)
-for sub, name in ((auth, "auth"), (tokens, "tokens"), (projects, "projects")):
+uploads = typer.Typer(
+    help="Load files into datasets: upload, check the proposed mapping, ingest.",
+    no_args_is_help=True,
+)
+for sub, name in (
+    (auth, "auth"),
+    (tokens, "tokens"),
+    (projects, "projects"),
+    (uploads, "uploads"),
+):
     app.add_typer(sub, name=name)
 
 console = Console()
@@ -257,6 +267,285 @@ def tokens_revoke(token_id: str) -> None:
 def projects_list() -> None:
     """List the projects you can use."""
     emit(state.api().list_projects(), ["name", "my_role", "status", "description"])
+
+
+# -- uploads --------------------------------------------------------------------------
+
+_UPLOAD_COLUMNS = ["id", "filename", "kind", "status", "rows_done", "created_at"]
+KindOpt = Annotated[
+    str,
+    typer.Option(
+        help="What the file holds: timeseries, layer (locations with geometry) or "
+        "crosswalk (series keys linked across two datasets)."
+    ),
+]
+NameOpt = Annotated[str | None, typer.Option("--name", help="Dataset name (new or existing).")]
+RoleOpt = Annotated[str | None, typer.Option(help="New timeseries: observed, simulated, forecast.")]
+VariableOpt = Annotated[str | None, typer.Option(help="New timeseries: e.g. streamflow.")]
+UnitOpt = Annotated[
+    str | None, typer.Option(help="Unit of the file's values (UCUM, e.g. '[cft_i]/s'); converted.")
+]
+StatisticOpt = Annotated[
+    str | None, typer.Option(help="New timeseries: inst, or mean, sum, min, max over a period.")
+]
+PeriodOpt = Annotated[str | None, typer.Option(help="New timeseries: e.g. hour_starting.")]
+PartitionOpt = Annotated[
+    str | None,
+    typer.Option("--partition", help="New timeseries: partition by month (default), year or none."),
+]
+LayerOpt = Annotated[
+    str | None, typer.Option("--layer", help="Timeseries: the layer its series' locations are in.")
+]
+LeftOpt = Annotated[
+    str | None, typer.Option(help="New crosswalk: the dataset its left keys are series of.")
+]
+RightOpt = Annotated[
+    str | None, typer.Option(help="New crosswalk: the dataset its right keys are series of.")
+]
+SourceOpt = Annotated[str | None, typer.Option(help="Where the data came from.")]
+DescriptionOpt = Annotated[str | None, typer.Option(help="What the dataset is.")]
+TimezoneOpt = Annotated[
+    str | None,
+    typer.Option(help="IANA zone of times without one, e.g. America/New_York (no default)."),
+]
+MapOpt = Annotated[
+    list[str] | None,
+    typer.Option(
+        "--map",
+        help="Change the proposed mapping, FIELD=VALUE (repeatable): e.g. value=flow_cfs, "
+        "series_key=site_no, layout=wide, series_columns=a,b; JSON for lists of objects, "
+        'e.g. \'attributes=[{"column": "huc"}]\'.',
+    ),
+]
+WaitOpt = Annotated[bool, typer.Option("--wait", help="Wait for the load to finish.")]
+
+
+def _dataset_opts(**given: str | None) -> dict[str, Any]:
+    names = {"layer": "location_layer", "partition": "time_partition"}
+    return {names.get(k, k): v for k, v in given.items() if v}
+
+
+def _mapping_opts(items: list[str] | None, timezone: str | None) -> dict[str, Any]:
+    out: dict[str, Any] = {"timezone": timezone} if timezone else {}
+    for item in items or []:
+        key, sep, value = item.partition("=")
+        if not sep:
+            raise typer.BadParameter(f"{item!r}: use FIELD=VALUE", param_hint="--map")
+        if value.startswith(("[", "{")):
+            try:
+                out[key] = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise typer.BadParameter(f"{key}: not JSON ({exc})", param_hint="--map") from exc
+        else:
+            out[key] = value.split(",") if key == "series_columns" else (value or None)
+    return out
+
+
+#: What gives each of inspect's ``needed`` fields (others: --map FIELD=...).
+_NEEDED_OPTION = {
+    "mapping.timezone": "--timezone ZONE",
+    "dataset.location_layer": "--layer LAYER",
+    "dataset.time_partition": "--partition month|year|none",
+}
+
+
+def _option_for(needed: str) -> str:
+    field = needed.split(" ", 1)[0]
+    if field in _NEEDED_OPTION:
+        return _NEEDED_OPTION[field]
+    part, _, key = field.partition(".")
+    if part == "dataset":
+        return f"--{key.replace('_', '-')} ..."
+    return f"--map {key}=..."
+
+
+def _show_preview(upload: dict[str, Any]) -> None:
+    if state.output == Output.JSON:
+        emit(upload)
+        return
+    preview = upload.get("preview") or {}
+    rows = preview.get("rows")
+    console.print(
+        f"Upload [bold]{upload['id']}[/bold] ({escape(upload['filename'])}"
+        + (f", {rows} rows" if rows is not None else "")
+        + f"): {upload['status']}"
+    )
+    mapping = {k: v for k, v in (preview.get("mapping") or {}).items() if v}
+    dataset = {k: v for k, v in (preview.get("dataset") or {}).items() if v}
+    console.print(
+        "Proposed mapping: " + escape(", ".join(f"{k}={_cell(v)}" for k, v in mapping.items()))
+    )
+    console.print(
+        "Proposed dataset: " + escape(", ".join(f"{k}={_cell(v)}" for k, v in dataset.items()))
+    )
+    for note in preview.get("notes") or []:
+        console.print(f"  note: {escape(note)}", style="yellow")
+    for need in preview.get("needed") or []:
+        console.print(f"  needed: {escape(need)}  ({_option_for(need)})", style="red")
+
+
+def _waited(project: str, upload: dict[str, Any], wait: bool) -> dict[str, Any]:
+    """Return the upload, after waiting for its load to end if ``wait``."""
+    if not wait:
+        return upload
+    with notes.status(f"upload {upload['id']}: {upload['status']}") as status:
+        return state.api().wait_upload(
+            project,
+            upload["id"],
+            lambda u: status.update(f"upload {u['id']}: {u['status']}, {u['rows_done']} rows"),
+        )
+
+
+def _outcome(upload: dict[str, Any]) -> None:
+    """Print a load's outcome (table mode; JSON prints the whole upload once)."""
+    emit({k: upload.get(k) for k in ("id", "status", "rows_done", "result", "problems", "error")})
+
+
+def _finish(project: str, upload: dict[str, Any], wait: bool) -> None:
+    upload = _waited(project, upload, wait)
+    if state.output == Output.JSON:
+        emit(upload)
+    else:
+        _outcome(upload)
+    if upload["status"] in ("failed", "cancelled"):
+        raise typer.Exit(1)
+
+
+@uploads.command("add")
+def uploads_add(
+    files: Annotated[list[Path], typer.Argument(exists=True, dir_okay=False)],
+    project: ProjectOpt,
+    kind: KindOpt,
+    name: NameOpt = None,
+    role: RoleOpt = None,
+    variable: VariableOpt = None,
+    unit: UnitOpt = None,
+    statistic: StatisticOpt = None,
+    period: PeriodOpt = None,
+    partition: PartitionOpt = None,
+    layer: LayerOpt = None,
+    left: LeftOpt = None,
+    right: RightOpt = None,
+    source: SourceOpt = None,
+    description: DescriptionOpt = None,
+    timezone: TimezoneOpt = None,
+    map_: MapOpt = None,
+    yes: Annotated[
+        bool, typer.Option("--yes", "-y", help="Ingest right away (if nothing is missing).")
+    ] = False,
+    wait: WaitOpt = False,
+) -> None:
+    """Upload files and show how they map; with --yes, load them too.
+
+    Without --yes, check the proposed mapping, then `teehr uploads ingest ID` with any
+    changes. With several files and --yes, each loads after the one before (give
+    --name to load them all into one dataset).
+    """
+    api = state.api()
+    dataset = _dataset_opts(
+        name=name, role=role, variable=variable, unit=unit, statistic=statistic,
+        period=period, partition=partition, layer=layer, left=left, right=right,
+        source=source, description=description,
+    )  # fmt: skip
+    mapping = _mapping_opts(map_, timezone)
+    json_out = state.output == Output.JSON
+    done: list[dict[str, Any]] = []  # JSON: one document at the end
+    for file in files:
+        upload = api.upload_file(project, file, kind)
+        if not json_out:
+            _show_preview(upload)
+        if yes:
+            started = api.ingest_upload(project, upload["id"], dataset, mapping)
+            upload = _waited(project, started, wait or len(files) > 1)
+            if not json_out:
+                _outcome(upload)
+        elif not json_out:
+            notes.print(f"Load it with: teehr uploads ingest {upload['id']} -p {project} [options]")
+        done.append(upload)
+        if upload["status"] in ("failed", "cancelled"):
+            break  # don't load the rest after one that didn't
+    if json_out:
+        emit(done[0] if len(files) == 1 else done)
+    if done[-1]["status"] in ("failed", "cancelled"):
+        raise typer.Exit(1)
+
+
+@uploads.command("ingest")
+def uploads_ingest(
+    upload_id: str,
+    project: ProjectOpt,
+    name: NameOpt = None,
+    role: RoleOpt = None,
+    variable: VariableOpt = None,
+    unit: UnitOpt = None,
+    statistic: StatisticOpt = None,
+    period: PeriodOpt = None,
+    partition: PartitionOpt = None,
+    layer: LayerOpt = None,
+    left: LeftOpt = None,
+    right: RightOpt = None,
+    source: SourceOpt = None,
+    description: DescriptionOpt = None,
+    timezone: TimezoneOpt = None,
+    map_: MapOpt = None,
+    wait: WaitOpt = False,
+) -> None:
+    """Load an uploaded file, confirming (or changing) the proposed mapping and dataset."""
+    upload = state.api().ingest_upload(
+        project,
+        upload_id,
+        _dataset_opts(
+            name=name, role=role, variable=variable, unit=unit, statistic=statistic,
+            period=period, partition=partition, layer=layer, left=left, right=right,
+            source=source, description=description,
+        ),
+        _mapping_opts(map_, timezone),
+    )  # fmt: skip
+    _finish(project, upload, wait)
+
+
+@uploads.command("list")
+def uploads_list(project: ProjectOpt) -> None:
+    """List a project's uploads, newest first."""
+    emit(state.api().list_uploads(project), _UPLOAD_COLUMNS)
+
+
+@uploads.command("show")
+def uploads_show(upload_id: str, project: ProjectOpt) -> None:
+    """Show an upload: proposed mapping, status, progress, outcome and problems."""
+    upload = state.api().get_upload(project, upload_id)
+    if upload.get("preview") and state.output == Output.TABLE:
+        _show_preview(upload)
+    emit(
+        upload
+        if state.output == Output.JSON
+        else {k: upload.get(k) for k in ("status", "rows_done", "result", "problems", "error")}
+    )
+
+
+@uploads.command("wait")
+def uploads_wait(upload_id: str, project: ProjectOpt) -> None:
+    """Wait for an upload's load to finish."""
+    _finish(project, state.api().get_upload(project, upload_id), wait=True)
+
+
+@uploads.command("cancel")
+def uploads_cancel(upload_id: str, project: ProjectOpt) -> None:
+    """Stop a queued or running load (the upload can be ingested again)."""
+    emit(state.api().cancel_upload(project, upload_id), ["id", "status"])
+
+
+@uploads.command("delete")
+def uploads_delete(
+    upload_id: str,
+    project: ProjectOpt,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help="Don't ask first.")] = False,
+) -> None:
+    """Delete an upload and its staged file (not data already loaded)."""
+    if not yes:
+        typer.confirm(f"Delete upload {upload_id} in {project}?", abort=True)
+    state.api().delete_upload(project, upload_id)
+    notes.print(f"Deleted upload {upload_id}", style="green")
 
 
 def run() -> None:
