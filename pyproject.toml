@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-teehr = "teehr.cli:app"
+teehr = "teehr.cli:run"
 
 [project.urls]
 Repository = "https://github.com/RTIInternational/teehr"

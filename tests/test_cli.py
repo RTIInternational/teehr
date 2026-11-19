@@ -1,10 +1,12 @@
 import json
 import os
 import stat
+import sys
 
+import pytest
 from typer.testing import CliRunner
 
-from teehr import Client, config
+from teehr import Client, TeehrError, cli, config
 from teehr.cli import app
 from tests.conftest import API
 
@@ -12,12 +14,11 @@ runner = CliRunner()
 
 
 def run(*args):
-    result = runner.invoke(app, list(args))
-    return result
+    return runner.invoke(app, list(args))
 
 
 def test_login_signs_in_and_saves_a_token_only_the_user_can_read(api):
-    result = run("auth", "login", "--api", API + "/", "--name", "laptop")
+    result = run("--api", API + "/", "auth", "login", "--name", "laptop")
     assert result.exit_code == 0, result.output
     assert "ABCD-EFGH" in result.output and "as alice" in result.output
     assert api.started == [{"name": "laptop", "scopes": ["read", "write"], "expires_in_days": 90}]
@@ -31,49 +32,49 @@ def test_login_signs_in_and_saves_a_token_only_the_user_can_read(api):
 
 
 def test_status_projects_and_tokens_use_the_saved_token(api):
-    run("auth", "login", "--api", API, "--name", "laptop")
+    run("--api", API, "auth", "login", "--name", "laptop")
     status = run("auth", "status")
     assert status.exit_code == 0 and "alice" in status.output and "laptop" in status.output
     assert "flood" in run("projects", "list").output
-    assert "this one" in run("tokens", "list").output
+    assert "True" in run("tokens", "list").output
     assert Client.from_config().list_projects()[0]["name"] == "flood"
 
 
 def test_read_only_and_project_limits_are_asked_for(api):
-    run("auth", "login", "--api", API, "--read-only", "--project", "flood", "--days", "7")
+    run("--api", API, "auth", "login", "--read-only", "--project", "flood", "--days", "7")
     assert api.started[-1] == {"name": api.started[-1]["name"], "scopes": ["read"],
                                "projects": ["flood"], "expires_in_days": 7}  # fmt: skip
 
 
 def test_logout_revokes_and_forgets(api):
-    run("auth", "login", "--api", API)
+    run("--api", API, "auth", "login")
     result = run("auth", "logout")
     assert result.exit_code == 0 and "Signed out" in result.output
     assert all(t["revoked_at"] for t in api.tokens.values())
     assert config.credentials() is None
-    assert run("auth", "status").exit_code == 1  # not signed in: one line, no traceback
+    assert isinstance(run("auth", "status").exception, TeehrError)  # not signed in
 
 
 def test_a_revoked_token_is_reported_plainly(api):
-    run("auth", "login", "--api", API)
+    run("--api", API, "auth", "login")
     for t in api.tokens.values():
         t["revoked_at"] = "now"
     result = run("projects", "list")
-    assert result.exit_code == 1 and "Invalid token" in result.output
-    assert "Traceback" not in result.output
+    assert isinstance(result.exception, TeehrError)
+    assert result.exception.detail == "Invalid token"
 
 
 def test_login_with_an_existing_token(api):
-    run("auth", "login", "--api", API)
+    run("--api", API, "auth", "login")
     secret = next(iter(api.tokens))
     config.forget(API)
-    result = run("auth", "login", "--api", API, "--token", secret)
+    result = run("--api", API, "auth", "login", "--token", secret)
     assert result.exit_code == 0 and api.polls == 2  # no new sign-in
     assert config.credentials().token == secret
 
 
 def test_environment_overrides_for_ci(api, monkeypatch):
-    run("auth", "login", "--api", API)
+    run("--api", API, "auth", "login")
     secret = next(iter(api.tokens))
     config.forget(API)
     monkeypatch.setenv("TEEHR_API_URL", API)
@@ -86,8 +87,26 @@ def test_login_needs_an_api_the_first_time(api):
     assert result.exit_code == 2 and "--api" in result.output
 
 
+def test_api_errors_are_one_line_not_a_traceback(api, monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["teehr", "projects", "list"])
+    with pytest.raises(SystemExit) as exit_:
+        cli.run()
+    assert exit_.value.code == 1
+    err = capsys.readouterr().err
+    assert "Not signed in" in err and "Traceback" not in err
+
+
+def test_json_output_is_parseable(api):
+    run("--api", API, "auth", "login")
+    result = run("-o", "json", "tokens", "list")
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)[0]["current"] is True
+    csv_out = run("-o", "csv", "projects", "list").stdout.splitlines()
+    assert csv_out[0] == "name,my_role,status,description" and csv_out[1].startswith("flood,")
+
+
 def test_token_ids_are_listed_whole_for_revoking(api):
-    run("auth", "login", "--api", API)
+    run("--api", API, "auth", "login")
     token_id = next(iter(api.tokens.values()))["id"]
-    listed = run("tokens", "list").output
-    assert token_id in listed.replace("\n", "").replace("│", "").replace(" ", "")
+    wide = runner.invoke(app, ["tokens", "list"], env={"COLUMNS": "200"})
+    assert token_id in wide.output

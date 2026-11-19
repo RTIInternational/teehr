@@ -1,14 +1,22 @@
-"""The ``teehr`` command: TEEHR Cloud from the terminal, on the SDK."""
+"""The ``teehr`` command: TEEHR Cloud from the terminal, on the SDK.
+
+Commands are grouped by resource (``teehr tokens list``, ``teehr projects list``).
+``--output json`` (or ``csv``) gives machine-readable output everywhere; notes go to
+stderr so it stays parseable. The patterns follow VeriRace's CLI (ADR-0011).
+"""
 
 from __future__ import annotations
 
-import functools
+import csv
+import json
 import platform
-from collections.abc import Callable
-from typing import Any
+import sys
+from enum import StrEnum
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 
 from teehr import __version__, config
@@ -16,75 +24,135 @@ from teehr.client import Client, NotSignedIn, TeehrError
 from teehr.login import sign_in
 
 app = typer.Typer(help="TEEHR Cloud from the terminal.", no_args_is_help=True)
-auth_app = typer.Typer(help="Sign in, check who you are, sign out.", no_args_is_help=True)
-tokens_app = typer.Typer(help="Your personal tokens.", no_args_is_help=True)
-projects_app = typer.Typer(help="Projects you can use.", no_args_is_help=True)
-app.add_typer(auth_app, name="auth")
-app.add_typer(tokens_app, name="tokens")
-app.add_typer(projects_app, name="projects")
+auth = typer.Typer(help="Sign in, check who you are, sign out.", no_args_is_help=True)
+tokens = typer.Typer(help="Personal tokens (for scripts, CI, agents).", no_args_is_help=True)
+projects = typer.Typer(help="Projects you can use.", no_args_is_help=True)
+for sub, name in ((auth, "auth"), (tokens, "tokens"), (projects, "projects")):
+    app.add_typer(sub, name=name)
 
-out = Console()
-err = Console(stderr=True)
-
-API = typer.Option(
-    None, "--api", envvar="TEEHR_API_URL", help="The API (default: the last you signed in to)"
-)
+console = Console()
+#: Status messages, kept off stdout so ``-o json`` output stays parseable.
+notes = Console(stderr=True)
 
 
-def friendly[F: Callable[..., Any]](fn: F) -> F:
-    """Report API errors as one line on stderr and exit code 1, not a traceback."""
+class Output(StrEnum):
+    """Output format."""
 
-    @functools.wraps(fn)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        try:
-            return fn(*args, **kwargs)
-        except TeehrError as exc:
-            err.print(f"[red]{exc.detail}[/red]")
-            raise typer.Exit(1) from None
-
-    return wrapper  # type: ignore[return-value]
+    TABLE = "table"
+    JSON = "json"
+    CSV = "csv"
 
 
-def _client(api: str | None) -> Client:
-    return Client.from_config(api)
+class State:
+    """Options shared by every command."""
+
+    api_url: str | None = None
+    output: Output = Output.TABLE
+    client: Client | None = None
+
+    def api(self) -> Client:
+        """Return the client for the chosen API, signed in with its saved token."""
+        if self.client is None:
+            self.client = Client.from_config(self.api_url)
+        return self.client
+
+
+state = State()
+
+#: For project-scoped commands (``TEEHR_PROJECT`` sets a default).
+ProjectOpt = Annotated[
+    str, typer.Option("--project", "-p", envvar="TEEHR_PROJECT", help="Project name.")
+]
 
 
 @app.callback(invoke_without_command=True)
 def main(
-    version: bool = typer.Option(False, "--version", help="Show the version and exit."),
+    api: Annotated[
+        str | None,
+        typer.Option(
+            "--api",
+            envvar="TEEHR_API_URL",
+            help="The API, e.g. https://control-plane.<host> (default: the last signed in to).",
+        ),
+    ] = None,
+    output: Annotated[Output, typer.Option("--output", "-o", help="Output format.")] = Output.TABLE,
+    version: Annotated[bool, typer.Option("--version", help="Show the version.")] = False,
 ) -> None:
     """TEEHR Cloud from the terminal."""
     if version:
-        out.print(__version__)
+        console.print(__version__)
         raise typer.Exit()
+    state.api_url, state.output, state.client = api, output, None
 
 
-# --- auth ---------------------------------------------------------------------------
+# -- output ---------------------------------------------------------------------------
 
 
-@auth_app.command("login")
-@friendly
-def login(
-    api: str | None = API,
-    name: str = typer.Option(None, help="A name for the token (default: this computer's name)"),
-    days: int = typer.Option(90, min=1, max=365, help="Days until the token expires"),
-    read_only: bool = typer.Option(False, "--read-only", help="A token that can't write"),
-    project: list[str] = typer.Option(
-        None, "--project", help="Only this project (repeat for more; default: all of yours)"
-    ),
-    token: str = typer.Option(
-        None, "--token", envvar=None, help="Save an existing personal token instead (CI)"
-    ),
-    no_browser: bool = typer.Option(False, "--no-browser", help="Don't open the browser"),
-    insecure: bool = typer.Option(
-        False, "--insecure", help="Don't check the TLS certificate (local clusters only)"
-    ),
+def _cell(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, float):
+        return f"{value:.6g}"
+    if isinstance(value, dict | list):
+        return json.dumps(value, default=str)
+    return str(value)
+
+
+def emit(rows: list[dict[str, Any]] | dict[str, Any], columns: list[str] | None = None) -> None:
+    """Print records as a table, JSON or CSV (``columns``: which, in order)."""
+    if state.output == Output.JSON:
+        print(json.dumps(rows, indent=2, default=str))
+        return
+    if isinstance(rows, dict) and state.output == Output.TABLE:
+        for k in columns or list(rows):
+            console.print(f"[bold]{k}[/bold]: {escape(_cell(rows.get(k)))}")
+        return
+    records = [rows] if isinstance(rows, dict) else rows
+    cols = columns or (list(records[0]) if records else [])
+    if state.output == Output.CSV:
+        writer = csv.DictWriter(sys.stdout, cols, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows({c: _cell(r.get(c)) for c in cols} for r in records)
+        return
+    table = Table()
+    for c in cols:
+        table.add_column(c, overflow="fold")  # wrap long values, never cut them
+    for r in records:
+        table.add_row(*(escape(_cell(r.get(c))) for c in cols))  # values aren't markup
+    console.print(table)
+
+
+# -- auth -----------------------------------------------------------------------------
+
+
+@auth.command("login")
+def auth_login(
+    name: Annotated[
+        str | None, typer.Option(help="A name for the token (default: this computer's).")
+    ] = None,
+    days: Annotated[int, typer.Option(min=1, max=365, help="Days until it expires.")] = 90,
+    read_only: Annotated[
+        bool, typer.Option("--read-only", help="A token that can't write.")
+    ] = False,
+    project: Annotated[
+        list[str] | None,
+        typer.Option("--project", "-p", help="Only this project (repeatable; default: all yours)."),
+    ] = None,
+    token: Annotated[
+        str | None, typer.Option(help="Save an existing personal token instead (CI).")
+    ] = None,
+    browser: Annotated[bool, typer.Option(help="Open the approval page in a browser.")] = True,
+    insecure: Annotated[
+        bool, typer.Option("--insecure", help="Don't check TLS certificates (local clusters).")
+    ] = False,
 ) -> None:
     """Sign in: approve in your browser, and a personal token is saved for this API."""
-    url = api or config.default_api()
+    url = state.api_url or config.default_api()
     if not url:
-        err.print("Which API? Pass --api https://control-plane.<your TEEHR Cloud host>")
-        raise typer.Exit(2)
+        raise typer.BadParameter(
+            "which API? pass --api https://control-plane.<your TEEHR Cloud host>",
+            param_hint="--api",
+        )
     url = config.normalize(url)
     client = Client(url, verify=not insecure)
     if token is None:
@@ -94,8 +162,8 @@ def login(
             scopes=["read"] if read_only else ["read", "write"],
             projects=project or None,
             expires_in_days=days,
-            open_browser=not no_browser,
-            show=out.print,
+            open_browser=browser,
+            show=notes.print,
         )
         token = made["token"]
     client.token = token
@@ -111,35 +179,35 @@ def login(
             verify=not insecure,
         )
     )
-    who = current.get("username") or "you"
-    out.print(f"Signed in to {url} as [bold]{who}[/bold] (token '{current.get('name')}', "
-              f"expires {str(current.get('expires_at', '?'))[:10]}).")  # fmt: skip
+    notes.print(
+        f"Signed in to {url} as [bold]{escape(str(current.get('username')))}[/bold] "
+        f"(token {escape(repr(current.get('name')))}, "
+        f"expires {str(current.get('expires_at', '?'))[:10]})",
+        style="green",
+    )
 
 
-@auth_app.command("status")
-@friendly
-def status(api: str | None = API) -> None:
-    """Who you're signed in as, and with which token."""
-    client = _client(api)
+@auth.command("status")
+def auth_status() -> None:
+    """Show who you're signed in as, and with which token."""
+    client = state.api()
     current = client.current_token()
     if current is None:
-        out.print(f"Signed in to {client.api_url} with a token that isn't a personal token.")
+        notes.print(f"Signed in to {client.api_url}, not with a personal token")
         return
-    scopes = ", ".join(current["scopes"])
-    projects = ", ".join(current["projects"]) if current["projects"] else "all yours"
-    out.print(f"[bold]{current['username']}[/bold] at {client.api_url}")
-    out.print(f"token '{current['name']}' ({current['hint']}...): {scopes}; projects: {projects}")
-    out.print(f"expires {current['expires_at'][:10]}")
+    emit(
+        {"api": client.api_url, **current},
+        ["api", "username", "name", "hint", "scopes", "projects", "expires_at"],
+    )
 
 
-@auth_app.command("logout")
-@friendly
-def logout(api: str | None = API) -> None:
+@auth.command("logout")
+def auth_logout() -> None:
     """Revoke this computer's token and forget it."""
     try:
-        client = _client(api)
+        client = state.api()
     except NotSignedIn:
-        out.print("Not signed in.")
+        notes.print("Not signed in")
         return
     try:
         current = client.current_token()
@@ -149,54 +217,52 @@ def logout(api: str | None = API) -> None:
         if exc.status != 401:  # already revoked or expired: just forget it
             raise
     config.forget(client.api_url)
-    out.print(f"Signed out of {client.api_url}.")
+    notes.print(f"Signed out of {client.api_url}", style="green")
 
 
-# --- tokens ---------------------------------------------------------------------------
+# -- tokens ---------------------------------------------------------------------------
+
+#: The table shows these; -o json / csv give every field.
+_TOKEN_COLUMNS = ["id", "name", "scopes", "expires_at", "last_used_at", "current"]
 
 
-@tokens_app.command("list")
-@friendly
+@tokens.command("list")
 def tokens_list(
-    api: str | None = API,
-    all: bool = typer.Option(False, "--all", help="Everyone's (admins)"),
+    all: Annotated[bool, typer.Option("--all", help="Everyone's (admins).")] = False,
 ) -> None:
-    """Your personal tokens."""
-    for t in _client(api).list_tokens(all=all):
-        state = (
-            " [red](revoked)[/red]"
-            if t["revoked_at"]
-            else (" [green](this one)[/green]" if t["current"] else "")
-        )
-        used = (t["last_used_at"] or "never")[:16].replace("T", " ")
-        who = f"{t['username']}, " if all else ""
-        # One line each, id first and whole: it's what `teehr tokens revoke` takes.
-        out.print(
-            f"{t['id']}  [bold]{t['name']}[/bold]{state}  ({who}{','.join(t['scopes'])}; "
-            f"expires {t['expires_at'][:10]}; last used {used})",
-            soft_wrap=True,
-        )
+    """List your personal tokens, newest first (``current``: this computer's)."""
+    rows = state.api().list_tokens(all=all)
+    if state.output == Output.JSON:
+        emit(rows)
+        return
+    for r in rows:
+        r["expires_at"] = (r["expires_at"] or "")[:10]
+        r["last_used_at"] = (r["last_used_at"] or "")[:16].replace("T", " ")
+        if r.get("revoked_at"):
+            r["current"] = "revoked"
+    emit(rows, ["username", *_TOKEN_COLUMNS] if all else _TOKEN_COLUMNS)
 
 
-@tokens_app.command("revoke")
-@friendly
-def tokens_revoke(token_id: str, api: str | None = API) -> None:
-    """Revoke a personal token by id (see `teehr tokens list`)."""
-    _client(api).revoke_token(token_id)
-    out.print(f"Revoked {token_id}.")
+@tokens.command("revoke")
+def tokens_revoke(token_id: str) -> None:
+    """Revoke a personal token by id (see ``teehr tokens list``)."""
+    state.api().revoke_token(token_id)
+    notes.print(f"Revoked {token_id}", style="green")
 
 
-# --- projects -----------------------------------------------------------------------
+# -- projects -------------------------------------------------------------------------
 
 
-@projects_app.command("list")
-@friendly
-def projects_list(api: str | None = API) -> None:
-    """Projects you can use."""
-    table = Table("name", "role", "status", "description")
-    for p in _client(api).list_projects():
-        table.add_row(
-            p["name"], str(p.get("my_role") or ""), str(p.get("status") or ""),
-            str(p.get("description") or ""),
-        )  # fmt: skip
-    out.print(table)
+@projects.command("list")
+def projects_list() -> None:
+    """List the projects you can use."""
+    emit(state.api().list_projects(), ["name", "my_role", "status", "description"])
+
+
+def run() -> None:
+    """Run the CLI with API errors shown as one line, not a traceback."""
+    try:
+        app()
+    except TeehrError as exc:
+        Console(stderr=True).print(escape(exc.detail), style="red")
+        sys.exit(1)
