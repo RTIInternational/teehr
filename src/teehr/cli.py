@@ -8,10 +8,12 @@ stderr so it stays parseable. The patterns follow VeriRace's CLI (ADR-0011).
 from __future__ import annotations
 
 import csv
+import functools
 import json
 import platform
 import re
 import sys
+from collections.abc import Callable
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
@@ -780,8 +782,7 @@ def _split_ref(ref: str, project: str) -> tuple[str, str]:
 
 
 def _read(
-    project: str,
-    dataset: str,
+    fetch: Callable[..., pa.Table],
     columns: str | None,
     filter: str | None,
     limit: int | None,
@@ -789,9 +790,7 @@ def _read(
 ) -> None:
     """Read rows and print them (at most PRINT_LIMIT by default) or write them all."""
     want = limit if limit is not None else (None if out is not None else PRINT_LIMIT)
-    table = state.api().read(
-        project,
-        dataset,
+    table = fetch(
         columns=[c.strip() for c in columns.split(",")] if columns else None,
         filter=filter,
         limit=None if want is None else want + 1,  # one more shows whether there are more
@@ -850,9 +849,14 @@ def datasets_read(
     limit: LimitOpt = None,
     out: OutOpt = None,
 ) -> None:
-    """Print a dataset's rows, or write them all to a file (--out)."""
+    """Print a dataset's rows, or write them all to a file (--out).
+
+    An evaluation's results table (results_<name>_v<version>) holds every run's rows,
+    run_id saying which; `teehr runs results RUN_ID` reads one run's.
+    """
     owner, dataset = _split_ref(name, project)
-    _read(owner, dataset, columns, filter, limit, out)
+    api = state.api()
+    _read(functools.partial(api.read, owner, dataset), columns, filter, limit, out)
 
 
 @runs.command("results")
@@ -866,20 +870,22 @@ def runs_results(
 ) -> None:
     """Print a run's results, or write them all to a file (--out).
 
-    Printed, the lineage columns (run_id, spec_version, engine_version: the same on
-    every row) are left out unless --columns asks for them.
+    Just this run's rows: its evaluation version's results table keeps every run's
+    (see `teehr datasets read results_<name>_v<version>`). Printed, the lineage
+    columns (run_id, spec_version, engine_version: the same on every row) are left
+    out unless --columns asks for them.
     """
     api = state.api()
     run = api.get_run(project, run_id)
     if run["status"] != "succeeded" or not run.get("results_dataset"):
         raise typer.BadParameter(f"the run is {run['status']}; results come once it succeeds")
-    dataset = run["results_dataset"]
-    notes.print(dataset)
+    notes.print(f"run {run_id} of {run['evaluation']} v{run['version']}")
     if columns is None and out is None and state.output == Output.TABLE:
-        names = [c["name"] for c in api.get_dataset(project, dataset).get("columns") or []]
+        dataset = api.get_dataset(project, run["results_dataset"])
+        names = [c["name"] for c in dataset.get("columns") or []]
         kept = [c for c in names if c not in _LINEAGE]
         columns = ",".join(kept) if kept else None
-    _read(project, dataset, columns, filter, limit, out)
+    _read(functools.partial(api.run_results, project, run_id), columns, filter, limit, out)
 
 
 def run() -> None:

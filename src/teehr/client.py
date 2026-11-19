@@ -327,10 +327,21 @@ class Client:
     ) -> pa.Table:
         """Read a dataset's rows (all, or the first ``limit``) as an Arrow table.
 
+        An evaluation's results table holds every run's rows (``run_id`` says which);
+        :meth:`run_results` reads one run's.
+
         ``filter`` is the API's expression language, e.g.
         ``"primary_series_key = 'usgs-01010000'"``. Pages are read in Arrow, all from
         one snapshot, so writes landing meanwhile don't shift them.
         """
+        return self._pages(
+            f"/v1/projects/{project}/datasets/{dataset}/data", columns, filter, limit
+        )
+
+    def _pages(
+        self, path: str, columns: list[str] | None, filter: str | None, limit: int | None
+    ) -> pa.Table:
+        """Read a paged table route in Arrow, following its cursor."""
         params: dict[str, Any] = {}
         if columns:
             params["columns"] = ",".join(columns)
@@ -342,7 +353,7 @@ class Client:
             page = READ_PAGE_ROWS if limit is None else min(READ_PAGE_ROWS, limit - got)
             resp = self._request(
                 "GET",
-                f"/v1/projects/{project}/datasets/{dataset}/data",
+                path,
                 params={**params, "limit": page, **({"cursor": cursor} if cursor else {})},
                 headers={"Accept": ARROW},
             )
@@ -437,6 +448,21 @@ class Client:
             if run["status"] in ENDED:
                 return run
             time.sleep(interval)
+
+    def run_results(
+        self,
+        project: str,
+        run_id: str,
+        *,
+        columns: list[str] | None = None,
+        filter: str | None = None,
+        limit: int | None = None,
+    ) -> pa.Table:
+        """Read a succeeded run's results as an Arrow table.
+
+        A version's results table keeps every run's rows; this reads this run's.
+        """
+        return self._pages(f"/v1/projects/{project}/runs/{run_id}/results", columns, filter, limit)
 
     def cancel_run(self, project: str, run_id: str) -> dict[str, Any]:
         """Stop a queued or running run."""

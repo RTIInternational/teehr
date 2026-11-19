@@ -211,6 +211,20 @@ class FakeAPI:
             run = self.runs.get(parts[1])
             if run is None:
                 return httpx.Response(404, json={"detail": "No such run"})
+            if parts[2:] == ["results"]:
+                if run["status"] != "succeeded":
+                    return httpx.Response(409, json={"detail": f"The run is {run['status']}"})
+                # The version's table holds every run's rows; this route reads one run's.
+                mine = self.RESULTS.append_column(
+                    "run_id", pa.array([run["id"]] * self.RESULTS.num_rows)
+                )
+                other = mine.set_column(
+                    2, "run_id", pa.array(["another-run"] * self.RESULTS.num_rows)
+                )
+                self.results_reads = getattr(self, "results_reads", 0) + 1
+                return self._arrow_page(request, pa.concat_tables([mine, other]).filter(
+                    pc.equal(pa.concat_tables([mine, other])["run_id"], run["id"])
+                ))  # fmt: skip
             if parts[2:] == ["cancel"]:
                 run["status"] = "cancelled"
                 return httpx.Response(200, json=run)
@@ -245,9 +259,12 @@ class FakeAPI:
                 "columns": [{"name": "primary_series_key", "type": "string"},
                             {"name": "kge", "type": "float64"}],
             })  # fmt: skip
+        return self._arrow_page(request, self.RESULTS)
+
+    def _arrow_page(self, request, table):
+        """A page of ``table`` in Arrow, as the API serves reads (small pages)."""
         assert request.headers["Accept"] == "application/vnd.apache.arrow.stream"
         params = request.url.params
-        table = self.RESULTS
         if params.get("filter"):
             key = params["filter"].split("'")[1]
             table = table.filter(pc.equal(table["primary_series_key"], key))

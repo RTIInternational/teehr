@@ -73,9 +73,12 @@ teehr datasets read public.usgs_streamflow -n 20 -f "series_key = 'usgs-01646500
 teehr datasets read pairs_my_eval_v1 -p my_project --out pairs.parquet   # every row
 ```
 
+An evaluation version's results table (`results_<name>_v<version>`) keeps every run's rows,
+`run_id` saying which: `datasets read` shows them all, `runs results` one run's.
+
 Printing stops at 1000 rows (`-n` for more); `--out` writes every row to `.parquet`, `.csv` or
-`.arrow`. In Python, `client.read(project, dataset, filter=..., columns=...)` returns an Arrow
-table.
+`.arrow`. In Python, `client.read(project, dataset, filter=..., columns=...)` and
+`client.run_results(project, run_id)` return Arrow tables.
 
 ## From Python
 

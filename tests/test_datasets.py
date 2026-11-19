@@ -69,4 +69,7 @@ def test_run_results_reads_the_runs_dataset(api, tmp_path):
     started = json.loads(run("-o", "json", "runs", "start", "kge", "-p", "flood", "--wait").stdout)
     result = run("runs", "results", started["id"], "-p", "flood", "-n", "3")
     assert result.exit_code == 0, result.output
-    assert "results_kge_v1" in result.output and "usgs-002" in result.output
+    assert f"run {started['id']} of kge v1" in result.output and "usgs-002" in result.output
+    assert api.results_reads == 1  # the run's own route, not the whole table
+    rows = json.loads(run("-o", "json", "runs", "results", started["id"], "-p", "flood").stdout)
+    assert len(rows) == 250 and {r["run_id"] for r in rows} == {started["id"]}
