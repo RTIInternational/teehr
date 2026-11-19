@@ -136,7 +136,15 @@ class Client:
             headers["Authorization"] = f"Bearer {self.token}"
         resp = self._http.request(method, f"{self.api_url}{path}", headers=headers, **kwargs)
         if resp.status_code >= 400:
-            raise TeehrError(resp.status_code, _detail(resp))
+            detail = _detail(resp)
+            if resp.status_code == 404 and detail == "Not Found":
+                # The API's answer for a route it doesn't have (its own 404s say what
+                # wasn't found): it's older than this client.
+                detail = (
+                    f"{self.api_url} has no {method} {path.split('?')[0]}; "
+                    "the API may be older than this client"
+                )
+            raise TeehrError(resp.status_code, detail)
         return resp
 
     # --- signing in: making a personal token (no token needed) -------------------

@@ -116,3 +116,17 @@ def test_timestamps_read_to_the_second_in_tables():
     assert cli._cell("2026-11-19T18:29:21.237820Z") == "2026-11-19 18:29:21"
     assert cli._cell("2026-11-19T18:29:21+00:00") == "2026-11-19 18:29:21"
     assert cli._cell("not a time") == "not a time"
+
+
+def test_a_route_the_api_lacks_says_so():
+    import httpx
+
+    from teehr.client import Client
+
+    client = Client(API, "tpat_x", http=httpx.Client(transport=httpx.MockTransport(
+        lambda r: httpx.Response(404, json={"detail": "Not Found"})
+    )))  # fmt: skip
+    with pytest.raises(TeehrError) as raised:
+        client.get_run("flood", "abc")
+    assert "has no GET /v1/projects/flood/runs/abc" in raised.value.detail
+    assert "older than this client" in raised.value.detail
