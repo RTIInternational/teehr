@@ -162,14 +162,20 @@ def tokens_list(
     all: bool = typer.Option(False, "--all", help="Everyone's (admins)"),
 ) -> None:
     """Your personal tokens."""
-    table = Table("id", "name", "user", "scopes", "expires", "last used", "")
     for t in _client(api).list_tokens(all=all):
-        state = "revoked" if t["revoked_at"] else ("this one" if t["current"] else "")
-        table.add_row(
-            t["id"], t["name"], t["username"] or "", ",".join(t["scopes"]),
-            t["expires_at"][:10], (t["last_used_at"] or "")[:16].replace("T", " "), state,
-        )  # fmt: skip
-    out.print(table)
+        state = (
+            " [red](revoked)[/red]"
+            if t["revoked_at"]
+            else (" [green](this one)[/green]" if t["current"] else "")
+        )
+        used = (t["last_used_at"] or "never")[:16].replace("T", " ")
+        who = f"{t['username']}, " if all else ""
+        # One line each, id first and whole: it's what `teehr tokens revoke` takes.
+        out.print(
+            f"{t['id']}  [bold]{t['name']}[/bold]{state}  ({who}{','.join(t['scopes'])}; "
+            f"expires {t['expires_at'][:10]}; last used {used})",
+            soft_wrap=True,
+        )
 
 
 @tokens_app.command("revoke")

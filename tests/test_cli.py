@@ -84,3 +84,10 @@ def test_environment_overrides_for_ci(api, monkeypatch):
 def test_login_needs_an_api_the_first_time(api):
     result = run("auth", "login")
     assert result.exit_code == 2 and "--api" in result.output
+
+
+def test_token_ids_are_listed_whole_for_revoking(api):
+    run("auth", "login", "--api", API)
+    token_id = next(iter(api.tokens.values()))["id"]
+    listed = run("tokens", "list").output
+    assert token_id in listed.replace("\n", "").replace("│", "").replace(" ", "")
