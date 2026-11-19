@@ -135,11 +135,14 @@ incremental reruns, and all the data is read in one pod, so very large evaluatio
 ```
 teehr runs list nwm31_by_lead -p my_project     # newest first
 teehr runs show <run id> -p my_project          # status, results table, rows, mode, pairs
+teehr runs logs <run id> -p my_project --follow # its log as it goes: plan, shards, writes
 teehr runs wait <run id> -p my_project
 teehr runs cancel <run id> -p my_project
 ```
 
-A run that fails says why in `error`. Reading results is on
+A run's **log** is kept with it: what it planned to read, each shard (from every pod, with
+retries), what it wrote, and why it failed if it did. `--follow` prints new lines until the run
+ends. A run that fails also says why in `error`. Reading results is on
 [Reading data and results](reading.md).
 
 ## Managing evaluations

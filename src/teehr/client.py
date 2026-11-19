@@ -14,7 +14,7 @@ A client authenticates with a personal token (``tpat_...``, made by
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -567,6 +567,37 @@ class Client:
             if not cursor:
                 break
         return {"type": "FeatureCollection", "features": features}
+
+    def logs(
+        self, project: str, kind: str, job_id: str, after: int | None = None
+    ) -> dict[str, Any]:
+        """Return a run's or upload's log lines after line ``after``, oldest first.
+
+        ``kind`` is ``runs`` or ``uploads``; ``ended`` says no more lines will come.
+        """
+        page: dict[str, Any] = self._request(
+            "GET", f"/v1/projects/{project}/{kind}/{job_id}/logs", params=_given(after=after)
+        ).json()
+        return page
+
+    def follow_logs(
+        self, project: str, kind: str, job_id: str, follow: bool = True, interval: float = 2.0
+    ) -> Iterator[dict[str, Any]]:
+        """Yield a run's or upload's log lines.
+
+        With ``follow``, keep yielding new ones until it ends.
+        """
+        after = None
+        while True:
+            page = self.logs(project, kind, job_id, after)
+            for line in page["lines"]:
+                after = line["id"]
+                yield line
+            if page["lines"] and len(page["lines"]) >= 1000:
+                continue  # more already waiting
+            if not follow or page["ended"]:
+                return
+            time.sleep(interval)
 
     def cancel_run(self, project: str, run_id: str) -> dict[str, Any]:
         """Stop a queued or running run."""

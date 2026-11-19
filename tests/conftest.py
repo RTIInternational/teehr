@@ -114,6 +114,8 @@ class FakeAPI:
         if (method, rest) == ("GET", ""):
             return httpx.Response(200, json=list(self.uploads.values()))
         upload_id, _, action = rest.strip("/").partition("/")
+        if (method, action) == ("GET", "logs"):
+            return httpx.Response(200, json=self._log_page(request))
         upload = self.uploads.get(upload_id)
         if upload is None:
             return httpx.Response(404, json={"detail": "No such upload"})
@@ -213,6 +215,8 @@ class FakeAPI:
                 return httpx.Response(202, json=self.runs[run_id])
             return httpx.Response(200, json=[r for r in self.runs.values()
                                              if r["evaluation"] == slug])  # fmt: skip
+        if parts[0] == "runs" and parts[2:] == ["logs"]:
+            return httpx.Response(200, json=self._log_page(request))
         if parts[0] == "runs" and len(parts) >= 2:
             run = self.runs.get(parts[1])
             if run is None:
@@ -372,6 +376,23 @@ class FakeAPI:
                                              "table": f"flood.{body['name']}",
                                              "key_columns": None, "description": None})  # fmt: skip
         return None
+
+    #: A log that grows: two lines, then (a poll later) a warning and the end.
+    LOG: ClassVar[list[dict]] = [
+        {"id": 1, "at": "2026-11-19T18:00:00.123Z", "level": "INFO", "pod": "run-0",
+         "message": "planned public.usgs: 1 files"},
+        {"id": 2, "at": "2026-11-19T18:00:01Z", "level": "INFO", "pod": "run-1",
+         "message": "shard 1/2 (try 1): 10 series"},
+        {"id": 3, "at": "2026-11-19T18:00:02Z", "level": "WARNING", "pod": "run-0",
+         "message": "shard 2/2 (try 2): retried [after a lost pod]"},
+    ]  # fmt: skip
+
+    def _log_page(self, request):
+        self.log_polls = getattr(self, "log_polls", 0) + 1
+        after = int(request.url.params.get("after") or 0)
+        visible = self.LOG if self.log_polls > 1 else self.LOG[:2]
+        return {"lines": [line for line in visible if line["id"] > after],
+                "ended": self.log_polls > 1}  # fmt: skip
 
 
 @pytest.fixture

@@ -80,3 +80,19 @@ def test_plan_and_save_show_warnings(api, tmp_path):
     assert "warning: every run is full" in planned.output
     saved = run("evaluations", "save", "kge", spec_file(tmp_path), "-p", "flood")
     assert "warning: every run is full" in saved.output
+
+
+def test_run_logs_print_and_follow(api):
+    run("--api", API, "auth", "login")
+    once = run("runs", "logs", "r1", "-p", "flood")
+    assert once.exit_code == 0, once.output
+    assert "2026-11-19 18:00:00 [run-0]  planned public.usgs" in once.output
+    assert "shard 2/2" not in once.output  # not there yet; no --follow
+    api.log_polls = 0
+    followed = run("runs", "logs", "r1", "-p", "flood", "--follow")
+    assert "shard 1/2" in followed.output and "shard 2/2 (try 2)" in followed.output
+    assert "[after a lost pod]" in followed.output  # text, not markup
+    assert followed.output.count("planned public.usgs") == 1  # each line once
+    api.log_polls = 0
+    lines = json.loads(run("-o", "json", "uploads", "logs", "u1", "-p", "flood", "-F").stdout)
+    assert [line["id"] for line in lines] == [1, 2, 3]

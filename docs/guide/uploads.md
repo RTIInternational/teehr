@@ -122,6 +122,7 @@ commit (`--mode upsert|append|overwrite`). Uploads are for anything larger, or t
 teehr uploads list -p my_project
 teehr uploads show <id> -p my_project      # proposed mapping, status, rows, problems
 teehr uploads wait <id> -p my_project
+teehr uploads logs <id> -p my_project --follow  # the load's log: read, checked, written
 teehr uploads cancel <id> -p my_project    # it can be loaded again afterwards
 teehr uploads delete <id> -p my_project    # the upload and its staged file, not loaded data
 ```

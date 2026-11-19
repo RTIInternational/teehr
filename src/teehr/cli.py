@@ -761,6 +761,12 @@ def uploads_wait(upload_id: str, project: ProjectOpt) -> None:
     _finish(project, state.api().get_upload(project, upload_id), wait=True)
 
 
+@uploads.command("logs")
+def uploads_logs(upload_id: str, project: ProjectOpt, follow: FollowOpt = False) -> None:
+    """Print a load's log: reading, checking and writing the file."""
+    _print_logs("uploads", project, upload_id, follow)
+
+
 @uploads.command("cancel")
 def uploads_cancel(upload_id: str, project: ProjectOpt) -> None:
     """Stop a queued or running load (the upload can be ingested again)."""
@@ -947,6 +953,36 @@ def runs_show(run_id: str, project: ProjectOpt) -> None:
 def runs_wait(run_id: str, project: ProjectOpt) -> None:
     """Wait for a run to end."""
     _run_outcome(_run_waited(project, state.api().get_run(project, run_id), True))
+
+
+FollowOpt = Annotated[
+    bool, typer.Option("--follow", "-F", help="Keep printing new lines until it ends.")
+]
+_LEVEL_STYLE = {"ERROR": "red", "CRITICAL": "red", "WARNING": "yellow"}
+
+
+def _print_logs(kind: str, project: str, job_id: str, follow: bool) -> None:
+    lines = state.api().follow_logs(project, kind, job_id, follow)
+    if state.output == Output.JSON:
+        emit(list(lines))
+        return
+    shown = 0
+    for line in lines:
+        shown += 1
+        pod = f" [{line['pod']}]" if line.get("pod") else ""
+        console.print(
+            f"{_cell(line['at'])}{escape(pod)}  {escape(line['message'])}",
+            style=_LEVEL_STYLE.get(line["level"]),
+            highlight=False,
+        )
+    if not shown:
+        notes.print("No log lines (yet).")
+
+
+@runs.command("logs")
+def runs_logs(run_id: str, project: ProjectOpt, follow: FollowOpt = False) -> None:
+    """Print a run's log: its plan, each shard (from every pod), writes and outcome."""
+    _print_logs("runs", project, run_id, follow)
 
 
 @runs.command("cancel")
