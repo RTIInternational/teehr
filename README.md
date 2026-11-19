@@ -52,6 +52,17 @@ or do both at once with `uploads add ... -y --wait`. `teehr uploads list|show|wa
 manage them; `--map FIELD=VALUE` changes the proposed mapping (e.g. `--map value=flow_cfs`).
 `TEEHR_PROJECT` sets a default `-p`. Every command takes `-o json` (or `csv`).
 
+## Evaluations and runs
+
+```
+teehr evaluations plan spec.yaml -p my_project        # check it against the datasets
+teehr evaluations save my_eval spec.yaml -p my_project  # version 1, then a new version per change
+teehr runs start my_eval -p my_project --wait          # incremental unless --full
+teehr runs list my_eval -p my_project
+```
+
+`teehr evaluations show my_eval -p other > spec.yaml` copies a spec to start from.
+
 ## From Python
 
 ```python

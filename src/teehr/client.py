@@ -24,8 +24,8 @@ import httpx
 from teehr import config
 
 USER_AGENT = "teehr-sdk"
-#: An upload's statuses once its load has ended.
-UPLOAD_ENDED = ("succeeded", "failed", "cancelled")
+#: An upload's or run's statuses once it has ended.
+ENDED = ("succeeded", "failed", "cancelled")
 
 
 class TeehrError(Exception):
@@ -281,7 +281,7 @@ class Client:
             upload = self.get_upload(project, upload_id)
             if on_update:
                 on_update(upload)
-            if upload["status"] in UPLOAD_ENDED:
+            if upload["status"] in ENDED:
                 return upload
             time.sleep(interval)
 
@@ -295,6 +295,95 @@ class Client:
     def delete_upload(self, project: str, upload_id: str) -> None:
         """Delete an upload and its staged file (not data already loaded)."""
         self._request("DELETE", f"/v1/projects/{project}/uploads/{upload_id}")
+
+    # --- evaluations and runs --------------------------------------------------------
+
+    def plan(self, project: str, spec: dict[str, Any]) -> dict[str, Any]:
+        """Check a spec against the project's datasets, without saving or running it.
+
+        Raises :class:`TeehrError` (422) listing every problem found.
+        """
+        planned: dict[str, Any] = self._request(
+            "POST", f"/v1/projects/{project}/runs/plan", json=spec
+        ).json()
+        return planned
+
+    def save_evaluation(self, project: str, slug: str, spec: dict[str, Any]) -> dict[str, Any]:
+        """Save a spec under ``slug``: version 1, the next version, or nothing new.
+
+        ``changed`` says whether a version was saved; ``plan`` is the spec as planned.
+        """
+        saved: dict[str, Any] = self._request(
+            "PUT", f"/v1/projects/{project}/evaluations/{slug}", json=spec
+        ).json()
+        return saved
+
+    def list_evaluations(self, project: str) -> list[dict[str, Any]]:
+        """List a project's saved evaluations, with their latest versions."""
+        evaluations: list[dict[str, Any]] = self._request(
+            "GET", f"/v1/projects/{project}/evaluations"
+        ).json()
+        return evaluations
+
+    def get_evaluation(self, project: str, slug: str, version: int | None = None) -> dict[str, Any]:
+        """Return an evaluation: its latest spec and versions (or one ``version``)."""
+        path = f"/v1/projects/{project}/evaluations/{slug}"
+        if version is not None:
+            path += f"/versions/{version}"
+        evaluation: dict[str, Any] = self._request("GET", path).json()
+        return evaluation
+
+    def delete_evaluation(self, project: str, slug: str, keep_results: bool = False) -> None:
+        """Delete an evaluation, its runs and (unless ``keep_results``) their tables."""
+        params = {"keep_results": "true"} if keep_results else None
+        self._request("DELETE", f"/v1/projects/{project}/evaluations/{slug}", params=params)
+
+    def start_run(
+        self, project: str, slug: str, version: int | None = None, full: bool = False
+    ) -> dict[str, Any]:
+        """Run an evaluation (its latest version by default), incrementally unless ``full``."""
+        body: dict[str, Any] = {"full": full}
+        if version is not None:
+            body["version"] = version
+        run: dict[str, Any] = self._request(
+            "POST", f"/v1/projects/{project}/evaluations/{slug}/runs", json=body
+        ).json()
+        return run
+
+    def list_runs(self, project: str, slug: str) -> list[dict[str, Any]]:
+        """List an evaluation's runs, newest first."""
+        runs: list[dict[str, Any]] = self._request(
+            "GET", f"/v1/projects/{project}/evaluations/{slug}/runs"
+        ).json()
+        return runs
+
+    def get_run(self, project: str, run_id: str) -> dict[str, Any]:
+        """Return a run: status, and its result or error once it has ended."""
+        run: dict[str, Any] = self._request("GET", f"/v1/projects/{project}/runs/{run_id}").json()
+        return run
+
+    def wait_run(
+        self,
+        project: str,
+        run_id: str,
+        on_update: Callable[[dict[str, Any]], None] | None = None,
+        interval: float = 3.0,
+    ) -> dict[str, Any]:
+        """Wait for a run to end; ``on_update`` sees each poll."""
+        while True:
+            run = self.get_run(project, run_id)
+            if on_update:
+                on_update(run)
+            if run["status"] in ENDED:
+                return run
+            time.sleep(interval)
+
+    def cancel_run(self, project: str, run_id: str) -> dict[str, Any]:
+        """Stop a queued or running run."""
+        run: dict[str, Any] = self._request(
+            "POST", f"/v1/projects/{project}/runs/{run_id}/cancel"
+        ).json()
+        return run
 
     # --- projects ------------------------------------------------------------------
 

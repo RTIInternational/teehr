@@ -3,6 +3,7 @@ CLI pointed at it with its config in a temporary directory."""
 
 import json
 import uuid
+from typing import ClassVar
 
 import httpx
 import pytest
@@ -20,6 +21,8 @@ class FakeAPI:
         self.uploads: dict[str, dict] = {}
         self.staged: dict[str, bytes] = {}
         self.ingested: list[dict] = []
+        self.evaluations: dict[str, list[dict]] = {}  # slug -> versions' specs
+        self.runs: dict[str, dict] = {}
 
     def _me(self, request):
         auth = request.headers.get("Authorization", "")
@@ -76,6 +79,8 @@ class FakeAPI:
                     t["revoked_at"] = "2026-11-19T01:00:00Z"
                     return httpx.Response(204)
             return httpx.Response(404, json={"detail": "No such token"})
+        if path.startswith(("/v1/projects/flood/evaluations", "/v1/projects/flood/runs")):
+            return self._evaluations(request, method, path.removeprefix("/v1/projects/flood"))
         if path.startswith("/v1/projects/flood/uploads"):
             return self._uploads(request, method, path.removeprefix("/v1/projects/flood/uploads"))
         if (method, path) == ("GET", "/v1/projects"):
@@ -132,6 +137,86 @@ class FakeAPI:
             del self.uploads[upload_id]
             return httpx.Response(204)
         return httpx.Response(404, json={"detail": f"no route {method} {rest}"})
+
+    PLAN: ClassVar[dict] = {
+        "unit": "m3/s",
+        "inputs": [
+            {"dataset": "public.usgs", "side": "primary", "role": "observed",
+             "variable": "streamflow", "unit": "m3/s", "period": None},
+            {"dataset": "public.nwm", "side": "secondary", "role": "simulated",
+             "variable": "streamflow", "unit": "m3/s", "period": None},
+        ],
+        "relation": {"dataset": "public.usgs_nwm", "reversed": False},
+        "stages": [{"group_by": ["primary_series_key"], "columns": ["kge"]}],
+    }  # fmt: skip
+
+    def _evaluations(self, request, method, path):
+        parts = path.strip("/").split("/")  # evaluations/<slug>[/runs] or runs/<id>[/cancel]
+        if parts == ["runs", "plan"] and method == "POST":
+            spec = json.loads(request.content)
+            if "inputs" not in spec:
+                return httpx.Response(422, json={
+                    "detail": "inputs: Field required",
+                    "errors": [{"loc": ["body", "inputs"], "msg": "Field required"}],
+                })  # fmt: skip
+            return httpx.Response(200, json=self.PLAN)
+        if parts == ["evaluations"] and method == "GET":
+            return httpx.Response(200, json=[
+                {"slug": k, "version": len(v), "updated_at": "2026-11-19T00:00:00Z",
+                 "created_by": "alice"} for k, v in self.evaluations.items()
+            ])  # fmt: skip
+        if parts[0] == "evaluations" and len(parts) == 2:
+            slug = parts[1]
+            versions = self.evaluations.get(slug)
+            if method == "PUT":
+                spec = json.loads(request.content)
+                versions = self.evaluations.setdefault(slug, [])
+                changed = not versions or versions[-1] != spec
+                if changed:
+                    versions.append(spec)
+                return httpx.Response(201 if len(versions) == 1 and changed else 200, json={
+                    "slug": slug, "version": len(versions), "spec": versions[-1],
+                    "versions": [], "created_by": "alice", "created_at": "x",
+                    "changed": changed, "plan": self.PLAN,
+                })  # fmt: skip
+            if versions is None:
+                return httpx.Response(404, json={"detail": "No such evaluation"})
+            if method == "GET":
+                return httpx.Response(200, json={
+                    "slug": slug, "version": len(versions), "spec": versions[-1],
+                    "versions": [{"version": n + 1} for n in range(len(versions))],
+                })  # fmt: skip
+            if method == "DELETE":
+                del self.evaluations[slug]
+                return httpx.Response(204)
+        if parts[0] == "evaluations" and parts[2:] == ["runs"]:
+            slug = parts[1]
+            if method == "POST":
+                body = json.loads(request.content)
+                run_id = str(uuid.uuid4())
+                self.runs[run_id] = {
+                    "id": run_id, "evaluation": slug, "version": body.get("version", 1),
+                    "status": "queued", "results_dataset": f"results_{slug}_v1",
+                    "result": None, "error": None, "full": body["full"], "polls": 0,
+                    "created_at": "x", "finished_at": None,
+                }  # fmt: skip
+                return httpx.Response(202, json=self.runs[run_id])
+            return httpx.Response(200, json=[r for r in self.runs.values()
+                                             if r["evaluation"] == slug])  # fmt: skip
+        if parts[0] == "runs" and len(parts) >= 2:
+            run = self.runs.get(parts[1])
+            if run is None:
+                return httpx.Response(404, json={"detail": "No such run"})
+            if parts[2:] == ["cancel"]:
+                run["status"] = "cancelled"
+                return httpx.Response(200, json=run)
+            if run["status"] in ("queued", "running"):
+                run["polls"] += 1
+                run["status"] = "running" if run["polls"] < 2 else "succeeded"
+                if run["status"] == "succeeded":
+                    run["result"] = {"rows": 7053, "mode": "full"}
+            return httpx.Response(200, json=run)
+        return httpx.Response(404, json={"detail": f"no route {method} {path}"})
 
 
 @pytest.fixture

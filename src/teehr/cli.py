@@ -10,12 +10,14 @@ from __future__ import annotations
 import csv
 import json
 import platform
+import re
 import sys
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
+import yaml
 from rich.console import Console
 from rich.markup import escape
 from rich.table import Table
@@ -32,11 +34,17 @@ uploads = typer.Typer(
     help="Load files into datasets: upload, check the proposed mapping, ingest.",
     no_args_is_help=True,
 )
+evaluations = typer.Typer(
+    help="Saved evaluations: specs under a name, versioned.", no_args_is_help=True
+)
+runs = typer.Typer(help="Runs of saved evaluations.", no_args_is_help=True)
 for sub, name in (
     (auth, "auth"),
     (tokens, "tokens"),
     (projects, "projects"),
     (uploads, "uploads"),
+    (evaluations, "evaluations"),
+    (runs, "runs"),
 ):
     app.add_typer(sub, name=name)
 
@@ -98,9 +106,14 @@ def main(
 # -- output ---------------------------------------------------------------------------
 
 
+_TIMESTAMP = re.compile(r"^(\d{4}-\d\d-\d\d)T(\d\d:\d\d:\d\d)[.\d]*(Z|[+-]00:00)?$")
+
+
 def _cell(value: Any) -> str:
     if value is None:
         return ""
+    if isinstance(value, str) and (m := _TIMESTAMP.match(value)):
+        return f"{m[1]} {m[2]}"  # UTC, to the second (JSON keeps it whole)
     if isinstance(value, float):
         return f"{value:.6g}"
     if isinstance(value, dict | list):
@@ -546,6 +559,179 @@ def uploads_delete(
         typer.confirm(f"Delete upload {upload_id} in {project}?", abort=True)
     state.api().delete_upload(project, upload_id)
     notes.print(f"Deleted upload {upload_id}", style="green")
+
+
+# -- evaluations ----------------------------------------------------------------------
+
+SpecArg = Annotated[
+    Path, typer.Argument(exists=True, dir_okay=False, help="The spec, as YAML or JSON.")
+]
+
+
+def _spec(path: Path) -> dict[str, Any]:
+    try:
+        data = yaml.safe_load(path.read_text())
+    except yaml.YAMLError as exc:
+        raise typer.BadParameter(f"not YAML or JSON: {exc}", param_hint="SPEC") from exc
+    if not isinstance(data, dict):
+        raise typer.BadParameter("a spec is a mapping (keys and values)", param_hint="SPEC")
+    return data
+
+
+def _show_plan(plan: dict[str, Any]) -> None:
+    console.print(f"unit: {escape(str(plan.get('unit')))}")
+    for i in plan.get("inputs") or []:
+        console.print(
+            f"  {i['side']}: {escape(i['dataset'])} ({i['role']}, "
+            f"{escape(str(i.get('variable')))}, in {escape(str(i.get('unit')))})"
+        )
+    if plan.get("relation"):
+        console.print(f"  crosswalk: {escape(plan['relation']['dataset'])}")
+    for n, stage in enumerate(plan.get("stages") or [], 1):
+        by = ", ".join(stage["group_by"]) or "everything"
+        console.print(f"  stage {n}: by {escape(by)} -> {escape(', '.join(stage['columns']))}")
+
+
+@evaluations.command("plan")
+def evaluations_plan(spec: SpecArg, project: ProjectOpt) -> None:
+    """Check a spec against the project's datasets, without saving or running it."""
+    planned = state.api().plan(project, _spec(spec))
+    if state.output == Output.JSON:
+        emit(planned)
+        return
+    notes.print("The spec plans.", style="green")
+    _show_plan(planned)
+
+
+@evaluations.command("save")
+def evaluations_save(slug: str, spec: SpecArg, project: ProjectOpt) -> None:
+    """Save a spec under a name: version 1, the next version, or nothing if unchanged."""
+    saved = state.api().save_evaluation(project, slug, _spec(spec))
+    if state.output == Output.JSON:
+        emit(saved)
+        return
+    what = (
+        f"saved as version {saved['version']}"
+        if saved["changed"]
+        else (f"unchanged (still version {saved['version']})")
+    )
+    notes.print(f"{slug}: {what}", style="green")
+    _show_plan(saved["plan"])
+
+
+@evaluations.command("list")
+def evaluations_list(project: ProjectOpt) -> None:
+    """List the project's saved evaluations."""
+    emit(state.api().list_evaluations(project), ["slug", "version", "updated_at", "created_by"])
+
+
+@evaluations.command("show")
+def evaluations_show(
+    slug: str,
+    project: ProjectOpt,
+    version: Annotated[int | None, typer.Option(help="This version (default: latest).")] = None,
+) -> None:
+    """Show an evaluation's spec (YAML) and versions."""
+    evaluation = state.api().get_evaluation(project, slug, version)
+    if state.output == Output.JSON:
+        emit(evaluation)
+        return
+    shown = evaluation.get("version")
+    notes.print(f"{slug} version {shown}" + (
+        f" (versions: {', '.join(str(v['version']) for v in evaluation['versions'])})"
+        if evaluation.get("versions") else ""
+    ))  # fmt: skip
+    print(yaml.safe_dump(evaluation["spec"], sort_keys=False), end="")
+
+
+@evaluations.command("delete")
+def evaluations_delete(
+    slug: str,
+    project: ProjectOpt,
+    keep_results: Annotated[
+        bool, typer.Option("--keep-results", help="Keep the runs' tables, as datasets.")
+    ] = False,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help="Don't ask first.")] = False,
+) -> None:
+    """Delete an evaluation and its runs (and their tables, unless --keep-results)."""
+    if not yes:
+        typer.confirm(f"Delete evaluation {slug} in {project}?", abort=True)
+    state.api().delete_evaluation(project, slug, keep_results)
+    notes.print(f"Deleted {slug}", style="green")
+
+
+# -- runs -----------------------------------------------------------------------------
+
+_RUN_COLUMNS = ["id", "evaluation", "version", "status", "created_at", "finished_at"]
+_RUN_OUTCOME = ["id", "evaluation", "version", "status", "results_dataset", "rows", "mode",
+                "pairs", "error"]  # fmt: skip
+
+
+def _run_waited(project: str, run: dict[str, Any], wait: bool) -> dict[str, Any]:
+    if not wait:
+        return run
+    with notes.status(f"run {run['id']}: {run['status']}") as status:
+        return state.api().wait_run(
+            project, run["id"], lambda r: status.update(f"run {r['id']}: {r['status']}")
+        )
+
+
+def _run_outcome(run: dict[str, Any]) -> None:
+    """Print a run: whole as JSON; in a table, a summary of its result."""
+    if state.output == Output.JSON:
+        emit(run)
+    else:
+        result = run.get("result") or {}
+        mode = result.get("mode")
+        pairs = result.get("pairs") or {}
+        emit(
+            {
+                **run,
+                "rows": result.get("rows"),
+                "mode": f"{mode} ({result['why']})" if mode and result.get("why") else mode,
+                "pairs": f"{pairs.get('rows')} rows in {pairs.get('dataset')}" if pairs else None,
+            },
+            _RUN_OUTCOME,
+        )
+    if run["status"] in ("failed", "cancelled"):
+        raise typer.Exit(1)
+
+
+@runs.command("start")
+def runs_start(
+    slug: str,
+    project: ProjectOpt,
+    full: Annotated[bool, typer.Option("--full", help="Recompute everything.")] = False,
+    version: Annotated[int | None, typer.Option(help="This version (default: latest).")] = None,
+    wait: Annotated[bool, typer.Option("--wait", help="Wait for the run to end.")] = False,
+) -> None:
+    """Run a saved evaluation (incremental unless --full)."""
+    run = state.api().start_run(project, slug, version, full)
+    _run_outcome(_run_waited(project, run, wait))
+
+
+@runs.command("list")
+def runs_list(slug: str, project: ProjectOpt) -> None:
+    """List an evaluation's runs, newest first."""
+    emit(state.api().list_runs(project, slug), _RUN_COLUMNS)
+
+
+@runs.command("show")
+def runs_show(run_id: str, project: ProjectOpt) -> None:
+    """Show a run: status, and its result or error once it has ended."""
+    _run_outcome(state.api().get_run(project, run_id))
+
+
+@runs.command("wait")
+def runs_wait(run_id: str, project: ProjectOpt) -> None:
+    """Wait for a run to end."""
+    _run_outcome(_run_waited(project, state.api().get_run(project, run_id), True))
+
+
+@runs.command("cancel")
+def runs_cancel(run_id: str, project: ProjectOpt) -> None:
+    """Stop a queued or running run."""
+    emit(state.api().cancel_run(project, run_id), ["id", "status", "finished_at"])
 
 
 def run() -> None:

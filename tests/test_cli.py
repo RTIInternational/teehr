@@ -110,3 +110,9 @@ def test_token_ids_are_listed_whole_for_revoking(api):
     token_id = next(iter(api.tokens.values()))["id"]
     wide = runner.invoke(app, ["tokens", "list"], env={"COLUMNS": "200"})
     assert token_id in wide.output
+
+
+def test_timestamps_read_to_the_second_in_tables():
+    assert cli._cell("2026-11-19T18:29:21.237820Z") == "2026-11-19 18:29:21"
+    assert cli._cell("2026-11-19T18:29:21+00:00") == "2026-11-19 18:29:21"
+    assert cli._cell("not a time") == "not a time"
