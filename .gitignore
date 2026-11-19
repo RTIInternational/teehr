@@ -150,3 +150,10 @@ playground/iceberg/local-eval-warehouse
 copilot-instructions.md# Local copy files
 *copy.py
 * copy.py
+
+# TEEHR 1.0 (v1): local leftovers from the 0.x checkout
+spark-warehouse/
+profile.log
+.nox/
+.poetry/
+playground/

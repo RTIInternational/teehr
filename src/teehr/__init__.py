@@ -1,31 +1,12 @@
-"""Initialize the TEEHR package."""
-import warnings
+"""TEEHR: the Python SDK and CLI for TEEHR Cloud."""
 
-__version__ = "0.8.0"
+from importlib.metadata import PackageNotFoundError, version
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore", UserWarning)
-    import pandera.pyspark as ps  # noqa: F401
+from teehr.client import Client, NotSignedIn, TeehrError
 
-from teehr.evaluation.evaluation import Evaluation  # noqa
-from teehr.evaluation.evaluation import RemoteReadOnlyEvaluation  # noqa
-from teehr.evaluation.evaluation import RemoteReadWriteEvaluation  # noqa
-from teehr.evaluation.evaluation import LocalReadWriteEvaluation  # noqa
-from teehr.metrics.models.deterministic import DeterministicMetrics  # noqa
-from teehr.metrics.models.probabilistic import ProbabilisticMetrics  # noqa
-from teehr.metrics.models.signature import Signatures  # noqa
-from teehr.metrics.models.bootstrap import Bootstrappers  # noqa
-from teehr.metrics.models.base import Operators  # noqa
-from teehr.models.pydantic_table_models import (  # noqa
-    Configuration,
-    Attribute,
-    Unit,
-    Variable
-)
+try:
+    __version__ = version("teehr")
+except PackageNotFoundError:  # running from a checkout
+    __version__ = "0+unknown"
 
-from teehr.calculated_fields.models.row_level import RowLevelCalculatedFields # noqa
-from teehr.calculated_fields.models.timeseries_aware import TimeseriesAwareCalculatedFields # noqa
-from teehr.generate.models.timeseries_generator_models import (  # noqa
-    SignatureTimeseriesGenerators,
-    BenchmarkForecastGenerators
-)
+__all__ = ["Client", "NotSignedIn", "TeehrError", "__version__"]

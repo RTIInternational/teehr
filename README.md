@@ -1,50 +1,56 @@
-![alt text](https://github.com/RTIInternational/teehr/blob/main/docs/images/teehr.png?raw=true)
+# TEEHR
 
-| | |
-| --- | --- |
-| ![alt text](https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/CIROHLogo_200x200.png?raw=true) | Funding for this project was provided by the National Oceanic & Atmospheric Administration (NOAA), awarded to the Cooperative Institute for Research to Operations in Hydrology (CIROH) through the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003). |
+The Python SDK and CLI for **TEEHR Cloud**: sign in, manage personal tokens, and work with
+projects, datasets, uploads and evaluation runs from Python or the terminal.
 
+> This is the `v1` branch: TEEHR 1.0, in development. The current TEEHR package (0.x, Spark)
+> is on `main` and frozen until 1.0 replaces it (teehr-cloud-core ADR-0015).
 
-# TEEHR - Tools for Exploratory Evaluation in Hydrologic Research
-TEEHR-Python  (pronounced “teer”) is an opinionated Python framework for fetching, loading, storing, and processing large amounts hydrologic simulation data for the purpose of exploring and evaluating the datasets to assess their skill and performance.
+## Install
 
-## Documentation
-[TEEHR Documentation](https://rtiinternational.github.io/teehr/)
+```
+uv tool install "git+https://github.com/RTIInternational/teehr.git@v1"
+```
 
-## How to Install TEEHR (macOS/Linux)
-The easiest way to install TEEHR is from PyPI using `pip`. If using `pip` to install TEEHR, we recommend installing TEEHR in a virtual environment. Detailed installation instuctions for macOS/Linux users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html#installation-guide-for-macos-linux) under 'Installation Guide for macOS & Linux'.
+or `pip install "git+https://github.com/RTIInternational/teehr.git@v1"`.
 
-## How to Install TEEHR (Windows)
-Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL). Detailed installation instructions for Windows users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html#installation-guide-for-windows) under 'Installation Guide for Windows'.
+## Sign in
 
-## Versioning
-The TEEHR project follows semantic versioning as described here: [https://semver.org/](https://semver.org/).
-Note, per the specification, "Major version zero (0.y.z) is for initial development. Anything MAY change at any time. The public API SHOULD NOT be considered stable.".  We are solidly in "major version zero" territory, and trying to move fast, so expect breaking changes often.
+```
+teehr auth login --api https://control-plane.<your TEEHR Cloud host>
+```
 
-## Main Features
-The TEEHR-Python package is comprised of three main features:
+It shows a code and opens your browser; approve, and a personal token for this computer is saved
+in `~/.config/teehr/credentials.json` (readable by you only). Then:
 
-<table>
-  <tr>
-    <td><img src="https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/fetching-and-loading.png?raw=true" alt="Fetching and Loading" width="220"></td>
-    <td><strong>Fetching and Loading</strong> - Tools to bring external or local data into your Evaluation from a variety of sources and file formats.</td>
-  </tr>
-  <tr>
-    <td><img src="https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/data-validation-and-storage.png?raw=true" alt="Data Validation and Storage" width="220"></td>
-    <td><strong>Data Validation and Storage</strong> - TEEHR's data model helps ensure consistency in field values and types, and interfaces with Apache Iceberg for underlying data storage functionality.</td>
-  </tr>
-  <tr>
-    <td><img src="https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/analytics.png?raw=true" alt="Analytics" width="220"></td>
-    <td><strong>Analytics</strong> - TEEHR contains a suite of robust and scalable analytic methods that enable users to fully interrogate their datasets.</td>
-  </tr>
-</table>
+```
+teehr auth status
+teehr projects list
+teehr tokens list
+teehr auth logout
+```
 
-## The TEEHR-Cloud Framework
-The TEEHR-Cloud framework is made up of three components:
-- **TEEHR-Python**: Acts as the underlying analytics engine for computing metrics and analyzing data.
-- **The TEEHR Data Warehouse**: A cloud-hosted data warehouse build on Apache Iceberg conforming to TEEHR's data model.
-- **TEEHR Services Stack**: A suite of cloud-based services acting as an Evaluation Manager enabling automated data ingestion, metric calculations, and dashboard visualizations.
+For CI, make a token once (`teehr auth login --name ci --days 30`) and give the job
+`TEEHR_API_URL` and `TEEHR_TOKEN`, or save it with `teehr auth login --token tpat_...`.
+A local cluster with a self-signed certificate needs `--insecure` at login.
 
-<p align="center">
-  <img src="https://github.com/RTIInternational/teehr/blob/main/docs/images/readme/teehr-cloud-venn-diagram.png?raw=true" alt="TEEHR Cloud Venn Diagram" width="333">
-</p>
+## From Python
+
+```python
+from teehr import Client
+
+client = Client.from_config()  # the token `teehr auth login` saved
+client.list_projects()
+```
+
+## Develop
+
+```
+uv sync
+uv run pytest
+uv run ruff check . && uv run ruff format --check . && uv run mypy
+```
+
+## License
+
+MIT (see `LICENSE.md`).
