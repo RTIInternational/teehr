@@ -1,0 +1,58 @@
+﻿TimeseriesTable
+===============
+
+.. currentmodule:: teehr.evaluation.tables.timeseries_table
+
+.. autoclass:: TimeseriesTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~TimeseriesTable.add_attributes
+      ~TimeseriesTable.add_calculated_fields
+      ~TimeseriesTable.add_geometry
+      ~TimeseriesTable.aggregate
+      ~TimeseriesTable.delete
+      ~TimeseriesTable.distinct_values
+      ~TimeseriesTable.drop
+      ~TimeseriesTable.filter
+      ~TimeseriesTable.load_csv
+      ~TimeseriesTable.load_dataframe
+      ~TimeseriesTable.load_fews_xml
+      ~TimeseriesTable.load_netcdf
+      ~TimeseriesTable.load_parquet
+      ~TimeseriesTable.order_by
+      ~TimeseriesTable.to_geopandas
+      ~TimeseriesTable.to_pandas
+      ~TimeseriesTable.to_sdf
+      ~TimeseriesTable.validate
+      ~TimeseriesTable.write
+      ~TimeseriesTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TimeseriesTable.foreign_keys
+      ~TimeseriesTable.is_core_table
+      ~TimeseriesTable.primary_location_id_field
+      ~TimeseriesTable.schema_func
+      ~TimeseriesTable.secondary_location_id_field
+      ~TimeseriesTable.strict_validation
+      ~TimeseriesTable.table_name
+      ~TimeseriesTable.uniqueness_fields
+      ~TimeseriesTable.validate_filter_field_types
+   
+      ~TimeseriesTable.extraction_func
+   
+   

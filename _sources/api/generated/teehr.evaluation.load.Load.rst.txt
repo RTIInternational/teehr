@@ -1,0 +1,25 @@
+﻿Load
+====
+
+.. currentmodule:: teehr.evaluation.load
+
+.. autoclass:: Load
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Load.dataframe
+      ~Load.file
+      ~Load.from_cache
+   
+   
+
+   
+   
+   

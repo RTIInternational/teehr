@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Fetching and Summarizing NWM Gridded Data &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.8.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=4a9db78a" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../_static/documentation_options.js?v=486e5634"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'example_notebooks/notebooks/05_fetching_nwm_gridded_data';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../_static/js/toc_strip_classname.js?v=076a0c7b"></script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Developer Guide" href="../../development/index.html" />
+    <link rel="prev" title="Fetching USGS and NWM Streamflow Data" href="04_fetching_nwm_streamflow.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.8.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.8.0 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.8.0 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Notebooks
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Example Notebooks</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01_loading_local_data.html">Loading Local Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_adding_calculated_fields.html">Adding Calculated Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_ensemble_metrics.html">Ensemble Forecast Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_fetching_nwm_streamflow.html">Fetching USGS and NWM Streamflow Data</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Fetching NWM Gridded Data</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Example Notebooks</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Fetching and Summarizing NWM Gridded Data</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="fetching-and-summarizing-nwm-gridded-data">
+<h1>Fetching and Summarizing NWM Gridded Data<a class="headerlink" href="#fetching-and-summarizing-nwm-gridded-data" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>In this guide we’ll demonstrate fetching National Water Model (NWM) operational and retrospective gridded data from cloud storage. This example makes use of a pre-generated Evaluation dataset stored in TEEHR’s example data module.</p>
+<p><strong>Note</strong>: For demonstration purposes several cells below are shown in markdown form. If you want to download this notebook and run them yourself, you will need to convert them to code cells.</p>
+<section id="set-up-the-example-evaluation">
+<h3>Set up the example Evaluation<a class="headerlink" href="#set-up-the-example-evaluation" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hvplot.pandas</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.example_data.setup_nwm_grid_example</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_nwm_example</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.evaluation.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_tree</span>
+
+<span class="c1"># Tell Bokeh to output plots in the notebook</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">output_notebook</span>
+<span class="n">output_notebook</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><script type="esms-options">{"shimMode": true}</script><style>*[data-root-id],
+*[data-root-id] > * {
+  box-sizing: border-box;
+  font-family: var(--jp-ui-font-family);
+  font-size: var(--jp-ui-font-size1);
+  color: var(--vscode-editor-foreground, var(--jp-ui-font-color1));
+}
+
+/* Override VSCode background color */
+.cell-output-ipywidget-background:has(
+  > .cell-output-ipywidget-background > .lm-Widget > *[data-root-id]
+),
+.cell-output-ipywidget-background:has(> .lm-Widget > *[data-root-id]) {
+  background-color: transparent !important;
+}
+</style><div id="b750a7d5-a518-4701-92e7-d0106ca30e7f" role="alert" hidden></div></div><script type="application/javascript">(function(root) {
+  function now() {
+    return new Date();
+  }
+
+  const force = true;
+  const version = '3.10.1'.replace('rc', '-rc.').replace('.dev', '-dev.');
+  const reloading = false;
+  const Bokeh = root.Bokeh;
+  const BK_RE = /^https:\/\/cdn\.bokeh\.org\/bokeh\/(release|dev)\/bokeh-/;
+  const PN_RE = /^https:\/\/cdn\.holoviz\.org\/panel\/[^/]+\/dist\/panel/i;
+  const JUPYTER_ENDPOINT = "/panel-preview/";
+  const JUPYTER_EXTENSION_PATH = JUPYTER_ENDPOINT + "static/extensions/panel/";
+  const CDN_DIST = "https://cdn.holoviz.org/panel/1.10.0/dist/";
+  // Endpoint paths and the CDN urls serving the same files: Panel's dist,
+  // each extension with a CDN and each BokehJS file.
+  const CDN_MAP = [];
+  // Executed notebooks retain this bootstrap when published as static pages.
+  const live_notebook = root.Jupyter?.notebook != null || document.querySelector('.jp-LabShell') != null;
+  root.__panel_live_notebook__ = live_notebook;
+  // The lazy-resource registry needs the same export routing and CDN fallback.
+  root.__panel_cdn_dist__ = CDN_DIST;
+  root.__panel_cdn_map__ = CDN_MAP;
+
+  function cdn_url(url) {
+    const index = url.indexOf(JUPYTER_ENDPOINT);
+    if (index === -1) {
+      return null;
+    }
+    const path = url.slice(index + JUPYTER_ENDPOINT.length);
+    for (const [prefix, cdn] of CDN_MAP) {
+      if (path.startsWith(prefix)) {
+        return cdn + path.slice(prefix.length);
+      }
+    }
+    return null;
+  }
+
+  function resource_url(url) {
+    return !live_notebook || root.__panel_endpoint_failed__ === true ? (cdn_url(url) ?? url) : url;
+  }
+
+  // Pending until this bootstrap has loaded everything (or given up), so
+  // that output rendered meanwhile can wait for Panel's models.
+  let bootstrap_resolve;
+  const bootstrap = new Promise((resolve) => { bootstrap_resolve = resolve });
+  root.__panel_bootstrap__ = bootstrap;
+  function bootstrap_done() {
+    if (root.__panel_bootstrap__ === bootstrap) {
+      root.__panel_bootstrap__ = null;
+    }
+    bootstrap_resolve();
+  }
+  setTimeout(bootstrap_done, Math.max(5000, 15000));
+
+  // jupyter_bokeh, which renders Panel output for comms='ipywidgets' and in
+  // VS Code, builds a view as soon as its output arrives, so a notebook run
+  // top to bottom can render before BokehJS has loaded or before panel.js
+  // has registered the models the view needs. Both the classic notebook and
+  // VS Code load jupyter_bokeh through RequireJS, so its fetch is held until
+  // the bootstrap is done, and should it already be loaded, ipywidgets
+  // awaits render(), which is held instead.
+  function hold_bokeh_views(module) {
+    const View = module?.BokehView;
+    if (View == null || View.prototype.__panel_hold__ === true) {
+      return;
+    }
+    const render = View.prototype.render;
+    View.prototype.render = function(...args) {
+      const pending = root.__panel_bootstrap__;
+      return pending == null ? render.apply(this, args) : pending.then(() => render.apply(this, args));
+    };
+    View.prototype.__panel_hold__ = true;
+  }
+  if (root.requirejs != null) {
+    for (const name of ["@bokeh/jupyter_bokeh", "nbextensions/jupyter_bokeh/index"]) {
+      if (root.requirejs.defined(name)) {
+        hold_bokeh_views(root.requirejs(name));
+      }
+    }
+    const load = root.requirejs.load;
+    if (load?.__panel_hold__ !== true) {
+      root.requirejs.load = function(context, name, url) {
+        const pending = root.__panel_bootstrap__;
+        if (pending != null && name.includes("jupyter_bokeh")) {
+          pending.then(() => load.call(this, context, name, url));
+          return;
+        }
+        return load.call(this, context, name, url);
+      };
+      root.requirejs.load.__panel_hold__ = true;
+    }
+    const on_resource_load = root.requirejs.onResourceLoad;
+    if (on_resource_load?.__panel_hold__ !== true) {
+      // Called once a module is defined but before it is handed to the
+      // widget manager that asked for it.
+      root.requirejs.onResourceLoad = function(context, map, deps) {
+        if (map.id.includes("jupyter_bokeh")) {
+          hold_bokeh_views(context.defined[map.id]);
+        }
+        return on_resource_load?.apply(this, arguments);
+      };
+      root.requirejs.onResourceLoad.__panel_hold__ = true;
+    }
+  }
+
+  // Set a timeout for this load but only if we are not already initializing
+  if (typeof (root._bokeh_timeout) === "undefined" || (force || !root._bokeh_is_initializing)) {
+    root._bokeh_timeout = Date.now() + 5000;
+    root._bokeh_failed_load = false;
+  }
+
+  function run_callbacks() {
+    try {
+      root._bokeh_onload_callbacks.forEach(function(callback) {
+        if (callback != null)
+          callback();
+      });
+    } finally {
+      delete root._bokeh_onload_callbacks;
+    }
+    console.debug("Bokeh: all callbacks have finished");
+  }
+
+  function show_jupyter_extension_error() {
+    if (!live_notebook) {
+      return;
+    }
+    const element = document.getElementById("b750a7d5-a518-4701-92e7-d0106ca30e7f");
+    if (element == null || !element.hidden) {
+      return;
+    }
+    element.style.cssText = "color: #b91c1c; font-family: sans-serif; padding: 0.5em;";
+    element.textContent = (
+      "Panel could not load resources from its Jupyter server extension. " +
+      "Install Panel in the environment running the Jupyter server and restart it."
+    );
+    element.hidden = false;
+  }
+  root.__panel_jupyter_extension_error__ = show_jupyter_extension_error;
+
+
+  function load_libs(css_urls, js_urls, js_modules, Bokeh, callback) {
+    if (css_urls == null) css_urls = [];
+    if (js_urls == null) js_urls = [];
+    if (js_modules == null) js_modules = [];
+
+    root._bokeh_onload_callbacks.push(callback);
+
+    if (root._bokeh_is_loading > 0) {
+      // Don't load bokeh if it is still initializing
+      console.debug("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+      return null;
+    } else if (js_urls.length === 0 && js_modules.length === 0) {
+      // There is nothing to load
+      run_callbacks();
+      return null;
+    }
+
+    function on_load() {
+      root._bokeh_is_loading--;
+      if (root._bokeh_is_loading === 0) {
+        console.debug("Bokeh: all BokehJS libraries/stylesheets loaded");
+        run_callbacks()
+      }
+    }
+    window._bokeh_on_load = on_load
+
+    function on_error(url) {
+      console.error("failed to load " + url);
+      if (url.includes(JUPYTER_ENDPOINT + "static/")) {
+        show_jupyter_extension_error();
+      }
+    }
+
+    function fallback_to_cdn(element, url, attribute, parent) {
+      const fallback = cdn_url(url);
+      if (fallback == null || element.dataset.panelCdnFallback != null) {
+        return false;
+      }
+      element.dataset.panelCdnFallback = "";
+      element.remove();
+      element[attribute] = fallback;
+      parent.appendChild(element);
+      return true;
+    }
+
+    // Mirrors the AMD guard in panel/models/resources.ts: a UMD library that
+    // is not loaded by RequireJS must take its browser-global branch, so
+    // define.amd reads as undefined while one of these scripts executes. A
+    // module script has no currentScript, so it is told apart by the
+    // directory its code was loaded from.
+    function install_amd_guard() {
+      const define = root.define;
+      if (typeof define !== "function" || define.amd == null || define.__panel_no_amd__ === true) {
+        return;
+      }
+      const dirs = root.__panel_no_amd_dirs__ = root.__panel_no_amd_dirs__ || [];
+      const hidden = () => {
+        const script = document.currentScript;
+        if (script != null) {
+          return script.hasAttribute("data-panel-no-amd");
+        }
+        const stack = new Error().stack || "";
+        return dirs.some((dir) => stack.includes(dir));
+      };
+      let amd = define.amd;
+      try {
+        Object.defineProperty(define, "amd", {
+          configurable: true,
+          enumerable: true,
+          get: () => hidden() ? undefined : amd,
+          set: (value) => { amd = value },
+        });
+        Object.defineProperty(define, "__panel_no_amd__", {value: true});
+      } catch (e) {
+        console.warn(`Panel: could not hide RequireJS from component libraries: ${e}`);
+      }
+    }
+
+    function hide_amd(element) {
+      element.setAttribute("data-panel-no-amd", "");
+      install_amd_guard();
+    }
+
+    function hide_amd_module(url) {
+      const dirs = root.__panel_no_amd_dirs__ = root.__panel_no_amd_dirs__ || [];
+      const dir = new URL(url, document.baseURI).href.split("?")[0].replace(/[^/]*$/, "");
+      // panel.js itself lives in a dist root, and must never match.
+      if (!/\/(dist|static\/extensions\/panel)\/$/.test(dir) && !dirs.includes(dir)) {
+        dirs.push(dir);
+      }
+      install_amd_guard();
+    }
+
+    function inject_script_tag(url) {
+      const element = document.createElement('script');
+      hide_amd(element);
+      element.onload = on_load;
+      element.onerror = () => {
+        if (!fallback_to_cdn(element, url, "src", document.head)) {
+          on_error(url);
+        }
+      };
+      element.async = false;
+      element.src = resource_url(url);
+      console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+      document.head.appendChild(element);
+    }
+
+    const skip = [];
+    // Held open until every resource below has been queued, then released
+    // by on_load() at the end of this function.
+    root._bokeh_is_loading = 1;
+    if (window.requirejs) {
+      const require_config = {'packages': {}, 'paths': {}, 'shim': {}};
+      // RequireJS tries each path in turn, so a bundled copy the Jupyter
+      // extension cannot serve falls back to the CDN, then to the original.
+      const require_urls = (url) => {
+        url = resource_url(url);
+        const fallback = cdn_url(url);
+        return fallback == null || fallback === url ? [url] : [url, fallback];
+      };
+      for (const [name, path] of Object.entries(require_config.paths || {})) {
+        require_config.paths[name] = (Array.isArray(path) ? path : [path]).flatMap(require_urls);
+      }
+      window.requirejs.config(require_config);
+    }
+
+    const existing_stylesheets = []
+    const links = document.getElementsByTagName('link')
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i]
+      if (link.href != null) {
+        existing_stylesheets.push(link.href)
+      }
+    }
+    for (let i = 0; i < css_urls.length; i++) {
+      const url = css_urls[i];
+      const escaped = encodeURI(url)
+      if (existing_stylesheets.indexOf(escaped) !== -1) {
+        continue;
+      }
+      const element = document.createElement("link");
+      root._bokeh_is_loading++;
+      element.onload = on_load;
+      element.onerror = () => {
+        if (!fallback_to_cdn(element, url, "href", document.body)) {
+          on_error(url);
+        }
+      };
+      element.rel = "stylesheet";
+      element.type = "text/css";
+      element.href = resource_url(url);
+      console.debug("Bokeh: injecting link tag for BokehJS stylesheet: ", url);
+      document.body.appendChild(element);
+    }    var existing_scripts = []
+    const scripts = document.getElementsByTagName('script')
+    for (let i = 0; i < scripts.length; i++) {
+      var script = scripts[i]
+      if (script.src != null) {
+        existing_scripts.push(script.src)
+      }
+    }
+    for (let i = 0; i < js_urls.length; i++) {
+      const url = js_urls[i];
+      const escaped = encodeURI(url)
+      const shouldSkip = skip.includes(escaped) || existing_scripts.includes(escaped)
+      const isBokehOrPanel = BK_RE.test(escaped) || PN_RE.test(escaped)
+      const missingOrBroken = Bokeh == null || Bokeh.Panel == null || (Bokeh.version != version && !Bokeh.versions?.has(version)) || Bokeh.versions?.get(version)?.Panel == null;
+      if (shouldSkip && !(isBokehOrPanel && missingOrBroken)) {
+        continue;
+      }
+      root._bokeh_is_loading++;
+      inject_script_tag(url);
+    }
+    for (let i = 0; i < js_modules.length; i++) {
+      const [url, name] = js_modules[i];
+      const escaped = encodeURI(url)
+      const loaded = name == null ? existing_scripts.indexOf(escaped) !== -1 : root[name] != null
+      if (skip.indexOf(escaped) !== -1 || loaded) {
+        continue;
+      }
+      var element = document.createElement('script');
+      hide_amd_module(resource_url(url));
+      root._bokeh_is_loading++;
+      element.onerror = () => {
+        if (!fallback_to_cdn(element, url, "src", document.head)) {
+          on_error(url);
+        }
+      };
+      element.async = false;
+      element.type = "module";
+      if (name == null) {
+        element.onload = on_load;
+        element.src = resource_url(url);
+      } else {
+        // Namespace import rather than a default import, matching what the
+        // resource registry's module wrapper assigns, so a library that only
+        // has named exports resolves to its namespace instead of to undefined.
+        // The import loads the module, so it gets no bare tag as well. The url
+        // is absolutized because an import specifier resolves through the
+        // import map unless it starts with a scheme, / or ./, whereas a src
+        // resolves against the document.
+        element.textContent = `
+        import * as ns from "${new URL(resource_url(url), document.baseURI).href}"
+        window.${name} = ns.default ?? ns
+        window._bokeh_on_load()
+        `
+      }
+      console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+      document.head.appendChild(element);
+    }
+    // Releases the reservation taken above, running the callbacks now if
+    // nothing else is outstanding.
+    on_load()
+  };
+
+  function inject_raw_css(css) {
+    const element = document.createElement("style");
+    element.appendChild(document.createTextNode(css));
+    document.body.appendChild(element);
+  }
+
+  const js_urls = ["https://cdn.holoviz.org/panel/1.10.0/dist/bundled/reactiveesm/es-module-shims@^1.10.0/dist/es-module-shims.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-3.10.1.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-gl-3.10.1.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.10.1.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.10.1.min.js", "https://cdn.holoviz.org/panel/1.10.0/dist/panel.min.js"];
+  const js_modules = [];
+  const css_urls = [];
+  const inline_js = [    function(Bokeh, define, module, exports) {
+Bokeh.set_log_level("info");
+    },
+function(Bokeh, define, module, exports) {} // ensure no trailing comma for IE
+  ];
+
+  // Resolved once RequireJS has loaded its libraries and assigned their
+  // globals, so the resource registry can wait for them instead of racing.
+  let require_ready_resolve;
+  const require_ready = new Promise((resolve) => { require_ready_resolve = resolve });  require_ready_resolve();
+  // Module exports are only assigned once their libraries have loaded. A
+  // library that fails to load never finishes the load, so the wait is bounded
+  // and the registry loads whatever is still missing itself.
+  let libs_ready_resolve;
+  const libs_ready = new Promise((resolve) => { libs_ready_resolve = resolve });
+  setTimeout(() => libs_ready_resolve(), 5000 || 5000);
+
+  function declare_resources() {
+    // Tells the panel.js resource registry which component libraries this
+    // bundle has already satisfied, so nothing is fetched a second time.
+    // In inline mode the libraries have no URLs at all, which makes this
+    // the only way the registry can know about them.
+    const declared = {"libs": [{"name": "reactiveesm:extra", "js": ["https://cdn.holoviz.org/panel/1.10.0/dist/bundled/reactiveesm/es-module-shims@^1.10.0/dist/es-module-shims.min.js"]}]};
+    if (!declared || !(declared.libs || declared.css)) {
+      return;
+    }
+    // Libraries RequireJS is loading are claimed against require_ready
+    // instead of being declared, since they are not ready yet.
+    const require_urls = window.requirejs ? [] : [];
+    const satisfied = [], pending = [], exporting = [];
+    for (const lib of declared.libs || []) {
+      const urls = lib.js || [];
+      const by_require = urls.length > 0 && urls.every((url) => require_urls.includes(url));
+      const exports = (lib.modules || []).some((module) => module.export != null);
+      (by_require ? pending : exports ? exporting : satisfied).push(lib);
+    }
+    const declarations = [{libs: satisfied, css: declared.css}];
+    if (pending.length > 0) {
+      declarations.push({libs: pending, ready: require_ready});
+    }
+    if (exporting.length > 0) {
+      declarations.push({libs: exporting, ready: libs_ready});
+    }
+    for (const declaration of declarations) {
+      if (root.__panel_resources__ != null) {
+        if (declaration.ready != null) {
+          root.__panel_resources__.claim(declaration, declaration.ready);
+        } else {
+          root.__panel_resources__.declare(declaration);
+        }
+      } else {
+        (root.__panel_resources_declared__ = root.__panel_resources_declared__ || []).push(declaration);
+      }
+    }
+  }
+
+  function run_inline_js() {
+    if ((root.Bokeh !== undefined) || (force === true)) {
+      for (let i = 0; i < inline_js.length; i++) {
+        try {
+          inline_js[i].call(root, root.Bokeh);
+        } catch(e) {
+          if (!reloading) {
+            throw e;
+          }
+        }
+      }
+      // Views waiting on this run once the current task is done, by which
+      // point the load callback has also restored root.Bokeh.
+      bootstrap_done();
+    } else if (Date.now() < root._bokeh_timeout) {
+      setTimeout(run_inline_js, 100);
+    } else if (!root._bokeh_failed_load) {
+      console.log("Bokeh: BokehJS failed to load within specified timeout.");
+      root._bokeh_failed_load = true;
+      bootstrap_done();
+    }
+    root._bokeh_is_initializing = false;
+  }
+
+  function load_or_wait() {
+    // Implement a backoff loop that tries to ensure we do not load multiple
+    // versions of Bokeh and its dependencies at the same time.
+    // In recent versions we use the root._bokeh_is_initializing flag
+    // to determine whether there is an ongoing attempt to initialize
+    // bokeh, however for backward compatibility we also try to ensure
+    // that we do not start loading a newer (Panel>=1.0 and Bokeh>3) version
+    // before older versions are fully initialized.
+    if (root._bokeh_is_initializing && Date.now() > root._bokeh_timeout) {
+      // If the timeout and bokeh was not successfully loaded we reset
+      // everything and try loading again
+      root._bokeh_timeout = Date.now() + 5000;
+      root._bokeh_is_initializing = false;
+      root._bokeh_onload_callbacks = undefined;
+      root._bokeh_is_loading = 0;
+      console.log("Bokeh: BokehJS was loaded multiple times but one version failed to initialize.");
+      load_or_wait();
+    } else if (root._bokeh_is_initializing || (typeof root._bokeh_is_initializing === "undefined" && root._bokeh_onload_callbacks !== undefined)) {
+      setTimeout(load_or_wait, 100);
+    } else {
+      root._bokeh_is_initializing = true;
+      root._bokeh_onload_callbacks = [];
+      const bokeh_loaded = Bokeh != null && ((Bokeh.version === version && Bokeh.Panel) || (Bokeh.versions?.has(version) && Bokeh.versions.get(version)?.Panel));
+      if (!reloading && !bokeh_loaded) {
+        if (root.Bokeh) {
+          root.Bokeh = undefined;
+        }
+        console.debug("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+      }
+      load_libs(css_urls, js_urls, js_modules, Bokeh, function() {
+        console.debug("Bokeh: BokehJS plotting callback run at", now());
+        libs_ready_resolve();
+        run_inline_js();
+        if (Bokeh != undefined && !reloading) {
+          const NewBokeh = root.Bokeh;
+          if (Bokeh.versions === undefined) {
+            Bokeh.versions = new Map();
+          }
+          if (NewBokeh.version !== Bokeh.version) {
+            Bokeh[NewBokeh.version] = NewBokeh;
+            Bokeh.versions.set(NewBokeh.version, NewBokeh);
+          }
+          root.Bokeh = Bokeh;
+        }
+      });
+    }
+  }
+  // Declared synchronously, before anything is scheduled, so a cell whose
+  // output embeds while libraries are still loading finds this in place
+  // instead of fetching its own second copy of each.
+  declare_resources();
+  // Give older versions of the autoload script a head-start to ensure
+  // they initialize before we start loading newer version.
+  setTimeout(load_or_wait, 100)
+}(window));</script><script type="application/javascript">
+if ((window.PyViz === undefined) || (window.PyViz instanceof HTMLElement)) {
+  window.PyViz = {comms: {}, comm_status:{}, kernels:{}, receivers: {}, plot_index: []}
+}
+
+
+    function JupyterCommManager() {
+    }
+
+    JupyterCommManager.prototype.register_target = function(plot_id, comm_id, msg_handler) {
+      if (window.comm_manager || ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null))) {
+        var comm_manager = window.comm_manager || Jupyter.notebook.kernel.comm_manager;
+        comm_manager.register_target(comm_id, function(comm) {
+          comm.on_msg(msg_handler);
+        });
+      } else if ((plot_id in window.PyViz.kernels) && (window.PyViz.kernels[plot_id])) {
+        window.PyViz.kernels[plot_id].registerCommTarget(comm_id, function(comm) {
+          comm.onMsg = msg_handler;
+        });
+      } else if (typeof google != 'undefined' && google.colab.kernel != null) {
+        google.colab.kernel.comms.registerTarget(comm_id, (comm) => {
+          var messages = comm.messages[Symbol.asyncIterator]();
+          function processIteratorResult(result) {
+            var message = result.value;
+            var content = {data: message.data, comm_id};
+            var buffers = []
+            for (var buffer of message.buffers || []) {
+              buffers.push(new DataView(buffer))
+            }
+            var metadata = message.metadata || {};
+            var msg = {content, buffers, metadata}
+            msg_handler(msg);
+            return messages.next().then(processIteratorResult);
+          }
+          return messages.next().then(processIteratorResult);
+        })
+      }
+    }
+
+    JupyterCommManager.prototype.get_client_comm = function(plot_id, comm_id, msg_handler) {
+      if (comm_id in window.PyViz.comms) {
+        return window.PyViz.comms[comm_id];
+      } else if (window.comm_manager || ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null))) {
+        var comm_manager = window.comm_manager || Jupyter.notebook.kernel.comm_manager;
+        var comm = comm_manager.new_comm(comm_id, {}, {}, {}, comm_id);
+        if (msg_handler) {
+          comm.on_msg(msg_handler);
+        }
+      } else if ((plot_id in window.PyViz.kernels) && (window.PyViz.kernels[plot_id])) {
+        var comm = window.PyViz.kernels[plot_id].connectToComm(comm_id);
+        let retries = 0;
+        const open = () => {
+          if (comm.active) {
+            comm.open();
+          } else if (retries > 3) {
+            console.warn('Comm target never activated')
+          } else {
+            retries += 1
+            setTimeout(open, 500)
+          }
+        }
+        if (comm.active) {
+          comm.open();
+        } else {
+          setTimeout(open, 500)
+        }
+        if (msg_handler) {
+          comm.onMsg = msg_handler;
+        }
+      } else if (typeof google != 'undefined' && google.colab.kernel != null) {
+        var comm_promise = google.colab.kernel.comms.open(comm_id)
+        comm_promise.then((comm) => {
+          window.PyViz.comms[comm_id] = comm;
+          if (msg_handler) {
+            var messages = comm.messages[Symbol.asyncIterator]();
+            function processIteratorResult(result) {
+              var message = result.value;
+              var content = {data: message.data};
+              var metadata = message.metadata || {comm_id};
+              var msg = {content, metadata}
+              msg_handler(msg);
+              return messages.next().then(processIteratorResult);
+            }
+            return messages.next().then(processIteratorResult);
+          }
+        })
+        var sendClosure = (data, metadata, buffers, disposeOnDone) => {
+          return comm_promise.then((comm) => {
+            comm.send(data, metadata, buffers, disposeOnDone);
+          });
+        };
+        var comm = {
+          send: sendClosure
+        };
+      }
+      window.PyViz.comms[comm_id] = comm;
+      return comm;
+    }
+    window.PyViz.comm_manager = new JupyterCommManager();
+    
+
+
+var JS_MIME_TYPE = 'application/javascript';
+var HTML_MIME_TYPE = 'text/html';
+var EXEC_MIME_TYPE = 'application/vnd.holoviews_exec.v0+json';
+var CLASS_NAME = 'output';
+
+/**
+ * Render data to the DOM node
+ */
+function render(props, node) {
+  var div = document.createElement("div");
+  var script = document.createElement("script");
+  node.appendChild(div);
+  node.appendChild(script);
+}
+
+/**
+ * Handle when a new output is added
+ */
+function handle_add_output(event, handle) {
+  var output_area = handle.output_area;
+  var output = handle.output;
+  if ((output.data == undefined) || (!output.data.hasOwnProperty(EXEC_MIME_TYPE))) {
+    return
+  }
+  var id = output.metadata[EXEC_MIME_TYPE]["id"];
+  var toinsert = output_area.element.find("." + CLASS_NAME.split(' ')[0]);
+  if (id !== undefined) {
+    var nchildren = toinsert.length;
+    var html_node = toinsert[nchildren-1].children[0];
+    html_node.innerHTML = output.data[HTML_MIME_TYPE];
+    var scripts = [];
+    var nodelist = html_node.querySelectorAll("script");
+    for (var i in nodelist) {
+      if (nodelist.hasOwnProperty(i)) {
+        scripts.push(nodelist[i])
+      }
+    }
+
+    scripts.forEach( function (oldScript) {
+      var newScript = document.createElement("script");
+      var attrs = [];
+      var nodemap = oldScript.attributes;
+      for (var j in nodemap) {
+        if (nodemap.hasOwnProperty(j)) {
+          attrs.push(nodemap[j])
+        }
+      }
+      attrs.forEach(function(attr) { newScript.setAttribute(attr.name, attr.value) });
+      newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+      oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
+    if (JS_MIME_TYPE in output.data) {
+      toinsert[nchildren-1].children[1].textContent = output.data[JS_MIME_TYPE];
+    }
+    output_area._hv_plot_id = id;
+    if ((window.Bokeh !== undefined) && (id in Bokeh.index)) {
+      window.PyViz.plot_index[id] = Bokeh.index[id];
+    } else {
+      window.PyViz.plot_index[id] = null;
+    }
+  } else if (output.metadata[EXEC_MIME_TYPE]["server_id"] !== undefined) {
+    var bk_div = document.createElement("div");
+    bk_div.innerHTML = output.data[HTML_MIME_TYPE];
+    var script_attrs = bk_div.children[0].attributes;
+    for (var i = 0; i < script_attrs.length; i++) {
+      toinsert[toinsert.length - 1].childNodes[1].setAttribute(script_attrs[i].name, script_attrs[i].value);
+    }
+    // store reference to server id on output_area
+    output_area._bokeh_server_id = output.metadata[EXEC_MIME_TYPE]["server_id"];
+  }
+}
+
+/**
+ * Handle when an output is cleared or removed
+ */
+function handle_clear_output(event, handle) {
+  var id = handle.cell.output_area._hv_plot_id;
+  var server_id = handle.cell.output_area._bokeh_server_id;
+  if (((id === undefined) || !(id in PyViz.plot_index)) && (server_id !== undefined)) { return; }
+  var comm = window.PyViz.comm_manager.get_client_comm("hv-extension-comm", "hv-extension-comm", function () {});
+  if (server_id !== null) {
+    comm.send({event_type: 'server_delete', 'id': server_id});
+    return;
+  } else if (comm !== null) {
+    comm.send({event_type: 'delete', 'id': id});
+  }
+  delete PyViz.plot_index[id];
+  if ((window.Bokeh !== undefined) & (id in window.Bokeh.index)) {
+    var doc = window.Bokeh.index[id].model.document
+    doc.clear();
+    const i = window.Bokeh.documents.indexOf(doc);
+    if (i > -1) {
+      window.Bokeh.documents.splice(i, 1);
+    }
+  }
+}
+
+/**
+ * Handle kernel restart event
+ */
+function handle_kernel_cleanup(event, handle) {
+  delete PyViz.comms["hv-extension-comm"];
+  window.PyViz.plot_index = {}
+}
+
+/**
+ * Handle update_display_data messages
+ */
+function handle_update_output(event, handle) {
+  handle_clear_output(event, {cell: {output_area: handle.output_area}})
+  handle_add_output(event, handle)
+}
+
+function register_renderer(events, OutputArea) {
+  function append_mime(data, metadata, element) {
+    // create a DOM node to render to
+    var toinsert = this.create_output_subarea(
+    metadata,
+    CLASS_NAME,
+    EXEC_MIME_TYPE
+    );
+    this.keyboard_manager.register_events(toinsert);
+    // Render to node
+    var props = {data: data, metadata: metadata[EXEC_MIME_TYPE]};
+    render(props, toinsert[0]);
+    element.append(toinsert);
+    return toinsert
+  }
+
+  events.on('output_added.OutputArea', handle_add_output);
+  events.on('output_updated.OutputArea', handle_update_output);
+  events.on('clear_output.CodeCell', handle_clear_output);
+  events.on('delete.Cell', handle_clear_output);
+  events.on('kernel_ready.Kernel', handle_kernel_cleanup);
+
+  OutputArea.prototype.register_mime_type(EXEC_MIME_TYPE, append_mime, {
+    safe: true,
+    index: 0
+  });
+}
+
+if (window.Jupyter !== undefined) {
+  try {
+    var events = require('base/js/events');
+    var OutputArea = require('notebook/js/outputarea').OutputArea;
+    if (OutputArea.prototype.mime_types().indexOf(EXEC_MIME_TYPE) == -1) {
+      register_renderer(events, OutputArea);
+    }
+  } catch(err) {
+  }
+}
+</script><div class="output text_html"><div id='f80e1bf8-d566-4621-9310-be6bd40cd914'>
+  <div id="c50e58b5-649c-420b-9acf-5b405399a041" data-root-id="f80e1bf8-d566-4621-9310-be6bd40cd914" style="display: contents;"></div>
+</div>
+<script type="application/javascript">(function(root) {
+  var docs_json = {"811e7743-4a71-4628-a920-867d57e64593":{"version":"3.10.1","title":"Bokeh Application","config":{"type":"object","name":"DocumentConfig","id":"43f02131-672b-4c85-b3ce-8429474c40d1","attributes":{"notifications":{"type":"object","name":"Notifications","id":"f35617f4-06d2-4b16-a8e1-837861722e2a"}}},"roots":[{"type":"object","name":"panel.models.browser.BrowserInfo","id":"f80e1bf8-d566-4621-9310-be6bd40cd914"},{"type":"object","name":"panel.models.comm_manager.CommManager","id":"f7f24745-73a4-4d79-bd6c-db2ce68f0248","attributes":{"plot_id":"f80e1bf8-d566-4621-9310-be6bd40cd914","comm_id":"2ab2697ce9a94a239c4d6457606adaf9","client_comm_id":"00bd83370bcc4f7b8d191901634c9eb8"}}],"defs":[{"type":"model","name":"ReactiveHTML1"},{"type":"model","name":"FlexBox1","properties":[{"name":"align_content","kind":"Any","default":"flex-start"},{"name":"align_items","kind":"Any","default":"flex-start"},{"name":"flex_direction","kind":"Any","default":"row"},{"name":"flex_wrap","kind":"Any","default":"wrap"},{"name":"gap","kind":"Any","default":""},{"name":"justify_content","kind":"Any","default":"flex-start"}]},{"type":"model","name":"FloatPanel1","properties":[{"name":"config","kind":"Any","default":{"type":"map"}},{"name":"contained","kind":"Any","default":true},{"name":"position","kind":"Any","default":"right-top"},{"name":"offsetx","kind":"Any","default":null},{"name":"offsety","kind":"Any","default":null},{"name":"theme","kind":"Any","default":"primary"},{"name":"status","kind":"Any","default":"normalized"}]},{"type":"model","name":"GridStack1","properties":[{"name":"ncols","kind":"Any","default":null},{"name":"nrows","kind":"Any","default":null},{"name":"allow_resize","kind":"Any","default":true},{"name":"allow_drag","kind":"Any","default":true},{"name":"state","kind":"Any","default":[]}]},{"type":"model","name":"drag1","properties":[{"name":"slider_width","kind":"Any","default":5},{"name":"slider_color","kind":"Any","default":"black"},{"name":"start","kind":"Any","default":0},{"name":"end","kind":"Any","default":100},{"name":"value","kind":"Any","default":50}]},{"type":"model","name":"click1","properties":[{"name":"terminal_output","kind":"Any","default":""},{"name":"debug_name","kind":"Any","default":""},{"name":"clears","kind":"Any","default":0}]},{"type":"model","name":"ReactiveESM1","properties":[{"name":"esm_constants","kind":"Any","default":{"type":"map"}}]},{"type":"model","name":"JSComponent1","properties":[{"name":"esm_constants","kind":"Any","default":{"type":"map"}}]},{"type":"model","name":"ReactComponent1","properties":[{"name":"use_shadow_dom","kind":"Any","default":true},{"name":"esm_constants","kind":"Any","default":{"type":"map"}}]},{"type":"model","name":"AnyWidgetComponent1","properties":[{"name":"use_shadow_dom","kind":"Any","default":true},{"name":"esm_constants","kind":"Any","default":{"type":"map"}}]},{"type":"model","name":"FastWrapper1","properties":[{"name":"object","kind":"Any","default":null},{"name":"style","kind":"Any","default":null}]},{"type":"model","name":"NotificationArea1","properties":[{"name":"js_events","kind":"Any","default":{"type":"map"}},{"name":"max_notifications","kind":"Any","default":5},{"name":"notifications","kind":"Any","default":[]},{"name":"position","kind":"Any","default":"bottom-right"},{"name":"_clear","kind":"Any","default":0},{"name":"types","kind":"Any","default":[{"type":"map","entries":[["type","warning"],["background","#ffc107"],["icon",{"type":"map","entries":[["className","fas fa-exclamation-triangle"],["tagName","i"],["color","white"]]}]]},{"type":"map","entries":[["type","info"],["background","#007bff"],["icon",{"type":"map","entries":[["className","fas fa-info-circle"],["tagName","i"],["color","white"]]}]]}]}]},{"type":"model","name":"Notification","properties":[{"name":"background","kind":"Any","default":null},{"name":"duration","kind":"Any","default":3000},{"name":"icon","kind":"Any","default":null},{"name":"message","kind":"Any","default":""},{"name":"notification_type","kind":"Any","default":null},{"name":"_rendered","kind":"Any","default":false},{"name":"_destroyed","kind":"Any","default":false}]},{"type":"model","name":"TemplateActions1","properties":[{"name":"open_modal","kind":"Any","default":0},{"name":"close_modal","kind":"Any","default":0}]},{"type":"model","name":"BootstrapTemplateActions1","properties":[{"name":"open_modal","kind":"Any","default":0},{"name":"close_modal","kind":"Any","default":0}]},{"type":"model","name":"TemplateEditor1","properties":[{"name":"layout","kind":"Any","default":[]}]},{"type":"model","name":"MaterialTemplateActions1","properties":[{"name":"open_modal","kind":"Any","default":0},{"name":"close_modal","kind":"Any","default":0}]},{"type":"model","name":"request_value1","properties":[{"name":"fill","kind":"Any","default":"none"},{"name":"_synced","kind":"Any","default":null},{"name":"_request_sync","kind":"Any","default":0}]},{"type":"model","name":"holoviews.plotting.bokeh.raster.HoverModel","properties":[{"name":"xy","kind":"Any","default":null},{"name":"data","kind":"Any","default":null}]}]}};
+  var render_items = [{"docid":"811e7743-4a71-4628-a920-867d57e64593","roots":{"f80e1bf8-d566-4621-9310-be6bd40cd914":"c50e58b5-649c-420b-9acf-5b405399a041"},"root_ids":["f80e1bf8-d566-4621-9310-be6bd40cd914"]}];
+  var docs = Object.values(docs_json)
+  if (!docs) {
+    return
+  }
+  const version = docs[0].version.replace('rc', '-rc.').replace('.dev', '-dev.')
+  async function embed_document(root) {
+    var Bokeh = get_bokeh(root)
+    await Bokeh.embed.embed_items_notebook(docs_json, render_items);
+    for (const render_item of render_items) {
+      for (const root_id of render_item.root_ids) {
+	const id_el = document.getElementById(root_id)
+	if (id_el.children.length && id_el.children[0].hasAttribute('data-root-id')) {
+	  const root_el = id_el.children[0]
+	  root_el.id = root_el.id + '-rendered'
+	  for (const child of root_el.children) {
+            // Ensure JupyterLab does not capture keyboard shortcuts
+            // see: https://jupyterlab.readthedocs.io/en/4.1.x/extension/notebook.html#keyboard-interaction-model
+	    child.setAttribute('data-lm-suppress-shortcuts', 'true')
+	  }
+	}
+      }
+    }
+  }
+  function get_bokeh(root) {
+    if (root.Bokeh === undefined) {
+      return null
+    } else if (root.Bokeh.version !== version) {
+      if (root.Bokeh.versions === undefined || !root.Bokeh.versions.has(version)) {
+	return null
+      }
+      return root.Bokeh.versions.get(version);
+    } else if (root.Bokeh.version === version) {
+      return root.Bokeh
+    }
+    return null
+  }
+  function is_loaded(root) {
+    var Bokeh = get_bokeh(root)
+    return (Bokeh != null && Bokeh.Panel !== undefined)
+  }
+  if (is_loaded(root)) {
+    embed_document(root);
+  } else {
+    var attempts = 0;
+    var timer = setInterval(function(root) {
+      if (is_loaded(root)) {
+        clearInterval(timer);
+        embed_document(root);
+      } else if (document.readyState == "complete") {
+        attempts++;
+        if (attempts > 200) {
+          clearInterval(timer);
+	  var Bokeh = get_bokeh(root)
+	  if (Bokeh == null || Bokeh.Panel == null) {
+            console.warn("Panel: ERROR: Unable to run Panel code because Bokeh or Panel library is missing");
+	  } else {
+	    console.warn("Panel: WARNING: Attempting to render but not all required libraries could be resolved.")
+	    embed_document(root)
+	  }
+        }
+      }
+    }, 25, root)
+  }
+})(window);</script></div><div class="output text_html">    <style>
+        .bk-notebook-logo {
+            display: block;
+            width: 20px;
+            height: 20px;
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAOkSURBVDiNjZRtaJVlGMd/1/08zzln5zjP1LWcU9N0NkN8m2CYjpgQYQXqSs0I84OLIC0hkEKoPtiH3gmKoiJDU7QpLgoLjLIQCpEsNJ1vqUOdO7ppbuec5+V+rj4ctwzd8IIbbi6u+8f1539dt3A78eXC7QizUF7gyV1fD1Yqg4JWz84yffhm0qkFqBogB9rM8tZdtwVsPUhWhGcFJngGeWrPzHm5oaMmkfEg1usvLFyc8jLRqDOMru7AyC8saQr7GG7f5fvDeH7Ej8CM66nIF+8yngt6HWaKh7k49Soy9nXurCi1o3qUbS3zWfrYeQDTB/Qj6kX6Ybhw4B+bOYoLKCC9H3Nu/leUTZ1JdRWkkn2ldcCamzrcf47KKXdAJllSlxAOkRgyHsGC/zRday5Qld9DyoM4/q/rUoy/CXh3jzOu3bHUVZeU+DEn8FInkPBFlu3+nW3Nw0mk6vCDiWg8CeJaxEwuHS3+z5RgY+YBR6V1Z1nxSOfoaPa4LASWxxdNp+VWTk7+4vzaou8v8PN+xo+KY2xsw6une2frhw05CTYOmQvsEhjhWjn0bmXPjpE1+kplmmkP3suftwTubK9Vq22qKmrBhpY4jvd5afdRA3wGjFAgcnTK2s4hY0/GPNIb0nErGMCRxWOOX64Z8RAC4oCXdklmEvcL8o0BfkNK4lUg9HTl+oPlQxdNo3Mg4Nv175e/1LDGzZen30MEjRUtmXSfiTVu1kK8W4txyV6BMKlbgk3lMwYCiusNy9fVfvvwMxv8Ynl6vxoByANLTWplvuj/nF9m2+PDtt1eiHPBr1oIfhCChQMBw6Aw0UulqTKZdfVvfG7VcfIqLG9bcldL/+pdWTLxLUy8Qq38heUIjh4XlzZxzQm19lLFlr8vdQ97rjZVOLf8nclzckbcD4wxXMidpX30sFd37Fv/GtwwhzhxGVAprjbg0gCAEeIgwCZyTV2Z1REEW8O4py0wsjeloKoMr6iCY6dP92H6Vw/oTyICIthibxjm/DfN9lVz8IqtqKYLUXfoKVMVQVVJOElGjrnnUt9T9wbgp8AyYKaGlqingHZU/uG2NTZSVqwHQTWkx9hxjkpWDaCg6Ckj5qebgBVbT3V3NNXMSiWSDdGV3hrtzla7J+duwPOToIg42ChPQOQjspnSlp1V+Gjdged7+8UN5CRAV7a5EdFNwCjEaBR27b3W890TE7g24NAP/mMDXRWrGoFPQI9ls/MWO2dWFAar/xcOIImbbpA3zgAAAABJRU5ErkJggg==);
+        }
+    </style>
+    <div>
+        <a href="https://bokeh.org" target="_blank" class="bk-notebook-logo"></a>
+        <span id="ad15216f-9a04-4af4-9e71-7eac1b212888">Loading BokehJS ...</span>
+    </div>
+</div><script type="application/javascript">'use strict';
+(function(root) {
+  function now() {
+    return new Date();
+  }
+
+  const force = true;
+
+  if (typeof root._bokeh_onload_callbacks === "undefined" || force === true) {
+    root._bokeh_onload_callbacks = [];
+    root._bokeh_is_loading = undefined;
+  }
+
+const JS_MIME_TYPE = 'application/javascript';
+  const HTML_MIME_TYPE = 'text/html';
+  const EXEC_MIME_TYPE = 'application/vnd.bokehjs_exec.v0+json';
+  const CLASS_NAME = 'output_bokeh rendered_html';
+
+  /**
+   * Render data to the DOM node
+   */
+  function render(props, node) {
+    const script = document.createElement("script");
+    node.appendChild(script);
+  }
+
+  /**
+   * Handle when an output is cleared or removed
+   */
+  function handleClearOutput(event, handle) {
+    function drop(id) {
+      const view = Bokeh.index.get_by_id(id)
+      if (view != null) {
+        view.model.document.clear()
+        Bokeh.index.delete(view)
+      }
+    }
+
+    const cell = handle.cell;
+
+    const id = cell.output_area._bokeh_element_id;
+    const server_id = cell.output_area._bokeh_server_id;
+
+    // Clean up Bokeh references
+    if (id != null) {
+      drop(id)
+    }
+
+    if (server_id !== undefined) {
+      // Clean up Bokeh references
+      const cmd_clean = "from bokeh.io.state import curstate; print(curstate().uuid_to_server['" + server_id + "'].get_sessions()[0].document.roots[0]._id)";
+      cell.notebook.kernel.execute(cmd_clean, {
+        iopub: {
+          output: function(msg) {
+            const id = msg.content.text.trim()
+            drop(id)
+          }
+        }
+      });
+      // Destroy server and session
+      const cmd_destroy = "import bokeh.io.notebook as ion; ion.destroy_server('" + server_id + "')";
+      cell.notebook.kernel.execute(cmd_destroy);
+    }
+  }
+
+  /**
+   * Handle when a new output is added
+   */
+  function handleAddOutput(event, handle) {
+    const output_area = handle.output_area;
+    const output = handle.output;
+
+    // limit handleAddOutput to display_data with EXEC_MIME_TYPE content only
+    if ((output.output_type != "display_data") || (!Object.prototype.hasOwnProperty.call(output.data, EXEC_MIME_TYPE))) {
+      return
+    }
+
+    const toinsert = output_area.element.find("." + CLASS_NAME.split(' ')[0]);
+
+    if (output.metadata[EXEC_MIME_TYPE]["id"] !== undefined) {
+      toinsert[toinsert.length - 1].firstChild.textContent = output.data[JS_MIME_TYPE];
+      // store reference to embed id on output_area
+      output_area._bokeh_element_id = output.metadata[EXEC_MIME_TYPE]["id"];
+    }
+    if (output.metadata[EXEC_MIME_TYPE]["server_id"] !== undefined) {
+      const bk_div = document.createElement("div");
+      bk_div.innerHTML = output.data[HTML_MIME_TYPE];
+      const script_attrs = bk_div.children[0].attributes;
+      for (let i = 0; i < script_attrs.length; i++) {
+        toinsert[toinsert.length - 1].firstChild.setAttribute(script_attrs[i].name, script_attrs[i].value);
+        toinsert[toinsert.length - 1].firstChild.textContent = bk_div.children[0].textContent
+      }
+      // store reference to server id on output_area
+      output_area._bokeh_server_id = output.metadata[EXEC_MIME_TYPE]["server_id"];
+    }
+  }
+
+  function register_renderer(events, OutputArea) {
+
+    function append_mime(data, metadata, element) {
+      // create a DOM node to render to
+      const toinsert = this.create_output_subarea(
+        metadata,
+        CLASS_NAME,
+        EXEC_MIME_TYPE
+      );
+      this.keyboard_manager.register_events(toinsert);
+      // Render to node
+      const props = {data: data, metadata: metadata[EXEC_MIME_TYPE]};
+      render(props, toinsert[toinsert.length - 1]);
+      element.append(toinsert);
+      return toinsert
+    }
+
+    /* Handle when an output is cleared or removed */
+    events.on('clear_output.CodeCell', handleClearOutput);
+    events.on('delete.Cell', handleClearOutput);
+
+    /* Handle when a new output is added */
+    events.on('output_added.OutputArea', handleAddOutput);
+
+    /**
+     * Register the mime type and append_mime function with output_area
+     */
+    OutputArea.prototype.register_mime_type(EXEC_MIME_TYPE, append_mime, {
+      /* Is output safe? */
+      safe: true,
+      /* Index of renderer in `output_area.display_order` */
+      index: 0
+    });
+  }
+
+  // register the mime type if in Jupyter Notebook environment and previously unregistered
+  if (root.Jupyter !== undefined) {
+    const events = require('base/js/events');
+    const OutputArea = require('notebook/js/outputarea').OutputArea;
+
+    if (OutputArea.prototype.mime_types().indexOf(EXEC_MIME_TYPE) == -1) {
+      register_renderer(events, OutputArea);
+    }
+  }
+  if (typeof (root._bokeh_timeout) === "undefined" || force === true) {
+    root._bokeh_timeout = Date.now() + 5000;
+    root._bokeh_failed_load = false;
+  }
+
+  const NB_LOAD_WARNING = {'data': {'text/html':
+     "<div style='background-color: #fdd'>\n"+
+     "<p>\n"+
+     "BokehJS does not appear to have successfully loaded. If loading BokehJS from CDN, this \n"+
+     "may be due to a slow or bad network connection. Possible fixes:\n"+
+     "</p>\n"+
+     "<ul>\n"+
+     "<li>re-rerun `output_notebook()` to attempt to load from CDN again, or</li>\n"+
+     "<li>use INLINE resources instead, as so:</li>\n"+
+     "</ul>\n"+
+     "<code>\n"+
+     "from bokeh.resources import INLINE\n"+
+     "output_notebook(resources=INLINE)\n"+
+     "</code>\n"+
+     "</div>"}};
+
+  function display_loaded(error = null) {
+    const el = document.getElementById("ad15216f-9a04-4af4-9e71-7eac1b212888");
+    if (el != null) {
+      const html = (() => {
+        if (typeof root.Bokeh === "undefined") {
+          if (error == null) {
+            return "BokehJS is loading ...";
+          } else {
+            return "BokehJS failed to load.";
+          }
+        } else {
+          const prefix = `BokehJS ${root.Bokeh.version}`;
+          if (error == null) {
+            return `${prefix} successfully loaded.`;
+          } else {
+            return `${prefix} <b>encountered errors</b> while loading and may not function as expected.`;
+          }
+        }
+      })();
+      el.innerHTML = html;
+
+      if (error != null) {
+        const wrapper = document.createElement("div");
+        wrapper.style.overflow = "auto";
+        wrapper.style.height = "5em";
+        wrapper.style.resize = "vertical";
+        const content = document.createElement("div");
+        content.style.fontFamily = "monospace";
+        content.style.whiteSpace = "pre-wrap";
+        content.style.backgroundColor = "rgb(255, 221, 221)";
+        content.textContent = error.stack ?? error.toString();
+        wrapper.append(content);
+        el.append(wrapper);
+      }
+    } else if (Date.now() < root._bokeh_timeout) {
+      setTimeout(() => display_loaded(error), 100);
+    }
+  }
+
+  function run_callbacks() {
+    try {
+      root._bokeh_onload_callbacks.forEach(function(callback) {
+        if (callback != null)
+          callback();
+      });
+    } finally {
+      delete root._bokeh_onload_callbacks
+    }
+    console.debug("Bokeh: all callbacks have finished");
+  }
+
+  function load_libs(css_urls, js_urls, callback) {
+    if (css_urls == null) css_urls = [];
+    if (js_urls == null) js_urls = [];
+
+    root._bokeh_onload_callbacks.push(callback);
+    if (root._bokeh_is_loading > 0) {
+      console.debug("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+      return null;
+    }
+    if (js_urls == null || js_urls.length === 0) {
+      run_callbacks();
+      return null;
+    }
+    console.debug("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+    root._bokeh_is_loading = css_urls.length + js_urls.length;
+
+    function on_load() {
+      root._bokeh_is_loading--;
+      if (root._bokeh_is_loading === 0) {
+        console.debug("Bokeh: all BokehJS libraries/stylesheets loaded");
+        run_callbacks()
+      }
+    }
+
+    function on_error(url) {
+      console.error("failed to load " + url);
+    }
+
+    for (let i = 0; i < css_urls.length; i++) {
+      const url = css_urls[i];
+      const element = document.createElement("link");
+      element.onload = on_load;
+      element.onerror = on_error.bind(null, url);
+      element.rel = "stylesheet";
+      element.type = "text/css";
+      element.href = url;
+      console.debug("Bokeh: injecting link tag for BokehJS stylesheet: ", url);
+      document.body.appendChild(element);
+    }
+
+    for (let i = 0; i < js_urls.length; i++) {
+      const url = js_urls[i];
+      const element = document.createElement('script');
+      element.onload = on_load;
+      element.onerror = on_error.bind(null, url);
+      element.async = false;
+      element.src = url;
+      console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+      document.head.appendChild(element);
+    }
+  };
+
+  function inject_raw_css(css) {
+    const element = document.createElement("style");
+    element.appendChild(document.createTextNode(css));
+    document.body.appendChild(element);
+  }
+
+  const js_urls = ["https://cdn.holoviz.org/panel/1.10.0/dist/bundled/reactiveesm/es-module-shims@^1.10.0/dist/es-module-shims.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-3.10.1.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-gl-3.10.1.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.10.1.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.10.1.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-3.10.1.min.js", "https://unpkg.com/@holoviz/panel@1.10.0/dist/panel.min.js"];
+  const css_urls = [];
+
+  const inline_js = [    function(Bokeh) {
+      Bokeh.set_log_level("info");
+    },
+function(Bokeh) {
+    }
+  ];
+
+  function run_inline_js() {
+    if (root.Bokeh !== undefined || force === true) {
+      try {
+            for (let i = 0; i < inline_js.length; i++) {
+      inline_js[i].call(root, root.Bokeh);
+    }
+
+      } catch (error) {display_loaded(error);throw error;
+      }if (force === true) {
+        display_loaded();
+      }} else if (Date.now() < root._bokeh_timeout) {
+      setTimeout(run_inline_js, 100);
+    } else if (!root._bokeh_failed_load) {
+      console.log("Bokeh: BokehJS failed to load within specified timeout.");
+      root._bokeh_failed_load = true;
+    } else if (force !== true) {
+      const cell = $(document.getElementById("ad15216f-9a04-4af4-9e71-7eac1b212888")).parents('.cell').data().cell;
+      cell.output_area.append_execute_result(NB_LOAD_WARNING)
+    }
+  }
+
+  if (root._bokeh_is_loading === 0) {
+    console.debug("Bokeh: BokehJS loaded, going straight to plotting");
+    run_inline_js();
+  } else {
+    load_libs(css_urls, js_urls, function() {
+      console.debug("Bokeh: BokehJS plotting callback run at", now());
+      run_inline_js();
+    });
+  }
+}(window));</script></div>
+</div>
+<p>We’ll start with the Evaluation from the previous User Guide, which contains observed (USGS) and simulation (NWM) streamflow for a gage at Radford, VA during hurricane Helene.</p>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input above-output-prompt docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define the directory where the Evaluation will be created.</span>
+<span class="n">test_eval_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">()</span><span class="o">.</span><span class="n">home</span><span class="p">(),</span> <span class="s2">"temp"</span><span class="p">,</span> <span class="s2">"11_fetch_gridded_nwm_data"</span><span class="p">)</span>
+
+<span class="c1"># Setup the example evaluation using data from the TEEHR repository.</span>
+<span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">setup_nwm_example</span><span class="p">(</span><span class="n">tmpdir</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">)</span>
+
+<span class="c1"># Initialize the evaluation.</span>
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">Evaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<details class="admonition hide below-input">
+<summary aria-label="Toggle hidden content">
+<p class="collapsed admonition-title">Show code cell output</p>
+<p class="expanded admonition-title">Hide code cell output</p>
+</summary>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">PySparkRuntimeError</span><span class="g g-Whitespace">                       </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">6</span>
+<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="n">test_eval_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">()</span><span class="o">.</span><span class="n">home</span><span class="p">(),</span> <span class="s2">"temp"</span><span class="p">,</span> <span class="s2">"11_fetch_gridded_nwm_data"</span><span class="p">)</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> 
+<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="c1"># Setup the example evaluation using data from the TEEHR repository.</span>
+<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="ne">----&gt; </span><span class="mi">6</span> <span class="n">setup_nwm_example</span><span class="p">(</span><span class="n">tmpdir</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">)</span>
+<span class="g g-Whitespace">      </span><span class="mi">7</span> 
+<span class="g g-Whitespace">      </span><span class="mi">8</span> <span class="c1"># Initialize the evaluation.</span>
+<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">Evaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">)</span>
+
+<span class="nn">File ~/work/teehr/teehr/src/teehr/example_data/setup_nwm_grid_example.py:13,</span> in <span class="ni">setup_nwm_example</span><span class="nt">(tmpdir)</span>
+<span class="g g-Whitespace">     </span><span class="mi">11</span><span class="w"> </span><span class="sd">"""Set up the NWM streamflow fetching example."""</span>
+<span class="g g-Whitespace">     </span><span class="mi">12</span> <span class="c1"># Create an Evaluation object and create the directory</span>
+<span class="ne">---&gt; </span><span class="mi">13</span> <span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">LocalReadWriteEvaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">15</span> <span class="c1"># Fetch the test data</span>
+<span class="g g-Whitespace">     </span><span class="mi">16</span> <span class="n">location_data_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="s2">"usgs_at_radford_location.parquet"</span><span class="p">)</span>
+
+<span class="nn">File ~/work/teehr/teehr/src/teehr/evaluation/evaluation.py:778,</span> in <span class="ni">LocalReadWriteEvaluation.__init__</span><span class="nt">(self, dir_path, create_dir, check_evaluation_version, spark, namespace_name, enable_spark_proxy)</span>
+<span class="g g-Whitespace">    </span><span class="mi">745</span> <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">746</span>     <span class="bp">self</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">747</span>     <span class="n">dir_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">752</span>     <span class="n">enable_spark_proxy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">753</span> <span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">754</span><span class="w">     </span><span class="sd">"""Initialize the Evaluation class.</span>
+<span class="g g-Whitespace">    </span><span class="mi">755</span><span class="sd"> </span>
+<span class="g g-Whitespace">    </span><span class="mi">756</span><span class="sd">     Parameters</span>
+<span class="sd">   (...)    776         access to the underlying Spark DataFrame. Default is False.</span>
+<span class="g g-Whitespace">    </span><span class="mi">777</span><span class="sd">     """</span>
+<span class="ne">--&gt; </span><span class="mi">778</span>     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">779</span>         <span class="n">spark</span><span class="o">=</span><span class="n">spark</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">780</span>         <span class="n">dir_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">dir_path</span><span class="p">),</span>
+<span class="g g-Whitespace">    </span><span class="mi">781</span>         <span class="n">enable_spark_proxy</span><span class="o">=</span><span class="n">enable_spark_proxy</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">782</span>     <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">784</span>     <span class="n">local_catalog_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"local_catalog_name"</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">785</span>     <span class="n">warehouse_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_path</span> <span class="o">/</span> <span class="n">local_catalog_name</span>
+
+<span class="nn">File ~/work/teehr/teehr/src/teehr/evaluation/evaluation.py:105,</span> in <span class="ni">BaseEvaluation.__init__</span><span class="nt">(self, dir_path, spark, enable_spark_proxy)</span>
+<span class="g g-Whitespace">    </span><span class="mi">103</span> <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">104</span>     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Creating a new default Spark session."</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">105</span>     <span class="bp">self</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="n">create_spark_session</span><span class="p">()</span>
+
+<span class="nn">File ~/work/teehr/teehr/src/teehr/evaluation/spark_session_utils.py:300,</span> in <span class="ni">create_spark_session</span><span class="nt">(app_name, local_catalog_name, local_catalog_type, remote_warehouse_dir, remote_catalog_name, remote_catalog_type, remote_catalog_uri, start_spark_cluster, force_recreate_session, executor_instances, executor_memory, executor_cores, executor_image, executor_namespace, driver_memory, driver_max_result_size, pod_template_path, aws_access_key_id, aws_secret_access_key, aws_session_token, aws_region, aws_profile, enable_gcs, gcs_project_id, gcs_service_account_key_file, add_jars, add_packages, update_configs, debug_config, polaris_token, use_authmanager)</span>
+<span class="g g-Whitespace">    </span><span class="mi">292</span> <span class="n">_update_configs_and_packages</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">293</span>     <span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">294</span>     <span class="n">update_configs</span><span class="o">=</span><span class="n">effective_configs</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">295</span>     <span class="n">add_jars</span><span class="o">=</span><span class="n">add_jars</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">296</span>     <span class="n">add_packages</span><span class="o">=</span><span class="n">add_packages</span>
+<span class="g g-Whitespace">    </span><span class="mi">297</span> <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">299</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"⚙️ All settings applied. Creating Spark session..."</span><span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">300</span> <span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">appName</span><span class="p">(</span><span class="n">app_name</span><span class="p">)</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">)</span><span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">301</span> <span class="n">sedona_spark</span> <span class="o">=</span> <span class="n">SedonaContext</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">303</span> <span class="k">if</span> <span class="n">debug_config</span><span class="p">:</span>
+
+<span class="nn">File /opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/sql/session.py:556,</span> in <span class="ni">SparkSession.Builder.getOrCreate</span><span class="nt">(self)</span>
+<span class="g g-Whitespace">    </span><span class="mi">554</span>     <span class="n">sparkConf</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">555</span> <span class="c1"># This SparkContext may be an existing one.</span>
+<span class="ne">--&gt; </span><span class="mi">556</span> <span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">getOrCreate</span><span class="p">(</span><span class="n">sparkConf</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">557</span> <span class="c1"># Do not update `SparkConf` for existing `SparkContext`, as it's shared</span>
+<span class="g g-Whitespace">    </span><span class="mi">558</span> <span class="c1"># by all sessions.</span>
+<span class="g g-Whitespace">    </span><span class="mi">559</span> <span class="n">session</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="n">sc</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">)</span>
+
+<span class="nn">File /opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/core/context.py:523,</span> in <span class="ni">SparkContext.getOrCreate</span><span class="nt">(cls, conf)</span>
+<span class="g g-Whitespace">    </span><span class="mi">521</span> <span class="k">with</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">522</span>     <span class="k">if</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">_active_spark_context</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">523</span>         <span class="n">SparkContext</span><span class="p">(</span><span class="n">conf</span><span class="o">=</span><span class="n">conf</span> <span class="ow">or</span> <span class="n">SparkConf</span><span class="p">())</span>
+<span class="g g-Whitespace">    </span><span class="mi">524</span>     <span class="k">assert</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">_active_spark_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="g g-Whitespace">    </span><span class="mi">525</span>     <span class="k">return</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">_active_spark_context</span>
+
+<span class="nn">File /opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/core/context.py:205,</span> in <span class="ni">SparkContext.__init__</span><span class="nt">(self, master, appName, sparkHome, pyFiles, environment, batchSize, serializer, conf, gateway, jsc, profiler_cls, udf_profiler_cls, memory_profiler_cls)</span>
+<span class="g g-Whitespace">    </span><span class="mi">199</span> <span class="k">if</span> <span class="n">gateway</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">gateway</span><span class="o">.</span><span class="n">gateway_parameters</span><span class="o">.</span><span class="n">auth_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">200</span>     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">201</span>         <span class="s2">"You are trying to pass an insecure Py4j gateway to Spark. This"</span>
+<span class="g g-Whitespace">    </span><span class="mi">202</span>         <span class="s2">" is not allowed as it is a security risk."</span>
+<span class="g g-Whitespace">    </span><span class="mi">203</span>     <span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">205</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">_ensure_initialized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gateway</span><span class="o">=</span><span class="n">gateway</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">206</span> <span class="k">try</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">207</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_do_init</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">208</span>         <span class="n">master</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">209</span>         <span class="n">appName</span><span class="p">,</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">219</span>         <span class="n">memory_profiler_cls</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">220</span>     <span class="p">)</span>
+
+<span class="nn">File /opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/core/context.py:444,</span> in <span class="ni">SparkContext._ensure_initialized</span><span class="nt">(cls, instance, gateway, conf)</span>
+<span class="g g-Whitespace">    </span><span class="mi">442</span> <span class="k">with</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">443</span>     <span class="k">if</span> <span class="ow">not</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">_gateway</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">444</span>         <span class="n">SparkContext</span><span class="o">.</span><span class="n">_gateway</span> <span class="o">=</span> <span class="n">gateway</span> <span class="ow">or</span> <span class="n">launch_gateway</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">445</span>         <span class="n">SparkContext</span><span class="o">.</span><span class="n">_jvm</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="o">.</span><span class="n">_gateway</span><span class="o">.</span><span class="n">jvm</span>
+<span class="g g-Whitespace">    </span><span class="mi">447</span>     <span class="k">if</span> <span class="n">instance</span><span class="p">:</span>
+
+<span class="nn">File /opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/java_gateway.py:111,</span> in <span class="ni">launch_gateway</span><span class="nt">(conf, popen_kwargs)</span>
+<span class="g g-Whitespace">    </span><span class="mi">108</span>     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">110</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">conn_info_file</span><span class="p">):</span>
+<span class="ne">--&gt; </span><span class="mi">111</span>     <span class="k">raise</span> <span class="n">PySparkRuntimeError</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">112</span>         <span class="n">errorClass</span><span class="o">=</span><span class="s2">"JAVA_GATEWAY_EXITED"</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">113</span>         <span class="n">messageParameters</span><span class="o">=</span><span class="p">{},</span>
+<span class="g g-Whitespace">    </span><span class="mi">114</span>     <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">116</span> <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">conn_info_file</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">info</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">117</span>     <span class="n">gateway_port</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+
+<span class="ne">PySparkRuntimeError</span>: [JAVA_GATEWAY_EXITED] Java gateway process exited before sending its port number.
+</pre></div>
+</div>
+</div>
+</details>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_geopandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can add polygons to summarize rainfall to, to see the impact of the forcing data on the NWM streamflow prediction</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">location_data_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">"three_huc10s_radford.parquet"</span><span class="p">)</span>
+
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">load_spatial</span><span class="p">(</span>
+    <span class="n">location_data_path</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"huc10"</span><span class="p">:</span> <span class="s2">"id"</span>
+    <span class="p">},</span>
+    <span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">"wbd"</span><span class="p">,</span>
+    <span class="n">write_mode</span><span class="o">=</span><span class="s2">"append"</span>  <span class="c1"># this is the default</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we have the USGS gage point, and three WBD HUC10 polygons in the locations table.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gdf</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_geopandas</span><span class="p">()</span>
+<span class="n">gdf</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gdf</span><span class="p">[</span><span class="n">gdf</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="s2">"usgs-03171000"</span><span class="p">]</span><span class="o">.</span><span class="n">hvplot</span><span class="p">(</span><span class="n">geo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tiles</span><span class="o">=</span><span class="s2">"OSM"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> \
+    <span class="n">gdf</span><span class="p">[</span><span class="n">gdf</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s2">"usgs-03171000"</span><span class="p">]</span><span class="o">.</span><span class="n">hvplot</span><span class="p">(</span><span class="n">geo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we’ll fetch NWM gridded analysis and assimilation rainfall data and calculate mean areal precipitation (MAP) for each of the HUC10 watersheds. We’ll consider this “observed” primary timeseries.</p>
+<p>The location ID prefix is used to filter the locations table for WBD polygons during fetching. The calculated MAP timeseries will be appended (the default) to the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> table along with the streamflow data (the primary timeseries table will contain both streamflow and rainfall).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># To run this cell locally first convert it to a python cell</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">nwm_operational_grids</span><span class="p">(</span>
+    <span class="n">nwm_configuration</span><span class="o">=</span><span class="s2">"forcing_analysis_assim"</span><span class="p">,</span>
+    <span class="n">output_type</span><span class="o">=</span><span class="s2">"forcing"</span><span class="p">,</span>
+    <span class="n">variable_name</span><span class="o">=</span><span class="s2">"RAINRATE"</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span>
+    <span class="n">nwm_version</span><span class="o">=</span><span class="s2">"nwm30"</span><span class="p">,</span>
+    <span class="n">prioritize_analysis_value_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">t_minus_hours</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">calculate_zonal_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">"wbd"</span><span class="p">,</span>
+    <span class="n">timeseries_type</span><span class="o">=</span><span class="s2">"primary"</span>  <span class="c1"># To be considered "observations". This is the default.</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">primary_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">primary_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s take a look at the <code class="docutils literal notranslate"><span class="pre">cache</span></code> directory. After fetching the NWM analysis forcing, we have a directory for the weights file.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">print_tree</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span> <span class="s2">"fetching"</span><span class="p">,</span> <span class="s2">"weights"</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The weights file contains the fractional coverage for each pixel (row/col pair) that intersects with each polygon location (WBD HUC10 watershed).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cached_weights_filepath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span>
+        <span class="s2">"fetching"</span><span class="p">,</span>
+        <span class="s2">"weights"</span><span class="p">,</span>
+        <span class="s2">"nwm30_forcing_analysis_assim"</span><span class="p">,</span>
+        <span class="s2">"nwm30_forcing_analysis_assim_pixel_weights.parquet"</span>
+<span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">cached_weights_filepath</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we can fetch the NWM forecast rainfall and calculate MAP, to compare it to the “observed” rainfall. First we need to create and import the <code class="docutils literal notranslate"><span class="pre">location_crosswalks</span></code> table, which maps the secondary locations (“model”) to the primary (“observations”).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()[</span><span class="s2">"id"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xwalk_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"primary_location_id"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"wbd-0505000115"</span><span class="p">,</span>
+            <span class="s2">"wbd-0505000117"</span><span class="p">,</span>
+            <span class="s2">"wbd-0505000118"</span>
+        <span class="p">],</span>
+        <span class="s2">"secondary_location_id"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"forecast-0505000115"</span><span class="p">,</span>
+            <span class="s2">"forecast-0505000117"</span><span class="p">,</span>
+            <span class="s2">"forecast-0505000118"</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">temp_xwalk_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">cache_dir</span><span class="p">,</span> <span class="s2">"forcing_xwalk.parquet"</span><span class="p">)</span>
+<span class="n">xwalk_df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">temp_xwalk_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we can load it into the Evaluation, appending to the existing table.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">load_parquet</span><span class="p">(</span><span class="n">temp_xwalk_path</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we can fetch the NWM forecast rainfall, which we’ll consider the “secondary” timeseries. Let’s grab a single short range rainfall forecast</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># To run this cell locally first convert it to a python cell</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">nwm_operational_grids</span><span class="p">(</span>
+    <span class="n">nwm_configuration</span><span class="o">=</span><span class="s2">"forcing_short_range"</span><span class="p">,</span>
+    <span class="n">output_type</span><span class="o">=</span><span class="s2">"forcing"</span><span class="p">,</span>
+    <span class="n">variable_name</span><span class="o">=</span><span class="s2">"RAINRATE"</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span>
+    <span class="n">nwm_version</span><span class="o">=</span><span class="s2">"nwm30"</span><span class="p">,</span>
+    <span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">"forecast"</span><span class="p">,</span>
+    <span class="n">calculate_zonal_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># re-use the weights file in the cache</span>
+    <span class="n">zonal_weights_filepath</span><span class="o">=</span><span class="n">cached_weights_filepath</span><span class="p">,</span>
+    <span class="n">starting_z_hour</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">ending_z_hour</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">timeseries_type</span><span class="o">=</span><span class="s2">"secondary"</span>  <span class="c1"># now considered forecast</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>And our <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code> table consists of NWM medium range streamflow forecasts (member 1), plus NWM short range rainfall forecast summarized to the three WBD HUC10 watersheds as mean areal precipitation (MAP).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">secondary_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">secondary_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>And our <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> table consists of USGS streamflow data at the Radford gage, plus NWM analysis rainfall summarized to the three WBD HUC10 watersheds as mean areal precipitation (MAP).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">primary_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">primary_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we can make use of the <code class="docutils literal notranslate"><span class="pre">joined_timeseries_view</span></code> for efficient metric calculation and further exploration.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">joined_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">joined_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">joined_df</span><span class="o">.</span><span class="n">secondary_configuration_name</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># We'll use this helper function for plotting timeseries.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_timeseries</span><span class="p">(</span>
+    <span class="n">configuration_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">secondary_by</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">):</span>
+    <span class="n">sim_plot</span> <span class="o">=</span> <span class="n">joined_df</span><span class="p">[</span><span class="n">joined_df</span><span class="p">[</span><span class="s2">"secondary_configuration_name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">configuration_name</span><span class="p">]</span><span class="o">.</span>\
+        <span class="n">hvplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="s2">"value_time"</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="s2">"secondary_value"</span><span class="p">,</span>
+            <span class="n">by</span><span class="o">=</span><span class="n">secondary_by</span><span class="p">,</span>
+            <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">obs_plot</span> <span class="o">=</span> <span class="n">joined_df</span><span class="p">[</span><span class="n">joined_df</span><span class="p">[</span><span class="s2">"secondary_configuration_name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">configuration_name</span><span class="p">]</span><span class="o">.</span>\
+        <span class="n">hvplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="s2">"value_time"</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="s2">"primary_value"</span><span class="p">,</span>
+            <span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">"location_id"</span><span class="p">,</span> <span class="s2">"secondary_configuration_name"</span><span class="p">],</span>
+            <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">sim_plot</span> <span class="o">*</span> <span class="n">obs_plot</span><span class="p">)</span><span class="o">.</span><span class="n">options</span><span class="p">(</span>
+                <span class="n">width</span><span class="o">=</span><span class="mi">700</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+                <span class="n">show_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="n">title</span>
+            <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can plot the primary (USGS) vs. secondary (NWM) streamflow and notice that this particular NWM forecast underestimated the flow.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_timeseries</span><span class="p">(</span>
+    <span class="n">configuration_name</span><span class="o">=</span><span class="s2">"nwm30_medium_range"</span><span class="p">,</span>
+    <span class="n">secondary_by</span><span class="o">=</span><span class="p">[</span><span class="s2">"reference_time"</span><span class="p">],</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Observed streamflow (black) and forecast streamflow at the Radford gage"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>In plotting the primary vs. secondary rainfall (MAP) in each watershed, we can see the this NWM forecast underestimated the observed rainfall. This is likely one reason why the NWM streamflow forecasts also underestimated the flow.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_timeseries</span><span class="p">(</span>
+    <span class="n">configuration_name</span><span class="o">=</span><span class="s2">"nwm30_forcing_short_range"</span><span class="p">,</span>
+    <span class="n">secondary_by</span><span class="o">=</span><span class="p">[</span><span class="s2">"location_id"</span><span class="p">],</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Observed MAP (black) and forecast MAP at the three HUC10s"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we can also calculate performance metrics for the streamflow and rainfall for this event.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bias</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">RelativeBias</span><span class="p">()</span>
+<span class="n">kge</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">DeterministicMetrics</span><span class="o">.</span><span class="n">KlingGuptaEfficiency</span><span class="p">()</span>
+
+<span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries_view</span><span class="p">()</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">bias</span><span class="p">,</span> <span class="n">kge</span><span class="p">],</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">"location_id"</span><span class="p">,</span> <span class="s2">"secondary_configuration_name"</span><span class="p">],</span>
+<span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">([</span><span class="s2">"location_id"</span><span class="p">,</span> <span class="s2">"secondary_configuration_name"</span><span class="p">])</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="04_fetching_nwm_streamflow.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Fetching USGS and NWM Streamflow Data</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../development/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Developer Guide</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-the-example-evaluation">Set up the example Evaluation</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/example_notebooks/notebooks/05_fetching_nwm_gridded_data.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.8.0</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

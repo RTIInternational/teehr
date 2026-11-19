@@ -1,0 +1,27 @@
+﻿GeneratedTimeseries
+===================
+
+.. currentmodule:: teehr.evaluation.generate
+
+.. autoclass:: GeneratedTimeseries
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~GeneratedTimeseries.benchmark_forecast
+      ~GeneratedTimeseries.signature_timeseries
+      ~GeneratedTimeseries.to_pandas
+      ~GeneratedTimeseries.to_sdf
+      ~GeneratedTimeseries.write
+   
+   
+
+   
+   
+   

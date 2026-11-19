@@ -1,0 +1,6 @@
+teehr.metrics.bootstrap\_funcs.create\_shared\_bootstrap\_func
+==============================================================
+
+.. currentmodule:: teehr.metrics.bootstrap_funcs
+
+.. autofunction:: create_shared_bootstrap_func

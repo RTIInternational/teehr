@@ -1,0 +1,255 @@
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/nbclient/client.py", line 1323, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/jupyter_core/utils/__init__.py", line 165, in wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/nbclient/client.py", line 709, in async_execute
+    await self.async_execute_cell(
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/nbclient/client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/nbclient/client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+# Define the directory where the Evaluation will be created.
+test_eval_dir = Path(Path().home(), "temp", "09_ensemble_metrics")
+shutil.rmtree(test_eval_dir, ignore_errors=True)
+
+# Setup the example evaluation using data from the TEEHR repository.
+setup_hefs_example(tmpdir=test_eval_dir)
+
+# Initialize the evaluation.
+ev = teehr.LocalReadWriteEvaluation(dir_path=test_eval_dir)
+------------------
+
+----- stderr -----
+INFO:teehr.evaluation.evaluation:Creating a new default Spark session.
+----- stderr -----
+INFO:teehr.evaluation.spark_session_utils:🚀 Creating Spark session: TEEHR Evaluation
+----- stderr -----
+INFO:teehr.evaluation.spark_session_utils:✅ Spark local configuration successful!
+----- stderr -----
+INFO:teehr.evaluation.spark_session_utils:Setting Hadoop's default AWS credentials provider and AWS region
+----- stderr -----
+INFO:teehr.evaluation.spark_session_utils:🔑 Using anonymous AWS credentials for S3 access
+----- stderr -----
+INFO:teehr.evaluation.spark_session_utils:Configuring Iceberg catalogs...
+----- stderr -----
+INFO:teehr.evaluation.spark_session_utils:⚙️ All settings applied. Creating Spark session...
+----- stderr -----
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: package sun.security.action not in java.base
+----- stderr -----
+Warning: Ignoring non-Spark config property: local_catalog_name
+Warning: Ignoring non-Spark config property: remote_catalog_type
+Warning: Ignoring non-Spark config property: remote_catalog_uri
+Warning: Ignoring non-Spark config property: remote_warehouse_dir
+Warning: Ignoring non-Spark config property: remote_catalog_name
+Warning: Ignoring non-Spark config property: local_catalog_type
+----- stderr -----
+:: loading settings :: url = jar:file:/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+Ivy Default Cache set to: /tmp/.ivy2.5.2/cache
+The jars for the packages stored in: /tmp/.ivy2.5.2/jars
+org.apache.sedona#sedona-spark-shaded-4.0_2.13 added as a dependency
+org.apache.iceberg#iceberg-spark-runtime-4.0_2.13 added as a dependency
+org.datasyslab#geotools-wrapper added as a dependency
+org.apache.iceberg#iceberg-spark-extensions-4.0_2.13 added as a dependency
+software.amazon.awssdk#bundle added as a dependency
+org.apache.hadoop#hadoop-aws added as a dependency
+com.amazonaws#aws-java-sdk-bundle added as a dependency
+org.xerial#sqlite-jdbc added as a dependency
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-7a87cdcd-ffe1-4dcc-b0b3-d950fbbbf700;1.0
+	confs: [default]
+	found org.apache.sedona#sedona-spark-shaded-4.0_2.13;1.8.0 in central
+	found org.apache.iceberg#iceberg-spark-runtime-4.0_2.13;1.10.1 in central
+----- stderr -----
+	found org.datasyslab#geotools-wrapper;1.8.0-33.1 in central
+	found org.apache.iceberg#iceberg-spark-extensions-4.0_2.13;1.10.1 in central
+	found org.antlr#antlr4;4.13.1 in central
+	found org.antlr#antlr4-runtime;4.13.1 in central
+	found org.antlr#antlr-runtime;3.5.3 in central
+	found org.antlr#ST4;4.3.4 in central
+	found org.abego.treelayout#org.abego.treelayout.core;1.0.3 in central
+	found com.ibm.icu#icu4j;72.1 in central
+	found org.slf4j#slf4j-api;2.0.17 in central
+	found org.scala-lang.modules#scala-collection-compat_2.13;2.13.0 in central
+	found org.roaringbitmap#RoaringBitmap;1.3.0 in central
+	found software.amazon.awssdk#bundle;2.33.0 in central
+	found org.apache.hadoop#hadoop-aws;3.4.1 in central
+----- stderr -----
+	found org.wildfly.openssl#wildfly-openssl;1.1.3.Final in central
+	found com.amazonaws#aws-java-sdk-bundle;1.12.791 in central
+	found org.xerial#sqlite-jdbc;3.42.0.0 in central
+:: resolution report :: resolve 385ms :: artifacts dl 14ms
+	:: modules in use:
+	com.amazonaws#aws-java-sdk-bundle;1.12.791 from central in [default]
+	com.ibm.icu#icu4j;72.1 from central in [default]
+	org.abego.treelayout#org.abego.treelayout.core;1.0.3 from central in [default]
+	org.antlr#ST4;4.3.4 from central in [default]
+	org.antlr#antlr-runtime;3.5.3 from central in [default]
+	org.antlr#antlr4;4.13.1 from central in [default]
+	org.antlr#antlr4-runtime;4.13.1 from central in [default]
+	org.apache.hadoop#hadoop-aws;3.4.1 from central in [default]
+	org.apache.iceberg#iceberg-spark-extensions-4.0_2.13;1.10.1 from central in [default]
+	org.apache.iceberg#iceberg-spark-runtime-4.0_2.13;1.10.1 from central in [default]
+	org.apache.sedona#sedona-spark-shaded-4.0_2.13;1.8.0 from central in [default]
+	org.datasyslab#geotools-wrapper;1.8.0-33.1 from central in [default]
+	org.roaringbitmap#RoaringBitmap;1.3.0 from central in [default]
+	org.scala-lang.modules#scala-collection-compat_2.13;2.13.0 from central in [default]
+	org.slf4j#slf4j-api;2.0.17 from central in [default]
+	org.wildfly.openssl#wildfly-openssl;1.1.3.Final from central in [default]
+	org.xerial#sqlite-jdbc;3.42.0.0 from central in [default]
+	software.amazon.awssdk#bundle;2.33.0 from central in [default]
+	:: evicted modules:
+	software.amazon.awssdk#bundle;2.24.6 by [software.amazon.awssdk#bundle;2.33.0] in [default]
+	---------------------------------------------------------------------
+	|                  |            modules            ||   artifacts   |
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	|      default     |   19  |   0   |   0   |   1   ||   18  |   0   |
+	---------------------------------------------------------------------
+:: retrieving :: org.apache.spark#spark-submit-parent-7a87cdcd-ffe1-4dcc-b0b3-d950fbbbf700
+	confs: [default]
+	0 artifacts copied, 18 already retrieved (0kB/8ms)
+----- stderr -----
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::loadLibrary has been called by org.apache.hadoop.util.NativeCodeLoader in an unnamed module (file:/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/jars/hadoop-client-api-3.4.1.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+26/11/19 15:13:33 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Exception in thread "main" java.lang.UnsupportedOperationException: getSubject is not supported
+	at java.base/javax.security.auth.Subject.getSubject(Subject.java:277)
+	at org.apache.hadoop.security.UserGroupInformation.getCurrentUser(UserGroupInformation.java:588)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3888)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3878)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3666)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:557)
+	at org.apache.spark.util.DependencyUtils$.resolveGlobPath(DependencyUtils.scala:255)
+	at org.apache.spark.util.DependencyUtils$.$anonfun$resolveGlobPaths$2(DependencyUtils.scala:211)
+	at scala.collection.StrictOptimizedIterableOps.flatMap(StrictOptimizedIterableOps.scala:118)
+	at scala.collection.StrictOptimizedIterableOps.flatMap$(StrictOptimizedIterableOps.scala:105)
+	at scala.collection.immutable.ArraySeq.flatMap(ArraySeq.scala:35)
+	at org.apache.spark.util.DependencyUtils$.resolveGlobPaths(DependencyUtils.scala:209)
+	at org.apache.spark.deploy.SparkSubmit.$anonfun$prepareSubmitEnvironment$4(SparkSubmit.scala:397)
+	at scala.Option.map(Option.scala:242)
+	at org.apache.spark.deploy.SparkSubmit.prepareSubmitEnvironment(SparkSubmit.scala:397)
+	at org.apache.spark.deploy.SparkSubmit.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:961)
+	at org.apache.spark.deploy.SparkSubmit.doRunMain$1(SparkSubmit.scala:204)
+	at org.apache.spark.deploy.SparkSubmit.submit(SparkSubmit.scala:227)
+	at org.apache.spark.deploy.SparkSubmit.doSubmit(SparkSubmit.scala:96)
+	at org.apache.spark.deploy.SparkSubmit$$anon$2.doSubmit(SparkSubmit.scala:1132)
+	at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:1141)
+	at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+------------------
+
+[31m---------------------------------------------------------------------------[39m
+[31mPySparkRuntimeError[39m                       Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[2][39m[32m, line 6[39m
+[32m      2[39m test_eval_dir = Path(Path().home(), [33m"temp"[39m, [33m"09_ensemble_metrics"[39m)
+[32m      3[39m shutil.rmtree(test_eval_dir, ignore_errors=[38;5;28;01mTrue[39;00m)
+[32m      4[39m 
+[32m      5[39m [38;5;66;03m# Setup the example evaluation using data from the TEEHR repository.[39;00m
+[32m----> [39m[32m6[39m setup_hefs_example(tmpdir=test_eval_dir)
+[32m      7[39m 
+[32m      8[39m [38;5;66;03m# Initialize the evaluation.[39;00m
+[32m      9[39m ev = teehr.LocalReadWriteEvaluation(dir_path=test_eval_dir)
+
+[36mFile [39m[32m~/work/teehr/teehr/src/teehr/example_data/setup_ensemble_example.py:11[39m, in [36msetup_hefs_example[39m[34m(tmpdir)[39m
+[32m      9[39m [38;5;250m[39m[33;03m"""Set up the ensemble metrics example."""[39;00m
+[32m     10[39m [38;5;66;03m# Create an Evaluation object and create the directory[39;00m
+[32m---> [39m[32m11[39m ev = [30;43mteehr[39;49m[30;43m.[39;49m[30;43mLocalReadWriteEvaluation[39;49m[30;43m([39;49m[30;43mdir_path[39;49m[30;43m=[39;49m[30;43mtmpdir[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mcreate_dir[39;49m[30;43m=[39;49m[30;43;01mTrue[39;49;00m[30;43m)[39;49m
+[32m     13[39m [38;5;66;03m# Fetch the test data[39;00m
+[32m     14[39m location_data_path = Path(tmpdir, [33m"[39m[33mtwo_locations.parquet[39m[33m"[39m)
+
+[36mFile [39m[32m~/work/teehr/teehr/src/teehr/evaluation/evaluation.py:778[39m, in [36mLocalReadWriteEvaluation.__init__[39m[34m(self, dir_path, create_dir, check_evaluation_version, spark, namespace_name, enable_spark_proxy)[39m
+[32m    745[39m [38;5;28;01mdef[39;00m[38;5;250m [39m[34m__init__[39m(
+[32m    746[39m     [38;5;28mself[39m,
+[32m    747[39m     dir_path: Union[[38;5;28mstr[39m, Path],
+[32m   (...)[39m[32m    752[39m     enable_spark_proxy: [38;5;28mbool[39m = [38;5;28;01mFalse[39;00m,
+[32m    753[39m ):
+[32m    754[39m [38;5;250m    [39m[33;03m"""Initialize the Evaluation class.[39;00m
+[32m    755[39m 
+[32m    756[39m [33;03m    Parameters[39;00m
+[32m   (...)[39m[32m    776[39m [33;03m        access to the underlying Spark DataFrame. Default is False.[39;00m
+[32m    777[39m [33;03m    """[39;00m
+[32m--> [39m[32m778[39m     [30;43msuper[39;49m[30;43m([39;49m[30;43m)[39;49m[30;43m.[39;49m[30;43m__init__[39;49m[30;43m([39;49m
+[32m    779[39m [30;43m        [39;49m[30;43mspark[39;49m[30;43m=[39;49m[30;43mspark[39;49m[30;43m,[39;49m
+[32m    780[39m [30;43m        [39;49m[30;43mdir_path[39;49m[30;43m=[39;49m[30;43mPath[39;49m[30;43m([39;49m[30;43mdir_path[39;49m[30;43m)[39;49m[30;43m,[39;49m
+[32m    781[39m [30;43m        [39;49m[30;43menable_spark_proxy[39;49m[30;43m=[39;49m[30;43menable_spark_proxy[39;49m[30;43m,[39;49m
+[32m    782[39m [30;43m    [39;49m[30;43m)[39;49m
+[32m    784[39m     local_catalog_name = [38;5;28mself[39m.spark.conf.get([33m"[39m[33mlocal_catalog_name[39m[33m"[39m)
+[32m    785[39m     warehouse_dir = [38;5;28mself[39m.dir_path / local_catalog_name
+
+[36mFile [39m[32m~/work/teehr/teehr/src/teehr/evaluation/evaluation.py:105[39m, in [36mBaseEvaluation.__init__[39m[34m(self, dir_path, spark, enable_spark_proxy)[39m
+[32m    103[39m [38;5;28;01melse[39;00m:
+[32m    104[39m     logger.info([33m"[39m[33mCreating a new default Spark session.[39m[33m"[39m)
+[32m--> [39m[32m105[39m     [38;5;28mself[39m.spark = [30;43mcreate_spark_session[39;49m[30;43m([39;49m[30;43m)[39;49m
+
+[36mFile [39m[32m~/work/teehr/teehr/src/teehr/evaluation/spark_session_utils.py:300[39m, in [36mcreate_spark_session[39m[34m(app_name, local_catalog_name, local_catalog_type, remote_warehouse_dir, remote_catalog_name, remote_catalog_type, remote_catalog_uri, start_spark_cluster, force_recreate_session, executor_instances, executor_memory, executor_cores, executor_image, executor_namespace, driver_memory, driver_max_result_size, pod_template_path, aws_access_key_id, aws_secret_access_key, aws_session_token, aws_region, aws_profile, enable_gcs, gcs_project_id, gcs_service_account_key_file, add_jars, add_packages, update_configs, debug_config, polaris_token, use_authmanager)[39m
+[32m    292[39m _update_configs_and_packages(
+[32m    293[39m     conf=conf,
+[32m    294[39m     update_configs=effective_configs [38;5;129;01mor[39;00m [38;5;28;01mNone[39;00m,
+[32m    295[39m     add_jars=add_jars,
+[32m    296[39m     add_packages=add_packages
+[32m    297[39m )
+[32m    299[39m logger.info([33m"[39m[33m⚙️ All settings applied. Creating Spark session...[39m[33m"[39m)
+[32m--> [39m[32m300[39m spark = [30;43mSparkSession[39;49m[30;43m.[39;49m[30;43mbuilder[39;49m[30;43m.[39;49m[30;43mappName[39;49m[30;43m([39;49m[30;43mapp_name[39;49m[30;43m)[39;49m[30;43m.[39;49m[30;43mconfig[39;49m[30;43m([39;49m[30;43mconf[39;49m[30;43m=[39;49m[30;43mconf[39;49m[30;43m)[39;49m[30;43m.[39;49m[30;43mgetOrCreate[39;49m[30;43m([39;49m[30;43m)[39;49m
+[32m    301[39m sedona_spark = SedonaContext.create(spark)
+[32m    303[39m [38;5;28;01mif[39;00m debug_config:
+
+[36mFile [39m[32m/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/sql/session.py:556[39m, in [36mSparkSession.Builder.getOrCreate[39m[34m(self)[39m
+[32m    554[39m     sparkConf.set(key, value)
+[32m    555[39m [38;5;66;03m# This SparkContext may be an existing one.[39;00m
+[32m--> [39m[32m556[39m sc = [30;43mSparkContext[39;49m[30;43m.[39;49m[30;43mgetOrCreate[39;49m[30;43m([39;49m[30;43msparkConf[39;49m[30;43m)[39;49m
+[32m    557[39m [38;5;66;03m# Do not update `SparkConf` for existing `SparkContext`, as it's shared[39;00m
+[32m    558[39m [38;5;66;03m# by all sessions.[39;00m
+[32m    559[39m session = SparkSession(sc, options=[38;5;28mself[39m._options)
+
+[36mFile [39m[32m/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/core/context.py:523[39m, in [36mSparkContext.getOrCreate[39m[34m(cls, conf)[39m
+[32m    521[39m [38;5;28;01mwith[39;00m SparkContext._lock:
+[32m    522[39m     [38;5;28;01mif[39;00m SparkContext._active_spark_context [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+[32m--> [39m[32m523[39m         [30;43mSparkContext[39;49m[30;43m([39;49m[30;43mconf[39;49m[30;43m=[39;49m[30;43mconf[39;49m[30;43m [39;49m[30;43;01mor[39;49;00m[30;43m [39;49m[30;43mSparkConf[39;49m[30;43m([39;49m[30;43m)[39;49m[30;43m)[39;49m
+[32m    524[39m     [38;5;28;01massert[39;00m SparkContext._active_spark_context [38;5;129;01mis[39;00m [38;5;129;01mnot[39;00m [38;5;28;01mNone[39;00m
+[32m    525[39m     [38;5;28;01mreturn[39;00m SparkContext._active_spark_context
+
+[36mFile [39m[32m/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/core/context.py:205[39m, in [36mSparkContext.__init__[39m[34m(self, master, appName, sparkHome, pyFiles, environment, batchSize, serializer, conf, gateway, jsc, profiler_cls, udf_profiler_cls, memory_profiler_cls)[39m
+[32m    199[39m [38;5;28;01mif[39;00m gateway [38;5;129;01mis[39;00m [38;5;129;01mnot[39;00m [38;5;28;01mNone[39;00m [38;5;129;01mand[39;00m gateway.gateway_parameters.auth_token [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+[32m    200[39m     [38;5;28;01mraise[39;00m [38;5;167;01mValueError[39;00m(
+[32m    201[39m         [33m"[39m[33mYou are trying to pass an insecure Py4j gateway to Spark. This[39m[33m"[39m
+[32m    202[39m         [33m"[39m[33m is not allowed as it is a security risk.[39m[33m"[39m
+[32m    203[39m     )
+[32m--> [39m[32m205[39m [30;43mSparkContext[39;49m[30;43m.[39;49m[30;43m_ensure_initialized[39;49m[30;43m([39;49m[30;43mself[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mgateway[39;49m[30;43m=[39;49m[30;43mgateway[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mconf[39;49m[30;43m=[39;49m[30;43mconf[39;49m[30;43m)[39;49m
+[32m    206[39m [38;5;28;01mtry[39;00m:
+[32m    207[39m     [38;5;28mself[39m._do_init(
+[32m    208[39m         master,
+[32m    209[39m         appName,
+[32m   (...)[39m[32m    219[39m         memory_profiler_cls,
+[32m    220[39m     )
+
+[36mFile [39m[32m/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/core/context.py:444[39m, in [36mSparkContext._ensure_initialized[39m[34m(cls, instance, gateway, conf)[39m
+[32m    442[39m [38;5;28;01mwith[39;00m SparkContext._lock:
+[32m    443[39m     [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m SparkContext._gateway:
+[32m--> [39m[32m444[39m         SparkContext._gateway = gateway [38;5;129;01mor[39;00m [30;43mlaunch_gateway[39;49m[30;43m([39;49m[30;43mconf[39;49m[30;43m)[39;49m
+[32m    445[39m         SparkContext._jvm = SparkContext._gateway.jvm
+[32m    447[39m     [38;5;28;01mif[39;00m instance:
+
+[36mFile [39m[32m/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/pyspark/java_gateway.py:111[39m, in [36mlaunch_gateway[39m[34m(conf, popen_kwargs)[39m
+[32m    108[39m     time.sleep([32m0.1[39m)
+[32m    110[39m [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m os.path.isfile(conn_info_file):
+[32m--> [39m[32m111[39m     [38;5;28;01mraise[39;00m PySparkRuntimeError(
+[32m    112[39m         errorClass=[33m"[39m[33mJAVA_GATEWAY_EXITED[39m[33m"[39m,
+[32m    113[39m         messageParameters={},
+[32m    114[39m     )
+[32m    116[39m [38;5;28;01mwith[39;00m [38;5;28mopen[39m(conn_info_file, [33m"[39m[33mrb[39m[33m"[39m) [38;5;28;01mas[39;00m info:
+[32m    117[39m     gateway_port = read_int(info)
+
+[31mPySparkRuntimeError[39m: [JAVA_GATEWAY_EXITED] Java gateway process exited before sending its port number.
+

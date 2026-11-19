@@ -1,0 +1,57 @@
+﻿UnitTable
+=========
+
+.. currentmodule:: teehr.evaluation.tables.unit_table
+
+.. autoclass:: UnitTable
+   :members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~UnitTable.add
+      ~UnitTable.add_attributes
+      ~UnitTable.add_calculated_fields
+      ~UnitTable.add_geometry
+      ~UnitTable.aggregate
+      ~UnitTable.delete
+      ~UnitTable.distinct_values
+      ~UnitTable.drop
+      ~UnitTable.filter
+      ~UnitTable.load_csv
+      ~UnitTable.load_dataframe
+      ~UnitTable.load_parquet
+      ~UnitTable.order_by
+      ~UnitTable.to_geopandas
+      ~UnitTable.to_pandas
+      ~UnitTable.to_sdf
+      ~UnitTable.validate
+      ~UnitTable.write
+      ~UnitTable.write_to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UnitTable.foreign_keys
+      ~UnitTable.is_core_table
+      ~UnitTable.primary_location_id_field
+      ~UnitTable.secondary_location_id_field
+      ~UnitTable.strict_validation
+      ~UnitTable.table_name
+      ~UnitTable.uniqueness_fields
+      ~UnitTable.validate_filter_field_types
+   
+      ~UnitTable.extraction_func
+      ~UnitTable.schema_func
+   
+   

@@ -1,0 +1,6 @@
+teehr.metrics.probabilistic\_funcs.ensemble\_brier\_score
+=========================================================
+
+.. currentmodule:: teehr.metrics.probabilistic_funcs
+
+.. autofunction:: ensemble_brier_score
