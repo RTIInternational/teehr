@@ -224,9 +224,20 @@ class FakeAPI:
                 mine = self.RESULTS.append_column(
                     "run_id", pa.array([run["id"]] * self.RESULTS.num_rows)
                 )
+                self.geometry_asked = request.url.params.get("geometry")
+                if "geo+json" in request.headers.get("Accept", ""):
+                    return httpx.Response(200, json={"type": "FeatureCollection", "features": [
+                        {"type": "Feature", "properties": r,
+                         "geometry": {"type": "Point", "coordinates": [0, i]}}
+                        for i, r in enumerate(mine.to_pylist()[:3])
+                    ]})  # fmt: skip
                 other = mine.set_column(
                     2, "run_id", pa.array(["another-run"] * self.RESULTS.num_rows)
                 )
+                if self.geometry_asked != "false":  # output.geometry: a place per row
+                    point = bytes.fromhex("0101000000" + "00" * 16)  # WKB POINT (0 0)
+                    mine = mine.append_column("geometry", pa.array([point] * mine.num_rows))
+                    other = other.append_column("geometry", pa.array([point] * other.num_rows))
                 self.results_reads = getattr(self, "results_reads", 0) + 1
                 return self._arrow_page(request, pa.concat_tables([mine, other]).filter(
                     pc.equal(pa.concat_tables([mine, other])["run_id"], run["id"])

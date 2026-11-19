@@ -40,6 +40,28 @@ output:
 
 `teehr evaluations show <name> -p <project> > spec.yaml` copies an existing spec to start from.
 
+## Places on results
+
+`output.geometry` gives each result row a place, so results can be mapped:
+
+```yaml
+aggregate:
+  - group_by: [primary_series_key, secondary_dataset]
+    metrics: [kling_gupta_efficiency]
+output:
+  geometry: primary_series_key     # each gage's location
+  attributes: [huc_cd]             # and attributes of the same place, as columns
+```
+
+- `primary_series_key`: the observed series' location, from its series table's `location_key`
+  in its layer (the dataset's `location_layer` unless a series says otherwise).
+- A `within` field's name: the polygon of its layer, e.g. a basin.
+
+The column must be in the last stage's `group_by`. Places are looked up when results are read
+(`teehr runs results`): `--out results.geojson` writes a feature collection, `.parquet` and
+`.arrow` keep a `geometry` column. A dataset read of the results table has no places: they're
+not stored.
+
 ## Check, save, run
 
 ```
@@ -49,7 +71,11 @@ teehr evaluations plan spec.yaml -p my_project
 **Plan** checks the spec against the project's datasets without saving or running anything. It
 prints what the run will read (each input's dataset, role, variable and unit), the crosswalk, and
 each aggregation stage's groups and columns, or every problem found: an unknown dataset or
-metric, a column that doesn't exist at that step, a unit that doesn't convert.
+metric, a column that doesn't exist at that step, a unit that doesn't convert, or a feature TEEHR
+doesn't support yet (below).
+
+It also prints **warnings** about what the spec does that you may not expect, e.g. that every run
+of it is full (and why), so reruns won't be incremental.
 
 ```
 teehr evaluations save nwm31_by_lead nwm31-by-lead.yaml -p my_project
@@ -80,6 +106,29 @@ teehr runs start nwm31_by_lead -p my_project --full --wait   # recompute everyth
 ```
 
 The run's `mode` says which it did, and why when it was full (e.g. "no earlier run kept state").
+
+## Not supported in TEEHR yet
+
+The spec is shared with VeriRace, so the [spec
+guide](https://github.com/RTIInternational/teehr-core/blob/main/docs/spec/README.md) describes
+everything either system may run. In TEEHR, today:
+
+| Feature | Status |
+| --- | --- |
+| `generate: climatology`, `generate: blend` inputs | **refused:** need a climatology dataset, which TEEHR can't make yet ([#251](https://github.com/RTIInternational/teehr-cloud-core/issues/251)) |
+| `fn: percentile` field (`from:` a percentiles dataset) | **refused:** needs a percentiles dataset (#251) |
+| `fn: naive_scale` field (for MASE) | **refused:** needs a naive_scale dataset (#251) |
+| `generate: persistence` | supported |
+| Answering small evaluations right away, `--estimate` (VeriRace's `evaluate`) | not in TEEHR: save, then run |
+| Datasets of other projects (`<project>.<name>`) | not yet; `public.<name>` and the project's own |
+
+`plan` refuses each with a message saying so. These run, but **every run is full** (no
+incremental reruns, and all the data is read in one pod, so very large evaluations may not fit);
+`plan` warns about them:
+
+- metrics that need every pair rather than running sums (e.g. `spearman_correlation`);
+- `guards`, `reduce` windows, and skill matched on observations;
+- some `bootstrap` settings.
 
 ## Following runs
 

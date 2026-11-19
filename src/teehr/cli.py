@@ -798,6 +798,8 @@ def _spec(path: Path) -> dict[str, Any]:
 
 
 def _show_plan(plan: dict[str, Any]) -> None:
+    for warning in plan.get("warnings") or []:
+        notes.print(f"warning: {escape(warning)}", style="yellow")
     console.print(f"unit: {escape(str(plan.get('unit')))}")
     for i in plan.get("inputs") or []:
         console.print(
@@ -988,11 +990,18 @@ def _read(
             style="yellow",
         )
     if out is None:
+        if "geometry" in table.column_names and state.output != Output.JSON:
+            table = table.drop_columns(["geometry"])  # bytes; --out keeps it
         emit(table.to_pylist(), table.column_names)
         return
     suffix = out.suffix.lower()
     if suffix == ".parquet":
         pq.write_table(table, out, compression="zstd")
+    elif suffix == ".geojson":
+        raise typer.BadParameter(
+            ".geojson is for run results with output.geometry (teehr runs results)",
+            param_hint="--out",
+        )
     elif suffix == ".csv":
         pacsv.write_csv(table, out)
     elif suffix in (".arrow", ".feather"):
@@ -1189,6 +1198,10 @@ def runs_results(
     filter: FilterOpt = None,
     limit: LimitOpt = None,
     out: OutOpt = None,
+    geometry: Annotated[
+        bool,
+        typer.Option(help="With output.geometry: each row's place (and output.attributes)."),
+    ] = True,
 ) -> None:
     """Print a run's results, or write them all to a file (--out).
 
@@ -1196,18 +1209,27 @@ def runs_results(
     (see `teehr datasets read results_<name>_v<version>`). Printed, the lineage
     columns (run_id, spec_version, engine_version: the same on every row) are left
     out unless --columns asks for them.
+
+    With output.geometry in the spec, results have places: `--out results.geojson`
+    writes them as GeoJSON, and .parquet / .arrow keep a geometry column (WKB).
     """
     api = state.api()
     run = api.get_run(project, run_id)
     if run["status"] != "succeeded" or not run.get("results_dataset"):
         raise typer.BadParameter(f"the run is {run['status']}; results come once it succeeds")
     notes.print(f"run {run_id} of {run['evaluation']} v{run['version']}")
+    if out is not None and out.suffix.lower() == ".geojson":
+        collection = api.run_results_geojson(project, run_id, filter=filter, limit=limit)
+        out.write_text(json.dumps(collection))
+        notes.print(f"Wrote {len(collection['features'])} features to {out}", style="green")
+        return
     if columns is None and out is None and state.output == Output.TABLE:
         dataset = api.get_dataset(project, run["results_dataset"])
         names = [c["name"] for c in dataset.get("columns") or []]
         kept = [c for c in names if c not in _LINEAGE]
         columns = ",".join(kept) if kept else None
-    _read(functools.partial(api.run_results, project, run_id), columns, filter, limit, out)
+    fetch = functools.partial(api.run_results, project, run_id, geometry=geometry)
+    _read(fetch, columns, filter, limit, out)
 
 
 def run() -> None:

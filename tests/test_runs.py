@@ -71,3 +71,12 @@ def test_a_spec_must_be_a_mapping(api, tmp_path):
     path.write_text("- a\n- b\n")
     result = run("evaluations", "plan", str(path), "-p", "flood")
     assert result.exit_code == 2 and "mapping" in result.output
+
+
+def test_plan_and_save_show_warnings(api, tmp_path):
+    run("--api", API, "auth", "login")
+    api.PLAN = {**api.PLAN, "warnings": ["every run is full: spearman needs every pair"]}
+    planned = run("evaluations", "plan", spec_file(tmp_path), "-p", "flood")
+    assert "warning: every run is full" in planned.output
+    saved = run("evaluations", "save", "kge", spec_file(tmp_path), "-p", "flood")
+    assert "warning: every run is full" in saved.output

@@ -15,6 +15,11 @@ and `-o json` and `--out` keep everything.
 
 The run ID is in `teehr runs list <evaluation> -p my_project`.
 
+When the spec has `output.geometry` ([Places on results](evaluations.md#places-on-results)),
+results have places: `--out results.geojson` writes a GeoJSON feature collection for a map, and
+`.parquet` / `.arrow` keep a `geometry` column (WKB; GeoParquet). Printed tables leave the
+geometry out; `--no-geometry` leaves it (and `output.attributes`) out of files too.
+
 ## Any dataset
 
 ```

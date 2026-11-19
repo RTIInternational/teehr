@@ -73,3 +73,29 @@ def test_run_results_reads_the_runs_dataset(api, tmp_path):
     assert api.results_reads == 1  # the run's own route, not the whole table
     rows = json.loads(run("-o", "json", "runs", "results", started["id"], "-p", "flood").stdout)
     assert len(rows) == 250 and {r["run_id"] for r in rows} == {started["id"]}
+
+
+def test_run_results_with_places(api, tmp_path):
+    import yaml
+
+    run("--api", API, "auth", "login")
+    spec = tmp_path / "s.yaml"
+    spec.write_text(yaml.safe_dump({"inputs": {}}))
+    run("evaluations", "save", "kge", str(spec), "-p", "flood")
+    started = json.loads(run("-o", "json", "runs", "start", "kge", "-p", "flood", "--wait").stdout)
+    # Printed: no raw geometry bytes.
+    printed = run("runs", "results", started["id"], "-p", "flood", "-n", "2")
+    assert printed.exit_code == 0 and "bytes>" not in printed.output
+    # Parquet keeps the geometry column.
+    out = tmp_path / "r.parquet"
+    run("runs", "results", started["id"], "-p", "flood", "--out", str(out))
+    assert "geometry" in pq.read_table(out).column_names
+    # GeoJSON: a feature collection.
+    geo = tmp_path / "r.geojson"
+    result = run("runs", "results", started["id"], "-p", "flood", "--out", str(geo))
+    assert result.exit_code == 0, result.output
+    collection = json.loads(geo.read_text())
+    assert collection["type"] == "FeatureCollection" and len(collection["features"]) == 3
+    # --no-geometry asks the API to leave places out.
+    run("runs", "results", started["id"], "-p", "flood", "--no-geometry", "-n", "1")
+    assert api.geometry_asked == "false"

@@ -406,10 +406,15 @@ class Client:
         )
 
     def _pages(
-        self, path: str, columns: list[str] | None, filter: str | None, limit: int | None
+        self,
+        path: str,
+        columns: list[str] | None,
+        filter: str | None,
+        limit: int | None,
+        extra: dict[str, Any] | None = None,
     ) -> pa.Table:
         """Read a paged table route in Arrow, following its cursor."""
-        params: dict[str, Any] = {}
+        params: dict[str, Any] = dict(extra or {})
         if columns:
             params["columns"] = ",".join(columns)
         if filter:
@@ -524,12 +529,44 @@ class Client:
         columns: list[str] | None = None,
         filter: str | None = None,
         limit: int | None = None,
+        geometry: bool = True,
     ) -> pa.Table:
         """Read a succeeded run's results as an Arrow table.
 
-        A version's results table keeps every run's rows; this reads this run's.
+        A version's results table keeps every run's rows; this reads this run's. With
+        ``output.geometry`` in the spec, rows get a ``geometry`` column (WKB) and the
+        ``output.attributes``; ``geometry=False`` leaves them out.
         """
-        return self._pages(f"/v1/projects/{project}/runs/{run_id}/results", columns, filter, limit)
+        return self._pages(
+            f"/v1/projects/{project}/runs/{run_id}/results", columns, filter, limit,
+            None if geometry else {"geometry": "false"},
+        )  # fmt: skip
+
+    def run_results_geojson(
+        self,
+        project: str,
+        run_id: str,
+        *,
+        filter: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """Read a run's results as one GeoJSON feature collection (``output.geometry``)."""
+        params: dict[str, Any] = _given(filter=filter)
+        features: list[dict[str, Any]] = []
+        cursor = None
+        while limit is None or len(features) < limit:
+            page = 10_000 if limit is None else min(10_000, limit - len(features))
+            resp = self._request(
+                "GET",
+                f"/v1/projects/{project}/runs/{run_id}/results",
+                params={**params, "limit": page, **({"cursor": cursor} if cursor else {})},
+                headers={"Accept": "application/geo+json"},
+            )
+            features += resp.json()["features"]
+            cursor = resp.headers.get("X-Next-Cursor")
+            if not cursor:
+                break
+        return {"type": "FeatureCollection", "features": features}
 
     def cancel_run(self, project: str, run_id: str) -> dict[str, Any]:
         """Stop a queued or running run."""
