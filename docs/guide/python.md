@@ -7,7 +7,7 @@ from pathlib import Path
 
 from teehr import Client
 
-client = Client.from_config()   # the token `teehr auth login` saved (or TEEHR_API_URL / TEEHR_TOKEN)
+client = Client.from_config()  # the token `teehr auth login` saved (or TEEHR_API_URL / TEEHR_TOKEN)
 client.list_projects()
 ```
 
@@ -21,14 +21,15 @@ pandas installed: `pip install pandas`).
 
 ```python
 obs = client.read(
-    "public", "usgs_streamflow",
+    "public",
+    "usgs_streamflow",
     filter="series_key = 'usgs-01646500' AND value_time >= '2026-10-01'",
     columns=["value_time", "value"],
 )
 df = obs.to_pandas()
 
 datasets = client.list_datasets("public")
-client.get_dataset("public", "usgs_streamflow")       # kind, metadata, columns
+client.get_dataset("public", "usgs_streamflow")  # kind, metadata, columns
 ```
 
 ## Evaluations and runs
@@ -37,7 +38,7 @@ client.get_dataset("public", "usgs_streamflow")       # kind, metadata, columns
 import yaml
 
 spec = yaml.safe_load(Path("nwm-vs-usgs.yaml").read_text())
-client.plan("my_project", spec)                        # raises TeehrError listing the problems
+client.plan("my_project", spec)  # raises TeehrError listing the problems
 client.save_evaluation("my_project", "nwm31_vs_usgs", spec)
 
 run = client.start_run("my_project", "nwm31_vs_usgs")  # full=True to recompute everything
@@ -49,12 +50,18 @@ results = client.run_results("my_project", run["id"]).to_pandas()
 
 ```python
 upload = client.upload_file("my_project", Path("obs.csv"), "timeseries")
-print(upload["preview"]["needed"])                     # what the load still needs
+print(upload["preview"]["needed"])  # what the load still needs
 
 upload = client.ingest_upload(
-    "my_project", upload["id"],
-    dataset={"name": "usgs_obs", "role": "observed", "variable": "streamflow",
-             "unit": "[cft_i]/s", "statistic": "inst"},
+    "my_project",
+    upload["id"],
+    dataset={
+        "name": "usgs_obs",
+        "role": "observed",
+        "variable": "streamflow",
+        "unit": "[cft_i]/s",
+        "statistic": "inst",
+    },
     mapping={"timezone": "America/New_York"},
 )
 upload = client.wait_upload("my_project", upload["id"])

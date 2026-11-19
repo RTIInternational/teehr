@@ -30,6 +30,15 @@ teehr datasets read pairs_nwm31_by_lead_v1 -p my_project --out pairs.parquet
 all of them, `run_id` saying which run each row is from; `teehr runs results` shows one run's.
 Pairs and state tables hold the latest run's.
 
+## Write history
+
+```
+teehr datasets writes public.usgs_streamflow -n 10
+```
+
+Each write to a dataset: when, by whom, the mode, rows, the months of data it touched, the unit
+it came in, and how many series it added. Incremental runs use the months to know what changed.
+
 ## Options
 
 | Option | |

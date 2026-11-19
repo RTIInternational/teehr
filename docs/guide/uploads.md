@@ -56,6 +56,10 @@ Several files with `-y` load one after another; give `--name` to load them all i
 
 ## Timeseries
 
+- **Names to use:** `teehr variables list` (and the unit each is stored in), `teehr units list`
+  and `teehr periods list` show what `--variable`, `--unit` and `--period` accept; `-p
+  my_project` adds the project's own. A project can add its own: `teehr variables add`, `units
+  add`, `periods add` (`--help` for each).
 - **New or existing:** `--name` an existing dataset to add to it; otherwise a new one is made
   (with `--role`, `--variable`, `--statistic` and, for values over a span, `--period`).
 - **Units:** `--unit` is the unit of the values in the file (UCUM, e.g. `[cft_i]/s`, `m3/s`).
@@ -97,6 +101,20 @@ teehr uploads add usgs_to_model.csv -p my_project --kind crosswalk \
 --map layout=wide --map series_columns=a,b,c
 --map 'attributes=[{"column": "huc_cd", "type": "string"}]'
 ```
+
+## Small writes without an upload
+
+A dataset can also be made and written directly, for small files already in its columns:
+
+```
+teehr datasets create my_obs -p my_project --kind timeseries --role observed \
+  --variable streamflow --statistic inst --optional quality --layer gauges
+teehr datasets write my_obs rows.csv -p my_project --unit '[cft_i]/s'
+```
+
+`datasets write` takes `.csv`, `.parquet`, `.json` or `.arrow`, up to 64 MiB, written in one
+commit (`--mode upsert|append|overwrite`). Uploads are for anything larger, or that needs mapping.
+`teehr datasets delete` removes a dataset and its data.
 
 ## Following uploads
 

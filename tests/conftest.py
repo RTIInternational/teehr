@@ -24,6 +24,9 @@ class FakeAPI:
         self.staged: dict[str, bytes] = {}
         self.ingested: list[dict] = []
         self.evaluations: dict[str, list[dict]] = {}  # slug -> versions' specs
+        self.sent: list[tuple[str, str, object]] = []  # (method, path, body) of admin calls
+        self.members = [{"subject": "sub-bob", "username": "bob", "role": "read",
+                         "added_by": "alice", "added_at": "2026-11-19T00:00:00Z"}]  # fmt: skip
         self.runs: dict[str, dict] = {}
 
     def _me(self, request):
@@ -81,6 +84,9 @@ class FakeAPI:
                     t["revoked_at"] = "2026-11-19T01:00:00Z"
                     return httpx.Response(204)
             return httpx.Response(404, json={"detail": "No such token"})
+        admin = self._admin(request, method, path)
+        if admin is not None:
+            return admin
         if "/datasets" in path:
             return self._datasets(request, method, path)
         if path.startswith(("/v1/projects/flood/evaluations", "/v1/projects/flood/runs")):
@@ -281,6 +287,80 @@ class FakeAPI:
             headers["X-Next-Cursor"] = str(offset + page)
         self.reads = getattr(self, "reads", 0) + 1
         return httpx.Response(200, content=sink.getvalue().to_pybytes(), headers=headers)
+
+    def _admin(self, request, method, path):
+        """Projects, members, domains and dataset changes: recorded, answered plainly."""
+        body = None
+        if request.content:
+            is_arrow = request.headers.get("Content-Type") == "application/vnd.apache.arrow.stream"
+            body = (pa.ipc.open_stream(request.content).read_all() if is_arrow
+                    else json.loads(request.content))  # fmt: skip
+        project = {"name": "flood", "display_name": None, "description": "x", "kind": "tenant",
+                   "status": "ready", "my_role": "admin", "storage_location": "s3://x",
+                   "created_by": "alice", "created_at": "2026-11-19T00:00:00Z"}  # fmt: skip
+        parts = path.strip("/").split("/")
+        if (method, path) == ("POST", "/v1/projects"):
+            self.sent.append((method, path, body))
+            return httpx.Response(201, json={**project, **body})
+        if (
+            parts[:2] == ["v1", "projects"]
+            and len(parts) == 3
+            and method in ("GET", "PATCH", "DELETE")
+        ):
+            self.sent.append((method, path, body))
+            if method == "DELETE":
+                return httpx.Response(204)
+            return httpx.Response(200, json={**project, "name": parts[2], **(body or {})})
+        if parts[3:] == ["provision"]:
+            self.sent.append((method, path, body))
+            return httpx.Response(200, json=project)
+        if parts[3:4] == ["members"]:
+            self.sent.append((method, path, body))
+            if method == "GET":
+                return httpx.Response(200, json=self.members)
+            if method == "POST":
+                member = {"subject": f"sub-{body['username']}", "added_by": "alice",
+                          "added_at": "x", **body}  # fmt: skip
+                self.members.append(member)
+                return httpx.Response(201, json=member)
+            subject = parts[4]
+            member = next((m for m in self.members if m["subject"] == subject), None)
+            if member is None:
+                return httpx.Response(404, json={"detail": "Not a member"})
+            if method == "PUT":
+                member["role"] = body["role"]
+                return httpx.Response(200, json=member)
+            self.members.remove(member)
+            return httpx.Response(204)
+        if parts[:2] == ["v1", "domains"]:
+            self.sent.append((method, path, body))
+            if method == "POST":
+                return httpx.Response(201, json=body)
+            public = {"symbol": "m3/s", "dimension": "volume_flow_rate", "to_si": 1.0,
+                      "offset": 0.0, "description": None, "project": None,
+                      "name": "streamflow", "canonical_unit": "m3/s"}  # fmt: skip
+            return httpx.Response(200, json=[public])
+        if parts[3:4] == ["datasets"] and (
+            (method == "POST" and len(parts) == 4) or method == "DELETE"
+            or (method == "POST" and parts[5:] == ["data"]) or parts[5:] == ["writes"]
+        ):  # fmt: skip
+            self.sent.append((method, path, body))
+            if method == "DELETE":
+                return httpx.Response(204)
+            if parts[5:] == ["data"]:
+                return httpx.Response(201, json={
+                    "id": "w1", "mode": request.url.params.get("mode", "upsert"), "filter": None,
+                    "rows": body.num_rows, "snapshot_id": "1", "written_by": "alice",
+                    "written_at": "x", "series_added": 0, "months": ["2026-01"], "notes": None,
+                })  # fmt: skip
+            if parts[5:] == ["writes"]:
+                return httpx.Response(200, json=[{"written_at": "2026-11-19T00:00:00Z",
+                                                  "written_by": "alice", "mode": "upsert",
+                                                  "rows": 3, "months": ["2026-01"]}])  # fmt: skip
+            return httpx.Response(201, json={"name": body["name"], "kind": body["type"],
+                                             "table": f"flood.{body['name']}",
+                                             "key_columns": None, "description": None})  # fmt: skip
+        return None
 
 
 @pytest.fixture

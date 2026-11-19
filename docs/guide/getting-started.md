@@ -52,8 +52,13 @@ file instead.
 ## 4. Write and check an evaluation
 
 Evaluations live in a project where you have the `write` or `admin` role (`teehr projects list`
-shows yours; below, `my_project` stands for one). `teehr` can't create projects yet: ask an admin,
-or use `POST /v1/projects` in the API docs if you're allowed to create them.
+shows yours; below, `my_project` stands for one). To make one, if your account may create
+projects (otherwise, ask an admin):
+
+```
+teehr projects create my_project --description "NWM vs USGS in the Potomac"
+teehr projects members add alice -p my_project --role write
+```
 
 Save this as `nwm-vs-usgs.yaml`:
 

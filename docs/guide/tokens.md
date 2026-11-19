@@ -54,4 +54,14 @@ In the API docs at `/docs`, paste it into **Authorize**.
 
 Your project roles (`read`, `write`, `admin`; see [Concepts](concepts.md#projects)) decide what
 you can do, wherever you do it: the CLI, Python, HTTP or the jobs your runs and uploads start.
-Project admins manage members in the API (`PUT /v1/projects/{name}/members/{username}`).
+Project admins manage members:
+
+```
+teehr projects members list -p my_project
+teehr projects members add alice -p my_project --role write
+teehr projects members set alice -p my_project --role admin
+teehr projects members remove alice -p my_project
+```
+
+and the project itself: `teehr projects show|update|delete my_project`, and `teehr projects
+provision my_project` to retry setting up its storage if `status` says it failed.

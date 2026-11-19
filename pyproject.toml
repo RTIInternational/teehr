@@ -55,7 +55,7 @@ ignore = ["D105", "D107", "B008"]
 convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["D"]
+"tests/**" = ["D", "E501"]  # long assertions read better whole
 
 [tool.mypy]
 python_version = "3.12"

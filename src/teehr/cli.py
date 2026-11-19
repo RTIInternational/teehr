@@ -43,8 +43,20 @@ evaluations = typer.Typer(
     help="Saved evaluations: specs under a name, versioned.", no_args_is_help=True
 )
 runs = typer.Typer(help="Runs of saved evaluations.", no_args_is_help=True)
-datasets = typer.Typer(help="Datasets: list, describe, read.", no_args_is_help=True)
+datasets = typer.Typer(
+    help="Datasets: list, describe, read, create, write, delete.", no_args_is_help=True
+)
+members = typer.Typer(help="A project's members and their roles.", no_args_is_help=True)
+units = typer.Typer(help="Units (UCUM symbols) values can be in.", no_args_is_help=True)
+periods = typer.Typer(help="Periods: the span each value covers.", no_args_is_help=True)
+variables = typer.Typer(
+    help="Variables (e.g. streamflow) and their canonical units.", no_args_is_help=True
+)
+projects.add_typer(members, name="members")
 for sub, name in (
+    (units, "units"),
+    (periods, "periods"),
+    (variables, "variables"),
     (datasets, "datasets"),
     (auth, "auth"),
     (tokens, "tokens"),
@@ -314,6 +326,179 @@ def tokens_revoke(token_id: str) -> None:
 def projects_list() -> None:
     """List the projects you can use."""
     emit(state.api().list_projects(), ["name", "my_role", "status", "description"])
+
+
+_PROJECT_FIELDS = ["name", "display_name", "description", "kind", "status", "status_detail",
+                   "my_role", "storage_location", "created_by", "created_at"]  # fmt: skip
+DisplayNameOpt = Annotated[str | None, typer.Option(help="A longer name to show.")]
+ProjectDescriptionOpt = Annotated[str | None, typer.Option(help="What the project is for.")]
+YesOpt = Annotated[bool, typer.Option("--yes", "-y", help="Don't ask first.")]
+
+
+@projects.command("create")
+def projects_create(
+    name: str, display_name: DisplayNameOpt = None, description: ProjectDescriptionOpt = None
+) -> None:
+    """Create a project; you become its admin (needs a project-creator role).
+
+    Names are lowercase letters, digits and underscores, starting with a letter.
+    """
+    emit(state.api().create_project(name, display_name, description), _PROJECT_FIELDS)
+
+
+@projects.command("show")
+def projects_show(name: str) -> None:
+    """Show a project: status, storage, your role."""
+    emit(state.api().get_project(name), _PROJECT_FIELDS)
+
+
+@projects.command("update")
+def projects_update(
+    name: str, display_name: DisplayNameOpt = None, description: ProjectDescriptionOpt = None
+) -> None:
+    """Change a project's display name or description (admins)."""
+    emit(state.api().update_project(name, display_name, description), _PROJECT_FIELDS)
+
+
+@projects.command("delete")
+def projects_delete(name: str, yes: YesOpt = False) -> None:
+    """Delete a project with all its datasets, evaluations and runs (admins)."""
+    if not yes:
+        typer.confirm(f"Delete project {name} and everything in it?", abort=True)
+    state.api().delete_project(name)
+    notes.print(f"Deleted project {name}", style="green")
+
+
+@projects.command("provision")
+def projects_provision(name: str) -> None:
+    """Retry setting up a project's storage and catalog access, if it failed (admins)."""
+    emit(state.api().provision_project(name), _PROJECT_FIELDS)
+
+
+# -- members --------------------------------------------------------------------------
+
+_MEMBER_COLUMNS = ["username", "role", "subject", "added_by", "added_at"]
+RoleArg = Annotated[str, typer.Option("--role", help="read, write or admin.")]
+
+
+@members.command("list")
+def members_list(project: ProjectOpt) -> None:
+    """List a project's members and their roles."""
+    emit(state.api().list_members(project), _MEMBER_COLUMNS)
+
+
+@members.command("add")
+def members_add(username: str, project: ProjectOpt, role: RoleArg) -> None:
+    """Add a user to the project with a role (admins)."""
+    emit(state.api().add_member(project, username, role), _MEMBER_COLUMNS)
+
+
+@members.command("set")
+def members_set(user: str, project: ProjectOpt, role: RoleArg) -> None:
+    """Change a member's role (by username or subject; admins)."""
+    emit(state.api().set_member(project, user, role), _MEMBER_COLUMNS)
+
+
+@members.command("remove")
+def members_remove(user: str, project: ProjectOpt, yes: YesOpt = False) -> None:
+    """Remove a member from the project (by username or subject; admins)."""
+    if not yes:
+        typer.confirm(f"Remove {user} from {project}?", abort=True)
+    state.api().remove_member(project, user)
+    notes.print(f"Removed {user} from {project}", style="green")
+
+
+# -- units, periods, variables ---------------------------------------------------------
+
+DomainProjectOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--project", "-p", envvar="TEEHR_PROJECT",
+        help="Also this project's own (default: the public ones only).",
+    ),
+]  # fmt: skip
+AddToOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--project", "-p",
+        help="Add it to this project (default: public, which needs the platform's write role).",
+    ),
+]  # fmt: skip
+DomainDescriptionOpt = Annotated[str | None, typer.Option(help="What it is.")]
+
+
+def _scoped(rows: list[dict[str, Any]], columns: list[str]) -> None:
+    for r in rows:
+        r["project"] = r.get("project") or "public"
+    emit(rows, [*columns, "project"])
+
+
+@units.command("list")
+def units_list(project: DomainProjectOpt = None) -> None:
+    """List units: their dimension and conversion to SI (si = value * to_si + offset)."""
+    _scoped(state.api().list_domain("units", project),
+            ["symbol", "dimension", "to_si", "offset", "description"])  # fmt: skip
+
+
+@units.command("add")
+def units_add(
+    symbol: str,
+    dimension: Annotated[str, typer.Option(help="e.g. volume_flow, length, temperature.")],
+    to_si: Annotated[float, typer.Option(help="Multiply by this to get SI.")],
+    offset: Annotated[float, typer.Option(help="Then add this (temperatures).")] = 0.0,
+    description: DomainDescriptionOpt = None,
+    project: AddToOpt = None,
+) -> None:
+    """Add a unit (a UCUM symbol, e.g. '[cft_i]/s')."""
+    body = {"symbol": symbol, "dimension": dimension, "to_si": to_si, "offset": offset,
+            "description": description, "project": project}  # fmt: skip
+    emit(state.api().add_domain("units", {k: v for k, v in body.items() if v is not None}))
+
+
+@periods.command("list")
+def periods_list(project: DomainProjectOpt = None) -> None:
+    """List periods: e.g. instant, hour_starting, day_ending."""
+    _scoped(state.api().list_domain("periods", project),
+            ["name", "form", "length", "value_time_at", "start", "end", "description"])  # fmt: skip
+
+
+@periods.command("add")
+def periods_add(
+    name: str,
+    form: Annotated[str, typer.Option(help="instant, duration, calendar or absolute.")],
+    length: Annotated[str | None, typer.Option(help="Duration: ISO 8601, e.g. PT1H.")] = None,
+    value_time_at: Annotated[
+        str | None, typer.Option(help="Duration: start or end of the span.")
+    ] = None,
+    start: Annotated[str | None, typer.Option(help="Absolute: --MM-DD.")] = None,
+    end: Annotated[str | None, typer.Option(help="Absolute: --MM-DD.")] = None,
+    description: DomainDescriptionOpt = None,
+    project: AddToOpt = None,
+) -> None:
+    """Add a period: the span each value of a dataset covers."""
+    body = {"name": name, "form": form, "length": length, "value_time_at": value_time_at,
+            "start": start, "end": end, "description": description, "project": project}  # fmt: skip
+    emit(state.api().add_domain("periods", {k: v for k, v in body.items() if v is not None}))
+
+
+@variables.command("list")
+def variables_list(project: DomainProjectOpt = None) -> None:
+    """List variables and the units their values are stored in."""
+    _scoped(state.api().list_domain("variables", project),
+            ["name", "canonical_unit", "description"])  # fmt: skip
+
+
+@variables.command("add")
+def variables_add(
+    name: str,
+    canonical_unit: Annotated[str, typer.Option(help="A unit; its values are stored in it.")],
+    description: DomainDescriptionOpt = None,
+    project: AddToOpt = None,
+) -> None:
+    """Add a variable, e.g. streamflow, with the unit its values are stored in."""
+    body = {"name": name, "canonical_unit": canonical_unit, "description": description,
+            "project": project}  # fmt: skip
+    emit(state.api().add_domain("variables", {k: v for k, v in body.items() if v is not None}))
 
 
 # -- uploads --------------------------------------------------------------------------
@@ -857,6 +1042,143 @@ def datasets_read(
     owner, dataset = _split_ref(name, project)
     api = state.api()
     _read(functools.partial(api.read, owner, dataset), columns, filter, limit, out)
+
+
+def _columns(items: list[str] | None, flag: str) -> list[dict[str, Any]]:
+    """``name:type`` (or ``name:type!`` for a required column) as column specs."""
+    out = []
+    for item in items or []:
+        name, sep, kind = item.partition(":")
+        if not sep or not name or not kind:
+            raise typer.BadParameter(f"{item!r}: use NAME:TYPE, e.g. basin:string", param_hint=flag)
+        required = kind.endswith("!")
+        out.append(
+            {"name": name, "type": kind.rstrip("!"), **({"required": True} if required else {})}
+        )
+    return out
+
+
+@datasets.command("create")
+def datasets_create(
+    name: str,
+    project: ProjectOpt,
+    kind: Annotated[
+        str, typer.Option(help="timeseries, layer, crosswalk or table (table: platform admins).")
+    ],
+    role: RoleOpt = None,
+    variable: VariableOpt = None,
+    statistic: StatisticOpt = None,
+    period: PeriodOpt = None,
+    unit: Annotated[
+        str | None, typer.Option(help="Timeseries: the variable's canonical unit (the default).")
+    ] = None,
+    optional: Annotated[
+        str | None,
+        typer.Option(help="Timeseries: optional columns, e.g. reference_time,member,quality."),
+    ] = None,
+    layer: LayerOpt = None,
+    partition: PartitionOpt = None,
+    series_table: Annotated[
+        str | None, typer.Option(help="Timeseries: share an existing series table.")
+    ] = None,
+    left: LeftOpt = None,
+    right: RightOpt = None,
+    column: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--column",
+            help="NAME:TYPE (TYPE! if required), repeatable: a table's columns, a layer's "
+            "attributes, a timeseries' or crosswalk's extra columns.",
+        ),
+    ] = None,
+    key: Annotated[str | None, typer.Option(help="Table: comma-separated key columns.")] = None,
+    source: SourceOpt = None,
+    description: DescriptionOpt = None,
+) -> None:
+    """Register a dataset and make its table (most come from uploads instead)."""
+    cols = _columns(column, "--column")
+    body: dict[str, Any] = {"type": kind, "name": name, "description": description,
+                            "source": source}  # fmt: skip
+    if kind == "timeseries":
+        body |= {"role": role, "variable": variable, "statistic": statistic, "period": period,
+                 "unit": unit, "location_layer": layer, "time_partition": partition,
+                 "series_table": series_table, "extra_columns": cols or None,
+                 "optional_columns": optional.split(",") if optional else None}  # fmt: skip
+    elif kind == "layer":
+        body["attributes"] = cols or None
+    elif kind == "crosswalk":
+        body |= {"left": left, "right": right, "extra_columns": cols or None}
+    elif kind == "table":
+        body |= {"columns": cols, "key_columns": key.split(",") if key else None}
+        body.pop("source")
+    else:
+        raise typer.BadParameter("timeseries, layer, crosswalk or table", param_hint="--kind")
+    record = state.api().create_dataset(project, {k: v for k, v in body.items() if v is not None})
+    shown = ("name", "kind", "table", "key_columns", "description")
+    emit(record if state.output == Output.JSON else {k: record.get(k) for k in shown})
+
+
+@datasets.command("delete")
+def datasets_delete(name: str, project: ProjectOpt, yes: YesOpt = False) -> None:
+    """Delete a dataset and its table (and a timeseries' series table, if no other uses it)."""
+    if not yes:
+        typer.confirm(f"Delete dataset {name} in {project} and its data?", abort=True)
+    state.api().delete_dataset(project, name)
+    notes.print(f"Deleted {name}", style="green")
+
+
+def _load_rows(path: Path) -> pa.Table:
+    suffix = path.suffix.lower()
+    if suffix == ".parquet":
+        return pq.read_table(path)
+    if suffix == ".csv":
+        return pacsv.read_csv(path)
+    if suffix in (".json", ".ndjson", ".jsonl"):
+        import pyarrow.json as pajson
+
+        return pajson.read_json(path)
+    if suffix in (".arrow", ".feather"):
+        with pa.memory_map(str(path)) as source:
+            return pa.ipc.open_file(source).read_all()
+    raise typer.BadParameter(f"unsupported file type {suffix!r}", param_hint="FILE")
+
+
+@datasets.command("write")
+def datasets_write(
+    name: str,
+    file: Annotated[Path, typer.Argument(exists=True, dir_okay=False, help="Rows to write.")],
+    project: ProjectOpt,
+    mode: Annotated[
+        str | None,
+        typer.Option(help="upsert (typed datasets' default), append or overwrite."),
+    ] = None,
+    filter: Annotated[
+        str | None, typer.Option("--filter", "-f", help="Overwrite: only the rows this keeps.")
+    ] = None,
+    timezone: TimezoneOpt = None,
+    unit: UnitOpt = None,
+) -> None:
+    """Write a small file's rows (.csv, .parquet, .json, .arrow) to a dataset in one commit.
+
+    Columns must already be the dataset's (see `teehr datasets show`). Up to 64 MiB:
+    larger files, or ones that need mapping, go through `teehr uploads add`.
+    """
+    emit(state.api().write(project, name, _load_rows(file), mode=mode, filter=filter,
+                           timezone=timezone, unit=unit),
+         ["mode", "rows", "series_added", "months", "notes", "snapshot_id"])  # fmt: skip
+
+
+@datasets.command("writes")
+def datasets_writes(
+    name: str,
+    project: DataProjectOpt = "public",
+    limit: Annotated[int | None, typer.Option("--limit", "-n", min=1)] = None,
+) -> None:
+    """List a dataset's writes, newest first: who, when, mode, rows and months."""
+    owner, dataset = _split_ref(name, project)
+    emit(state.api().list_writes(owner, dataset, limit),
+         ["written_at", "written_by", "mode", "rows", "months", "unit", "series_added",
+          "notes"])  # fmt: skip
 
 
 @runs.command("results")

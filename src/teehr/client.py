@@ -68,6 +68,11 @@ class Pending:
     slow_down: bool = False
 
 
+def _given(**values: Any) -> dict[str, Any]:
+    """Keep the values that were given (not None)."""
+    return {k: v for k, v in values.items() if v is not None}
+
+
 def _detail(resp: httpx.Response) -> str:
     try:
         body = resp.json()
@@ -324,6 +329,60 @@ class Client:
         ).json()
         return record
 
+    def create_dataset(self, project: str, body: dict[str, Any]) -> dict[str, Any]:
+        """Register a dataset and make its table.
+
+        ``body["type"]`` is ``timeseries``, ``layer``, ``crosswalk`` or ``table``; the
+        rest is that kind's metadata (see the API docs, ``create_dataset``).
+        """
+        record: dict[str, Any] = self._request(
+            "POST", f"/v1/projects/{project}/datasets", json=body
+        ).json()
+        return record
+
+    def delete_dataset(self, project: str, dataset: str) -> None:
+        """Delete a dataset and its table."""
+        self._request("DELETE", f"/v1/projects/{project}/datasets/{dataset}")
+
+    def write(
+        self,
+        project: str,
+        dataset: str,
+        table: pa.Table,
+        *,
+        mode: str | None = None,
+        filter: str | None = None,
+        timezone: str | None = None,
+        unit: str | None = None,
+    ) -> dict[str, Any]:
+        """Write rows to a dataset in one commit, through the API (up to 64 MiB).
+
+        ``mode``: ``upsert`` (the default for typed datasets), ``append`` or
+        ``overwrite`` (of the rows ``filter`` keeps, or all). Larger files: uploads.
+        """
+        sink = pa.BufferOutputStream()
+        with pa.ipc.new_stream(sink, table.schema) as writer:
+            writer.write_table(table)
+        written: dict[str, Any] = self._request(
+            "POST",
+            f"/v1/projects/{project}/datasets/{dataset}/data",
+            params=_given(mode=mode, filter=filter, timezone=timezone, unit=unit),
+            content=sink.getvalue().to_pybytes(),
+            headers={"Content-Type": ARROW},
+        ).json()
+        return written
+
+    def list_writes(
+        self, project: str, dataset: str, limit: int | None = None
+    ) -> list[dict[str, Any]]:
+        """List a dataset's writes, newest first: who, when, mode, rows, months, unit."""
+        writes: list[dict[str, Any]] = self._request(
+            "GET",
+            f"/v1/projects/{project}/datasets/{dataset}/writes",
+            params=_given(limit=limit),
+        ).json()
+        return writes
+
     def read(
         self,
         project: str,
@@ -485,3 +544,83 @@ class Client:
         """List the projects you can use."""
         projects: list[dict[str, Any]] = self._request("GET", "/v1/projects").json()
         return projects
+
+    def create_project(
+        self, name: str, display_name: str | None = None, description: str | None = None
+    ) -> dict[str, Any]:
+        """Create a project; you become its admin. Needs a project-creator role."""
+        body = _given(name=name, display_name=display_name, description=description)
+        project: dict[str, Any] = self._request("POST", "/v1/projects", json=body).json()
+        return project
+
+    def get_project(self, name: str) -> dict[str, Any]:
+        """Return a project: status, storage, your role."""
+        project: dict[str, Any] = self._request("GET", f"/v1/projects/{name}").json()
+        return project
+
+    def update_project(
+        self, name: str, display_name: str | None = None, description: str | None = None
+    ) -> dict[str, Any]:
+        """Change a project's display name or description (admins)."""
+        body = _given(display_name=display_name, description=description)
+        project: dict[str, Any] = self._request("PATCH", f"/v1/projects/{name}", json=body).json()
+        return project
+
+    def delete_project(self, name: str) -> None:
+        """Delete a project and everything in it (admins)."""
+        self._request("DELETE", f"/v1/projects/{name}")
+
+    def provision_project(self, name: str) -> dict[str, Any]:
+        """Retry setting up a project's storage and catalog access (admins)."""
+        project: dict[str, Any] = self._request("POST", f"/v1/projects/{name}/provision").json()
+        return project
+
+    # --- members -------------------------------------------------------------------
+
+    def list_members(self, project: str) -> list[dict[str, Any]]:
+        """List a project's members and their roles."""
+        members: list[dict[str, Any]] = self._request(
+            "GET", f"/v1/projects/{project}/members"
+        ).json()
+        return members
+
+    def add_member(self, project: str, username: str, role: str) -> dict[str, Any]:
+        """Add a user to a project with a role: read, write or admin (admins)."""
+        member: dict[str, Any] = self._request(
+            "POST", f"/v1/projects/{project}/members", json={"username": username, "role": role}
+        ).json()
+        return member
+
+    def _subject(self, project: str, user: str) -> str:
+        for m in self.list_members(project):
+            if user in (m["subject"], m.get("username")):
+                return str(m["subject"])
+        raise TeehrError(404, f"{user} isn't a member of {project}")
+
+    def set_member(self, project: str, user: str, role: str) -> dict[str, Any]:
+        """Change a member's role (``user``: their username or subject; admins)."""
+        member: dict[str, Any] = self._request(
+            "PUT",
+            f"/v1/projects/{project}/members/{self._subject(project, user)}",
+            json={"role": role},
+        ).json()
+        return member
+
+    def remove_member(self, project: str, user: str) -> None:
+        """Remove a member (``user``: their username or subject; admins)."""
+        self._request("DELETE", f"/v1/projects/{project}/members/{self._subject(project, user)}")
+
+    # --- domains: units, periods, variables ------------------------------------------
+
+    def list_domain(self, kind: str, project: str | None = None) -> list[dict[str, Any]]:
+        """List ``units``, ``periods`` or ``variables``: the public ones, and a project's own."""
+        params = {"project": project} if project else None
+        rows: list[dict[str, Any]] = self._request(
+            "GET", f"/v1/domains/{kind}", params=params
+        ).json()
+        return rows
+
+    def add_domain(self, kind: str, body: dict[str, Any]) -> dict[str, Any]:
+        """Add a unit, period or variable: to a project (``project`` in ``body``), or public."""
+        row: dict[str, Any] = self._request("POST", f"/v1/domains/{kind}", json=body).json()
+        return row
