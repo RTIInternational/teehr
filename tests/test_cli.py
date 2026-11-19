@@ -130,3 +130,33 @@ def test_a_route_the_api_lacks_says_so():
         client.get_run("flood", "abc")
     assert "has no GET /v1/projects/flood/runs/abc" in raised.value.detail
     assert "older than this client" in raised.value.detail
+
+
+def test_several_problems_read_one_per_line():
+    import httpx
+
+    from teehr.client import Client
+
+    body = {"detail": "x", "errors": [
+        {"loc": ["body"], "msg": "Value error, unknown metric 'kge2'"},
+        {"loc": ["body", "inputs", "secondary", 0], "msg": "no dataset 'public.nope'"},
+    ]}  # fmt: skip
+    client = Client(API, "tpat_x", http=httpx.Client(transport=httpx.MockTransport(
+        lambda r: httpx.Response(422, json=body)
+    )))  # fmt: skip
+    with pytest.raises(TeehrError) as raised:
+        client.list_projects()
+    assert raised.value.detail == (
+        "2 problems:\n- unknown metric 'kge2'\n- inputs.secondary.0: no dataset 'public.nope'"
+    )
+
+
+def test_an_unreachable_api_is_one_line(monkeypatch, capsys, tmp_path):
+    monkeypatch.setenv("TEEHR_CONFIG_DIR", str(tmp_path))
+    monkeypatch.setenv("TEEHR_TOKEN", "tpat_x")
+    monkeypatch.setattr(sys, "argv", ["teehr", "--api", "http://127.0.0.1:9", "projects", "list"])
+    with pytest.raises(SystemExit) as exit_:
+        cli.run()
+    assert exit_.value.code == 1
+    err = capsys.readouterr().err
+    assert err.startswith("Can't reach the API") and "Traceback" not in err

@@ -18,6 +18,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
 
+import httpx
 import pyarrow as pa
 import pyarrow.csv as pacsv
 import pyarrow.parquet as pq
@@ -1274,4 +1275,12 @@ def run() -> None:
         app()
     except TeehrError as exc:
         Console(stderr=True).print(escape(exc.detail), style="red")
+        sys.exit(1)
+    except httpx.TransportError as exc:
+        hint = ""
+        if "CERTIFICATE" in str(exc).upper():
+            hint = " (a local cluster's self-signed certificate? sign in with --insecure)"
+        Console(stderr=True).print(
+            escape(f"Can't reach the API: {exc}{hint}"), style="red", highlight=False
+        )
         sys.exit(1)

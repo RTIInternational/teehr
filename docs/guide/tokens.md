@@ -14,7 +14,9 @@ teehr auth login -p my_project           # only this project (repeat -p for more
 ```
 
 Tokens last 1 to 365 days (90 by default). Signing in shows a code and opens your browser;
-approve only a code you just started yourself.
+approve only a code you just started yourself. The token's secret is shown once, to the command
+that made it (`auth login` saves it); the API keeps only a hash, so a lost token can't be
+recovered: revoke it and make another.
 
 ```
 teehr auth status          # who you are, and this computer's token
@@ -52,8 +54,23 @@ In the API docs at `/docs`, paste it into **Authorize**.
 
 ## Who can do what
 
-Your project roles (`read`, `write`, `admin`; see [Concepts](concepts.md#projects)) decide what
-you can do, wherever you do it: the CLI, Python, HTTP or the jobs your runs and uploads start.
+Your project roles decide what you can do, wherever you do it: the CLI, Python, HTTP or the jobs
+your runs and uploads start.
+
+```mermaid
+flowchart LR
+    read["<b>read</b><br/>datasets, evaluations,<br/>results, logs"]
+    write["<b>write</b><br/>+ upload, write data,<br/>save evaluations, run them"]
+    admin["<b>admin</b><br/>+ members, the project,<br/>deleting evaluations"]
+    read --> write --> admin
+```
+
+- **Not a member:** the project doesn't exist, as far as you can tell (404), except `public`, which
+  everyone signed in reads.
+- **A project always keeps an admin:** removing or demoting the last one is refused.
+- **Platform admins** (very few people) can act on every project; **project creators** (an
+  account role) can make new projects.
+
 Project admins manage members:
 
 ```

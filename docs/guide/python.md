@@ -67,6 +67,31 @@ upload = client.ingest_upload(
 upload = client.wait_upload("my_project", upload["id"])
 ```
 
+## Metrics on your own arrays
+
+The metrics themselves are in `teehr-core`, which needs no service: any two equal-length arrays
+(lists, NumPy or Arrow) give the same numbers a run would. It isn't on PyPI yet; install it from a
+commit:
+
+```
+pip install "teehr-core @ https://github.com/RTIInternational/teehr-core/archive/<commit>.zip"
+```
+
+```python
+from teehr_core import metrics
+
+obs = [1, 2, 3, 4, 5]
+sim = [1.5, 1.5, 3.5, 3, 6]
+metrics.nse(obs, sim)  # 0.725
+metrics.csi(obs, sim, threshold=3)  # contingency metrics take a threshold
+result = metrics.evaluate(obs, sim, ["rmse", "kge", "relative_bias"])
+result["root_mean_square_error"]  # canonical names, as in run results
+```
+
+Pairs where either value isn't finite are left out; a metric that's undefined for the input
+returns `None`. Every metric is in the [metrics
+reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md).
+
 ## Errors
 
 A refused request raises `teehr.TeehrError`, with the HTTP `status` and the API's `detail`;

@@ -29,6 +29,16 @@ teehr auth status       # who you are, and which token this computer uses
 teehr projects list     # the projects you can use, and your role in each
 ```
 
+```
+api: https://control-plane.teehr.rtiamanzi.org
+username: alice
+name: alices-laptop
+hint: tpat_Arl3
+scopes: ["read", "write"]
+projects:
+expires_at: 2027-02-17 18:26:57
+```
+
 A local development cluster (KinD) uses `https://control-plane.teehr.local.app.garden` and a
 self-signed certificate: sign in there with `--insecure`. See [Tokens and access](tokens.md) for
 other computers, scripts and CI.
@@ -41,8 +51,29 @@ between them.
 ```
 teehr datasets list                                    # public's datasets
 teehr datasets show public.usgs_streamflow              # what it is: role, variable, unit, columns
+```
+
+```
+name: usgs_streamflow
+kind: timeseries
+role: observed
+variable: streamflow
+unit: m3/s
+statistic: inst
+period: instant
+optional_columns: ["quality"]
+series_table: usgs_streamflow_series
+location_layer: usgs_gauges
+...
+```
+
+Its values, its series (the gages) and the crosswalk from the gages to NWM reaches:
+
+```
 teehr datasets read public.usgs_streamflow -n 10
 teehr datasets read public.usgs_streamflow -f "series_key = 'usgs-01646500'" -n 50
+teehr datasets read public.usgs_streamflow_series
+teehr datasets read public.usgs_nwm31
 ```
 
 `datasets` commands read `public` unless you give a project with `-p`. Printed output stops at
@@ -57,7 +88,6 @@ projects (otherwise, ask an admin):
 
 ```
 teehr projects create my_project --description "NWM vs USGS in the Potomac"
-teehr projects members add alice -p my_project --role write
 ```
 
 Save this as `nwm-vs-usgs.yaml`:
@@ -110,11 +140,33 @@ teehr runs results <run id> -p my_project
 teehr runs results <run id> -p my_project --out results.parquet
 ```
 
-The run ID is in `teehr runs list nwm31_vs_usgs -p my_project`.
+```
+run f327bf66-83f5-4ee2-8408-fdf48e0ad976 of nwm31_vs_usgs v1
+primary_series_key  secondary_dataset                count  kling_gupta_efficiency  ...
+usgs-01646500       public.nwm31_medium_range_mem1   48     -0.484285               ...
+usgs-01646500       public.nwm31_short_range         36     -0.37794                ...
+usgs-02087500       public.nwm31_medium_range_mem1   48     0.681233                ...
+```
+
+The run ID is in `teehr runs list nwm31_vs_usgs -p my_project`. Wide results read better as a
+file (`--out results.csv`) or with `-o csv`. `teehr runs logs <run id> -p my_project` shows what
+the run did.
+
+## 7. Share it
+
+```
+teehr projects members add bob -p my_project --role read
+```
+
+Bob can now read the evaluation and its results: `teehr runs results <run id> -p my_project`.
+`--role write` would let him save evaluations and run them too.
 
 ## Next
 
 - [Concepts](concepts.md): what projects, datasets, evaluations and runs are.
+- The [metrics reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md): every metric you can ask for.
+- The API docs at `/docs` on the API's address: every request, to try in the browser (sign in
+  with **Authorize**, pasting a personal token).
 - [Uploading data](uploads.md): evaluate your own data.
 - [Evaluations and runs](evaluations.md): more of what a spec can do, and rerunning as new data
   arrives.

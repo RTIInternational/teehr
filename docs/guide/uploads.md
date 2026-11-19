@@ -52,7 +52,22 @@ teehr uploads add obs.csv -p my_project --kind timeseries --name usgs_obs --role
   --variable streamflow --unit '[cft_i]/s' --statistic inst --timezone UTC -y --wait
 ```
 
-Several files with `-y` load one after another; give `--name` to load them all into one dataset.
+Several files with `-y` load one after another, and stop at the first that fails; give `--name`
+to load them all into one dataset.
+
+When a load succeeds, its result says what it did:
+
+```
+id: c81d4586-2a03-41f1-a618-6b41be63324e
+status: succeeded
+rows_done: 144
+result: {"dataset": "usgs_obs", "created": true, "rows": 144, "snapshot_id": 6230135544349836096,
+"series_added": 3}
+```
+
+`created`: whether it made the dataset; `series_added`: new series added to its series table;
+with locations, `locations_set`; and `notes` on anything it noticed (e.g. location keys that
+aren't in the layer). `teehr uploads logs <id>` shows each step.
 
 ## Timeseries
 
@@ -61,7 +76,9 @@ Several files with `-y` load one after another; give `--name` to load them all i
   my_project` adds the project's own. A project can add its own: `teehr variables add`, `units
   add`, `periods add` (`--help` for each).
 - **New or existing:** `--name` an existing dataset to add to it; otherwise a new one is made
-  (with `--role`, `--variable`, `--statistic` and, for values over a span, `--period`).
+  (with `--role`, `--variable`, `--statistic` and, for values over a span, `--period`). Adding to
+  an existing dataset keeps its role, variable, statistic and period; the file's values may be in
+  any unit that converts to its variable's.
 - **Units:** `--unit` is the unit of the values in the file (UCUM, e.g. `[cft_i]/s`, `m3/s`).
   They're converted to the variable's canonical unit as they're stored.
 - **Times:** times with a zone offset (`2026-01-01T00:00:00Z`, `...-05:00`) are used as they are.
@@ -92,6 +109,58 @@ teehr uploads add usgs_to_model.csv -p my_project --kind crosswalk \
 - **Crosswalks:** `--left` and `--right` name the timeseries whose series the keys are. Keys not
   (yet) in them are reported, so timeseries and their crosswalk load in either order.
 
+### Example: your model against USGS gages
+
+Your model's output at its own reach IDs, and a crosswalk from the gages to them:
+
+```
+usgs_to_model.csv
+primary_location_id,secondary_location_id
+usgs-01646500,mymodel-1001
+usgs-02087500,mymodel-2040
+```
+
+```
+teehr uploads add model_flows.csv -p my_project --kind timeseries --name my_model \
+  --role simulated --variable streamflow --unit m3/s --statistic inst --timezone UTC -y --wait
+teehr uploads add usgs_to_model.csv -p my_project --kind crosswalk --name usgs_my_model \
+  --left public.usgs_streamflow --right my_model -y --wait
+```
+
+Then a spec pairs them through it:
+
+```yaml
+inputs:
+  primary: {dataset: public.usgs_streamflow}
+  secondary: [{dataset: my_model}]
+pair: {relation: usgs_my_model}
+```
+
+If your model's series keys are the gages' own (`usgs-01646500`), no crosswalk is needed:
+`pair: {on_attribute: series_key}`.
+
+### Example: metrics per basin
+
+Load the basins as a polygon layer, then group by the basin each gage is in:
+
+```
+teehr uploads add huc8.geojson -p my_project --kind layer --name huc8 -y --wait
+```
+
+```yaml
+fields:
+  - {name: basin, fn: within, layer: huc8}
+aggregate:
+  - group_by: [basin, secondary_dataset]
+    metrics: [kge]
+output:
+  geometry: basin          # results come with each basin's polygon
+```
+
+The gages' places come from the observed dataset's layer (`public.usgs_streamflow` has one).
+
+Leading zeros in keys are kept (`01646500` stays text), whatever the file's columns look like.
+
 ## Changing the proposed mapping
 
 `--map FIELD=VALUE`, repeatable, changes any part of it:
@@ -101,6 +170,43 @@ teehr uploads add usgs_to_model.csv -p my_project --kind crosswalk \
 --map layout=wide --map series_columns=a,b,c
 --map 'attributes=[{"column": "huc_cd", "type": "string"}]'
 ```
+
+Every field (`--timezone` is `--map timezone=...`):
+
+| Field | For | Is |
+| --- | --- | --- |
+| `layout` | timeseries | `long` (a row per value) or `wide` (a column per series) |
+| `series_key` | timeseries | the column with series keys |
+| `series_key_value` | timeseries | one series key for every row (a file of one series) |
+| `series_columns` | timeseries, wide | the value columns, each named by its series key |
+| `value_time`, `value` | timeseries | the columns with the times and the values |
+| `reference_time` | forecasts | the column with each forecast's issue time |
+| `member` | ensembles | the column with the ensemble member |
+| `quantile` | probabilistic | the column with the quantile level, 0 to 1, at most 4 decimals |
+| `quality` | timeseries | the column with the source's quality codes |
+| `location_key` | timeseries, layers | each series' (or place's) location key |
+| `timezone` | timeseries | IANA zone of times without one (no default) |
+| `time_format` | timeseries | `strptime` format of times that aren't ISO 8601 |
+| `name`, `geometry`, `longitude`, `latitude` | layers | the place's name, and its geometry (WKB or WKT) or point coordinates |
+| `crs` | layers | the file's coordinate system, when it doesn't say (e.g. `EPSG:26918`) |
+| `source_layer` | layers | which layer of a GeoPackage |
+| `attributes` | layers | the columns to keep as attributes, with names and types |
+| `left_key`, `right_key` | crosswalks | the columns with each side's series keys |
+
+## Common problems
+
+The whole file is checked before anything is written, and every problem is listed:
+
+| Problem | Looks like | Fix |
+| --- | --- | --- |
+| Times without a zone | needed: `mapping.timezone` | `--timezone America/New_York` (or `UTC`) |
+| **Repeated keys** | `12 key values (series_key, value_time) occur more than once in the file` | Often local times across the fall daylight-saving change: 01:30 happens twice. Load with UTC times, or check the source |
+| Times not ISO 8601 | needed: `mapping.time_format` | `--map time_format='%m/%d/%Y %H:%M'` |
+| Missing keys or times | `column 'value_time' is required but has 3 nulls` | Fix or drop those rows |
+| An unknown unit | `unknown unit 'cfs'` | Use its UCUM code (`[cft_i]/s`); `teehr units list` |
+| A unit that doesn't convert | `mm (length) doesn't convert to m3/s (volume_flow)` | The values aren't that variable, or the wrong `--unit` |
+| Quantiles too precise | `quantile: values must have at most 4 decimal places` | Round them |
+| Layer coordinates that aren't longitude/latitude | the load fails on them | `--map crs=EPSG:...` with the file's system |
 
 ## Small writes without an upload
 

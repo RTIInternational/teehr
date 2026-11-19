@@ -81,9 +81,14 @@ def _detail(resp: httpx.Response) -> str:
     if isinstance(body, dict):
         errors = body.get("errors")
         if errors:
-            return "; ".join(
-                f"{'.'.join(str(p) for p in e.get('loc', [])[1:])}: {e.get('msg')}" for e in errors
-            )
+            found = []
+            for e in errors:
+                where = ".".join(str(p) for p in e.get("loc", [])[1:])
+                msg = str(e.get("msg", "")).removeprefix("Value error, ")
+                found.append(f"{where}: {msg}" if where else msg)
+            if len(found) == 1:
+                return found[0]
+            return f"{len(found)} problems:\n" + "\n".join(f"- {f}" for f in found)
         return str(body.get("detail") or body.get("title") or resp.reason_phrase)
     return resp.reason_phrase
 

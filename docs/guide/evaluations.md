@@ -31,14 +31,99 @@ output:
 
 - **Datasets** are named as anywhere else: `public.<name>`, or a bare name for the project's own.
 - **Metrics** have one canonical name (`nash_sutcliffe_efficiency`) and short aliases (`nse`,
-  `kge`, `rmse`); results always use the canonical name.
+  `kge`, `rmse`); results always use the canonical name. All 62, with their parameters and units,
+  are in the [metrics reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md).
 - **Filters and expressions** are a small SQL subset: comparisons, `AND`/`OR`/`NOT`, `IN`,
   `BETWEEN`, `LIKE`, and functions such as `hour()` and `date_trunc()`.
 - **Units:** `output.unit` is the unit results are in (default: the primary dataset's). Any number
   with a unit in the spec says its unit (`{value: 1000, unit: "[cft_i]/s"}`).
-- **`output.pairs: all`** keeps the pairs, in `pairs_<name>_v<version>`.
+- **`output.pairs: all`** keeps the pairs, in `pairs_<name>_v<version>`. They're by far the
+  largest output (a row per pair, so millions for a big evaluation), so keep them when you'll
+  look at them.
 
 `teehr evaluations show <name> -p <project> > spec.yaml` copies an existing spec to start from.
+
+## The steps
+
+Every evaluation goes through the same steps, in this order; the [spec
+guide](https://github.com/RTIInternational/teehr-core/blob/main/docs/spec/README.md) documents
+each.
+
+```mermaid
+flowchart LR
+    inputs["<b>inputs</b><br/>observed dataset<br/>+ simulated or forecast ones"]
+    pair["<b>pair</b><br/>match series (crosswalk<br/>or attribute) and times;<br/>convert units"]
+    fields["<b>fields</b><br/>derived columns, e.g.<br/>lead_time_bin, month"]
+    filter["<b>filter</b><br/>drop pairs, e.g.<br/>primary_value > 0"]
+    agg1["<b>aggregate 1</b><br/>metrics per group,<br/>e.g. per gage and product"]
+    agg2["<b>aggregate 2+</b> (optional)<br/>summaries, e.g.<br/>median KGE"]
+    inputs --> pair --> fields --> filter --> agg1 --> agg2
+```
+
+**Pairing** is the core step. For each observed series it finds the secondary series that go with
+it (through the crosswalk), converts both to the evaluation unit, and matches values that cover
+the same time ([periods](concepts.md#periods-the-time-a-value-covers)). Each match is a **pair**:
+
+| primary_series_key | secondary_series_key | secondary_dataset | reference_time | value_time | primary_value | secondary_value |
+| --- | --- | --- | --- | --- | --- | --- |
+| usgs-01646500 | nwm31-4512772 | public.nwm31_short_range | 2026-10-11 06:00 | 2026-10-11 09:00 | 412.3 | 398.0 |
+
+`secondary_dataset` says which product a pair came from, so one evaluation compares several
+models or forecast products side by side. Fields add columns to the pairs (a `lead_time_bin` of
+`PT0H-PT6H` here); groups are made of pairs.
+
+## Metrics
+
+Each first-stage metric is computed over the pairs of each group. A metric is a name or an object
+with options:
+
+```yaml
+metrics:
+  - count
+  - kge                                                   # an alias
+  - {name: nse, transform: log, as: log_nse}              # on log values, its own column name
+  - {name: hits, threshold: {value: 1000, unit: "[cft_i]/s"}}
+  - {name: kge, sr: 1, sa: 0.5, sb: 0.5, as: kge_weighted}
+```
+
+The [metrics reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md) lists every metric: its aliases, definition, parameters
+(e.g. `threshold` for the contingency metrics, required), the unit of its result, and whether it
+**merges** (see [rerunning](#rerunning-as-data-arrives)).
+
+## Confidence intervals (bootstrap)
+
+A metric from a few weeks of data is uncertain. A `bootstrap` block on the first stage gives every
+metric in it an interval:
+
+```yaml
+aggregate:
+  - group_by: [primary_series_key, secondary_dataset]
+    metrics: [rmse, kge]
+    bootstrap: {method: circular_block, block: P7D, reps: 1000, seed: 42}
+```
+
+Results gain `root_mean_square_error_q05` and `_q95`, and `kling_gupta_efficiency_q05` and
+`_q95`: the 5th and 95th percentiles of each metric over 1,000 resamples of the group's pairs.
+Block resampling draws runs of consecutive pairs (about a week here), because today's error is
+correlated with yesterday's; resampling single pairs would make the intervals too narrow. The
+same spec and seed always give the same intervals. Methods: `iid`, `circular_block`,
+`stationary`, `year_block`; options are in the spec guide.
+
+## Units of results
+
+Values are compared in the evaluation unit (`output.unit`, default the observed dataset's), and
+each metric's result follows from it:
+
+| Metrics like | Are in |
+| --- | --- |
+| `mean_error`, `rmse`, `mean_absolute_error`, `max_value_delta` | the evaluation unit |
+| `mean_square_error`, `variance` | the unit squared |
+| `nse`, `kge`, correlations, relative errors, contingency scores | no unit |
+| `max_value_time_delta` | seconds; timing signatures in days |
+
+So the same spec with `output.unit: "[cft_i]/s"` gives an RMSE in cfs, and with `m3/s` in m³/s.
+Ratios between units with different zero points (°C and °F) differ between units: evaluate in the
+unit you want them in.
 
 ## Places on results
 
@@ -70,9 +155,25 @@ teehr evaluations plan spec.yaml -p my_project
 
 **Plan** checks the spec against the project's datasets without saving or running anything. It
 prints what the run will read (each input's dataset, role, variable and unit), the crosswalk, and
-each aggregation stage's groups and columns, or every problem found: an unknown dataset or
-metric, a column that doesn't exist at that step, a unit that doesn't convert, or a feature TEEHR
-doesn't support yet (below).
+each aggregation stage's groups and columns:
+
+```
+The spec plans.
+unit: [cft_i]/s
+  primary: public.usgs_streamflow (observed, streamflow, in m3/s)
+  secondary: public.nwm31_short_range (forecast, streamflow, in m3/s)
+  secondary: public.nwm31_medium_range_mem1 (forecast, streamflow, in m3/s)
+  crosswalk: public.usgs_nwm31
+  stage 1: by primary_series_key, secondary_dataset -> count, kling_gupta_efficiency,
+nash_sutcliffe_efficiency, root_mean_square_error, relative_bias, pearson_correlation
+```
+
+or every problem it finds: an unknown dataset or metric, a column that doesn't exist at that step,
+a unit that doesn't convert, or a feature TEEHR doesn't support yet (below):
+
+```
+no dataset 'public.nwm31_shrt_range' in the public project
+```
 
 It also prints **warnings** about what the spec does that you may not expect, e.g. that every run
 of it is full (and why), so reruns won't be incremental.
@@ -91,7 +192,18 @@ teehr runs start nwm31_by_lead -p my_project --wait
 ```
 
 **Run** computes the latest version (`--version N` for another) as a job that acts as you. A
-version runs one at a time: starting another while one is going is refused.
+version runs one at a time: starting another while one is going is refused. With `--wait`:
+
+```
+id: f327bf66-83f5-4ee2-8408-fdf48e0ad976
+evaluation: nwm31_by_lead
+version: 1
+status: succeeded
+results_dataset: results_nwm31_by_lead_v1
+rows: 6
+mode: full (no earlier run kept state)
+pairs: 252 rows in pairs_nwm31_by_lead_v1
+```
 
 ## Rerunning as data arrives
 
@@ -105,7 +217,30 @@ teehr runs start nwm31_by_lead -p my_project --wait          # incremental when 
 teehr runs start nwm31_by_lead -p my_project --full --wait   # recompute everything
 ```
 
-The run's `mode` says which it did, and why when it was full (e.g. "no earlier run kept state").
+The run's `mode` says which it did, and why when it was full (e.g. "no earlier run kept state",
+or an input whose layer changed).
+
+### What makes every run full
+
+Incremental runs need every first-stage metric to be computable from **state**: running sums kept
+per group and month, which merge. A spec that can't keep state runs **full every time**: no
+incremental reruns, and all its data read and computed in one pod, so a very large evaluation may
+not fit. `plan` warns when that's so, and why:
+
+```
+warning: every run is full (no incremental reruns; all the data is read and computed in one pod,
+so very large evaluations may not fit): spearman_correlation needs every pair, not running sums
+```
+
+What causes it:
+
+- a metric that doesn't merge: `spearman_correlation`, `center_of_timing`,
+  `standard_deviation_of_timing`, `annual_peak_flow_bias`, `rank_histogram_reliability` (the
+  **Merges** column of the [metrics reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md));
+- `guards`, `reduce` windows, skill matched on observations, and some `bootstrap` settings.
+
+To get back to incremental runs, move those metrics to an evaluation of their own: the large,
+frequent one stays incremental, and the other runs full when you need it.
 
 ## Not supported in TEEHR yet
 
@@ -122,13 +257,12 @@ everything either system may run. In TEEHR, today:
 | Answering small evaluations right away, `--estimate` (VeriRace's `evaluate`) | not in TEEHR: save, then run |
 | Datasets of other projects (`<project>.<name>`) | not yet; `public.<name>` and the project's own |
 
-`plan` refuses each with a message saying so. These run, but **every run is full** (no
-incremental reruns, and all the data is read in one pod, so very large evaluations may not fit);
-`plan` warns about them:
+`plan` refuses each with a message saying so. Two more depend on them:
 
-- metrics that need every pair rather than running sums (e.g. `spearman_correlation`);
-- `guards`, `reduce` windows, and skill matched on observations;
-- some `bootstrap` settings.
+- `mean_absolute_scaled_error` (`mase`): its `scale` comes from a `naive_scale` field;
+- thresholds taken from a percentile field (`threshold: {column: q90}`).
+
+What makes every run full is [above](#what-makes-every-run-full).
 
 ## Following runs
 

@@ -10,6 +10,7 @@ docs are at `/docs` on the API's address).
 
 | Page | Read it to… |
 | --- | --- |
+| [Overview](overview.md) | See how the pieces fit together, with diagrams |
 | [Getting started](getting-started.md) | Install `teehr`, sign in, look at the data and run a first evaluation |
 | [Concepts](concepts.md) | Learn the vocabulary: projects, datasets, series, evaluations, runs, results |
 | [Uploading data](uploads.md) | Load your own CSV, Parquet or geospatial files into a project |
@@ -20,10 +21,12 @@ docs are at `/docs` on the API's address).
 
 Reference:
 
+- **Metrics:** the [metrics reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md), every metric with its parameters, unit
+  and whether it merges.
 - **The evaluation spec:** the [spec guide](https://github.com/RTIInternational/teehr-core/blob/main/docs/spec/README.md)
   and its [JSON Schema](https://github.com/RTIInternational/teehr-core/blob/main/docs/spec/evaluation-spec-v1.schema.json),
-  in `teehr-core`. The spec is shared with VeriRace, so the guide's examples sometimes use
-  `verirace` commands; the TEEHR equivalents are on [Evaluations and runs](evaluations.md).
+  in `teehr-core`. The spec is shared with VeriRace; the guide shows both systems' commands and
+  says what TEEHR doesn't support yet.
 - **Every command:** `teehr --help`, `teehr <group> --help`, `teehr <group> <command> --help`.
 - **The API:** `/docs` on the API's address, e.g. `https://control-plane.teehr.rtiamanzi.org/docs`.
 

@@ -47,8 +47,103 @@ model version, so a crosswalk for one NWM version can't silently pair another's 
 erDiagram
     TIMESERIES }o--|| SERIES_TABLE : "series_key"
     SERIES_TABLE }o--o| LAYER : "location_key"
-    CROSSWALK }o--|| SERIES_TABLE : "left_key / right_key"
+    CROSSWALK }o--|| SERIES_TABLE : "left_key"
+    CROSSWALK }o--|| SERIES_TABLE : "right_key"
+
+    TIMESERIES {
+        string series_key "required"
+        timestamp value_time "required"
+        double value "null: missing"
+        timestamp reference_time "forecasts: issue time"
+        string member "ensembles"
+        decimal quantile "probabilistic, 0 to 1"
+        string quality "the source's codes"
+    }
+    SERIES_TABLE {
+        string series_key "one row per series"
+        string location_key "where it is"
+        string location_layer "in which layer"
+        any attributes "name, drainage area, ..."
+    }
+    LAYER {
+        string location_key "e.g. the gage number"
+        string name
+        binary geometry "point, line or polygon"
+        any attributes "state, huc, ..."
+    }
+    CROSSWALK {
+        string left_key "e.g. a USGS gage's series key"
+        string right_key "e.g. its NWM reach's series key"
+    }
 ```
+
+`teehr datasets show public.usgs_streamflow` prints a dataset's metadata and columns;
+`teehr datasets read public.usgs_streamflow_series` its series.
+
+## Variables and units
+
+A **variable** is what's measured, e.g. `streamflow`, with a **canonical unit** (`m3/s`) its
+values are stored in. Values arrive in any unit that converts to it (an upload's `--unit
+'[cft_i]/s'` is converted as it's stored); one that doesn't convert is refused, so streamflow
+can't be loaded in `mm`.
+
+Units are written in [UCUM](https://ucum.org/), the standard unit codes: `m3/s`, `[cft_i]/s`
+(cubic feet per second), `mm`, `Cel` (°C), `[degF]`. An evaluation compares values in one unit:
+its `output.unit`, or the observed dataset's.
+
+```
+teehr variables list         # each variable and the unit it's stored in
+teehr units list             # every unit: its dimension and conversion to SI
+```
+
+A project can add its own variables, units and periods (`teehr variables add`, `units add`,
+`periods add`); everyone's are listed with `-p <project>`.
+
+## Periods: the time a value covers
+
+A reading covers an instant; an hourly mean covers an hour. A dataset's **period** says which:
+
+| Period | A value at `value_time` covers |
+| --- | --- |
+| `instant` | that instant |
+| `hour_starting` | the hour starting then (10:00 means 10:00 to 11:00) |
+| `hour_ending` | the hour ending then (11:00 means 10:00 to 11:00) |
+| `day_starting`, `day_ending` | the day starting or ending then |
+
+**Values pair only when they cover the same span of time.** So an hourly mean labelled by the
+hour's start pairs with one labelled by its end, and an instantaneous reading doesn't pair with
+an hourly mean at the same `value_time`. `teehr periods list` shows them all; a project can add
+its own, e.g. a season: `teehr periods add apr_jul --form absolute --start --04-01 --end --07-31`.
+
+## Layers and places
+
+A **layer** holds places with geometry: gages as points, reaches as lines, basins as polygons.
+A timeseries' series are *at* places: each series' `location_key` in its series table names its
+place in the dataset's layer (`location_layer`).
+
+That lets an evaluation work by place:
+
+- group or filter by an attribute of each series' place (`{name: state, fn: attribute,
+  attribute: state_cd, of: location}`);
+- group by the polygon each place is in (`{name: basin, fn: within, layer: huc8}`), e.g. KGE per
+  basin;
+- give results their place, to map them (`output.geometry`; see
+  [Evaluations and runs](evaluations.md#places-on-results)).
+
+## Crosswalks
+
+A **crosswalk** says which secondary series go with which primary series: `left_key` is the
+primary side (e.g. `usgs-01646500`), `right_key` the secondary (`nwm31-4512772`). A spec names it
+in `pair: {relation: public.usgs_nwm31}`. It must link the series tables of the evaluation's
+inputs; a crosswalk for other series (say NWM 3.0's) is refused when you plan:
+
+```
+pair.relation: relation 'public.usgs_nwm30' links public.usgs_streamflow_series to
+public.nwm30_short_range_series, not the primary input's series to every secondary's
+```
+
+When both sides use the same keys (your model run at the gages), `pair: {on_attribute:
+series_key}` needs no crosswalk.
 
 ## Evaluations
 
@@ -77,6 +172,19 @@ documents each step.
 
 A **run** computes one version of an evaluation as a job in the cloud, acting as you: it reads
 the data you can read, with your permissions. A version runs one at a time.
+
+```mermaid
+stateDiagram-v2
+    [*] --> queued: teehr runs start
+    queued --> running: its job starts
+    running --> succeeded
+    running --> failed: why is in error and the log
+    queued --> cancelled: teehr runs cancel
+    running --> cancelled: teehr runs cancel
+    succeeded --> [*]
+    failed --> [*]
+    cancelled --> [*]
+```
 
 Each version writes three tables in its project:
 
