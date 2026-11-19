@@ -31,6 +31,14 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # Spark downloads its packages from Maven Central at session start, which rate-limits shared runner IPs.
+      - name: Cache Spark packages
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.ivy2.5.2
+          key: spark-ivy-${{ hashFiles('src/teehr/evaluation/spark_session_utils.py') }}
+          restore-keys: spark-ivy-
+
       - name: Install Poetry
         run: pip install poetry
 
