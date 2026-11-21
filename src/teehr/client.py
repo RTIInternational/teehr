@@ -337,8 +337,9 @@ class Client:
     def create_dataset(self, project: str, body: dict[str, Any]) -> dict[str, Any]:
         """Register a dataset and make its table.
 
-        ``body["type"]`` is ``timeseries``, ``layer``, ``crosswalk`` or ``table``; the
-        rest is that kind's metadata (see the API docs, ``create_dataset``).
+        ``body["type"]`` is ``timeseries``, ``layer``, ``crosswalk``, ``table``, or a
+        derived kind (``percentiles``, ``climatology``, ``naive_scale``, with ``observed``);
+        the rest is that kind's metadata (see the API docs, ``create_dataset``).
         """
         record: dict[str, Any] = self._request(
             "POST", f"/v1/projects/{project}/datasets", json=body

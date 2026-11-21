@@ -101,6 +101,12 @@ def test_dataset_create_by_kind(api):
                                "right": "my_obs"}  # fmt: skip
     bad = run("datasets", "create", "t", "-p", "flood", "--kind", "table", "--column", "id")
     assert bad.exit_code == 2 and "NAME:TYPE" in bad.output
+    run("datasets", "create", "usgs_p", "-p", "public", "--kind", "percentiles",
+        "--observed", "usgs_streamflow")  # fmt: skip
+    assert api.sent[-1][2] == {"type": "percentiles", "name": "usgs_p",
+                               "observed": "usgs_streamflow"}  # fmt: skip
+    bad = run("datasets", "create", "c", "-p", "flood", "--kind", "climatology")
+    assert bad.exit_code == 2 and "--observed" in bad.output
 
 
 def test_dataset_write_writes_and_delete(api, tmp_path):

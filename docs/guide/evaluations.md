@@ -251,17 +251,45 @@ everything either system may run. In TEEHR, today:
 
 | Feature | Status |
 | --- | --- |
-| `generate: climatology`, `generate: blend` inputs | **refused:** need a climatology dataset, which TEEHR can't make yet ([#251](https://github.com/RTIInternational/teehr-cloud-core/issues/251)) |
-| `fn: percentile` field (`from:` a percentiles dataset) | **refused:** needs a percentiles dataset (#251) |
-| `fn: naive_scale` field (for MASE) | **refused:** needs a naive_scale dataset (#251) |
+| `generate: climatology`, `generate: blend` inputs | supported, from a `climatology` dataset ([below](#datasets-derived-from-observations)) |
+| `fn: percentile` field (`from:` a percentiles dataset) | supported, from a `percentiles` dataset |
+| `fn: naive_scale` field (for MASE) | supported, from a `naive_scale` dataset |
 | `generate: persistence` | supported |
 | Answering small evaluations right away, `--estimate` (VeriRace's `evaluate`) | not in TEEHR: save, then run |
 | Datasets of other projects (`<project>.<name>`) | not yet; `public.<name>` and the project's own |
 
-`plan` refuses each with a message saying so. Two more depend on them:
+`plan` refuses the unsupported ones with a message saying so.
 
-- `mean_absolute_scaled_error` (`mase`): its `scale` comes from a `naive_scale` field;
-- thresholds taken from a percentile field (`threshold: {column: q90}`).
+### Datasets derived from observations
+
+Climatology, percentile thresholds and MASE's scale come from datasets built from an observed
+timeseries' whole record: `climatology` (mean per series, day of year and hour), `percentiles`
+(each series' values at fixed percentiles; the 90th is the value not exceeded 90% of the time)
+and `naive_scale` (each series' mean absolute change over a lag). They're built by scheduled
+flows, usually monthly, and replaced whole; `public` has them for its observations as they're
+built, named `<observed>_<kind>`, e.g. `public.usgs_streamflow_percentiles`:
+
+```
+teehr datasets list -p public                     # what's built
+teehr datasets show usgs_streamflow_percentiles -p public
+```
+
+A spec names them in `from:`:
+
+```yaml
+fields:
+  - {name: q90, fn: percentile, from: public.usgs_streamflow_percentiles, percentile: 90}
+aggregate:
+  - group_by: [primary_series_key]
+    metrics:
+      - {name: pod, threshold: {column: q90}}
+```
+
+To register one for your own observations, `teehr datasets create <name> -p <project> --kind
+percentiles --observed <timeseries>`; it's empty until a build fills it (builds run as flows on
+the platform; ask the platform team).
+
+A spec that uses one runs in full each time (the datasets aren't per month).
 
 What makes every run full is [above](#what-makes-every-run-full).
 

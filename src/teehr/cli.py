@@ -1140,12 +1140,20 @@ def _columns(items: list[str] | None, flag: str) -> list[dict[str, Any]]:
     return out
 
 
+#: Datasets derived from an observed timeseries, filled by build flows (ADR-0019).
+DERIVED_KINDS = ("percentiles", "climatology", "naive_scale")
+
+
 @datasets.command("create")
 def datasets_create(
     name: str,
     project: ProjectOpt,
     kind: Annotated[
-        str, typer.Option(help="timeseries, layer, crosswalk or table (table: platform admins).")
+        str,
+        typer.Option(
+            help="timeseries, layer, crosswalk, table (platform admins), or a dataset derived "
+            "from observations: percentiles, climatology or naive_scale."
+        ),
     ],
     role: RoleOpt = None,
     variable: VariableOpt = None,
@@ -1174,6 +1182,10 @@ def datasets_create(
         ),
     ] = None,
     key: Annotated[str | None, typer.Option(help="Table: comma-separated key columns.")] = None,
+    observed: Annotated[
+        str | None,
+        typer.Option(help="percentiles, climatology, naive_scale: the observed timeseries."),
+    ] = None,
     source: SourceOpt = None,
     description: DescriptionOpt = None,
 ) -> None:
@@ -1193,8 +1205,16 @@ def datasets_create(
     elif kind == "table":
         body |= {"columns": cols, "key_columns": key.split(",") if key else None}
         body.pop("source")
+    elif kind in DERIVED_KINDS:
+        if not observed:
+            raise typer.BadParameter(f"a {kind} dataset needs --observed", param_hint="--observed")
+        body |= {"observed": observed}
+        body.pop("source")
     else:
-        raise typer.BadParameter("timeseries, layer, crosswalk or table", param_hint="--kind")
+        raise typer.BadParameter(
+            "timeseries, layer, crosswalk, table, percentiles, climatology or naive_scale",
+            param_hint="--kind",
+        )
     record = state.api().create_dataset(project, {k: v for k, v in body.items() if v is not None})
     shown = ("name", "kind", "table", "key_columns", "description")
     emit(record if state.output == Output.JSON else {k: record.get(k) for k in shown})
