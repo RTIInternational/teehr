@@ -409,6 +409,42 @@ def members_remove(user: str, project: ProjectOpt, yes: YesOpt = False) -> None:
     notes.print(f"Removed {user} from {project}", style="green")
 
 
+# -- metrics --------------------------------------------------------------------------
+
+
+@app.command("metrics")
+def metrics_cmd(
+    name: Annotated[
+        str | None, typer.Argument(help="One metric, by name or alias: everything about it.")
+    ] = None,
+    family: Annotated[
+        str | None, typer.Option(help="Only this family, e.g. efficiency, contingency.")
+    ] = None,
+) -> None:
+    """List the metrics a spec can name (the metrics reference, from the registry)."""
+    rows = state.api().list_metrics()
+    if name is not None:
+        found = next((m for m in rows if name == m["name"] or name in m["aliases"]), None)
+        if found is None:
+            raise typer.BadParameter(f"no metric {name!r}; `teehr metrics` lists them")
+        emit(found, ["name", "aliases", "family", "description", "parameters", "required",
+                     "reads", "unit", "merges", "available", "note"])  # fmt: skip
+        return
+    if family is not None:
+        rows = [m for m in rows if m["family"] == family]
+    if state.output != Output.JSON:
+        for m in rows:
+            m["aliases"] = ", ".join(m["aliases"])
+            m["parameters"] = ", ".join(
+                f"{p}*" if p in m["required"] else p for p in m["parameters"]
+            )
+            m["available"] = "yes" if m["available"] else "no (see `teehr metrics NAME`)"
+    emit(rows, None if state.output == Output.JSON else
+         ["name", "aliases", "family", "parameters", "unit", "merges", "available"])  # fmt: skip
+    if state.output == Output.TABLE:
+        notes.print("* required. `teehr metrics NAME` shows a metric's definition.")
+
+
 # -- units, periods, variables ---------------------------------------------------------
 
 DomainProjectOpt = Annotated[

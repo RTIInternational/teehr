@@ -347,6 +347,21 @@ class FakeAPI:
                 return httpx.Response(200, json=member)
             self.members.remove(member)
             return httpx.Response(204)
+        if path == "/v1/domains/metrics":
+            return httpx.Response(200, json=[
+                {"name": "kling_gupta_efficiency", "aliases": ["kge"], "family": "efficiency",
+                 "description": "Kling-Gupta efficiency", "parameters": ["sa", "sb", "sr"],
+                 "required": [], "reads": [], "output": "float", "unit": "ratio",
+                 "merges": True, "available": True, "note": None},
+                {"name": "hits", "aliases": [], "family": "contingency",
+                 "description": "Pairs where obs and pred are events", "parameters": ["threshold"],
+                 "required": ["threshold"], "reads": [], "output": "int", "unit": "invariant",
+                 "merges": True, "available": True, "note": None},
+                {"name": "mean_absolute_scaled_error", "aliases": ["mase"], "family": "relative",
+                 "description": "MASE", "parameters": ["scale"], "required": ["scale"],
+                 "reads": [], "output": "float", "unit": "invariant", "merges": True,
+                 "available": False, "note": "needs a derived dataset (#251)"},
+            ])  # fmt: skip
         if parts[:2] == ["v1", "domains"]:
             self.sent.append((method, path, body))
             if method == "POST":

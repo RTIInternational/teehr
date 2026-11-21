@@ -164,7 +164,9 @@ Bob can now read the evaluation and its results: `teehr runs results <run id> -p
 ## Next
 
 - [Concepts](concepts.md): what projects, datasets, evaluations and runs are.
-- The [metrics reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md): every metric you can ask for.
+- `teehr metrics`, and the [metrics
+  reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md): every
+  metric you can ask for.
 - The API docs at `/docs` on the API's address: every request, to try in the browser (sign in
   with **Authorize**, pasting a personal token).
 - [Uploading data](uploads.md): evaluate your own data.

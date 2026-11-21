@@ -86,7 +86,8 @@ metrics:
   - {name: kge, sr: 1, sa: 0.5, sb: 0.5, as: kge_weighted}
 ```
 
-The [metrics reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md) lists every metric: its aliases, definition, parameters
+`teehr metrics` lists every metric (`teehr metrics kge` shows one in full), as does the [metrics
+reference](https://github.com/RTIInternational/teehr-core/blob/main/docs/metrics.md): its aliases, definition, parameters
 (e.g. `threshold` for the contingency metrics, required), the unit of its result, and whether it
 **merges** (see [rerunning](#rerunning-as-data-arrives)).
 

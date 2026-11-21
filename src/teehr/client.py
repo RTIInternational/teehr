@@ -685,6 +685,15 @@ class Client:
 
     # --- domains: units, periods, variables ------------------------------------------
 
+    def list_metrics(self) -> list[dict[str, Any]]:
+        """List every metric a spec can name.
+
+        Each has its aliases, definition, parameters, result unit, whether it merges
+        from state, and whether TEEHR can run it today.
+        """
+        metrics: list[dict[str, Any]] = self._request("GET", "/v1/domains/metrics").json()
+        return metrics
+
     def list_domain(self, kind: str, project: str | None = None) -> list[dict[str, Any]]:
         """List ``units``, ``periods`` or ``variables``: the public ones, and a project's own."""
         params = {"project": project} if project else None

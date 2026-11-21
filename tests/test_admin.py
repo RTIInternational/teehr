@@ -122,3 +122,16 @@ def test_dataset_write_writes_and_delete(api, tmp_path):
     assert "upsert" in run("datasets", "writes", "my_obs", "-p", "flood").output
     assert run("datasets", "delete", "my_obs", "-p", "flood", "-y").exit_code == 0
     assert api.sent[-1][:2] == ("DELETE", "/v1/projects/flood/datasets/my_obs")
+
+
+def test_metrics(api):
+    login()
+    listed = runner.invoke(app, ["metrics"], env={"COLUMNS": "200"})
+    assert listed.exit_code == 0, listed.output
+    assert "kling_gupta_efficiency" in listed.output and "threshold*" in listed.output
+    assert "no (see `teehr metrics NAME`)" in listed.output
+    one = run("metrics", "mase")  # an alias
+    assert "mean_absolute_scaled_error" in one.output and "#251" in one.output
+    only = run("-o", "json", "metrics", "--family", "contingency")
+    assert [m["name"] for m in json.loads(only.stdout)] == ["hits"]
+    assert run("metrics", "nope").exit_code == 2
