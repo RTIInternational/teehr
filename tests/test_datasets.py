@@ -50,6 +50,27 @@ def test_read_writes_every_row_to_a_file(api, tmp_path):
     assert pacsv.read_csv(csv_out).num_rows == 10
 
 
+def test_a_layer_reads_with_its_geometry(api, tmp_path):
+    run("--api", API, "auth", "login")
+    printed = run("datasets", "read", "public.gauges")
+    assert printed.exit_code == 0, printed.output
+    assert "POINT (-69.7156 46.7006)" in printed.output
+    rows = json.loads(run("-o", "json", "datasets", "read", "gauges").stdout)
+    assert rows[1]["geometry"] == "POINT (-69.7517 46.8939)"
+    csv_out = tmp_path / "g.csv"
+    run("datasets", "read", "gauges", "--out", str(csv_out))
+    assert pacsv.read_csv(csv_out)["geometry"][0].as_py() == "POINT (-69.7156 46.7006)"
+    out = tmp_path / "g.parquet"
+    run("datasets", "read", "gauges", "--out", str(out))
+    table = pq.read_table(out)
+    assert table["geometry"].type == "binary"  # WKB kept
+    assert json.loads(table.schema.metadata[b"geo"])["columns"]["geometry"] == {
+        "encoding": "WKB",
+        "geometry_types": ["Point"],
+        "bbox": [-69.7517, 46.7006, -69.7156, 46.8939],
+    }
+
+
 def test_list_and_show(api):
     run("--api", API, "auth", "login")
     assert "results_kge_v1" in run("datasets", "list", "-p", "flood").output
@@ -83,13 +104,18 @@ def test_run_results_with_places(api, tmp_path):
     spec.write_text(yaml.safe_dump({"inputs": {}}))
     run("evaluations", "save", "kge", str(spec), "-p", "flood")
     started = json.loads(run("-o", "json", "runs", "start", "kge", "-p", "flood", "--wait").stdout)
-    # Printed: no raw geometry bytes.
-    printed = run("runs", "results", started["id"], "-p", "flood", "-n", "2")
-    assert printed.exit_code == 0 and "bytes>" not in printed.output
-    # Parquet keeps the geometry column.
+    # JSON: geometry as WKT, not bytes.
+    rows = json.loads(run("-o", "json", "runs", "results", started["id"], "-p", "flood",
+                          "-n", "1").stdout)  # fmt: skip
+    assert rows[0]["geometry"] == "POINT (0 0)"
+    # Parquet keeps the geometry column, as GeoParquet.
     out = tmp_path / "r.parquet"
     run("runs", "results", started["id"], "-p", "flood", "--out", str(out))
-    assert "geometry" in pq.read_table(out).column_names
+    table = pq.read_table(out)
+    assert "geometry" in table.column_names
+    geo = json.loads(table.schema.metadata[b"geo"])
+    assert geo["primary_column"] == "geometry"
+    assert geo["columns"]["geometry"]["geometry_types"] == ["Point"]
     # GeoJSON: a feature collection.
     geo = tmp_path / "r.geojson"
     result = run("runs", "results", started["id"], "-p", "flood", "--out", str(geo))

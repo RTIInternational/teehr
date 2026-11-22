@@ -28,7 +28,7 @@ from rich.console import Console
 from rich.markup import escape
 from rich.table import Table
 
-from teehr import __version__, config
+from teehr import __version__, config, wkb
 from teehr.client import Client, NotSignedIn, TeehrError
 from teehr.login import sign_in
 
@@ -1063,20 +1063,20 @@ def _read(
             style="yellow",
         )
     if out is None:
-        if "geometry" in table.column_names and state.output != Output.JSON:
-            table = table.drop_columns(["geometry"])  # bytes; --out keeps it
+        # Geometry printed as WKT (in a table, cut short: --out for all of it).
+        table = wkb.with_wkt(table, 60 if state.output == Output.TABLE else None)
         emit(table.to_pylist(), table.column_names)
         return
     suffix = out.suffix.lower()
     if suffix == ".parquet":
-        pq.write_table(table, out, compression="zstd")
+        pq.write_table(wkb.with_geoparquet(table), out, compression="zstd")
     elif suffix == ".geojson":
         raise typer.BadParameter(
             ".geojson is for run results with output.geometry (teehr runs results)",
             param_hint="--out",
         )
     elif suffix == ".csv":
-        pacsv.write_csv(table, out)
+        pacsv.write_csv(wkb.with_wkt(table), out)
     elif suffix in (".arrow", ".feather"):
         with pa.OSFile(str(out), "wb") as sink, pa.ipc.new_file(sink, table.schema) as w:
             w.write_table(table)

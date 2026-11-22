@@ -2,6 +2,7 @@
 CLI pointed at it with its config in a temporary directory."""
 
 import json
+import struct
 import uuid
 from typing import ClassVar
 
@@ -263,6 +264,15 @@ class FakeAPI:
         "kge": [i / 250 for i in range(250)],
     })  # fmt: skip
 
+    #: A layer: WKB points with their bounds, as the API serves them.
+    GAUGES = pa.table({
+        "location_key": ["usgs-01010000", "usgs-01010070"],
+        "geometry": pa.array([struct.pack("<BIdd", 1, 1, -69.7156, 46.7006),
+                              struct.pack("<BIdd", 1, 1, -69.7517, 46.8939)], pa.binary()),
+        "bbox_xmin": [-69.7156, -69.7517], "bbox_ymin": [46.7006, 46.8939],
+        "bbox_xmax": [-69.7156, -69.7517], "bbox_ymax": [46.7006, 46.8939],
+    })  # fmt: skip
+
     def _datasets(self, request, method, path):
         project, _, rest = path.removeprefix("/v1/projects/").partition("/datasets")
         if rest == "":
@@ -271,6 +281,8 @@ class FakeAPI:
                  "created_at": "2026-11-19T00:00:00Z"}
             ])  # fmt: skip
         name, _, action = rest.strip("/").partition("/")
+        if (project, name, action) == ("public", "gauges", "data"):
+            return self._arrow_page(request, self.GAUGES)
         if name != "results_kge_v1" or project != "flood":
             return httpx.Response(404, json={"detail": f"No dataset '{name}'"})
         if action == "":
