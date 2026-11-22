@@ -1065,6 +1065,9 @@ def _read(
     if out is None:
         # Geometry printed as WKT (in a table, cut short: --out for all of it).
         table = wkb.with_wkt(table, 60 if state.output == Output.TABLE else None)
+        if state.output == Output.TABLE and columns is None:
+            # A layer's bounds just repeat its geometry; --columns can still ask.
+            table = table.drop_columns([c for c in wkb.BBOX if c in table.column_names])
         emit(table.to_pylist(), table.column_names)
         return
     suffix = out.suffix.lower()

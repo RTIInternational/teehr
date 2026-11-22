@@ -55,8 +55,11 @@ def test_a_layer_reads_with_its_geometry(api, tmp_path):
     printed = run("datasets", "read", "public.gauges")
     assert printed.exit_code == 0, printed.output
     assert "POINT (-69.7156 46.7006)" in printed.output
+    assert "bbox_xmin" not in printed.output  # bounds left out of the table
+    asked = run("datasets", "read", "gauges", "-c", "location_key,bbox_xmin").output
+    assert "bbox_xmin" in asked  # unless asked for
     rows = json.loads(run("-o", "json", "datasets", "read", "gauges").stdout)
-    assert rows[1]["geometry"] == "POINT (-69.7517 46.8939)"
+    assert rows[1]["geometry"] == "POINT (-69.7517 46.8939)" and "bbox_xmin" in rows[1]
     csv_out = tmp_path / "g.csv"
     run("datasets", "read", "gauges", "--out", str(csv_out))
     assert pacsv.read_csv(csv_out)["geometry"][0].as_py() == "POINT (-69.7156 46.7006)"

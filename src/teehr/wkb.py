@@ -22,6 +22,9 @@ _TYPES = {
 }
 _EWKB_Z, _EWKB_M, _EWKB_SRID = 0x80000000, 0x40000000, 0x20000000
 
+#: A layer's bounds columns, computed from its geometry on write.
+BBOX = ("bbox_xmin", "bbox_ymin", "bbox_xmax", "bbox_ymax")
+
 
 class _Reader:
     def __init__(self, data: bytes) -> None:
@@ -128,11 +131,10 @@ def with_geoparquet(table: pa.Table) -> pa.Table:
         "encoding": "WKB",
         "geometry_types": sorted({geometry_type(v) for v in values}),
     }
-    bounds = ("bbox_xmin", "bbox_ymin", "bbox_xmax", "bbox_ymax")
-    if values and all(b in table.column_names for b in bounds):
+    if values and all(b in table.column_names for b in BBOX):
         import pyarrow.compute as pc
 
-        xmin, ymin, xmax, ymax = (table[b] for b in bounds)
+        xmin, ymin, xmax, ymax = (table[b] for b in BBOX)
         column["bbox"] = [
             pc.min(xmin).as_py(), pc.min(ymin).as_py(), pc.max(xmax).as_py(), pc.max(ymax).as_py()
         ]  # fmt: skip
