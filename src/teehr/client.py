@@ -346,6 +346,15 @@ class Client:
         ).json()
         return record
 
+    def update_dataset(self, project: str, dataset: str, description: str) -> dict[str, Any]:
+        """Change a dataset's description (writers)."""
+        record: dict[str, Any] = self._request(
+            "PATCH",
+            f"/v1/projects/{project}/datasets/{dataset}",
+            json={"description": description},
+        ).json()
+        return record
+
     def delete_dataset(self, project: str, dataset: str) -> None:
         """Delete a dataset and its table."""
         self._request("DELETE", f"/v1/projects/{project}/datasets/{dataset}")

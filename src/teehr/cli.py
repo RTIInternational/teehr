@@ -1099,7 +1099,8 @@ def datasets_show(name: str, project: DataProjectOpt = "public") -> None:
     if state.output == Output.JSON:
         emit(record)
         return
-    meta = record.get("timeseries") or record.get("layer") or record.get("crosswalk") or {}
+    meta = (record.get("timeseries") or record.get("layer") or record.get("crosswalk")
+            or record.get("derived") or {})  # fmt: skip
     emit(
         {"name": record["name"], "kind": record["kind"], "table": record.get("table"),
          "key": record.get("key_columns"), "description": record.get("description"), **meta},
@@ -1218,6 +1219,17 @@ def datasets_create(
     record = state.api().create_dataset(project, {k: v for k, v in body.items() if v is not None})
     shown = ("name", "kind", "table", "key_columns", "description")
     emit(record if state.output == Output.JSON else {k: record.get(k) for k in shown})
+
+
+@datasets.command("update")
+def datasets_update(
+    name: str,
+    project: ProjectOpt,
+    description: Annotated[str, typer.Option(help="What the dataset is.")],
+) -> None:
+    """Change a dataset's description (its data is untouched)."""
+    record = state.api().update_dataset(project, name, description)
+    emit({"name": record["name"], "description": record.get("description")})
 
 
 @datasets.command("delete")

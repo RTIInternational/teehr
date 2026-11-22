@@ -371,12 +371,14 @@ class FakeAPI:
                       "name": "streamflow", "canonical_unit": "m3/s"}  # fmt: skip
             return httpx.Response(200, json=[public])
         if parts[3:4] == ["datasets"] and (
-            (method == "POST" and len(parts) == 4) or method == "DELETE"
+            (method == "POST" and len(parts) == 4) or method in ("PATCH", "DELETE")
             or (method == "POST" and parts[5:] == ["data"]) or parts[5:] == ["writes"]
         ):  # fmt: skip
             self.sent.append((method, path, body))
             if method == "DELETE":
                 return httpx.Response(204)
+            if method == "PATCH":
+                return httpx.Response(200, json={"name": parts[4], **body})
             if parts[5:] == ["data"]:
                 return httpx.Response(201, json={
                     "id": "w1", "mode": request.url.params.get("mode", "upsert"), "filter": None,

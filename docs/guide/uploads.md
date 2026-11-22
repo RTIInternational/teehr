@@ -220,6 +220,7 @@ teehr datasets write my_obs rows.csv -p my_project --unit '[cft_i]/s'
 
 `datasets write` takes `.csv`, `.parquet`, `.json` or `.arrow`, up to 64 MiB, written in one
 commit (`--mode upsert|append|overwrite`). Uploads are for anything larger, or that needs mapping.
+`teehr datasets update <name> -p <project> --description "..."` changes a dataset's description;
 `teehr datasets delete` removes a dataset and its data.
 
 ## Following uploads

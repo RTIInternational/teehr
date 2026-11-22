@@ -126,6 +126,10 @@ def test_dataset_write_writes_and_delete(api, tmp_path):
     )
     assert json.loads(result.stdout)["rows"] == 2
     assert "upsert" in run("datasets", "writes", "my_obs", "-p", "flood").output
+    updated = run("datasets", "update", "my_obs", "-p", "flood", "--description", "gauge obs")
+    assert updated.exit_code == 0 and "gauge obs" in updated.output
+    assert api.sent[-1] == ("PATCH", "/v1/projects/flood/datasets/my_obs",
+                            {"description": "gauge obs"})  # fmt: skip
     assert run("datasets", "delete", "my_obs", "-p", "flood", "-y").exit_code == 0
     assert api.sent[-1][:2] == ("DELETE", "/v1/projects/flood/datasets/my_obs")
 
