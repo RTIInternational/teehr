@@ -145,6 +145,15 @@ class Client:
                 raise NotSignedIn(self.api_url)
             headers["Authorization"] = f"Bearer {self.token}"
         resp = self._http.request(method, f"{self.api_url}{path}", headers=headers, **kwargs)
+        if resp.is_redirect:
+            # Not followed: a redirect can drop the token or turn a POST into a GET.
+            # Usually http:// sent to https://.
+            location = resp.headers.get("Location", "")
+            moved = location.removesuffix(path.split("?")[0]) if location else "elsewhere"
+            raise TeehrError(
+                resp.status_code,
+                f"{self.api_url} redirects to {moved}: use that as the API URL (--api)",
+            )
         if resp.status_code >= 400:
             detail = _detail(resp)
             if resp.status_code == 404 and detail == "Not Found":

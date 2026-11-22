@@ -1,6 +1,8 @@
+import httpx
 import pytest
 
 from teehr import Client
+from teehr.client import TeehrError
 from teehr.login import SignInFailed, sign_in
 from tests.conftest import API
 
@@ -23,3 +25,17 @@ def test_sign_in_gives_up_when_not_approved(api):
         sign_in(Client(API), "nb", show=lambda _: None, open_browser=False,
                 sleep=sleep, clock=lambda: now[0])  # fmt: skip
     assert not api.approved
+
+
+def test_an_http_url_that_redirects_says_which_url_to_use():
+    def handle(request):
+        url = str(request.url).replace("http://", "https://")
+        return httpx.Response(301, headers={"Location": url})
+
+    http = httpx.Client(transport=httpx.MockTransport(handle))
+    with pytest.raises(TeehrError) as caught:
+        Client("http://cp.example", http=http).start_sign_in("nb")
+    assert caught.value.status == 301
+    assert caught.value.detail == (
+        "http://cp.example redirects to https://cp.example: use that as the API URL (--api)"
+    )
