@@ -73,6 +73,31 @@ def _given(**values: Any) -> dict[str, Any]:
     return {k: v for k, v in values.items() if v is not None}
 
 
+#: Where a read's table says its unit (schema metadata): see :func:`unit_of`.
+UNIT_KEY = b"teehr.unit"
+
+
+def unit_of(table: pa.Table) -> str | None:
+    """Return the unit a read's values are in, as the API said (None: not said)."""
+    raw = (table.schema.metadata or {}).get(UNIT_KEY)
+    return raw.decode() if raw else None
+
+
+def _said_unit(resp: httpx.Response, asked: str | None) -> str | None:
+    """Return the unit a read's response says it's in.
+
+    Raises :class:`TeehrError` if it isn't the one asked for: an API from before units
+    on reads ignores ``unit``.
+    """
+    said: str | None = resp.headers.get("X-Unit")
+    if asked is not None and said != asked:
+        raise TeehrError(
+            501, f"this API doesn't convert to '{asked}' (it says {said or 'no unit'}); "
+            "it may predate units on reads",
+        )  # fmt: skip
+    return said
+
+
 def _detail(resp: httpx.Response) -> str:
     try:
         body = resp.json()
@@ -201,6 +226,16 @@ class Client:
             return Pending(slow_down=bool(resp.json().get("slow_down")))
         made: dict[str, Any] = resp.json()
         return made
+
+    # --- who you are ---------------------------------------------------------------
+
+    def me(self) -> dict[str, Any]:
+        """Return who you're signed in as (``GET /v1/me``).
+
+        Your platform roles, project memberships and the personal token used.
+        """
+        me: dict[str, Any] = self._request("GET", "/v1/me").json()
+        return me
 
     # --- personal tokens -----------------------------------------------------------
 
@@ -415,8 +450,12 @@ class Client:
         columns: list[str] | None = None,
         filter: str | None = None,
         limit: int | None = None,
+        unit: str | None = None,
     ) -> pa.Table:
         """Read a dataset's rows (all, or the first ``limit``) as an Arrow table.
+
+        ``unit`` (a timeseries; UCUM, e.g. ``"[cft_i]/s"``): ``value`` converted to it,
+        and ``filter``'s numbers read in it. The table's unit is :func:`unit_of` it.
 
         An evaluation's results table holds every run's rows (``run_id`` says which);
         :meth:`run_results` reads one run's.
@@ -426,8 +465,9 @@ class Client:
         one snapshot, so writes landing meanwhile don't shift them.
         """
         return self._pages(
-            f"/v1/projects/{project}/datasets/{dataset}/data", columns, filter, limit
-        )
+            f"/v1/projects/{project}/datasets/{dataset}/data", columns, filter, limit,
+            unit=unit,
+        )  # fmt: skip
 
     def _pages(
         self,
@@ -436,15 +476,16 @@ class Client:
         filter: str | None,
         limit: int | None,
         extra: dict[str, Any] | None = None,
+        unit: str | None = None,
     ) -> pa.Table:
         """Read a paged table route in Arrow, following its cursor."""
-        params: dict[str, Any] = dict(extra or {})
+        params: dict[str, Any] = {**(extra or {}), **_given(unit=unit)}
         if columns:
             params["columns"] = ",".join(columns)
         if filter:
             params["filter"] = filter
         batches: list[pa.Table] = []
-        got, cursor = 0, None
+        got, cursor, said = 0, None, None
         while limit is None or got < limit:
             page = READ_PAGE_ROWS if limit is None else min(READ_PAGE_ROWS, limit - got)
             resp = self._request(
@@ -453,6 +494,7 @@ class Client:
                 params={**params, "limit": page, **({"cursor": cursor} if cursor else {})},
                 headers={"Accept": ARROW},
             )
+            said = _said_unit(resp, unit)
             table = pa.ipc.open_stream(resp.content).read_all()
             batches.append(table)
             got += table.num_rows
@@ -461,7 +503,12 @@ class Client:
                 break
         if not batches:
             return pa.table({})
-        return pa.concat_tables(batches, promote_options="default")
+        table = pa.concat_tables(batches, promote_options="default")
+        if said:
+            table = table.replace_schema_metadata(
+                {**(table.schema.metadata or {}), UNIT_KEY: said.encode()}
+            )
+        return table
 
     # --- evaluations and runs --------------------------------------------------------
 
@@ -554,8 +601,13 @@ class Client:
         filter: str | None = None,
         limit: int | None = None,
         geometry: bool = True,
+        unit: str | None = None,
     ) -> pa.Table:
         """Read a succeeded run's results as an Arrow table.
+
+        ``unit``: the results converted from the evaluation unit, each metric as its
+        kind converts (errors by scale, ratios unchanged); a metric that can't be
+        (a ratio across an offset) raises :class:`TeehrError` naming it.
 
         A version's results table keeps every run's rows; this reads this run's. With
         ``output.geometry`` in the spec, rows get a ``geometry`` column (WKB) and the
@@ -563,7 +615,7 @@ class Client:
         """
         return self._pages(
             f"/v1/projects/{project}/runs/{run_id}/results", columns, filter, limit,
-            None if geometry else {"geometry": "false"},
+            None if geometry else {"geometry": "false"}, unit=unit,
         )  # fmt: skip
 
     def run_results_geojson(
@@ -573,9 +625,10 @@ class Client:
         *,
         filter: str | None = None,
         limit: int | None = None,
+        unit: str | None = None,
     ) -> dict[str, Any]:
         """Read a run's results as one GeoJSON feature collection (``output.geometry``)."""
-        params: dict[str, Any] = _given(filter=filter)
+        params: dict[str, Any] = _given(filter=filter, unit=unit)
         features: list[dict[str, Any]] = []
         cursor = None
         while limit is None or len(features) < limit:
@@ -586,6 +639,7 @@ class Client:
                 params={**params, "limit": page, **({"cursor": cursor} if cursor else {})},
                 headers={"Accept": "application/geo+json"},
             )
+            _said_unit(resp, unit)
             features += resp.json()["features"]
             cursor = resp.headers.get("X-Next-Cursor")
             if not cursor:

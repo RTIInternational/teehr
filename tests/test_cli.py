@@ -40,6 +40,18 @@ def test_status_projects_and_tokens_use_the_saved_token(api):
     assert Client.from_config().list_projects()[0]["name"] == "flood"
 
 
+def test_status_shows_platform_roles_and_memberships(api):
+    run("--api", API, "auth", "login", "--name", "laptop")
+    status = run("auth", "status")
+    assert status.exit_code == 0, status.output
+    assert "can create projects" in status.output and "flood" in status.output
+    as_json = json.loads(run("-o", "json", "auth", "status").stdout)
+    assert as_json["me"]["projects"] == [{"project": "flood", "role": "admin"}]
+    api.no_me = True  # an API from before /v1/me: the token alone
+    older = run("auth", "status")
+    assert older.exit_code == 0 and "laptop" in older.output
+
+
 def test_read_only_and_project_limits_are_asked_for(api):
     run("--api", API, "auth", "login", "--read-only", "--project", "flood", "--days", "7")
     assert api.started[-1] == {"name": api.started[-1]["name"], "scopes": ["read"],

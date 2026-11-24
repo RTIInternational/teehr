@@ -128,3 +128,22 @@ def test_run_results_with_places(api, tmp_path):
     # --no-geometry asks the API to leave places out.
     run("runs", "results", started["id"], "-p", "flood", "--no-geometry", "-n", "1")
     assert api.geometry_asked == "false"
+
+
+def test_read_in_another_unit_says_so(api):
+    run("--api", API, "auth", "login")
+    result = run("datasets", "read", "results_kge_v1", "-p", "flood", "-n", "2",
+                 "--unit", "[cft_i]/s")  # fmt: skip
+    assert result.exit_code == 0, result.output
+    assert api.unit_asked == "[cft_i]/s" and "values in [cft_i]/s" in result.output
+    table = Client.from_config().read("flood", "results_kge_v1", limit=5, unit="L/s")
+    from teehr import unit_of
+
+    assert unit_of(table) == "L/s"
+
+
+def test_an_api_that_ignores_unit_is_refused_not_trusted(api):
+    run("--api", API, "auth", "login")
+    api.ignores_units = True
+    result = run("datasets", "read", "results_kge_v1", "-p", "flood", "--unit", "L/s")
+    assert result.exit_code != 0 and "doesn't convert to 'L/s'" in str(result.exception)

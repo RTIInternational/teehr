@@ -85,6 +85,13 @@ class FakeAPI:
                     t["revoked_at"] = "2026-11-19T01:00:00Z"
                     return httpx.Response(204)
             return httpx.Response(404, json={"detail": "No such token"})
+        if (method, path) == ("GET", "/v1/me") and not getattr(self, "no_me", False):
+            return httpx.Response(200, json={
+                "subject": "sub-alice", "username": "alice",
+                "platform": {"admin": False, "viewer": False, "can_create_projects": True},
+                "projects": [{"project": "flood", "role": "admin"}],
+                "token": {**me, "id": me["id"]},
+            })  # fmt: skip
         admin = self._admin(request, method, path)
         if admin is not None:
             return admin
@@ -312,6 +319,9 @@ class FakeAPI:
         headers = {}
         if offset + page < table.num_rows:
             headers["X-Next-Cursor"] = str(offset + page)
+        if params.get("unit") and not getattr(self, "ignores_units", False):
+            headers["X-Unit"] = params["unit"]  # (values left as they are: a fake)
+        self.unit_asked = params.get("unit")
         self.reads = getattr(self, "reads", 0) + 1
         return httpx.Response(200, content=sink.getvalue().to_pybytes(), headers=headers)
 

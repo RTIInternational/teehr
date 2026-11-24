@@ -2,11 +2,11 @@
 
 from importlib.metadata import PackageNotFoundError, version
 
-from teehr.client import Client, NotSignedIn, TeehrError
+from teehr.client import Client, NotSignedIn, TeehrError, unit_of
 
 try:
     __version__ = version("teehr")
 except PackageNotFoundError:  # running from a checkout
     __version__ = "0+unknown"
 
-__all__ = ["Client", "NotSignedIn", "TeehrError", "__version__"]
+__all__ = ["Client", "NotSignedIn", "TeehrError", "__version__", "unit_of"]

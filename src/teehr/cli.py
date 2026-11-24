@@ -29,7 +29,7 @@ from rich.markup import escape
 from rich.table import Table
 
 from teehr import __version__, config, wkb
-from teehr.client import Client, NotSignedIn, TeehrError
+from teehr.client import Client, NotSignedIn, TeehrError, unit_of
 from teehr.login import sign_in
 
 app = typer.Typer(help="TEEHR Cloud from the terminal.", no_args_is_help=True)
@@ -259,16 +259,33 @@ def auth_login(
 
 @auth.command("status")
 def auth_status() -> None:
-    """Show who you're signed in as, and with which token."""
+    """Show who you're signed in as, with which token, and what you can do."""
     client = state.api()
+    try:
+        me = client.me()
+    except TeehrError as exc:
+        if exc.status != 404:  # an API from before /v1/me: the token alone
+            raise
+        me = None
     current = client.current_token()
+    if state.output == Output.JSON:
+        emit({"api": client.api_url, "token": current, "me": me})
+        return
     if current is None:
         notes.print(f"Signed in to {client.api_url}, not with a personal token")
-        return
-    emit(
-        {"api": client.api_url, **current},
-        ["api", "username", "name", "hint", "scopes", "projects", "expires_at"],
-    )
+    else:
+        emit(
+            {"api": client.api_url, **current},
+            ["api", "username", "name", "hint", "scopes", "projects", "expires_at"],
+        )
+    if me is not None:
+        platform = me["platform"]
+        roles = [r for r in ("admin", "viewer") if platform.get(r)]
+        notes.print(
+            f"platform: {', '.join(roles) or 'member'}; "
+            f"{'can' if platform.get('can_create_projects') else 'cannot'} create projects"
+        )
+        emit(me["projects"], ["project", "role"])
 
 
 @auth.command("logout")
@@ -553,6 +570,14 @@ RoleOpt = Annotated[str | None, typer.Option(help="New timeseries: observed, sim
 VariableOpt = Annotated[str | None, typer.Option(help="New timeseries: e.g. streamflow.")]
 UnitOpt = Annotated[
     str | None, typer.Option(help="Unit of the file's values (UCUM, e.g. '[cft_i]/s'); converted.")
+]
+ReadUnitOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--unit",
+        help="Return values in this unit (UCUM, e.g. '[cft_i]/s'); the filter's numbers "
+        "are in it too.",
+    ),
 ]
 StatisticOpt = Annotated[
     str | None, typer.Option(help="New timeseries: inst, or mean, sum, min, max over a period.")
@@ -1047,6 +1072,7 @@ def _read(
     filter: str | None,
     limit: int | None,
     out: Path | None,
+    unit: str | None = None,
 ) -> None:
     """Read rows and print them (at most PRINT_LIMIT by default) or write them all."""
     want = limit if limit is not None else (None if out is not None else PRINT_LIMIT)
@@ -1054,7 +1080,11 @@ def _read(
         columns=[c.strip() for c in columns.split(",")] if columns else None,
         filter=filter,
         limit=None if want is None else want + 1,  # one more shows whether there are more
+        unit=unit,
     )
+    said = unit_of(table)
+    if said and state.output == Output.TABLE:
+        notes.print(f"values in {escape(said)}")
     if want is not None and table.num_rows > want:
         table = table.slice(0, want)
         notes.print(
@@ -1119,6 +1149,7 @@ def datasets_read(
     filter: FilterOpt = None,
     limit: LimitOpt = None,
     out: OutOpt = None,
+    unit: ReadUnitOpt = None,
 ) -> None:
     """Print a dataset's rows, or write them all to a file (--out).
 
@@ -1127,7 +1158,7 @@ def datasets_read(
     """
     owner, dataset = _split_ref(name, project)
     api = state.api()
-    _read(functools.partial(api.read, owner, dataset), columns, filter, limit, out)
+    _read(functools.partial(api.read, owner, dataset), columns, filter, limit, out, unit)
 
 
 def _columns(items: list[str] | None, flag: str) -> list[dict[str, Any]]:
@@ -1310,6 +1341,7 @@ def runs_results(
         bool,
         typer.Option(help="With output.geometry: each row's place (and output.attributes)."),
     ] = True,
+    unit: ReadUnitOpt = None,
 ) -> None:
     """Print a run's results, or write them all to a file (--out).
 
@@ -1327,7 +1359,8 @@ def runs_results(
         raise typer.BadParameter(f"the run is {run['status']}; results come once it succeeds")
     notes.print(f"run {run_id} of {run['evaluation']} v{run['version']}")
     if out is not None and out.suffix.lower() == ".geojson":
-        collection = api.run_results_geojson(project, run_id, filter=filter, limit=limit)
+        collection = api.run_results_geojson(project, run_id, filter=filter, limit=limit,
+                                             unit=unit)  # fmt: skip
         out.write_text(json.dumps(collection))
         notes.print(f"Wrote {len(collection['features'])} features to {out}", style="green")
         return
@@ -1337,7 +1370,7 @@ def runs_results(
         kept = [c for c in names if c not in _LINEAGE]
         columns = ",".join(kept) if kept else None
     fetch = functools.partial(api.run_results, project, run_id, geometry=geometry)
-    _read(fetch, columns, filter, limit, out)
+    _read(fetch, columns, filter, limit, out, unit)
 
 
 def run() -> None:
