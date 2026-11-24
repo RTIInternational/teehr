@@ -1168,7 +1168,7 @@ def datasets_create(
     ] = None,
     optional: Annotated[
         str | None,
-        typer.Option(help="Timeseries: optional columns, e.g. reference_time,member,quality."),
+        typer.Option(help="Timeseries: optional columns, e.g. reference_time,member,qualifier."),
     ] = None,
     layer: LayerOpt = None,
     partition: PartitionOpt = None,
