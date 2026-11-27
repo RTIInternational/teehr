@@ -503,8 +503,9 @@ def spearman_correlation(model: MetricsBasemodel) -> Callable:
         primary_ranks = rankdata(p, method='average')
         secondary_ranks = rankdata(s, method='average')
 
-        # calculate covariance between p_rank and s_rank
-        covariance = np.cov(primary_ranks, secondary_ranks)[0, 1]
+        # Population covariance (ddof=0), to match the population standard
+        # deviations below: a sample covariance over them is n/(n-1) too large.
+        covariance = np.cov(primary_ranks, secondary_ranks, ddof=0)[0, 1]
 
         # calculate standard deviations of ranks
         std_primary = np.std(primary_ranks)
@@ -533,10 +534,10 @@ def nash_sutcliffe_efficiency(model: MetricsBasemodel) -> Callable:
         """Nash-Sutcliffe Efficiency."""
         if len(p) == 0 or len(s) == 0:
             return np.nan
-        if np.sum(p) == 0 or np.sum(s) == 0:
-            return np.nan
 
         p, s = _transform(p, s, model)
+        if len(p) == 0:  # no pairs left once gaps are dropped
+            return np.nan
 
         numerator = np.sum(np.subtract(p, s) ** 2)
         if model.add_epsilon:
@@ -568,10 +569,10 @@ def nash_sutcliffe_efficiency_normalized(model: MetricsBasemodel) -> Callable:
         """Apply normalized Nash-Sutcliffe Efficiency."""
         if len(p) == 0 or len(s) == 0:
             return np.nan
-        if np.sum(p) == 0 or np.sum(s) == 0:
-            return np.nan
 
         p, s = _transform(p, s, model)
+        if len(p) == 0:  # no pairs left once gaps are dropped
+            return np.nan
 
         numerator = np.sum(np.subtract(p, s) ** 2)
         if model.add_epsilon:
